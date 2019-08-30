@@ -1,0 +1,99 @@
+/* Copyright 2012-2020 Matthew Reid
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+#version 410 core
+
+layout(vertices = 4) out;
+in vec3 vsTexCoord[];
+in vec3 vsUpDir[];
+
+out	vec3 csTexCoord[];
+out vec3 csUpDir[];
+
+uniform mat4 viewProjectionMatrix;
+
+float lodFactor = 0.005;
+
+vec4 fromWorldToNdc(vec3 position)
+{
+    vec4 result = viewProjectionMatrix * vec4(position, 1);
+    result /= result.w;
+    return result;
+}
+
+const float screenLimit = 1.3;
+
+vec2 fromNdcToScreenSpace(vec4 position)
+{
+    return (clamp(position.xy, -screenLimit, screenLimit) + 1) * 0.5;
+}
+
+bool offscreen(vec4 minBound, vec4 maxBound)
+{
+    if(maxBound.z < 0)
+	{
+        return true;
+    }
+	
+	return (maxBound.x < -screenLimit ||
+			maxBound.y < -screenLimit ||
+			minBound.x > screenLimit ||
+			minBound.y > screenLimit
+			);
+}
+
+float level(vec2 v0, vec2 v1)
+{
+	return clamp(distance(v0, v1) / lodFactor, 1, 64);
+}
+
+void main()
+{
+	#define id gl_InvocationID
+	gl_out[id].gl_Position = gl_in[id].gl_Position;
+	csTexCoord[id] = vsTexCoord[id];
+	csUpDir[id] = vsUpDir[id];
+	
+	if(id == 0)
+	{
+		vec4 v0 = fromWorldToNdc(gl_in[0].gl_Position.xyz);
+		vec4 v1 = fromWorldToNdc(gl_in[1].gl_Position.xyz);
+		vec4 v2 = fromWorldToNdc(gl_in[2].gl_Position.xyz);
+		vec4 v3 = fromWorldToNdc(gl_in[3].gl_Position.xyz);
+
+		vec4 minBound = min(min(min(v0,v1),v2),v3);
+		vec4 maxBound = max(max(max(v0,v1),v2),v3);
+		
+		if (offscreen(minBound, maxBound))
+		{
+			gl_TessLevelInner[0] = 0;
+			gl_TessLevelInner[1] = 0;
+			gl_TessLevelOuter[0] = 0;
+			gl_TessLevelOuter[1] = 0;
+			gl_TessLevelOuter[2] = 0;
+			gl_TessLevelOuter[3] = 0;
+		}
+		else
+		{
+			vec2 ss0 = fromNdcToScreenSpace(v0);
+			vec2 ss1 = fromNdcToScreenSpace(v1);
+			vec2 ss2 = fromNdcToScreenSpace(v2);
+			vec2 ss3 = fromNdcToScreenSpace(v3);
+
+			float e0 = level(ss3, ss0);	
+			float e1 = level(ss0, ss1);
+			float e2 = level(ss1, ss2);
+			float e3 = level(ss2, ss3);
+
+			gl_TessLevelInner[0] = 1;//max(e1,e2); //TODO taking max instead because points behind camera enter a singularity and give wrong results//mix(e1, e2, 0.5);
+			gl_TessLevelInner[1] = 1;//max(e0,e3); //mix(e0, e3, 0.5);		
+			gl_TessLevelOuter[0] = 1;//e0;
+			gl_TessLevelOuter[1] = 1;//e1;
+			gl_TessLevelOuter[2] = 1;//e2;
+			gl_TessLevelOuter[3] = 1;//e3;
+		}
+	}
+}

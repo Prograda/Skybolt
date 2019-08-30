@@ -1,0 +1,132 @@
+/* Copyright 2012-2020 Matthew Reid
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+#version 410 core
+#include "AtmosphericScattering.h"
+#include "CloudShadows.h"
+#include "DepthPrecision.h"
+layout(quads, fractional_odd_spacing, cw) in;
+
+in vec3 csTexCoord[];
+in vec3 csUpDir[];
+out vec3 texCoord;
+out vec3 position_worldSpace;
+out vec3 wrappedNoiseCoord;
+out float cameraDistance;
+out float elevation;
+
+out vec3 sunIrradiance;
+out vec3 skyIrradiance;
+out vec3 transmittance;
+out vec3 skyRadianceToPoint;
+
+uniform sampler2D heightSampler;
+uniform sampler2D cloudSampler;
+
+uniform mat4 viewMatrix;
+uniform mat4 viewProjectionMatrix;
+uniform float heightScale;
+uniform vec2 heightMapUvScale;
+uniform vec2 heightMapUvOffset;
+uniform vec3 cameraPosition;
+uniform vec3 lightDirection;
+
+vec4 osg_ClipPlane = vec4(0,0,-1,0); // TODO: do we still need this?
+vec3 interpolateQuad(vec3 v0, vec3 v1, vec3 v2, vec3 v3)
+{
+	vec3 a = mix(v0, v1, gl_TessCoord.x);
+	vec3 b = mix(v3, v2, gl_TessCoord.x);
+	return mix(a, b, gl_TessCoord.y);
+}
+
+vec4 interpolateQuad(vec4 v0, vec4 v1, vec4 v2, vec4 v3)
+{
+	vec4 a = mix(v0, v1, gl_TessCoord.x);
+	vec4 b = mix(v3, v2, gl_TessCoord.x);
+	return mix(a, b, gl_TessCoord.y);
+}
+
+// TODO: unduplicate
+// Manual texture lookup with bilinear filtering.
+// Used in cases where more precision is required than used in built-in bilinear filtering.
+vec4 bilinear(sampler2D tex, vec2 uv)
+{
+	vec2 dims = textureSize(tex, 0);
+	vec2 weight = fract(uv * dims);
+	vec2 texelSize = 1.0f / dims;
+	
+	uv -= weight * texelSize;
+	
+	vec4 c00 = textureGrad(tex, uv, vec2(0), vec2(0)); // TODO: would be good if we didn't have to use zero derivatives
+	vec4 c10 = textureGrad(tex, uv + vec2(texelSize.x, 0), vec2(0), vec2(0));
+	vec4 c01 = textureGrad(tex, uv + vec2(0, texelSize.y), vec2(0), vec2(0));
+	vec4 c11 = textureGrad(tex, uv + texelSize, vec2(0), vec2(0));
+	
+	vec4 c0 = mix(c00, c10, weight.x);
+	vec4 c1 = mix(c01, c11, weight.x);
+	return mix(c0, c1, weight.y);
+}
+
+
+// TODO: use this instead. Not working at the moment.
+// Manual texture lookup with bilinear filtering.
+// Used in cases where more precision is required than used in built-in bilinear filtering.
+float bilinearGather(sampler2D tex, vec2 uv)
+{
+	vec2 dims = textureSize(tex, 0);
+	
+	vec2 pixCoord = uv * dims;
+	vec2 originPixCoord = floor(pixCoord);
+	
+	uv = (originPixCoord+0.5f) / dims;
+	vec2 weight = pixCoord - originPixCoord;
+	
+	vec4 values = textureGather(tex, uv);
+
+	float c0 = mix(values.x, values.y, weight.x);
+	float c1 = mix(values.w, values.z, weight.x);
+	return mix(c1, c0, weight.y);
+}
+
+void main()
+{
+	vec4 interpolatedPos = interpolateQuad(gl_in[0].gl_Position, gl_in[1].gl_Position, gl_in[2].gl_Position, gl_in[3].gl_Position);
+	position_worldSpace = interpolatedPos.xyz;
+	texCoord = interpolateQuad(csTexCoord[0], csTexCoord[1], csTexCoord[2], csTexCoord[3]);
+	vec3 upDir = interpolateQuad(csUpDir[0], csUpDir[1], csUpDir[2], csUpDir[3]);
+
+	elevation = (bilinear(heightSampler, texCoord.xy * heightMapUvScale + heightMapUvOffset).r - 0.5f) * heightScale;
+	float elevationDelta = elevation - interpolatedPos.w;
+	position_worldSpace += upDir * elevationDelta;
+	vec4 position_viewSpace = viewMatrix * vec4(position_worldSpace,1);
+	cameraDistance = length(position_viewSpace.xyz);
+
+	gl_ClipDistance[0] = (dot(osg_ClipPlane.xyz, position_worldSpace) + osg_ClipPlane.w) / length(osg_ClipPlane.xyz);
+	
+	gl_Position = viewProjectionMatrix * vec4(position_worldSpace, 1);
+	gl_Position.z = logarithmicZ(gl_Position.w);
+	
+	wrappedNoiseCoord = calcWrappedNoiseCoord(position_worldSpace);
+	
+	float shadowCasterDistance;
+	if (false) // TODO: Re-enable. Currently disabled because it makes the high-res terrain not match the low res-planet tiles.
+	{
+		float cloudShadow = sampleCloudShadowMaskAtTerrainUv(cloudSampler, texCoord.xy, lightDirection);
+		shadowCasterDistance = mix(0, 0, cloudShadow);
+	}
+	else
+	{
+		shadowCasterDistance = 0;
+	}
+	
+	// Atmospheric scattering
+	//position_worldSpace.z = min(position_worldSpace.z, 0); // TODO: prevent points going underground which causes artifacts
+	vec3 positionRelPlanet = position_worldSpace - planetCenter;
+	//positionRelPlanet.z = min(positionRelPlanet.z, innerRadius);
+	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
+	skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, positionRelPlanet, shadowCasterDistance, lightDirection, transmittance);
+	sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet, lightDirection, skyIrradiance);
+}

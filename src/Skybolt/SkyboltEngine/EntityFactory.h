@@ -1,0 +1,72 @@
+/* Copyright 2012-2020 Matthew Reid
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+#pragma once
+
+#include "ComponentFactory.h"
+#include "SkyboltEngineFwd.h"
+#include <SkyboltSim/SimMath.h>
+#include <SkyboltVis/VisFactory.h>
+#include <SkyboltVis/SkyboltVisFwd.h>
+#include <SkyboltCommon/File/FileLocator.h>
+#include <SkyboltCommon/Math/MathUtility.h>
+
+#include <nlohmann/json.hpp>
+
+#include <functional>
+#include <map>
+#include <vector>
+
+namespace skybolt {
+
+class EntityFactory
+{
+public:
+	struct Context
+	{
+		px_sched::Scheduler* scheduler;
+		sim::World* simWorld;
+		vis::Scene* scene;
+		vis::Window* visWindow;
+		vis::VisFactoryRegistryPtr visFactoryRegistry;
+		const vis::ShaderPrograms* programs;
+		JulianDateProvider julianDateProvider;
+		sim::NamedObjectRegistry* namedObjectRegistry;
+		ComponentFactoryRegistryPtr componentFactoryRegistry;
+		vis::JsonTileSourceFactoryPtr tileSourceFactory;
+		vis::ModelFactoryPtr modelFactory;
+		EngineStats* stats;
+		file::FileLocator fileLocator;
+	};
+
+	EntityFactory(const Context& context, const std::vector<boost::filesystem::path>& entityFilenames);
+
+	sim::EntityPtr createEntity(const std::string& templateName, const std::string& instanceName = "", const sim::Vector3& position = math::dvec3Zero(), const sim::Quaternion& orientation = math::dquatIdentity()) const;
+	sim::EntityPtr createSun() const;
+	sim::EntityPtr createMoon() const;
+	sim::EntityPtr createStarfield() const;
+	sim::EntityPtr createPolyline() const;
+
+	void addLight(const sim::EntityPtr& node) const;
+
+	typedef std::vector<std::string> Strings;
+	Strings getTemplateNames() const {return mTemplateNames;}
+
+	std::string createUniqueObjectName(const std::string& baseName) const;
+
+private:
+	sim::EntityPtr createEntityFromJson(const nlohmann::json& json, const std::string& templateName, const std::string& instanceName, const sim::Vector3& position, const sim::Quaternion& orientation) const;
+
+private:
+	Strings mTemplateNames;
+
+	typedef std::map<std::string, nlohmann::json> TemplateJsonMap;
+	TemplateJsonMap mTemplateJsonMap;
+
+	Context mContext;
+};
+
+} // namespace skybolt

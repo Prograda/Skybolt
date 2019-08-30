@@ -1,0 +1,65 @@
+/* Copyright 2012-2020 Matthew Reid
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+#include "ForcesVisBinding.h"
+#include "GeocentricToNedConverter.h"
+#include <SkyboltSim/Components/DynamicBodyComponent.h>
+#include <SkyboltSim/Components/Node.h>
+#include <SkyboltSim/Spatial/Geocentric.h>
+#include <SkyboltSim/Spatial/Position.h>
+#include <SkyboltSim/World.h>
+#include <SkyboltVis/Renderable/Arrows.h>
+#include <assert.h>
+
+namespace skybolt {
+
+constexpr double forceScaleMetersPerNewton = 0.0001;
+
+ForcesVisBinding::ForcesVisBinding(sim::World* world, const vis::ArrowsPtr& arrows) :
+	mWorld(world),
+	mArrows(arrows),
+	mVisibilityPredicate(visibilityOn)
+{
+	assert(mWorld);
+	assert(mArrows);
+}
+
+void ForcesVisBinding::syncVis(const GeocentricToNedConverter& converter)
+{
+	std::vector<vis::Vec3Segment> segments;
+
+	const auto& entities = mWorld->getEntities();
+	for (const sim::EntityPtr& entity : entities)
+	{
+		if (mVisibilityPredicate(*entity))
+		{
+			if (entity->isDynamicsEnabled())
+			{
+				const sim::Node* node = entity->getFirstComponent<sim::Node>().get();
+				const sim::DynamicBodyComponent* body = entity->getFirstComponent<sim::DynamicBodyComponent>().get();
+				if (node && body)
+				{
+					const std::vector<sim::AppliedForce>& forces = body->getForces();
+
+					for (const sim::AppliedForce& force : forces)
+					{
+						sim::Vector3 start = node->getPosition() + force.positionRelBody;
+
+						vis::Vec3Segment segment;
+						segment.start = converter.convertPosition(start);
+						segment.end = converter.convertPosition(start + force.force * forceScaleMetersPerNewton);
+
+						segments.push_back(segment);
+					}
+				}
+			}
+		}
+	}
+
+	mArrows->setSegments(segments);
+}
+
+} // namespace skybolt

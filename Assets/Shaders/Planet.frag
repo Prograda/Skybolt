@@ -1,0 +1,83 @@
+/* Copyright 2012-2020 Matthew Reid
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+#version 440 core
+#pragma import_defines ( ENABLE_OCEAN )
+#pragma import_defines ( ENABLE_CLOUDS )
+#pragma import_defines ( ENABLE_ATMOSPHERE )
+
+#include "CloudShadows.h"
+#include "DepthPrecision.h"
+#include "Ocean.h"
+#include "Brdfs/BlinnPhong.h"
+#include "Brdfs/Lambert.h"
+
+in vec2 geoTexCoord;
+in vec2 albedoTexCoord;
+in vec3 normal;
+in float logZ;
+in vec3 sunIrradiance;
+in vec3 skyIrradiance;
+in vec3 transmittance;
+in vec3 skyRadianceToPoint;
+in vec3 positionRelCamera;
+
+out vec4 color;
+
+uniform sampler2D albedoSampler;
+uniform sampler2D landMaskSampler;
+uniform sampler2D cloudSampler;
+uniform vec3 lightDirection;
+uniform vec2 heightScale;
+uniform vec2 heightOffset;
+uniform vec3 ambientLightColor;
+
+void main()
+{
+	color = texture(albedoSampler, albedoTexCoord.xy);
+	gl_FragDepth = fragDepth_logarithmic(logZ);
+
+	vec3 viewDirection = normalize(-positionRelCamera);
+	vec3 waterColor = deepScatterColor;
+
+#ifdef ENABLE_CLOUDS
+	float lightVisibility = sampleCloudShadowMaskAtTerrainUv(cloudSampler, geoTexCoord.xy, lightDirection);
+#else
+	float lightVisibility = 1.0;
+#endif
+	vec3 visibleSunIrradiance = sunIrradiance * lightVisibility;
+	
+#ifdef ENABLE_OCEAN
+	float landMask = texture(landMaskSampler, geoTexCoord.xy * heightScale + heightOffset).r;
+	vec3 albedo = mix(waterColor, color.rgb, landMask);
+	vec3 specularReflectance = oceanSpecularColor * (1.0 - landMask) * calcBlinnPhongSpecular(lightDirection, viewDirection, normal, oceanShininess) * visibleSunIrradiance;
+#else
+	vec3 albedo = color.rgb;
+	vec3 specularReflectance = vec3(0);
+#endif	
+
+	vec3 totalReflectance = albedo * (
+			calcLambertDirectionalLight(lightDirection, normal) * visibleSunIrradiance + 	
+			calcLambertSkyLight(lightDirection, normal) * skyIrradiance * (lightVisibility*0.5+0.5) +
+			ambientLightColor
+		)
+		+ specularReflectance;
+		
+#ifdef ENABLE_ATMOSPHERE
+	color.rgb = totalReflectance * transmittance + skyRadianceToPoint;
+
+#else
+	color.rgb = totalReflectance;
+#endif
+
+#ifdef DEBUG_EDGES
+
+	if(any(lessThan(geoTexCoord.xy, vec2(0.02))))
+	{
+		color.rgb = vec3(1,0,0);
+	}
+#endif
+}

@@ -1,0 +1,51 @@
+/* Copyright 2012-2020 Matthew Reid
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+/* Copyright 2012-2019 Matthew Paul Reid
+*
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+#include "SimMath.h"
+#include <SkyboltCommon/Math/MathUtility.h>
+#include <nlohmann/json.hpp>
+
+namespace skybolt {
+namespace sim {
+
+inline Vector3 readVector3(const nlohmann::json& j)
+{
+	return Vector3(j[0].get<double>(), j[1].get<double>(), j[2].get<double>());
+}
+
+inline Vector3 readOptionalVector3(const nlohmann::json& j, const std::string& name)
+{
+	auto i = j.find(name);
+	if (i != j.end())
+	{
+		return readVector3(*i);
+	}
+	return math::dvec3Zero();
+}
+
+inline Quaternion readQuaternion(const nlohmann::json& j)
+{
+	return glm::angleAxis(j["angleDeg"].get<double>() * skybolt::math::degToRadD(), readVector3(j["axis"]));
+}
+
+inline Quaternion readOptionalQuaternion(const nlohmann::json& j, const std::string& name)
+{
+	auto i = j.find(name);
+	if (i != j.end())
+	{
+		return readQuaternion(*i);
+	}
+	return math::dquatIdentity();
+}
+
+} // namespace sim
+} // namespace skybolt

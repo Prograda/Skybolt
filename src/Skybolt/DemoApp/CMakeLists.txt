@@ -1,0 +1,22 @@
+set(APP_NAME DemoApp)
+
+add_source_group_tree(. SOURCE)
+
+
+include_directories("../")
+include_directories("../SkyboltEngine/src")
+
+set(LIBS
+SkyboltEngine
+AircraftHud
+)
+
+add_executable(${APP_NAME} ${SOURCE})
+target_link_libraries (${APP_NAME} ${LIBS})
+
+if(WIN32)
+    set_target_properties(${APP_NAME} PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
+	set_target_properties(${APP_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:CONSOLE")
+	set_target_properties(${APP_NAME} PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:CONSOLE")
+	set_target_properties(${APP_NAME} PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE")
+endif()
