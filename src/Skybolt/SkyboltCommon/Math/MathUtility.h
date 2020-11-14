@@ -35,10 +35,11 @@ glm::vec2 vec2Rotate(const glm::vec2 &v, float theta);
 void getOrthonormalBasis(const glm::vec3 &normal, glm::vec3 &tangent, glm::vec3 &bitangent);
 
 template <typename T>
-T angleBetween(const glm::detail::tvec3<T> &v0, const glm::detail::tvec3<T> &v1)
+typename T::value_type angleBetween(const T &v0, const T &v1)
 {
-	T dot = glm::dot(v0, v1);
-	dot = glm::clamp(dot, T(-1), T(1));
+	using ValT = typename T::value_type;
+	ValT dot = glm::dot(v0, v1);
+	dot = glm::clamp(dot, ValT(-1), ValT(1));
 	return glm::acos(dot);
 }
 
@@ -48,19 +49,6 @@ glm::dquat quatFromEuler(const glm::dvec3 &eulerRPY);
 
 glm::vec3 eulerFromQuat(const glm::quat& quat);
 glm::dvec3 eulerFromQuat(const glm::dquat& quat);
-
-template<typename T>
-T lerpShortestRotation(T a, T b, T weight)
-{
-	if (std::abs(a - b) > piD())
-	{
-		if (a < b)
-			a += twoPiD();
-		else
-			b += twoPiD();
-	}
-	return a + weight * (b - a);
-}
 
 int nextPow2(int v);
 
@@ -96,6 +84,19 @@ float negInfinity();
 
 std::string toString(const glm::dvec3& v);
 std::string toString(const glm::dquat& v);
+
+template<typename T>
+T lerpShortestRotation(T a, T b, T weight)
+{
+	if (std::abs(a - b) > piD())
+	{
+		if (a < b)
+			a += twoPiD();
+		else
+			b += twoPiD();
+	}
+	return a + weight * (b - a);
+}
 
 } // namespace math
 } // namespace skybolt
