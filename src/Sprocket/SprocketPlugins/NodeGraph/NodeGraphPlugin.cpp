@@ -71,7 +71,7 @@ private:
 	NodeGraphPlugin* mNodeGraphPlugin;
 };
 
-void setGlobalNodeStyle()
+static void setGlobalNodeStyle()
 {
 	NodeStyle::setNodeStyle(
 R"(
@@ -109,7 +109,14 @@ R"(
   )");
 }
 
-FlowView* createFlowView()
+static void setNullScene(QtNodes::FlowView& view)
+{
+	// FlowView crashes with a nullptr, so use null object pattern
+	static FlowScene nullScene;
+	view.setScene(&nullScene);
+}
+
+static FlowView* createFlowView()
 {
 	static FlowViewStyle style;
 	style.BackgroundColor = QColor::fromRgb(42, 42, 42);
@@ -117,6 +124,7 @@ FlowView* createFlowView()
 	style.CoarseGridColor = QColor::fromRgb(25, 25, 25);
 	FlowView* view = new FlowView();
 	view->setFlowViewStyle(&style);
+	setNullScene(*view);
 	return view;
 }
 
@@ -235,7 +243,6 @@ NodeGraphPlugin::NodeGraphPlugin(const EditorPluginConfig& config) :
 	}
 
 	mMainFlowScene = new FlowScene(mDataModelRegistry);
-	viewFlowScene(mMainFlowScene);
 
 	QIcon nodeGraphIcon = getDefaultIconFactory().createIcon(IconFactory::Icon::NodeGraph);
 	mFlowFunctionTreeItemRegistry->add(std::make_shared<FlowSceneTreeItem>(nodeGraphIcon, "Main", mMainFlowScene));
@@ -286,7 +293,6 @@ void NodeGraphPlugin::loadProject(const QJsonObject& json)
 	if (!value.isUndefined())
 	{
 		mMainFlowScene->loadFromMemory(QJsonDocument(value.toObject()).toJson());
-		viewFlowScene(mMainFlowScene);
 	}
 }
 
@@ -343,9 +349,7 @@ void NodeGraphPlugin::viewFlowScene(FlowScene* scene)
 	{
 		if (!scene)
 		{
-			// FlowView crashes with a nullptr, so use null object pattern
-			static FlowScene nullScene;
-			mFlowView->setScene(&nullScene);
+			setNullScene(*mFlowView);
 		}
 		else
 		{
