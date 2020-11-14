@@ -53,17 +53,17 @@ const int iterations = 1000;
 const float initialStepSize = 10;
 const float maximumStepSize = 200;
 const float stepSizeGrowthFactor = 1.002;
-const float maxRenderDistance = 100000;// iterations * stepSize; // MTODO
+const float maxRenderDistance = 200000;
 
 // Multiplier to turn an alpha value into an effective density value.
 // The is hand tuned to produce correct looking results.
 float alphaToDensityMultiplier = 5;
 
-float calcDensityLowRes(vec2 uv, float height, out float cloudType)
+float calcDensityLowRes(vec2 uv, float height, out float cloudType, vec2 lod)
 {
-	vec4 coverageNoise = textureLod(coverageDetailSampler, uv.xy * vec2(100.0, 50.0), 0);
+	vec4 coverageNoise = textureLod(coverageDetailSampler, uv.xy * vec2(100.0, 50.0), 4 * lod.x);
 	float coverageDetail = coverageNoise.r;
-	cloudType = coverageNoise.g * coverageNoise.g; // ^2 for better shaping (fewer tall clouds). TODO: bake into texture
+	cloudType = coverageNoise.g;
 
 	float heightMultiplier = calcHeightMultiplier(height, cloudType);
 
@@ -81,22 +81,22 @@ const float cloudChaos = 0.7;
 const float averageNoiseSamplerValue = cloudChaos * 0.7;
 		
 //! @param lod is 0 for zero detail, 1 where frequencies of pos*noiseFrequencyScale should be visible
-float calcDensity(vec3 pos, vec2 uv, float lod, float height, out float cloudType)
+float calcDensity(vec3 pos, vec2 uv, vec2 lod, float height, out float cloudType)
 {
-	float density = calcDensityLowRes(uv, height, cloudType);
+	float density = calcDensityLowRes(uv, height, cloudType, lod);
 
 	// Apply detail
-	if (lod > 0)
+	if (lod.y > 0)
 	{
-		float clampedLod = min(lod, 1.0);
+		float clampedLod = min(lod.y, 1.0);
 	
 		// MTODO: 3D noise texture has visible tiling artifacts when viewed along an axis, e.g at the equator. Need to fix this.
 		vec4 noise = textureLod(baseNoiseSampler, pos*noiseFrequencyScale, 0); // MTODO: tweak
 		
 		// Apply high detail
-		if (lod > 4)
+		if (lod.y > 4)
 		{
-			float highDetailStrength = min(lod - 4, 0.7);
+			float highDetailStrength = min(lod.y - 4, 0.7);
 			noise.r = mix(noise.r, noise.r * textureLod(baseNoiseSampler, pos * noiseFrequencyScale * 5, 0).g, highDetailStrength);
 		}
 		
@@ -140,7 +140,7 @@ const float powderStrength = 0.2; // TODO: get this looking right
 const float multiScatterDistanceMultiplier = 1.0;
 const float scatterDistanceMultiplier = initialStepSize * 6;
 
-vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradiance, vec3 skyIrradianceOnFourPi, float lod, float height, float cloudType)
+vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradiance, vec3 skyIrradianceOnFourPi, vec2 lod, float height, float cloudType)
 {
 	// It looks better to make scatterDistance a fixed size, in this case the initialStepSize multiplied by a hand tuned factor.
 	// Making it a function of the adpstepSize makes the lighting look inconsistent and less realistic.
@@ -171,14 +171,13 @@ vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradian
 
 float effectiveZeroT = 0.01;
 
-vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, float lod, vec3 lightDir, vec3 sunIrradiance, vec3 skyIrradiance)
+vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 lightDir, vec3 sunIrradiance, vec3 skyIrradiance)
 {
 	float cosAngle = dot(lightDir, dir);
-    //float hg = mix(henyeyGreenstein(cosAngle, 0.3), henyeyGreenstein(cosAngle, -0.2), 0.5);
-	
+
 	// Tuned to match The "Watoo" phase function for clouds, from Bouthors et al.
 	// See http://wiki.nuaj.net/index.php?title=Clouds
-	float hg = dot(henyeyGreenstein(cosAngle, vec4(-0.2, 0.3, 0.96, 0)), vec4(0.5, 0.5, 0.003, 0.0));
+	float hg = dot(henyeyGreenstein(cosAngle, vec4(-0.2, 0.3, 0.96, 0)), vec4(0.5, 0.5, 0.03, 0.0));
 	
 	vec3 skyIrradianceOnFourPi = skyIrradiance * oneOnFourPi;
 
@@ -233,7 +232,7 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, float lod, vec3 lig
 				uv = uvFromPos(pos);
 				float height = length(pos) - innerRadius;
 				float outCloudType;
-				float density = calcDensityLowRes(uv, height, outCloudType);
+				float density = calcDensityLowRes(uv, height, outCloudType, lod);
 				
 				// If no longer in empty space, go back one step and break
 				if (density > 0)
@@ -271,20 +270,21 @@ float antiAliasSmoothStep(float value, float pixelCount)
 	return smoothstep(0, width, value);
 }
 
-const float multiScatteringBrightnessMultiplier = 4.5; // fudge factor to add in missing energy from not simulating multiscatter
-const float lowResBrightnessMultiplier = 2.0; // fudge factor to make low res clouds match brightness of high res clouds, needed because low res does not simulate any scattering
+// TODO: Rationalize this number. Why does the multiplier need to be so high? Looks best to set to about 7 during day and 1.5 at dusk
+const float multiScatteringBrightnessMultiplier = 7; // fudge factor to add in missing energy from not simulating multiscatter
+const float lowResBrightnessMultiplier = 3.0; // fudge factor to make low res clouds match brightness of high res clouds, needed because low res does not simulate any scattering
 
 // Simulates colour change due to scattering
 vec3 desaturateAndBlueShift(vec3 c)
 {
-	return dot(c, vec3(0.1 / 3.0)) * vec3(0.8, 0.8, 1.4);
+	return dot(c, vec3(0.1 / 3.0)) * vec3(0.6, 0.9, 1.4);
 }
 
 vec4 evaluateGlobalLowResColor(vec3 positionRelPlanetPlanetAxes, vec3 irradiance)
 {
 	float alpha = textureLod(globalAlphaSampler, uvFromPos(positionRelPlanetPlanetAxes), 0).r; // MTODO: auto lod
 	vec3 color = irradiance * alpha * oneOnFourPi;
-	color = mix(color, desaturateAndBlueShift(color), 0.5); // desaturate color to simulate scattering. This makes sunsets less extreme.
+	color = mix(color, desaturateAndBlueShift(color), 0.8); // desaturate color to simulate scattering. This makes sunsets less extreme.
 	return vec4(color, alpha);
 }
 
@@ -380,19 +380,24 @@ void main()
 	vec3 directIrradiance = (sunIrradiance + skyIrradiance);
 	
 	// Add some sun radiance to the sky radiance, to simulate light reflected off earth's surface
-	const vec3 desaturatedSunIrradiance = mix(sunIrradiance, desaturateAndBlueShift(sunIrradiance), 0.5);
+	const vec3 desaturatedSunIrradiance = mix(sunIrradiance, desaturateAndBlueShift(sunIrradiance), 0.8);
 	vec3 indirectIrradiance = (skyIrradiance + desaturatedSunIrradiance) / M_PI * multiScatteringBrightnessMultiplier;
 	
 	float stepSize = initialStepSize;
 	stepSize = min(stepSize + rayNear / 10000, maximumStepSize);
-	float detailLod = max(0.0, 150000 / (rayNear + 0.1) - 1.0);
+	vec2 lod;
+	lod.x = smoothstep(0.1, 1.0, stepSize / maximumStepSize);
+	lod.y = max(0.0, 150000 / (rayNear + 0.1) - 1.0);
 	
-	colorOut = march(positionRelPlanetPlanetAxes, rayDirPlanetAxes, stepSize, rayFar-rayNear, detailLod, lightDirPlanetAxes, directIrradiance, indirectIrradiance);
+	colorOut = march(positionRelPlanetPlanetAxes, rayDirPlanetAxes, stepSize, rayFar-rayNear, lod, lightDirPlanetAxes, directIrradiance, indirectIrradiance);
 	
 	vec4 lowResColor = evaluateGlobalLowResColor(positionRelPlanetPlanetAxes, directIrradiance + indirectIrradiance) * lowResBrightnessMultiplier;
-	float lod = smoothstep(0.1, 1.0, stepSize / maximumStepSize);
-	colorOut = mix(colorOut, vec4(lowResColor), lod);
-	
+	colorOut = mix(colorOut, vec4(lowResColor), lod.x);
+
+#ifdef APPLY_EXPERIMENTAL_ATMOSPHERIC_EXTINCTION
+	float transmission = exp(-rayNear * 0.00001);
+	colorOut *= mix(0.2, 1.0, transmission);
+#endif
 	colorOut *= alpha;
 
 	// Store the square root of color to minimize banding artifacts by giving  better precision at low color values.
