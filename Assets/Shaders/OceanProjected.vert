@@ -48,7 +48,8 @@ const float screenCoordScale = 1.1; // TODO: tweak and optimize
 
 void main()
 {
-	vec2 screenCoord = osg_Vertex.xy * vec2(screenCoordScale) + vec2(0.5);
+	vec2 scaledVertexPos = osg_Vertex.xy * vec2(screenCoordScale); // +/- 0.5 at screen edges
+	vec2 screenCoord = scaledVertexPos + vec2(0.5); // 0 and 1 at screen edges
 	vec3 topDir = mix(topLeftDir, topRightDir, screenCoord.x);
 	vec3 bottomDir = mix(bottomLeftDir, bottomRightDir, screenCoord.x);
 	vec3 vertCameraWorldDir = mix(topDir, bottomDir, screenCoord.y);
@@ -66,7 +67,14 @@ void main()
 		vec2 texCoord = wrappedNoiseCoord * heightMapTexCoordScales[i];
 		offset += textureLod(heightSamplers[i], texCoord, lod).xyz;
 	}
-	
+
+#define PIN_TO_SCREEN_EDGES
+#ifdef PIN_TO_SCREEN_EDGES
+	vec2 edgeFeather = (abs(scaledVertexPos) - vec2(0.5)) / vec2(0.05); // 0 at edge and 1 at maximum distance beyond edge
+	float edgeFeatherScalar = max(0.0, max(edgeFeather.x, edgeFeather.y));
+	offset.xy *= mix(1.0, 0.0, edgeFeatherScalar);
+#endif
+
 	positionWS.xyz += offset * vec3(1,1,-1);// * max(0.0, 1.0 - length(positionWS) / 5000);
 	
 	positionRelCameraWS = positionWS - cameraPosition;
