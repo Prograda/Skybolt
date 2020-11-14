@@ -78,19 +78,22 @@ void SimpleNdm::updateParams()
 void SimpleNdm::emitPortAdded(QtNodes::PortType portType, QtNodes::PortIndex portIndex)
 {
 	updateParams();
-	emit portAdded(portType, portIndex);
+	// TODO
+	//emit portAdded(portType, portIndex);
 }
 
 void SimpleNdm::emitPortMoved(QtNodes::PortType portType, QtNodes::PortIndex oldIndex, QtNodes::PortIndex newIndex)
 {
 	updateParams();
-	emit portMoved(portType, oldIndex, newIndex);
+	// TODO
+	//emit portMoved(portType, oldIndex, newIndex);
 }
 
 void SimpleNdm::emitPortRemoved(QtNodes::PortType portType, QtNodes::PortIndex portIndex)
 {
 	updateParams();
-	emit portRemoved(portType, portIndex);
+	// TODO
+	//emit portRemoved(portType, portIndex);
 }
 
 QJsonObject	SimpleNdm::save() const
