@@ -314,11 +314,11 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 
 	mEngineSettings = readOrCreateEngineSettingsFile(this, mSettings);
 
-	mOsgWidget = new OsgWidget();
-	mEngineRoot = EngineRootFactory::create(mOsgWidget->getWindow(), enginePluginFactories, mEngineSettings);
+	mEngineRoot = EngineRootFactory::create(enginePluginFactories, mEngineSettings);
 	mSprocketModel.reset(new SprocketModel(mEngineRoot.get(), mInputPlatform.get()));
 	mSimStepper = std::make_unique<SimStepper>(mEngineRoot->systemRegistry);
 
+	mOsgWidget = new OsgWidget();
 	mRenderTarget = vis::createAndAddViewportToWindow(*mOsgWidget->getWindow(), mEngineRoot->programs.compositeFinal);
 	mRenderTarget->setScene(std::make_shared<vis::RenderTargetSceneAdapter>(mEngineRoot->scene));
 

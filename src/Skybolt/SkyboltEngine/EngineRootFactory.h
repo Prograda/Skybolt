@@ -7,13 +7,15 @@
 #pragma once
 
 #include "EngineRoot.h"
+#include <boost/program_options/variables_map.hpp>
 
 namespace skybolt {
 
 class EngineRootFactory
 {
 public:
-	static std::unique_ptr<EngineRoot> create(vis::Window* window, const std::vector<PluginFactory>& pluginFactories, const nlohmann::json& settings);
+	static std::unique_ptr<EngineRoot> create(const boost::program_options::variables_map& params);
+	static std::unique_ptr<EngineRoot> create(const std::vector<PluginFactory>& pluginFactories, const nlohmann::json& settings);
 };
 
 } // namespace skybolt

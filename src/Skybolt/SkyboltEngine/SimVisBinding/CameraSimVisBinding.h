@@ -27,4 +27,7 @@ private:
 	const sim::CameraComponent* mCameraComponent;
 };
 
+//! @return a camera attached to the entity, or nullptr if the entity has no camera
+vis::CameraPtr getVisCamera(const sim::Entity& entity);
+
 } // namespace skybolt

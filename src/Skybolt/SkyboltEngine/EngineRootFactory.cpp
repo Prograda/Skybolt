@@ -5,6 +5,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "EngineRootFactory.h"
+#include "EngineCommandLineParser.h"
+#include <SkyboltEngine/GetExecutablePath.h>
+#include <SkyboltEngine/Plugin/PluginHelpers.h>
+#include <SkyboltCommon/OptionalUtility.h>
 
 #include <boost/log/trivial.hpp>
 
@@ -24,10 +28,19 @@ T getOptionalNodeOrDefaultWithWarning(const json& j, const std::string& name, co
 	return defaultValue;
 }
 
-std::unique_ptr<EngineRoot> EngineRootFactory::create(vis::Window* window, const std::vector<PluginFactory>& pluginFactories, const json& settings)
+std::unique_ptr<EngineRoot> EngineRootFactory::create(const boost::program_options::variables_map& params)
+{
+	nlohmann::json settings = skybolt::optionalMapOrElse<nlohmann::json>(EngineCommandLineParser::readSettings(params), [] { return nlohmann::json(); });
+
+	std::string pluginsDir = getExecutablePath().append("plugins").string();
+	std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(pluginsDir);
+
+	return create(enginePluginFactories, settings);
+}
+
+std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFactory>& pluginFactories, const json& settings)
 {
 	EngineRootConfig config;
-	config.window = window;
 	config.pluginFactories = pluginFactories;
 	config.tileSourceFactoryConfig.bingApiKey = getOptionalNodeOrDefaultWithWarning(settings, "bingApiKey", std::string());
 	config.tileSourceFactoryConfig.cacheDirectory = "Cache";

@@ -478,7 +478,6 @@ private:
 
 Planet::Planet(const PlanetConfig& config) :
 	mScene(config.scene),
-	mWindow(config.window),
 	mInnerRadius(config.innerRadius),
 	mTransform(new osg::MatrixTransform),
 	mShadowSceneTransform(new osg::MatrixTransform),
@@ -533,7 +532,6 @@ Planet::Planet(const PlanetConfig& config) :
 		surfaceConfig.forestGeoVisibilityRange = forestGeoVisibilityRange;
 		surfaceConfig.parentTransform = mTransform;
 		surfaceConfig.forestGroup = mScene->_getGroup();
-		surfaceConfig.window = mWindow;
 		surfaceConfig.planetTileSources = config.planetTileSources;
 		surfaceConfig.shadowMaps = { mShadowMapGenerator->getTexture() };
 		surfaceConfig.oceanEnabled = config.waterEnabled;

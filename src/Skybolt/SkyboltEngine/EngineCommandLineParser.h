@@ -14,8 +14,11 @@ namespace skybolt {
 class EngineCommandLineParser
 {
 public:
+
+	static boost::program_options::variables_map parse(int argc, char** argv);
+	static boost::program_options::variables_map parse(int argc, char** argv, const boost::program_options::options_description& desc);
+
 	static void addOptions(boost::program_options::options_description& desc);
-	static boost::program_options::variables_map parse(const boost::program_options::options_description& desc, int argc, char** argv);
 
 	static boost::optional<nlohmann::json> readSettings(const boost::program_options::variables_map& params);
 };

@@ -1,5 +1,4 @@
 add_subdirectory (AircraftHud)
-add_subdirectory (DemoApp)
 add_subdirectory (MapAttributesConverter)
 
 OPTION(BUILD_MAP_FEATURES_CONVERTER "Build MapFeaturesConverter")

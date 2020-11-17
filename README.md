@@ -25,6 +25,48 @@ For other queries, please use the [contact form](https://piraxus.com/contact) on
 ## License
 This project is licensed under the Mozilla Public License Version 2.0 - see the [License.txt](License.txt) file for details.
 
+## Example Usage
+```cpp
+// Create engine
+auto params = EngineCommandLineParser::parse(argc, argv);
+std::unique_ptr<EngineRoot> root = EngineRootFactory::create(params);
+
+// Create camera
+EntityFactory& entityFactory = *root->entityFactory;
+World& world = *root->simWorld;
+EntityPtr simCamera = entityFactory.createEntity("Camera");
+world.addEntity(simCamera);
+
+// Attach camera to window
+auto window = std::make_unique<StandaloneWindow>(RectI(0, 0, 1080, 720));
+osg::ref_ptr<vis::RenderTarget> viewport = createAndAddViewportToWindowWithEngine(*window, *root);
+viewport->setCamera(getVisCamera(*simCamera));
+
+// Create input
+auto inputPlatform = std::make_shared<InputPlatformOis>(window->getHandle(), window->getWidth(), window->getHeight()));
+std::vector<LogicalAxisPtr> axes = CameraInputSystem::createDefaultAxes(*inputPlatform);
+
+// Create systems
+root->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, window.get(), axes));
+root->systemRegistry->push_back(std::make_shared<CameraInputSystem>(window.get(), simCamera, inputPlatform, axes));
+root->systemRegistry->push_back(std::make_shared<SimVisSystem>(root.get(), simCamera));
+
+// Create entities
+world.addEntity(entityFactory.createStarfield());
+world.addEntity(entityFactory.createSun());
+world.addEntity(entityFactory.createMoon());
+
+EntityPtr planet = entityFactory.createEntity("PlanetEarth");
+world.addEntity(planet);
+
+// Point camera at planet
+auto cameraController = simCamera->getFirstComponentRequired<CameraControllerComponent>()->cameraController;
+cameraController->setTarget(planet.get());
+
+// Run loop
+runMainLoop(*window, *root, UpdateLoop::neverExit);
+```
+
 ## Dependencies
 Header only dependencies are available in a separate repository: https://github.com/Piraxus/SkyboltDependenciesHeaderOnly
 

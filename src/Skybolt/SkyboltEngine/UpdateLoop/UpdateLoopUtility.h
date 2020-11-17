@@ -6,14 +6,12 @@
 
 #pragma once
 
-#include <SkyboltEngine/TimeSource.h>
+#include "UpdateLoop.h"
+#include <SkyboltEngine/EngineRoot.h>
+#include <SkyboltVis/SkyboltVisFwd.h>
 
 namespace skybolt {
 
-struct Scenario
-{
-	double startJulianDate = 2457982.9;
-	TimeSource timeSource = TimeRange(0, 120);
-};
+void runMainLoop(vis::Window& window, EngineRoot& engineRoot, UpdateLoop::ShouldExit shouldExit);
 
 } // namespace skybolt

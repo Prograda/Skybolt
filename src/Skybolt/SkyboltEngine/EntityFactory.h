@@ -30,7 +30,6 @@ public:
 		px_sched::Scheduler* scheduler;
 		sim::World* simWorld;
 		vis::Scene* scene;
-		vis::Window* visWindow;
 		vis::VisFactoryRegistryPtr visFactoryRegistry;
 		const vis::ShaderPrograms* programs;
 		JulianDateProvider julianDateProvider;

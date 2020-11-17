@@ -38,7 +38,6 @@ struct PlanetTileSources
 struct PlanetSurfaceConfig
 {
 	px_sched::Scheduler* scheduler;
-	Window* window;
 	const ShaderPrograms* programs;
 	osg::ref_ptr<osg::MatrixTransform> parentTransform; //!< Planet transform
 	PlanetTileSources planetTileSources;

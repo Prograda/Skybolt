@@ -14,19 +14,26 @@ namespace po = boost::program_options;
 
 namespace skybolt {
 
-void EngineCommandLineParser::addOptions(po::options_description& desc)
+boost::program_options::variables_map EngineCommandLineParser::parse(int argc, char** argv)
 {
-	desc.add_options()
-		("help", "produce help message")
-		("settingsFile", po::value<double>(), "settings file");
+	boost::program_options::options_description desc;
+	EngineCommandLineParser::addOptions(desc);
+	return EngineCommandLineParser::parse(argc, argv, desc);
 }
 
-po::variables_map EngineCommandLineParser::parse(const po::options_description& desc, int argc, char** argv)
+po::variables_map EngineCommandLineParser::parse(int argc, char** argv, const po::options_description& desc)
 {
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
 	po::notify(vm);
 	return vm;
+}
+
+void EngineCommandLineParser::addOptions(po::options_description& desc)
+{
+	desc.add_options()
+		("help", "produce help message")
+		("settingsFile", po::value<double>(), "settings file");
 }
 
 boost::optional<nlohmann::json> EngineCommandLineParser::readSettings(const boost::program_options::variables_map& params)

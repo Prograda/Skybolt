@@ -1,18 +1,19 @@
-set(APP_NAME DemoApp)
+set(APP_NAME MinimalApp)
 
 add_source_group_tree(. SOURCE)
 
 
 include_directories("../")
-include_directories("../SkyboltEngine/src")
+include_directories("../../Skybolt")
 
 set(LIBS
-SkyboltEngine
-AircraftHud
+ExamplesCommon
 )
 
 add_executable(${APP_NAME} ${SOURCE})
 target_link_libraries (${APP_NAME} ${LIBS})
+
+set_target_properties(${APP_NAME} PROPERTIES FOLDER Examples)
 
 if(WIN32)
     set_target_properties(${APP_NAME} PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")

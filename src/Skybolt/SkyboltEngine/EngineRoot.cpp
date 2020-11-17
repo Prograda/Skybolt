@@ -108,7 +108,6 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	context.simWorld = simWorld.get();
 	context.componentFactoryRegistry = componentFactoryRegistry;
 	context.scene = scene.get();
-	context.visWindow = config.window;
 	context.programs = &programs;
 	context.julianDateProvider = julianDateProvider;
 	context.namedObjectRegistry = &namedObjectRegistry;

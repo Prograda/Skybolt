@@ -21,7 +21,6 @@
 #include "SkyboltVis/Renderable/Planet/Tile/QuadTreeTileLoader.h"
 #include "SkyboltVis/Renderable/Planet/Tile/PlanetSubdivisionPredicate.h"
 #include "SkyboltVis/Renderable/Planet/Tile/TileImageLoader.h"
-#include "SkyboltVis/Window/Window.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <cxxtimer/cxxtimer.hpp>
 

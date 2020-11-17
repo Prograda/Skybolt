@@ -6,14 +6,13 @@
 
 #pragma once
 
-#include <SkyboltEngine/TimeSource.h>
+#include <SkyboltEngine/SkyboltEngineFwd.h>
+#include <SkyboltVis/SkyboltVisFwd.h>
+
+#include <osg/ref_ptr>
 
 namespace skybolt {
 
-struct Scenario
-{
-	double startJulianDate = 2457982.9;
-	TimeSource timeSource = TimeRange(0, 120);
-};
+osg::ref_ptr<vis::RenderTarget> createAndAddViewportToWindowWithEngine(vis::Window& window, const EngineRoot& engineRoot);
 
 } // namespace skybolt

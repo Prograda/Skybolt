@@ -279,7 +279,6 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 	config.scheduler = context.scheduler;
 	config.programs = context.programs;
 	config.scene = context.scene;
-	config.window = context.visWindow;
 	config.innerRadius = planetRadius;
 	config.visFactoryRegistry = context.visFactoryRegistry.get();
 	config.waterEnabled = hasOcean;

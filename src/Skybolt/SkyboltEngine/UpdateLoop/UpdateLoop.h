@@ -15,8 +15,11 @@ class UpdateLoop
 public:
 	UpdateLoop(float minFrameDuration);
 
+	typedef std::function<bool()> ShouldExit;
+	static inline bool neverExit() { return false; }
+
 	typedef std::function<bool(float dt)> Updatable;
-	void exec(Updatable updatable);
+	void exec(Updatable updatable, ShouldExit shouldExit);
 
 private:
 	float mMinFrameDuration;

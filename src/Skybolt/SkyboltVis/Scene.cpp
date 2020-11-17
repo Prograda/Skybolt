@@ -42,7 +42,7 @@ Scene::Scene() :
 	mDirectLightColorUniform = new osg::Uniform("directLightColor", osg::Vec3f(1, 1, 1));
 	ss->addUniform(mDirectLightColorUniform);
 
-	mAmbientLightColorUniform = new osg::Uniform("ambientLightColor", osg::Vec3f(0.1f, 0.1f, 0.1f));
+	mAmbientLightColorUniform = new osg::Uniform("ambientLightColor", osg::Vec3f(0.0f, 0.0f, 0.0f));
 	ss->addUniform(mAmbientLightColorUniform);
 
 	mWrappedNoiseOriginUniform = new osg::Uniform("wrappedNoiseOrigin", osg::Vec3f());

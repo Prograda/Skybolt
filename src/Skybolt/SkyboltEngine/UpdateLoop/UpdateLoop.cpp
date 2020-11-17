@@ -21,12 +21,12 @@ UpdateLoop::UpdateLoop(float minFrameDuration) :
 {
 }
 
-void UpdateLoop::exec(Updatable updatable)
+void UpdateLoop::exec(Updatable updatable, ShouldExit shouldExit)
 {
 	typedef std::chrono::duration<double> seconds;
 	float prevElapsedTime = 0;
 
-	while (true)
+	while (!shouldExit())
 	{
 		// Get time delta
 		float elapsed;

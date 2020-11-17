@@ -32,7 +32,6 @@ struct PlanetConfig
 	px_sched::Scheduler* scheduler;
 	const ShaderPrograms* programs;
 	Scene* scene;
-	Window* window;
 	sim::LatLon latLonOrigin;
 	float innerRadius;
 	PlanetTileSources planetTileSources;
@@ -95,7 +94,6 @@ private:
 private:
 	sim::World* mWorld;
 	Scene* mScene;
-	Window* mWindow;
 
 	osg::ref_ptr<WaterStateSet> mWaterStateSet;
 	OceanPtr mOcean;

@@ -38,4 +38,9 @@ void CameraSimVisBinding::syncVis(const GeocentricToNedConverter& converter)
 	mCamera->setFarClipDistance(state.farClipDistance);
 }
 
+vis::CameraPtr getVisCamera(const sim::Entity& camera)
+{
+	return static_cast<const CameraSimVisBinding&>(*camera.getFirstComponent<SimVisBindingsComponent>()->bindings.front()).getCamera();
+}
+
 } // namespace skybolt

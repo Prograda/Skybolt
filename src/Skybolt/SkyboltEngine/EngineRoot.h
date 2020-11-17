@@ -25,7 +25,6 @@ typedef std::function<PluginPtr(const PluginConfig&)> PluginFactory;
 
 struct EngineRootConfig
 {
-	vis::Window* window;
 	std::vector<PluginFactory> pluginFactories;
 	vis::JsonTileSourceFactoryConfig tileSourceFactoryConfig;
 };
