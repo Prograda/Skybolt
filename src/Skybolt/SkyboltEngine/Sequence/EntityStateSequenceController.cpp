@@ -93,6 +93,14 @@ EntityStateSequenceController::EntityStateSequenceController(const std::shared_p
 	mConnections.push_back(sequence->valueChanged.connect(sanitizeOrientation));
 }
 
+EntityStateSequenceController::~EntityStateSequenceController()
+{
+	if (mEntity)
+	{
+		mEntity->removeListener(this);
+	}
+}
+
 SequenceStatePtr EntityStateSequenceController::getState() const
 {
 	if (mEntity)

@@ -34,6 +34,7 @@ class EntityStateSequenceController : public StateSequenceControllerT<EntitySequ
 {
 public:
 	EntityStateSequenceController(const std::shared_ptr<EntityStateSequence>& sequence);
+	~EntityStateSequenceController() override;
 
 	void setEntity(sim::Entity* entity);
 	sim::Entity* getEntity() const { return mEntity; }

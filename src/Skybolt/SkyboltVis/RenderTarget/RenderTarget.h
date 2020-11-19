@@ -32,8 +32,10 @@ public:
 
 	virtual void setRect(const RectI& rect);
 
-	virtual void setCamera(const CameraPtr& camera);
 	virtual void setScene(const std::shared_ptr<Scene>& scene);
+
+	virtual void setCamera(const CameraPtr& camera);
+	CameraPtr getCamera() const { return mCamera; }
 
 	osg::ref_ptr<osg::Camera> getOsgCamera() const { mOsgCamera; }
 

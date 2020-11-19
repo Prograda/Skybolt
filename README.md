@@ -52,9 +52,9 @@ root->systemRegistry->push_back(std::make_shared<CameraInputSystem>(window.get()
 root->systemRegistry->push_back(std::make_shared<SimVisSystem>(root.get(), simCamera));
 
 // Create entities
-world.addEntity(entityFactory.createStarfield());
-world.addEntity(entityFactory.createSun());
-world.addEntity(entityFactory.createMoon());
+world.addEntity(entityFactory.createEntity("SunBillboard"));
+world.addEntity(entityFactory.createEntity("MoonBillboard"));
+world.addEntity(entityFactory.createEntity("Stars"));
 
 EntityPtr planet = entityFactory.createEntity("PlanetEarth");
 world.addEntity(planet);

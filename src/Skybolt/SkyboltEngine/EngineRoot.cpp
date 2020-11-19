@@ -6,6 +6,7 @@
 
 #include "EngineRoot.h"
 #include "ComponentFactory.h"
+#include "SimVisBinding/SimVisSystem.h"
 #include <SkyboltSim/System/EntitySystem.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltVis/OsgStateSetHelpers.h>
@@ -122,7 +123,8 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 
 	// Create default systems
 	systemRegistry = std::make_shared<sim::SystemRegistry>(sim::SystemRegistry({
-		std::make_shared<sim::EntitySystem>(simWorld.get())
+		std::make_shared<sim::EntitySystem>(simWorld.get()),
+		std::make_shared<SimVisSystem>(simWorld.get(), scene)
 	}));
 
 	// Create plugins

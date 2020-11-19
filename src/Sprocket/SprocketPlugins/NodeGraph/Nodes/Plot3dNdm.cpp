@@ -17,7 +17,7 @@ using namespace skybolt;
 Plot3dNdm::Plot3dNdm(NodeContext* context) :
 	mFactory(context->entityFactory)
 {
-	mPolyline = mFactory->createPolyline();
+	mPolyline = mFactory->createEntity("Polyline");
 
 	NodeDefPtr def = std::make_shared<NodeDef>();
 	def->name = Name();

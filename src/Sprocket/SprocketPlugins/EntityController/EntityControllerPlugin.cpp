@@ -254,6 +254,14 @@ public:
 		assert(mInputPlatform);
 	}
 
+	~JoystickInputSystem() override
+	{
+		if (mEntity)
+		{
+			mEntity->removeListener(this);
+		}
+	}
+
 	//! @param object may be null
 	void setEntity(sim::Entity* entity)
 	{

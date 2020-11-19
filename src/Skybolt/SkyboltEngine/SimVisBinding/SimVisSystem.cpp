@@ -8,21 +8,24 @@
 #include "EngineRoot.h"
 #include "SimVisBinding/GeocentricToNedConverter.h"
 #include "SimVisBinding/SimVisBinding.h"
+#include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Entity.h>
+#include <SkyboltSim/World.h>
 #include <assert.h>
 
 namespace skybolt {
 
 using namespace sim;
 
-SimVisSystem::SimVisSystem(EngineRoot* engineRoot, const EntityPtr& simCamera) :
-	mEngineRoot(engineRoot),
-	mSimCamera(simCamera),
+SimVisSystem::SimVisSystem(const World* world, const vis::ScenePtr& scene) :
+	mSceneOriginProvider(sceneOriginFromFirstCamera(world)),
+	mWorld(world),
+	mScene(scene),
 	mCoordinateConverter(std::make_unique<GeocentricToNedConverter>())
 {
-	assert(mEngineRoot);
-	assert(mSimCamera);
+	assert(mWorld);
+	assert(mScene);
 }
 
 SimVisSystem::~SimVisSystem()
@@ -31,16 +34,86 @@ SimVisSystem::~SimVisSystem()
 
 void SimVisSystem::updatePostDynamics(const System::StepArgs& args)
 {
-	mEngineRoot->scenario.timeSource.setTime(mEngineRoot->scenario.timeSource.getTime() + args.dtWallClock);
-
 	// Calculate camera movement since last frame and apply offset to scene noise
-	Vector3 cameraPosition = mSimCamera->getFirstComponent<Node>()->getPosition();
+	Vector3 cameraPosition = mSceneOriginProvider();
 
-	osg::Vec3f cameraNedMovement = mCoordinateConverter->convertPosition(*getPosition(*mSimCamera));
-	mEngineRoot->scene->translateNoiseOrigin(-cameraNedMovement);
+	osg::Vec3f cameraNedMovement = mCoordinateConverter->convertPosition(cameraPosition);
+	mScene->translateNoiseOrigin(-cameraNedMovement);
 	mCoordinateConverter->setOrigin(cameraPosition);
 
-	syncVis(*mEngineRoot->simWorld, *mCoordinateConverter);
+	syncVis(*mWorld, *mCoordinateConverter);
+}
+
+SimVisSystem::SceneOriginProvider SimVisSystem::sceneOriginFromPosition(const sim::Vector3& position)
+{
+	return [=] { return position; };
+}
+
+SimVisSystem::SceneOriginProvider SimVisSystem::sceneOriginFromEntity(const sim::EntityPtr& entity)
+{
+	return [=]{
+		auto position = getPosition(*entity);
+		{
+			return *position;
+		}
+		return sim::Vector3(0, 0, 0);
+	};
+}
+
+class SceneOriginFromFirstCamera : public Entity::Listener
+{
+public:
+	SceneOriginFromFirstCamera(const sim::World* world) :
+		mWorld(world)
+	{
+		assert(mWorld);
+	}
+
+	~SceneOriginFromFirstCamera()
+	{
+		if (mCamera)
+		{
+			mCamera->removeListener(this);
+		}
+	}
+
+	sim::Vector3 operator()() {
+		if (!mCamera)
+		{
+			for (const auto& entity : mWorld->getEntities())
+			{
+				if (entity->getFirstComponent<sim::CameraComponent>())
+				{
+					mCamera = entity.get();
+					mCamera->addListener(this);
+					break;
+				}
+			}
+		}
+		if (mCamera)
+		{
+			auto position = getPosition(*mCamera);
+			{
+				return *position;
+			}
+		}
+		return sim::Vector3(0, 0, 0);
+	}
+
+	void onDestroy(Entity* entity) override
+	{
+		assert(entity == mCamera);
+		mCamera = nullptr;
+	}
+
+private:
+	const sim::World* mWorld;
+	sim::Entity* mCamera;
+};
+
+SimVisSystem::SceneOriginProvider SimVisSystem::sceneOriginFromFirstCamera(const sim::World* world)
+{
+	return SceneOriginFromFirstCamera(world);
 }
 
 } // namespace skybolt

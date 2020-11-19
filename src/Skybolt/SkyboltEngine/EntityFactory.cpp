@@ -468,6 +468,13 @@ EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::v
 	assert(context.Scene);
 	assert(context.visWindow);
 
+	mBuiltinTemplates = {
+		{"SunBillboard", [this] {return createSun(); }},
+		{"MoonBillboard", [this] {return createMoon(); }},
+		{"Stars", [this] {return createStars(); }},
+		{"Polyline", [this] {return createPolyline(); }}
+	};
+
 	for (const boost::filesystem::path& filename : entityFilenames)
 	{
 		std::string name = filename.stem().string();
@@ -478,19 +485,31 @@ EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::v
 
 EntityPtr EntityFactory::createEntity(const std::string& templateName, const std::string& nameIn, const Vector3& position, const Quaternion& orientation) const
 {
-	auto i = mTemplateJsonMap.find(templateName);
-	if (i != mTemplateJsonMap.end())
 	{
-		std::string name = nameIn.empty() ? createUniqueObjectName(templateName) : nameIn;
-		try
+		auto i = mTemplateJsonMap.find(templateName);
+		if (i != mTemplateJsonMap.end())
 		{
-			return createEntityFromJson(i->second, templateName, name, position, orientation);
-		}
-		catch (const std::exception& e)
-		{
-			throw Exception("Error loading '" + templateName + "': " + e.what());
+			std::string name = nameIn.empty() ? createUniqueObjectName(templateName) : nameIn;
+			try
+			{
+				return createEntityFromJson(i->second, templateName, name, position, orientation);
+			}
+			catch (const std::exception& e)
+			{
+				throw Exception("Error loading '" + templateName + "': " + e.what());
+			}
 		}
 	}
+
+	// Try builtin types
+	{
+		auto i = mBuiltinTemplates.find(templateName);
+		if (i != mBuiltinTemplates.end())
+		{
+			return i->second();
+		}
+	}
+
 	throw std::runtime_error("Invalid templateName: " + templateName);
 }
 
@@ -579,7 +598,7 @@ EntityPtr EntityFactory::createMoon() const
 	return object;
 }
 
-EntityPtr EntityFactory::createStarfield() const
+EntityPtr EntityFactory::createStars() const
 {
 	vis::StarfieldConfig config;
 	config.program = mContext.programs->starfield;
@@ -622,21 +641,6 @@ EntityPtr EntityFactory::createPolyline() const
 	object->addComponent(visObjectsComponent);
 
 	return object;
-}
-
-void EntityFactory::addLight(const sim::EntityPtr& entity) const
-{
-	vis::LightPtr light(new vis::Light());
-
-	SimVisBindingsComponentPtr simVisBindingComponent(new SimVisBindingsComponent);
-	entity->addComponent(simVisBindingComponent);
-
-	SimVisBindingPtr headlampSimVisBinding(new SimpleSimVisBinding(entity.get(), light));
-	simVisBindingComponent->bindings.push_back(headlampSimVisBinding);
-
-	VisObjectsComponentPtr visObjectsComponent(new VisObjectsComponent(mContext.scene));
-	entity->addComponent(visObjectsComponent);
-	visObjectsComponent->addObject(light);
 }
 
 std::string EntityFactory::createUniqueObjectName(const std::string& baseName) const

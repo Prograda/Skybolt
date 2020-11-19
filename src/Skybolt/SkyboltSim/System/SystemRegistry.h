@@ -15,5 +15,20 @@ namespace sim {
 typedef std::vector<SystemPtr> SystemRegistry;
 typedef std::shared_ptr<SystemRegistry> SystemRegistryPtr;
 
+//! @returns system of type T, or null if none found
+template <typename T>
+std::shared_ptr<T> findSystem(const SystemRegistry& registry)
+{
+	for (const auto& i : registry)
+	{
+		auto r = std::dynamic_pointer_cast<T>(i);
+		if (r)
+		{
+			return r;
+		}
+	}
+	return nullptr;
+}
+
 } // namespace sim
 } // namespace skybolt

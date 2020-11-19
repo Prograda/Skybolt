@@ -36,19 +36,14 @@ using namespace skybolt;
 using namespace skybolt::sim;
 using namespace skybolt::vis;
 
-static void createEntities(const EntityFactory& entityFactory, World& simWorld, CameraController& cameraController)
+static void createEntities(const EntityFactory& entityFactory, World& world, CameraController& cameraController)
 {
-	EntityPtr starfield = entityFactory.createStarfield();
-	simWorld.addEntity(starfield);
-
-	EntityPtr sun = entityFactory.createSun();
-	simWorld.addEntity(sun);
-
-	EntityPtr moon = entityFactory.createMoon();
-	simWorld.addEntity(moon);
+	world.addEntity(entityFactory.createEntity("Stars"));
+	world.addEntity(entityFactory.createEntity("SunBillboard"));
+	world.addEntity(entityFactory.createEntity("MoonBillboard"));
 
 	EntityPtr planet = entityFactory.createEntity("PlanetEarth");
-	simWorld.addEntity(planet);
+	world.addEntity(planet);
 
 	cameraController.setTarget(planet.get());
 }
@@ -82,7 +77,6 @@ int main(int argc, char *argv[])
 		// Create systems
 		engineRoot->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, window.get(), axes));
 		engineRoot->systemRegistry->push_back(std::make_shared<CameraInputSystem>(window.get(), simCamera, inputPlatform, axes));
-		engineRoot->systemRegistry->push_back(std::make_shared<SimVisSystem>(engineRoot.get(), simCamera));
 
 //#define SHOW_STATS // FIXME: enabling stats adds an unacceptable performance hit due to drawing the hud text
 #ifdef SHOW_STATS

@@ -4,9 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include <SkyboltEngine/EngineRoot.h>
+#include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EntityFactory.h>
+#include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
+#include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/World.h>
+#include <SkyboltSim/CameraController/CameraController.h>
+#include <SkyboltSim/CameraController/CameraControllerSelector.h>
+#include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Components/OrbitComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
@@ -14,6 +21,12 @@
 #include <SkyboltSim/Components/ProceduralLifetimeComponent.h>
 #include <SkyboltSim/Spatial/Orientation.h>
 #include <SkyboltSim/Spatial/Position.h>
+#include <SkyboltSim/System/SimStepper.h>
+
+#include <SkyboltVis/Rect.h>
+#include <SkyboltVis/RenderTarget/RenderTargetSceneAdapter.h>
+#include <SkyboltVis/RenderTarget/ViewportHelpers.h>
+#include <SkyboltVis/Window/StandaloneWindow.h>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
@@ -24,13 +37,13 @@ namespace py = pybind11;
 using namespace skybolt;
 using namespace skybolt::sim;
 
-World* gWorld = nullptr;
-static World* getWorld() { return gWorld; }
-static void setWorld(World* world) { gWorld = world; }
+EngineRoot* gEngineRoot = nullptr;
+static EngineRoot* getGlobalEngineRoot() { return gEngineRoot; }
+static void setGlobalEngineRoot(EngineRoot* root) { gEngineRoot = root; }
 
-EntityFactory* gEntityFactory = nullptr;
-static EntityFactory* getEntityFactory() { return gEntityFactory; }
-static void setEntityFactory(EntityFactory* factory) { gEntityFactory = factory; }
+static std::unique_ptr<EngineRoot> createEngineRootWithDefaults() {
+	return EngineRootFactory::create({});
+}
 
 static void removeNamespaceQualifier(std::string& str)
 {
@@ -80,6 +93,48 @@ static Vector3 normalizeFunc(const Vector3& v)
 	return glm::normalize(v);
 }
 
+static bool attachCameraToWindowWithEngine(sim::Entity& camera, vis::Window& window, EngineRoot& engineRoot)
+{
+	auto viewport = createAndAddViewportToWindow(window, engineRoot.programs.compositeFinal);
+	viewport->setScene(std::make_shared<vis::RenderTargetSceneAdapter>(engineRoot.scene));
+	vis::CameraPtr visCamera = getVisCamera(camera);
+	if (visCamera)
+	{
+		viewport->setCamera(visCamera);
+		return true;
+	}
+
+	return false;
+}
+
+static bool stepOnceAndRenderOnce(EngineRoot& engineRoot, vis::Window& window, double dtWallClock)
+{
+	SimStepper stepper(engineRoot.systemRegistry);
+	System::StepArgs args;
+	args.dtSim = dtWallClock;
+	args.dtWallClock = dtWallClock;
+	stepper.step(args);
+	return window.render();
+}
+
+static bool stepOnceAndRenderUntilDone(EngineRoot& engineRoot, vis::Window& window, double dtWallClock)
+{
+	SimStepper stepper(engineRoot.systemRegistry);
+	System::StepArgs args;
+	args.dtSim = dtWallClock;
+	args.dtWallClock = dtWallClock;
+	stepper.step(args);
+
+	bool result = window.render();
+	while (engineRoot.stats.tileLoadQueueSize > 0)
+	{
+		result = window.render();
+	}
+	// Render a second time in case something finished loading before we checked the queue size.
+	// FIXME: Make 'done' detection more robust.
+	result = window.render();
+	return result;
+}
 
 PYBIND11_MODULE(skybolt, m) {
 	py::class_<Vector3>(m, "Vector3")
@@ -124,6 +179,9 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_readwrite("trueAnomaly", &Orbit::trueAnomaly);
 		
 
+	py::class_<vis::RectI>(m, "RectI")
+		.def(py::init<int, int, int, int>());
+
 	py::class_<Position, std::shared_ptr<Position>>(m, "Position");
 
 	py::class_<GeocentricPosition, std::shared_ptr<GeocentricPosition>, Position>(m, "GeocentricPosition")
@@ -160,8 +218,19 @@ PYBIND11_MODULE(skybolt, m) {
 		.def(py::init<sim::Entity*>())
 		.def("getParent", &ParentReferenceComponent::getParent);
 
+	py::class_<CameraControllerComponent, std::shared_ptr<CameraControllerComponent>, Component>(m, "CameraControllerComponent")
+		.def_property_readonly("cameraController", [](const CameraControllerComponent& c) {return c.cameraController.get(); }, py::return_value_policy::reference_internal);
+
 	py::class_<ProceduralLifetimeComponent, std::shared_ptr<ProceduralLifetimeComponent>, Component>(m, "ProceduralLifetimeComponent")
 		.def(py::init());
+
+	py::class_<CameraController>(m, "CameraController")
+		.def("getTarget", &CameraController::getTarget)
+		.def("setTarget", &CameraController::setTarget);
+
+	py::class_<CameraControllerSelector, CameraController>(m, "CameraControllerSelector")
+		.def("selectController", &CameraControllerSelector::selectController)
+		.def("getSelectedControllerName", &CameraControllerSelector::getSelectedControllerName);
 
 	py::class_<Entity, std::shared_ptr<Entity>>(m, "Entity")
 		.def("getName", [](Entity* entity) { return getName(*entity); })
@@ -190,13 +259,24 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("removeAllEntities", &World::removeAllEntities);
 
 	py::class_<EntityFactory>(m, "EntityFactory")
-		.def("createEntity", &EntityFactory::createEntity, py::return_value_policy::reference);
+		.def("createEntity", &EntityFactory::createEntity, py::return_value_policy::reference,
+			py::arg("templateName"), py::arg("name") = "", py::arg("position") = math::dvec3Zero(), py::arg("orientation") = math::dquatIdentity());
 
+	py::class_<EngineRoot>(m, "EngineRoot")
+		.def_property_readonly("world", [](const EngineRoot& r) {return r.simWorld.get(); }, py::return_value_policy::reference_internal)
+		.def_property_readonly("entityFactory", [](const EngineRoot& r) {return r.entityFactory.get(); }, py::return_value_policy::reference_internal);
 
-	m.def("getWorld", &getWorld, "Get default world", py::return_value_policy::reference);
-	m.def("setWorld", &setWorld, "Set default world");
-	m.def("getEntityFactory", &getEntityFactory, "get default EntityFactory", py::return_value_policy::reference);
-	m.def("setEntityFactory", &setEntityFactory, "set default EntityFactory");
+	py::class_<vis::Window>(m, "Window");
+
+	py::class_<vis::StandaloneWindow, vis::Window>(m, "StandaloneWindow")
+		.def(py::init<vis::RectI>());
+
+	m.def("getGlobalEngineRoot", &getGlobalEngineRoot, "Get global EngineRoot", py::return_value_policy::reference);
+	m.def("setGlobalEngineRoot", &setGlobalEngineRoot, "Set global EngineRoot");
+	m.def("createEngineRootWithDefaults", &createEngineRootWithDefaults, "Create an EngineRoot with default values");
+	m.def("attachCameraToWindowWithEngine", &attachCameraToWindowWithEngine);
+	m.def("stepOnceAndRenderOnce", &stepOnceAndRenderOnce);
+	m.def("stepOnceAndRenderUntilDone", &stepOnceAndRenderUntilDone);
 	m.def("toGeocentricPosition", [](const PositionPtr& position) { return std::make_shared<GeocentricPosition>(toGeocentric(*position)); });
 	m.def("toGeocentricOrientation", [](const OrientationPtr& orientation, const LatLon& latLon) { return std::make_shared<GeocentricOrientation>(toGeocentric(*orientation, latLon)); });
 	m.def("toLatLonAlt", [](const PositionPtr& position) { return std::make_shared<LatLonAltPosition>(toLatLonAlt(*position)); });

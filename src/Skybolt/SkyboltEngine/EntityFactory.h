@@ -44,12 +44,6 @@ public:
 	EntityFactory(const Context& context, const std::vector<boost::filesystem::path>& entityFilenames);
 
 	sim::EntityPtr createEntity(const std::string& templateName, const std::string& instanceName = "", const sim::Vector3& position = math::dvec3Zero(), const sim::Quaternion& orientation = math::dquatIdentity()) const;
-	sim::EntityPtr createSun() const;
-	sim::EntityPtr createMoon() const;
-	sim::EntityPtr createStarfield() const;
-	sim::EntityPtr createPolyline() const;
-
-	void addLight(const sim::EntityPtr& node) const;
 
 	typedef std::vector<std::string> Strings;
 	Strings getTemplateNames() const {return mTemplateNames;}
@@ -59,8 +53,14 @@ public:
 private:
 	sim::EntityPtr createEntityFromJson(const nlohmann::json& json, const std::string& templateName, const std::string& instanceName, const sim::Vector3& position, const sim::Quaternion& orientation) const;
 
+	sim::EntityPtr createSun() const;
+	sim::EntityPtr createMoon() const;
+	sim::EntityPtr createStars() const;
+	sim::EntityPtr createPolyline() const;
+
 private:
 	Strings mTemplateNames;
+	std::map<std::string, std::function<sim::EntityPtr()>> mBuiltinTemplates; // TODO: genericize these
 
 	typedef std::map<std::string, nlohmann::json> TemplateJsonMap;
 	TemplateJsonMap mTemplateJsonMap;

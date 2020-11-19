@@ -6,8 +6,8 @@
 
 #include "EngineRootFactory.h"
 #include "EngineCommandLineParser.h"
-#include <SkyboltEngine/GetExecutablePath.h>
-#include <SkyboltEngine/Plugin/PluginHelpers.h>
+#include "GetExecutablePath.h"
+#include "Plugin/PluginHelpers.h"
 #include <SkyboltCommon/OptionalUtility.h>
 
 #include <boost/log/trivial.hpp>

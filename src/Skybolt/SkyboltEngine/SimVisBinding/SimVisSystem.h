@@ -8,7 +8,11 @@
 
 #include "SkyboltEngine/SkyboltEngineFwd.h"
 #include <SkyboltSim/SkyboltSimFwd.h>
+#include <SkyboltSim/SimMath.h>
 #include <SkyboltSim/System/System.h>
+#include <SkyboltVis/SkyboltVisFwd.h>
+
+#include <functional>
 
 namespace skybolt {
 
@@ -16,14 +20,25 @@ namespace skybolt {
 class SimVisSystem : public sim::System
 {
 public:
-	SimVisSystem(EngineRoot* engineRoot, const sim::EntityPtr& simCamera);
+	using SceneOriginProvider = std::function<sim::Vector3()>;
+
+	SimVisSystem(const sim::World* world, const vis::ScenePtr& scene);
 	~SimVisSystem();
 
 	void updatePostDynamics(const System::StepArgs& args) override;
 
+	const GeocentricToNedConverter& getCoordinateConverter() const { return *mCoordinateConverter; }
+
+	void setSceneOriginProvider(SceneOriginProvider sceneOriginProvider) { mSceneOriginProvider = std::move(sceneOriginProvider); }
+
+	static SceneOriginProvider sceneOriginFromPosition(const sim::Vector3& position);
+	static SceneOriginProvider sceneOriginFromEntity(const sim::EntityPtr& entity);
+	static SceneOriginProvider sceneOriginFromFirstCamera(const sim::World* world);
+
 private:
-	EngineRoot* mEngineRoot;
-	sim::EntityPtr mSimCamera;
+	const sim::World* mWorld;
+	vis::ScenePtr mScene;
+	SceneOriginProvider mSceneOriginProvider;
 	std::unique_ptr<GeocentricToNedConverter> mCoordinateConverter;
 };
 

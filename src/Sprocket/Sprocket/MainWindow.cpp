@@ -33,6 +33,14 @@
 #include <SkyboltEngine/EngineStats.h>
 #include <SkyboltEngine/Scenario.h>
 #include <SkyboltEngine/TemplateNameComponent.h>
+#include <SkyboltEngine/VisObjectsComponent.h>
+#include <SkyboltEngine/Input/LogicalAxis.h>
+#include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
+#include <SkyboltEngine/SimVisBinding/ForcesVisBinding.h>
+#include <SkyboltEngine/SimVisBinding/EntityVisibilityFilterable.h>
+#include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
+#include <SkyboltEngine/SimVisBinding/VisNameLabels.h>
+#include <SkyboltEngine/SimVisBinding/VisOrbits.h>
 #include <SkyboltSim/CameraController/CameraControllerSelector.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
@@ -42,14 +50,8 @@
 #include <SkyboltSim/Physics/Astronomy.h>
 #include <SkyboltSim/System/SimStepper.h>
 #include <SkyboltSim/System/System.h>
+#include <SkyboltSim/System/SystemRegistry.h>
 #include <SkyboltSim/World.h>
-#include <SkyboltEngine/VisObjectsComponent.h>
-#include <SkyboltEngine/Input/LogicalAxis.h>
-#include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
-#include <SkyboltEngine/SimVisBinding/ForcesVisBinding.h>
-#include <SkyboltEngine/SimVisBinding/EntityVisibilityFilterable.h>
-#include <SkyboltEngine/SimVisBinding/VisNameLabels.h>
-#include <SkyboltEngine/SimVisBinding/VisOrbits.h>
 #include <SkyboltVis/Camera.h>
 #include <SkyboltVis/Scene.h>
 #include <SkyboltVis/Renderable/Arrows.h>
@@ -564,25 +566,27 @@ void MainWindow::update()
 
 	engineRoot->scenario.timeSource.update(dt);
 
-	simulate(*mSimStepper, engineRoot->scenario.timeSource, dt);
+	auto simVisSystem = findSystem<SimVisSystem>(*engineRoot->systemRegistry);
+	assert(simVisSystem);
+	const GeocentricToNedConverter& coordinateConverter = simVisSystem->getCoordinateConverter();
 
 	if (mCurrentSimCamera)
 	{
+		simVisSystem->setSceneOriginProvider(SimVisSystem::sceneOriginFromEntity(mCurrentSimCamera));
+
 		if (auto controller = mCurrentSimCamera->getFirstComponent<CameraControllerComponent>())
 		{
 			controller->cameraController->setInput(mViewportInput->getInput());
 		}
+	}
 
-		// Calculate camera movement since last frame and apply offset to scene noise
-		osg::Vec3f cameraNedMovement = mCoordinateConverter.convertPosition(*getPosition(*mCurrentSimCamera));
-		engineRoot->scene->translateNoiseOrigin(-cameraNedMovement);
+	simulate(*mSimStepper, engineRoot->scenario.timeSource, dt);
 
-		mCoordinateConverter.setOrigin(*getPosition(*mCurrentSimCamera));
-
-		syncVis(*engineRoot->simWorld, mCoordinateConverter);
-		mVisNameLabels->syncVis(mCoordinateConverter);
-		mVisOrbits->syncVis(mCoordinateConverter);
-		mForcesVisBinding->syncVis(mCoordinateConverter);
+	if (mCurrentSimCamera)
+	{
+		mVisNameLabels->syncVis(coordinateConverter);
+		mVisOrbits->syncVis(coordinateConverter);
+		mForcesVisBinding->syncVis(coordinateConverter);
 	}
 
 	if (Updatable* updatablePropertiesModel = dynamic_cast<Updatable*>(mPropertiesModel.get()))
@@ -790,9 +794,9 @@ void MainWindow::clearProject()
 
 void createDefaultObjects(World& world, const EntityFactory& factory)
 {
-	world.addEntity(factory.createStarfield());
-	world.addEntity(factory.createSun());
-	world.addEntity(factory.createMoon());
+	world.addEntity(factory.createEntity("Stars"));
+	world.addEntity(factory.createEntity("SunBillboard"));
+	world.addEntity(factory.createEntity("MoonBillboard"));
 }
 
 void MainWindow::newScenario()

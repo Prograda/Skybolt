@@ -67,8 +67,7 @@ public:
 			}
 
 			py::module flow = py::module::import("skybolt");
-			flow.attr("setWorld")(mMainWindow->getEngineRoot()->simWorld.get());
-			flow.attr("setEntityFactory")(mMainWindow->getEngineRoot()->entityFactory.get());
+			flow.attr("setGlobalEngineRoot")(mMainWindow->getEngineRoot());
 			
 			if (argc >= 2)
 			{

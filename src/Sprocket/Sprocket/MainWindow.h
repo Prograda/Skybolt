@@ -11,7 +11,6 @@
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Input/InputPlatformOis.h>
 #include <SkyboltEngine/Plugin/PluginHelpers.h>
-#include <SkyboltEngine/SimVisBinding/GeocentricToNedConverter.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltCommon/Event.h>
 #include <QMainWindow>
@@ -109,8 +108,6 @@ private:
 	bool mDisableInputSystemOnNextUpdate = false;
 	std::shared_ptr<skybolt::InputPlatformOis> mInputPlatform;
 	std::unique_ptr<class ViewportInput> mViewportInput;
-
-	skybolt::GeocentricToNedConverter mCoordinateConverter;
 
 	skybolt::vis::ArrowsPtr mArrows;
 
