@@ -1,7 +1,11 @@
 # Skybolt Engine
-Skybolt generates realistic real-time images of planetary environments, suitable for use in aerospace simulations. Skybolt is open source, written in C++, based on OpenSceneGraph, and supports CIGI for communicating with host applications.
+Skybolt is a real-time planetary environment rendering engine, designed for flight simulators, aerospace R&D, and geospatial applications. Skybolt is written in C++, based on OpenSceneGraph, and supports CIGI for communicating with host applications. Skybolt also features a Python API for easy integration with science and engineering research tools.
 
-The Skybolt repository includes Sprocket, a GUI application built on the Skybolt engine, which functions as a platform for aerospace research, data analysis and command/control. Sprocket supports python scripting and node-based graphical programming.
+The Skybolt repository includes Sprocket, a GUI application for creating scenarios and visualizing data using Skybolt. Sprocket supports python scripting and node-based graphical programming.
+
+![alt text](https://piraxus.com/wp-content/uploads/2020/06/Mountain1-edited-300x162.jpg "Mointain") ![alt text](https://piraxus.com/wp-content/uploads/2020/06/Seattle2-edit-300x162.jpg "Airport")
+![alt text](https://piraxus.com/wp-content/uploads/2020/06/Shuttle3-flipped-300x170.jpg "Shuttle in space") ![alt text](https://piraxus.com/wp-content/uploads/2020/11/ShipHeloShot1-300x169.jpg "Ship on ocean")
+
 
 ## Features
 * Realistic environment rendering at multiple levels of detail, from orbit to planet surface
@@ -15,7 +19,7 @@ The Skybolt repository includes Sprocket, a GUI application built on the Skybolt
 * [JSBSim](https://github.com/JSBSim-Team/jsbsim) flight dynamics model integration
 * [Bullet](https://github.com/bulletphysics/bullet3) physics integration
 * Python API
-* Node-based graphical programming system
+* Integrates with Sprocket R&D GUI platform, with node-based graphical programming system
 
 ## Contact
 Skybolt/Sprocket created and maintained by Matthew Reid.
@@ -25,7 +29,7 @@ For other queries, please use the [contact form](https://piraxus.com/contact) on
 ## License
 This project is licensed under the Mozilla Public License Version 2.0 - see the [License.txt](License.txt) file for details.
 
-## Example Usage
+## Example Usage (C++)
 ```cpp
 // Create engine
 auto params = EngineCommandLineParser::parse(argc, argv);
@@ -45,11 +49,8 @@ viewport->setCamera(getVisCamera(*simCamera));
 // Create input
 auto inputPlatform = std::make_shared<InputPlatformOis>(window->getHandle(), window->getWidth(), window->getHeight()));
 std::vector<LogicalAxisPtr> axes = CameraInputSystem::createDefaultAxes(*inputPlatform);
-
-// Create systems
 root->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, window.get(), axes));
 root->systemRegistry->push_back(std::make_shared<CameraInputSystem>(window.get(), simCamera, inputPlatform, axes));
-root->systemRegistry->push_back(std::make_shared<SimVisSystem>(root.get(), simCamera));
 
 // Create entities
 world.addEntity(entityFactory.createEntity("SunBillboard"));
@@ -66,59 +67,103 @@ cameraController->setTarget(planet.get());
 // Run loop
 runMainLoop(*window, *root, UpdateLoop::neverExit);
 ```
+## Example Usage (Python)
+```python
+import skybolt as sb
 
-## Dependencies
-Header only dependencies are available in a separate repository: https://github.com/Piraxus/SkyboltDependenciesHeaderOnly
+window = sb.StandaloneWindow(sb.RectI(0,0,800,600))
+engine = sb.createEngineRootWithDefaults()
 
-### Required by Skybolt
+camera = engine.entityFactory.createEntity("Camera")
+engine.world.addEntity(camera);
+
+sb.attachCameraToWindowWithEngine(camera, window, engine)
+
+engine.world.addEntity(engine.entityFactory.createEntity("SunBillboard"))
+engine.world.addEntity(engine.entityFactory.createEntity("MoonBillboard"))
+engine.world.addEntity(engine.entityFactory.createEntity("Stars"))
+
+earth = engine.entityFactory.createEntity("PlanetEarth")
+engine.world.addEntity(earth);
+
+controller = camera.getFirstComponentOfType("CameraControllerComponent").cameraController
+controller.setTarget(earth)
+controller.selectController("Globe")
+
+sb.stepOnceAndRenderUntilDone(engine, window, 0.1)
+```
+
+## Projects and Dependencies
+This repository contains multiple projects, described below, which can be enabled/disabled in CMake. Each project has a different set of dependencies. You only need to obtain dependencies for projects you wish to build. Header-only dependencies can be obtained from the [SkyboltDependenciesHeaderOnly](https://github.com/Piraxus/SkyboltDependenciesHeaderOnly) repository for convenience.
+
+### Skybolt Engine (Required)
+The core engine libraries.
+Requires:
 * [Boost](www.boost.com)
 * [GLM (header only)](https://github.com/g-truc/glm)
 * [nlohmann/json (header only)](https://github.com/nlohmann/json)
 * [OpenInputSystem](https://github.com/wgois/OIS)
 * [OpenSceneGraph](https://github.com/openscenegraph/OpenSceneGraph)
 
-### Required by Python bindings
+### Skybolt Python Bindings
+Python bindings for Skybolt.
+Requires:
 * [Python](https://www.python.org)
 * [pybind11 (header only)](https://github.com/pybind/pybind11)
 
-### Required by Skybolt plugins
-
-#### Bullet Physics Engine Plugin
+### Bullet Physics Engine Plugin
+Skybolt plugin providing a rigid body dynamics component for entities by integrating the Bullet physics engine.
+Requires:
 * [bullet3](https://github.com/bulletphysics/bullet3)
 
-#### CIGI Plugin
+### CIGI Plugin
+Skybolt plugin providing a means for host applications to drive the simulation via the Common Image Generator Interface (CIGI).
+Requires:
 * [CIGI Class Library](http://cigi.sourceforge.net/product_ccl.php)
 
-#### FFT Ocean Plugin
+### FFT Ocean Plugin
+Skybolt plugin simulating ocean waves with FFT.
+Requires:
 * [muFFT](https://github.com/Themaister/muFFT)
 * [Xsimd (header only)](https://github.com/xtensor-stack/xsimd)
 
-#### JSBSim Plugin
+### JSBSim Plugin
+Skybolt plugin providing an aircraft dynamics component for entities by integrating the JSBSim dynamics engine.
+Requires:
 * [JSBSim Library](https://github.com/JSBSim-Team/jsbsim)
 
-### Required by Sprocket
+### Sprocket
+GUI application for creating, editing and running simulation scenarios, and performing analysis.
+Requires:
 * [Qt](https://www.qt.io)
 * [ToolWindowManager](https://github.com/Riateche/toolwindowmanager)
 
-### Required by Sprocket plugins
-#### NodeGraph
+#### NodeGraph Plugin
+Sprocket plugin providing a node-based graphical programming interface.
+Requires:
 * [placeholder/NodeEditor](https://github.com/paceholder/nodeeditor)
 * [QCodeEditor](https://github.com/cbtek/EasyCodeCreator/tree/master/common/contrib/QCodeEditor)
 
-#### PythonConsole
+#### PythonConsole Plugin
+Sprocket plugin providing an interactive python console in the Sprocket GUI.
 * [QCodeEditor](https://github.com/cbtek/EasyCodeCreator/tree/master/common/contrib/QCodeEditor)
 
-#### Plot
+#### Plot Plugin
+Sprocket plugin providing a GUI for plotting graphs.
+Requires:
 * [Qwt](https://github.com/opencor/qwt)
 
-#### SequenceEditor
+#### SequenceEditor Plugin
+Sprocket plugin providing a GUI for editing animated sequences.
+Requires:
 * [Qwt](https://github.com/opencor/qwt)
 
-### Required by MapFeaturesConverter Tool
+### MapFeaturesConverter Tool
+Application for converting Open Street Map data to Skybolt feature tile format.
 * [ReadOSM](https://www.gaia-gis.it/fossil/readosm/index)
 
 ## Building
-Generate project with CMake.
+Use CMake to configure and generate a build. Optional projects within the repository can be enabled/disabled with CMake BUILD_xxx properties as desired.
 
 ## Installing Data Modules
 Skybolt and Sprocket require runtime data. The runtime data is split up into separate modules, which can be downloaded from https://github.com/Piraxus/Skybolt/releases
