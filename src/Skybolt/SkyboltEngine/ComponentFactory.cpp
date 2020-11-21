@@ -15,6 +15,7 @@
 #include <SkyboltSim/CameraController/NullCameraController.h>
 #include <SkyboltSim/CameraController/PlanetCameraController.h>
 #include <SkyboltSim/CameraController/CameraControllerSelector.h>
+#include <SkyboltSim/Components/AssetDescriptionComponent.h>
 #include <SkyboltSim/Components/AttachmentComponent.h>
 #include <SkyboltSim/Components/AttachmentPointsComponent.h>
 #include <SkyboltSim/Components/CameraComponent.h>
@@ -35,7 +36,7 @@ namespace skybolt {
 
 using namespace sim;
 
-sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	FuselageParams params;
 	params.liftSlope = 5.7;
@@ -62,7 +63,7 @@ sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryContext& co
 	return std::make_shared<FuselageComponent>(params, entity->getFirstComponentRequired<Node>().get(), entity->getFirstComponentRequired<DynamicBodyComponent>().get());
 }
 
-sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	MainRotorParamsPtr params(new MainRotorParams);
 
@@ -98,7 +99,7 @@ sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryContext& c
 	return component;
 }
 
-sim::ComponentPtr loadTailRotor(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadTailRotor(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	PropellerParams params;
 	params.minPitch = -0.1;
@@ -138,7 +139,7 @@ sim::ComponentPtr loadReactonControlSystem(Entity* entity, const ComponentFactor
 	return std::make_shared<ReactionControlSystemComponent>(config);
 }
 
-sim::ComponentPtr loadRocketMotor(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadRocketMotor(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	RocketMotorComponentParams params;
 	params.maxThrust = json.at("maxThrust");
@@ -147,7 +148,7 @@ sim::ComponentPtr loadRocketMotor(Entity* entity, const ComponentFactoryContext&
 	return std::make_shared<RocketMotorComponent>(params, entity->getFirstComponentRequired<Node>().get(), entity->getFirstComponentRequired<DynamicBodyComponent>().get(), input);
 }
 
-sim::ComponentPtr loadShipWake(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadShipWake(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	auto component = std::make_shared<ShipWakeComponent>();
 	std::string type = json.at("type");
@@ -166,17 +167,17 @@ sim::ComponentPtr loadShipWake(Entity* entity, const ComponentFactoryContext& co
 	return component;
 }
 
-sim::ComponentPtr loadNode(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadNode(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	return std::make_shared<Node>();
 }
 
-sim::ComponentPtr loadDynamicBody(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadDynamicBody(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	return std::make_shared<DummyDynamicBodyComponent>();
 }
 
-sim::ComponentPtr loadAttachment(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadAttachment(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	sim::AttachmentParams params;
 	params.entityTemplate = json.at("entityTemplate").get<std::string>();
@@ -186,12 +187,12 @@ sim::ComponentPtr loadAttachment(Entity* entity, const ComponentFactoryContext& 
 	return std::make_shared<AttachmentComponent>(params, entity);
 }
 
-sim::ComponentPtr loadCamera(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadCamera(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	return std::make_shared<CameraComponent>();
 }
 
-sim::ComponentPtr loadAttachmentPoint(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadAttachmentPoint(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	auto point = std::make_shared<AttachmentPoint>();
 	point->positionRelBody = readVector3(json.at("positionRelBody"));
@@ -202,7 +203,7 @@ sim::ComponentPtr loadAttachmentPoint(Entity* entity, const ComponentFactoryCont
 	return nullptr; // addAttachmentPoint() will attach the component. TODO: refactor the loadXXX functions to modify the entity and not return anything?
 }
 
-sim::ComponentPtr loadCameraController(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadCameraController(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	std::map<std::string, CameraControllerPtr> controllers;	
 	{
@@ -246,9 +247,28 @@ sim::ComponentPtr loadCameraController(Entity* entity, const ComponentFactoryCon
 	return std::make_shared<CameraControllerComponent>(selector);
 }
 
-sim::ComponentPtr loadControlInputs(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadControlInputs(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	return std::make_shared<ControlInputsComponent>();
+}
+
+static sim::ComponentPtr loadAssetDescription(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	auto desc = std::make_shared<AssetDescription>();
+	desc->description = json.at("description").get<std::string>();
+
+	auto it = json.find("sourceUrl");
+	if (it != json.end())
+	{
+		desc->sourceUrl = it->get<std::string>();
+	}
+
+	for (const auto& author : json.at("authors"))
+	{
+		desc->authors.push_back(author.get<std::string>());
+	}
+
+	return std::make_shared<AssetDescriptionComponent>(desc);
 }
 
 void addDefaultFactories(ComponentFactoryRegistry& registry)
@@ -266,6 +286,7 @@ void addDefaultFactories(ComponentFactoryRegistry& registry)
 	registry["shipWake"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadShipWake);
 	registry["attachment"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAttachment);
 	registry["attachmentPoint"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAttachmentPoint);
+	registry["assetDescription"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAssetDescription);
 }
 
 } // namespace skybolt

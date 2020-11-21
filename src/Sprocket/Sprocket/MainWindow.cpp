@@ -18,6 +18,7 @@
 #include "TimeControlWidget.h"
 #include "TimelineWidget.h"
 #include "DataSeries/DataSeries.h"
+#include "ContextActions/AboutContextAction.h"
 #include "ContextActions/AttachToParentContextAction.h"
 #include "ContextActions/DetatchFromParentContextAction.h"
 #include "ContextActions/MoveToAirportContextAction.h"
@@ -1277,7 +1278,8 @@ std::vector<TreeItemContextActionPtr> MainWindow::createContextActions() const
 		adaptToTreeItem(std::make_shared<DetatchFromParentContextAction>()),
 		adaptToTreeItem(std::make_shared<MoveToAirportContextAction>(airports)),
 		adaptToTreeItem(std::make_shared<SetPositionContextAction>()),
-		adaptToTreeItem(std::make_shared<SetOrientationContextAction>())
+		adaptToTreeItem(std::make_shared<SetOrientationContextAction>()),
+		adaptToTreeItem(std::make_shared<AboutContextAction>())
 	};
 }
 
