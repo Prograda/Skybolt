@@ -18,3 +18,7 @@ target_include_directories(SkyboltCommon PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(SkyboltCommon PUBLIC glm json)
 
 target_compile_definitions(SkyboltCommon PUBLIC GLM_FORCE_RADIANS BOOST_ALL_NO_LIB)
+
+skybolt_install(SkyboltCommon)
+skybolt_install(glm)
+skybolt_install(json)

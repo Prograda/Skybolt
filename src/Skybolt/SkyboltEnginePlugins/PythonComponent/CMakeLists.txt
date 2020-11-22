@@ -24,3 +24,5 @@ add_library(${TARGET_NAME} SHARED ${SrcFiles})
 target_link_libraries (${TARGET_NAME} ${LIBS})
 
 set_engine_plugin_target_properties(${TARGET_NAME})
+skybolt_install(${TARGET_NAME})
+skybolt_install(pybind11)

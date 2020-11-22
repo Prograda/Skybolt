@@ -7,3 +7,5 @@ find_package(OSG REQUIRED)
 include_directories(${OSG_INCLUDE_DIR})
 
 add_library(MapAttributesConverter STATIC ${SOURCE})
+
+skybolt_install(MapAttributesConverter)

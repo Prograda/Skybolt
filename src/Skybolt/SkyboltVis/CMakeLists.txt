@@ -10,7 +10,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 find_package(OSG REQUIRED COMPONENTS osg osgDB osgGA osgText osgUtil osgViewer)
 include_directories(${OSG_INCLUDE_DIR})
 
-find_package(OPENTHREADS)
+find_package(OpenThreads)
 
 find_package(cxxtimer REQUIRED)
 find_package(earcut REQUIRED)
@@ -52,3 +52,9 @@ target_include_directories(${LIB_NAME} PUBLIC
 	${OIS_INCLUDE_DIR}
 	${OSG_INCLUDE_DIR}
 )
+
+skybolt_install(${LIB_NAME})
+skybolt_install(cxxtimer)
+skybolt_install(earcut)
+skybolt_install(httplib)
+skybolt_install(px_sched)

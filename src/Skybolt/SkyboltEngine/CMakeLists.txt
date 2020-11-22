@@ -28,3 +28,5 @@ target_include_directories(${LIB_NAME} PUBLIC
 	${Boost_INCLUDE_DIRS}
 	${OIS_INCLUDE_DIR}
 )
+
+skybolt_install(SkyboltEngine)

@@ -6,7 +6,7 @@ include_directories("../")
 
 find_package(catch)
 
-find_package(OPENGL REQUIRED) # CaptureTexture.cpp requires OpenGL to workaround an OSG limitation
+find_package(OpenGL REQUIRED) # CaptureTexture.cpp requires OpenGL to workaround an OSG limitation
 
 add_executable(${APP_NAME} ${SOURCE_FILES})
 

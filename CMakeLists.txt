@@ -1,5 +1,16 @@
-cmake_minimum_required (VERSION 2.8.3)
+cmake_minimum_required (VERSION 3.11.0)
+
 project(Skybolt)
+set(PACKAGE_VERSION 1.0.0)
+
+# Allow user to overwrite install path.
+# Solution from https://stackoverflow.com/questions/39481958/setting-cmake-install-prefix-from-cmakelists-txt-file
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+	if(DEFINED ENV{CMAKE_INSTALL_PREFIX})
+		set(CMAKE_INSTALL_PREFIX $ENV{CMAKE_INSTALL_PREFIX}/Skybolt CACHE PATH "Overriding CMAKE_INSTALL_PREFIX from environment variable" FORCE)
+	endif()
+endif()
+
 
 enable_testing()
 
@@ -29,10 +40,12 @@ if (Boost_STATIC_LIBS)
 endif()
 
 cmake_policy(SET CMP0020 NEW)
+cmake_policy(SET CMP0074 NEW) # allow <PackageName>_ROOT variables
 
 include(AddSourceGroup)
 include(SetPluginTargetProperties)
 include(Catch)
+include(SkyboltInstall)
 
 add_subdirectory (src/Skybolt)
 add_subdirectory (src/SkyboltExamples)
@@ -41,3 +54,29 @@ OPTION(BUILD_SPROCKET "Build Sprocket")
 if (BUILD_SPROCKET)
 	add_subdirectory (src/Sprocket)
 endif()
+
+# Install headers
+install(
+	DIRECTORY ${CMAKE_SOURCE_DIR}/src/Skybolt
+	DESTINATION include
+	FILES_MATCHING PATTERN "*.h*"
+)
+
+# Install cmake config files
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    SkyboltConfigVersion.cmake
+    VERSION ${PACKAGE_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+install(
+	EXPORT SkyboltTargets
+    DESTINATION cmake
+)
+
+configure_file(CMake/SkyboltConfig.cmake.in SkyboltConfig.cmake @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/SkyboltConfig.cmake"
+              "${CMAKE_CURRENT_BINARY_DIR}/SkyboltConfigVersion.cmake"
+	DESTINATION cmake
+)
