@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TileMapGenerator.h"
+#include <SkyboltVis/OsgImageHelpers.h>
 #include <SkyboltVis/OsgMathHelpers.h>
 #include <SkyboltCommon/Exception.h>
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -13,41 +14,6 @@
 #include <boost/filesystem.hpp>
 
 using namespace skybolt;
-
-osg::Vec4f getColorBilinear(const osg::Image& image, const osg::Vec2f& uv)
-{
-	// Calculate coordinates
-	osg::Vec2f coord = uv;
-	coord.x() *= image.s();
-	coord.y() *= image.t();
-
-	int sMax = image.s() - 1;
-	int tMax = image.t() - 1;
-
-	coord.x() = skybolt::math::clamp(coord.x(), 0.0f, float(sMax));
-	coord.y() = skybolt::math::clamp(coord.y(), 0.0f, float(tMax));
-
-	int u0 = (int)coord.x();
-	int u1 = std::min(u0 + 1, sMax);
-	int v0 = (int)coord.y();
-	int v1 = std::min(v0 + 1, tMax);
-
-	// Calculate weights
-	float fracU = coord.x() - u0;
-	float fracV = coord.y() - v0;
-
-	// Interpolate
-	osg::Vec4f d00 = image.getColor(u0, v0);
-	osg::Vec4f d10 = image.getColor(u1, v0);
-	osg::Vec4f d01 = image.getColor(u0, v1);
-	osg::Vec4f d11 = image.getColor(u1, v1);
-
-	osg::Vec4f fracUVec(fracU, fracU, fracU, fracU);
-	osg::Vec4f d0 = componentWiseLerp(d00, d10, fracUVec);
-	osg::Vec4f d1 = componentWiseLerp(d01, d11, fracUVec);
-
-	return componentWiseLerp(d0, d1, osg::Vec4f(fracV, fracV, fracV, fracV));
-}
 
 struct TileGenerator
 {
@@ -93,9 +59,11 @@ struct TileGenerator
 						switch (filtering)
 						{
 						case Filtering::NearestNeighbor:
-							c = layer.image->getColor(pSrc); break;
+							c = layer.image->getColor(pSrc);
+							break;
 						case Filtering::Bilinear:
-							c = getColorBilinear(*layer.image, pSrc); break;
+							c = vis::getColorBilinear(*layer.image, osg::Vec2f(pSrc.x() * layer.image->s(), pSrc.y() * layer.image->t()));
+							break;
 						default:
 							assert(!"Not implemented");
 						}

@@ -7,6 +7,7 @@
 #include "SphericalMercatorToPlateCarreeTileSource.h"
 #include "SkyboltVis/OsgBox2.h"
 #include "SkyboltVis/OsgImageHelpers.h"
+#include "SkyboltVis/OsgMathHelpers.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 
 #include <httplib/httplib.h>
@@ -83,6 +84,8 @@ osg::ref_ptr<osg::Image> SphericalMercatorToPlateCarreeTileSource::createImage(c
 
 	// The tile bounds give us all the Sperical Mercator tiles that the Plate Carree tile intersects.
 	// Download each tile.
+	GLenum pixelFormat;
+	GLenum type;
 	std::map<osg::Vec2i, osg::ref_ptr<osg::Image>> tiles;
 	for (int y = tilesBounds.minimum.y(); y <= tilesBounds.maximum.y(); ++y)
 	{
@@ -95,6 +98,8 @@ osg::ref_ptr<osg::Image> SphericalMercatorToPlateCarreeTileSource::createImage(c
 			if (image)
 			{
 				tiles[osg::Vec2i(x, y)] = image;
+				pixelFormat = image->getPixelFormat();
+				type = image->getDataType();
 			}
 			else
 			{
@@ -111,20 +116,20 @@ osg::ref_ptr<osg::Image> SphericalMercatorToPlateCarreeTileSource::createImage(c
 
 	// Composite the Spherical Mercator tiles into a single Plate Carree tile and return it.
 	osg::ref_ptr<osg::Image> composite(new osg::Image);
-	composite->allocateImage(256, 256, 1, GL_RGB, GL_UNSIGNED_BYTE);
+	composite->allocateImage(256, 256, 1, pixelFormat, type);
 	osg::Vec2d size = keyBounds.size();
 	for (int y = 0; y < 256; ++y)
 	{
 		for (int x = 0; x < 256; ++x)
 		{
 			osg::Vec2d latLon = keyBounds.minimum + osg::Vec2d(size.x() * (double(y) + 0.5) / 256.0, size.y() * (double(x) + 0.5) / 256.0);
-			osg::Vec2i srcXy = toVec2i(latLongToPixelXY(latLon.x(), latLon.y(), quadTreeTileKey.level));
+			osg::Vec2f srcXy = latLongToPixelXY(latLon.x(), latLon.y(), quadTreeTileKey.level);
 
-			auto it = tiles.find(pixelXYToTileXY(srcXy));
+			auto it = tiles.find(pixelXYToTileXY(toVec2i(srcXy)));
 			if (it != tiles.end())
 			{
 				const osg::Image& src = *it->second;
-				composite->setColor(src.getColor(srcXy.x() % 256, 255 - (srcXy.y() % 256)), x, y);
+				composite->setColor(getColorBilinear(src, osg::Vec2f(fmodf(srcXy.x(), 256.f), 255.f - fmodf(srcXy.y(), 256.f))), x, y);
 			}
 		}
 	}

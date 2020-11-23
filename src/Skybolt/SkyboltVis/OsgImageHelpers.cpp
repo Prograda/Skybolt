@@ -5,6 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "OsgImageHelpers.h"
+#include "OsgMathHelpers.h"
+#include <SkyboltCommon/Math/MathUtility.h>
 #include <osg/Texture>
 #include <osgDB/ReadFile>
 #include <boost/algorithm/string/predicate.hpp>
@@ -137,6 +139,39 @@ osg::ref_ptr<osg::Image> readImageWithoutWarnings(const std::string& filename)
 	if (rr.validImage()) return osg::ref_ptr<osg::Image>(rr.getImage());
 	return nullptr;
 }
+
+osg::Vec4f getColorBilinear(const osg::Image& image, const osg::Vec2f& coord)
+{
+	// Calculate coordinates
+	int sMax = image.s() - 1;
+	int tMax = image.t() - 1;
+
+	osg::Vec2f clampedCoord;
+	clampedCoord.x() = math::clamp(coord.x(), 0.0f, float(sMax));
+	clampedCoord.y() = math::clamp(coord.y(), 0.0f, float(tMax));
+
+	int u0 = (int)clampedCoord.x();
+	int u1 = std::min(u0 + 1, sMax);
+	int v0 = (int)clampedCoord.y();
+	int v1 = std::min(v0 + 1, tMax);
+
+	// Calculate weights
+	float fracU = clampedCoord.x() - u0;
+	float fracV = clampedCoord.y() - v0;
+
+	// Interpolate
+	osg::Vec4f d00 = image.getColor(u0, v0);
+	osg::Vec4f d10 = image.getColor(u1, v0);
+	osg::Vec4f d01 = image.getColor(u0, v1);
+	osg::Vec4f d11 = image.getColor(u1, v1);
+
+	osg::Vec4f fracUVec(fracU, fracU, fracU, fracU);
+	osg::Vec4f d0 = componentWiseLerp(d00, d10, fracUVec);
+	osg::Vec4f d1 = componentWiseLerp(d01, d11, fracUVec);
+
+	return componentWiseLerp(d0, d1, osg::Vec4f(fracV, fracV, fracV, fracV));
+}
+
 
 } // namespace vis
 } // namespace skybolt

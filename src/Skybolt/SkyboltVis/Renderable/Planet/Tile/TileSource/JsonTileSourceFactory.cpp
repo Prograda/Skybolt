@@ -8,6 +8,7 @@
 
 #include "SkyboltVis/Renderable/Planet/Tile/TileSource/BingTileSource.h"
 #include "SkyboltVis/Renderable/Planet/Tile/TileSource/CachedTileSource.h"
+#include "SkyboltVis/Renderable/Planet/Tile/TileSource/MapboxElevationTileSource.h"
 #include "SkyboltVis/Renderable/Planet/Tile/TileSource/SphericalMercatorToPlateCarreeTileSource.h"
 #include "SkyboltVis/Renderable/Planet/Tile/TileSource/XyzTileSource.h"
 #include <SkyboltCommon/ShaUtility.h>
@@ -42,6 +43,12 @@ TileSourcePtr JsonTileSourceFactory::createTileSourceFromJson(const nlohmann::js
 		bingConfig.url = url;
 		bingConfig.apiKey = mBingApiKey;
 		tileSource = std::make_shared<BingTileSource>(bingConfig);
+	}
+	else if (format == "mapboxElevation")
+	{
+		MapboxElevationTileSourceConfig config;
+		config.urlTemplate = url;
+		tileSource = std::make_shared<MapboxElevationTileSource>(config);
 	}
 	else
 	{
