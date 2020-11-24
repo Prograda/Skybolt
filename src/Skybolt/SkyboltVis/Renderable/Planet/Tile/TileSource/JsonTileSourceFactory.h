@@ -18,7 +18,7 @@ namespace vis {
 struct JsonTileSourceFactoryConfig
 {
 	std::string cacheDirectory;
-	std::string bingApiKey;
+	std::map<std::string, std::string> apiKeys;
 };
 
 class JsonTileSourceFactory
@@ -29,8 +29,11 @@ public:
 	TileSourcePtr createTileSourceFromJson(const nlohmann::json& json) const;
 
 private:
+	std::string getApiKey(const std::string& name) const;
+
+private:
 	std::string mCacheDirectory;
-	std::string mBingApiKey;
+	std::map<std::string, std::string> mApiKeys;
 };
 
 } // namespace vis

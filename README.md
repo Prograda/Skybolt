@@ -175,7 +175,8 @@ Only the Core module is required to run, but additional modules will add extra a
 1. Ensure the engine can find shaders (included in this code repository) under either Assets/Shaders or Source/Assets/Shaders relative to the working directory.
 2. Ensure the engine can find asset models under Assets/ relative to the working directory.
 
-### Using Bing Maps
-The PlanetEarth entity uses Bing maps for albedo data. To use Bing Maps, you must acquire an API key from https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key
+### Using third party Map APIs
+By default, the PlanetEarth entity uses mapbox for albedo and elevation data. To use mapbox, you must acquire an API key from https://mapbox.com
+If desired, PlanetEarth can be edited to use Bing maps for albedo instead. A bing key can be obtained from https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key
 
 After acquiring a key, enter the key in Sprocket under the Tools->Settings dialog.

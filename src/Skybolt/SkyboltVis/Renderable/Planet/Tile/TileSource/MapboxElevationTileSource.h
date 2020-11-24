@@ -12,9 +12,10 @@ namespace vis {
 
 struct MapboxElevationTileSourceConfig
 {
-	//! URL must be templated with variables x, y, z in curley braces
-	//! E.g "https://test.com/image/{z}/{x}/{y}.png"
+	//! URL must be templated with variables x, y, z, key in curley braces
+	//! E.g http://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token={key}
 	std::string urlTemplate;
+	std::string apiKey;
 };
 
 class MapboxElevationTileSource : public TileSource

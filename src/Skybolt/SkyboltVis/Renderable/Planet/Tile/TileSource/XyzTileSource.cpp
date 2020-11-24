@@ -17,7 +17,8 @@ namespace vis {
 
 XyzTileSource::XyzTileSource(const XyzTileSourceConfig& config) :
 	mUrlTemplate(config.urlTemplate),
-	mYOrigin(config.yOrigin)
+	mYOrigin(config.yOrigin),
+	mApiKey(config.apiKey)
 {
 }
 
@@ -34,6 +35,7 @@ osg::ref_ptr<osg::Image> XyzTileSource::createImage(const QuadTreeTileKey& key, 
 	boost::replace_all(url, "{x}", std::to_string(key.x));
 	boost::replace_all(url, "{y}", std::to_string(y));
 	boost::replace_all(url, "{z}", std::to_string(key.level));
+	boost::replace_all(url, "{key}", mApiKey);
 
 	osg::ref_ptr<osg::Image> image = readImageWithoutWarnings(url);
 	return image;

@@ -20,6 +20,7 @@ MapboxElevationTileSource::MapboxElevationTileSource(const MapboxElevationTileSo
 	XyzTileSourceConfig xyzConfig;
 	xyzConfig.urlTemplate = config.urlTemplate;
 	xyzConfig.yOrigin = XyzTileSourceConfig::YOrigin::Top;
+	xyzConfig.apiKey = config.apiKey;
 	m_source = std::make_unique<XyzTileSource>(xyzConfig);
 }
 

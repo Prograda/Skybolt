@@ -19,7 +19,7 @@ namespace vis {
 
 JsonTileSourceFactory::JsonTileSourceFactory(const JsonTileSourceFactoryConfig& config) :
 	mCacheDirectory(config.cacheDirectory),
-	mBingApiKey(config.bingApiKey)
+	mApiKeys(config.apiKeys)
 {
 }
 
@@ -32,22 +32,31 @@ TileSourcePtr JsonTileSourceFactory::createTileSourceFromJson(const nlohmann::js
 
 	if (format == "xyz")
 	{
+		std::string apiKey;
+		auto i = json.find("apiKeyName");
+		if (i != json.end())
+		{
+			apiKey = getApiKey(i.value());
+		}
+
 		XyzTileSourceConfig xyzConfig;
 		xyzConfig.urlTemplate = url;
 		xyzConfig.yOrigin = readOptionalOrDefault(json, "yTileOriginAtBottom", false) ? XyzTileSourceConfig::YOrigin::Bottom : XyzTileSourceConfig::YOrigin::Top;
+		xyzConfig.apiKey = apiKey;
 		tileSource = std::make_shared<XyzTileSource>(xyzConfig);
 	}
 	else if (format == "bing")
 	{
 		BingTileSourceConfig bingConfig;
 		bingConfig.url = url;
-		bingConfig.apiKey = mBingApiKey;
+		bingConfig.apiKey = getApiKey("bing");
 		tileSource = std::make_shared<BingTileSource>(bingConfig);
 	}
 	else if (format == "mapboxElevation")
 	{
 		MapboxElevationTileSourceConfig config;
 		config.urlTemplate = url;
+		config.apiKey = getApiKey("mapbox");
 		tileSource = std::make_shared<MapboxElevationTileSource>(config);
 	}
 	else
@@ -70,6 +79,16 @@ TileSourcePtr JsonTileSourceFactory::createTileSourceFromJson(const nlohmann::js
 		}
 	}
 	return tileSource;
+}
+
+std::string JsonTileSourceFactory::getApiKey(const std::string& name) const
+{
+	auto i = mApiKeys.find(name);
+	if (i == mApiKeys.end())
+	{
+		throw std::runtime_error("Unknown tile API key: " + name);
+	}
+	return i->second;
 }
 
 } // namespace vis

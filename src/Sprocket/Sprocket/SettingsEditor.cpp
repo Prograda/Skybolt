@@ -9,6 +9,7 @@
 
 #include <QBoxLayout>
 #include <QScrollArea>
+#include <boost/algorithm/string.hpp>  
 #include <memory>
 
 static QVariant toQVariant(const nlohmann::json& j)
@@ -32,37 +33,67 @@ static QVariant toQVariant(const nlohmann::json& j)
 
 static void setJsonQVariant(nlohmann::json& j, const std::string& key, const QVariant& variant)
 {
+	assert(!key.empty());
+
+	// Convert value to json
+	nlohmann::json value;
 	switch (variant.type())
 	{
 	case QVariant::String:
-		j[key] = variant.toString().toStdString();
+		value = variant.toString().toStdString();
 		break;
 	case QVariant::Bool:
-		j[key] = variant.toBool();
+		value = variant.toBool();
 		break;
 	case QVariant::Int:
-		j[key] = variant.toInt();
+		value = variant.toInt();
 		break;
 	case QVariant::Double:
-		j[key] = variant.toDouble();
+		value = variant.toDouble();
 		break;
 	default:
 		assert(!"QVariant type is not supported by json");
+	}
+
+	// Write property with hierarchy
+	std::vector<std::string> keyParts;
+	boost::split(keyParts, key, boost::is_any_of("."), boost::token_compress_on);
+
+	nlohmann::json* object = &j;
+	for (int i = 0; i < int(keyParts.size()-1); ++i)
+	{
+		object = &((*object)[keyParts[i]]);
+	}
+	(*object)[keyParts.back()] = value;
+}
+
+static void createPropertiesRecursive(std::vector<QtPropertyPtr>& properties, const nlohmann::json& j, const std::string& propertyNamePrefix = "")
+{
+	for (const auto& item : j.items())
+	{
+		if (item.value().is_object())
+		{
+			createPropertiesRecursive(properties, item.value(), item.key() + ".");
+		}
+
+		QVariant variant = toQVariant(item.value());
+		if (!variant.isNull())
+		{
+			if (item.key().find(".") != std::string::npos)
+			{
+				throw std::runtime_error("Settings property name must not contain period (.)");
+			}
+
+			auto property = PropertiesModel::createVariantProperty(QString::fromStdString(propertyNamePrefix + item.key()), variant);
+			properties.push_back(property);
+		}
 	}
 }
 
 SettingsEditor::SettingsEditor(const QString& settingsFilename, const nlohmann::json& settings, QWidget* parent)
 {
 	std::vector<QtPropertyPtr> properties;
-	for (const auto& item : settings.items())
-	{
-		QVariant variant = toQVariant(item.value());
-		if (!variant.isNull())
-		{
-			auto property = PropertiesModel::createVariantProperty(QString::fromStdString(item.key()), variant);
-			properties.push_back(property);
-		}
-	}
+	createPropertiesRecursive(properties, settings);
 
 	QVBoxLayout* layout = new QVBoxLayout;
 	setLayout(layout);

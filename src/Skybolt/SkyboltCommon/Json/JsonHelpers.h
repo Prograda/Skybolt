@@ -33,4 +33,20 @@ boost::optional<T> readOptional(const nlohmann::json& j, const std::string& key)
 	return boost::none;
 }
 
+template <typename T>
+static std::map<std::string, T> readNameMap(const nlohmann::json& j, const std::string& key)
+{
+	std::map<std::string, std::string> result;
+	auto item = j.find(key);
+	if (item != j.end())
+	{
+		for (const auto& i : item.value().items())
+		{
+			result[i.key()] = i.value().get<T>();
+		}
+	}
+
+	return result;
+}
+
 } // namespace skybolt

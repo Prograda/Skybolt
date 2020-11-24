@@ -12,9 +12,11 @@ namespace vis {
 
 struct XyzTileSourceConfig
 {
-	//! URL must be templated with variables x, y, z in curley braces
-	//! E.g "https://test.com/image/{z}/{x}/{y}.png"
+	//! URL must be templated with variables x, y, z, key in curley braces
+	//! E.g "https://test.com/image/{z}/{x}/{y}.png?{key}"
 	std::string urlTemplate;
+
+	std::string apiKey;
 
 	enum class YOrigin
 	{
@@ -35,6 +37,7 @@ public:
 private:
 	std::string mUrlTemplate;
 	XyzTileSourceConfig::YOrigin mYOrigin;
+	std::string mApiKey;
 };
 
 } // namespace vis

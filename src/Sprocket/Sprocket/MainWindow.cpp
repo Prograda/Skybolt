@@ -251,11 +251,12 @@ void mapContainer(const Source& c, Result& result, Functor &&f)
 
 static nlohmann::json createDefaultSettings()
 {
-	return R"(
-	{
-		"bingApiKey": ""
+	return R"({
+	"tileApiKeys": {
+		"bing": "",
+		"mapbox": ""
 	}
-)"_json;
+})"_json;
 }
 
 QString settingsFilenameKey = "settingsFilename";
@@ -265,6 +266,8 @@ QString settingsFilenameKey = "settingsFilename";
 // while the latter configures UI defaults.
 static nlohmann::json readOrCreateEngineSettingsFile(QWidget* parent, QSettings& settings)
 {
+	nlohmann::json result = createDefaultSettings();
+
 	QString settingsFilename = settings.value(settingsFilenameKey).toString();
 	if (settingsFilename.isEmpty() || !QFile(settingsFilename).exists())
 	{
@@ -288,13 +291,13 @@ static nlohmann::json readOrCreateEngineSettingsFile(QWidget* parent, QSettings&
 		}
 
 		settings.setValue(settingsFilenameKey, settingsFilename);
-		nlohmann::json j = createDefaultSettings();
 		QDir(path).mkdir(".");
-		writeJsonFile(j, settingsFilename.toStdString());
-		return j;
+		writeJsonFile(result, settingsFilename.toStdString());
+		return result;
 	}
 
-	return readJsonFile(settingsFilename.toStdString());
+	result.update(readJsonFile(settingsFilename.toStdString()));
+	return result;
 }
 
 MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, const std::vector<EditorPluginFactory>& editorPluginFactories, QWidget *parent, Qt::WindowFlags flags) :

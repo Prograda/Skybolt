@@ -9,6 +9,7 @@
 #include "GetExecutablePath.h"
 #include "Plugin/PluginHelpers.h"
 #include <SkyboltCommon/OptionalUtility.h>
+#include <SkyboltCommon/Json/JsonHelpers.h>
 
 #include <boost/log/trivial.hpp>
 
@@ -42,7 +43,7 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFa
 {
 	EngineRootConfig config;
 	config.pluginFactories = pluginFactories;
-	config.tileSourceFactoryConfig.bingApiKey = getOptionalNodeOrDefaultWithWarning(settings, "bingApiKey", std::string());
+	config.tileSourceFactoryConfig.apiKeys = readNameMap<std::string>(settings, "tileApiKeys");
 	config.tileSourceFactoryConfig.cacheDirectory = "Cache";
 	return std::make_unique<EngineRoot>(config);
 }
