@@ -165,10 +165,10 @@ Application for converting Open Street Map data to Skybolt feature tile format.
 ## Building
 Use CMake to configure and generate a build. Optional projects within the repository can be enabled/disabled with CMake BUILD_xxx properties as desired.
 
-## Installing Data Modules
-Skybolt and Sprocket require runtime data. The runtime data is split up into separate modules, which can be downloaded from https://github.com/Piraxus/Skybolt/releases
+## Installing Asset Packages
+Skybolt requires runtime assets which are not included in this repository. Assets are split up into separate packages, which can be downloaded from https://piraxus.com/downloads/assetpackages.html
 
-Only the Core module is required to run, but additional modules will add extra assets. To install a module, extract the zip file to a folder called "Assets" in the program working directory.
+Only the Core package is required to run, but additional packages will add extra assets. To install a package, extract the zip file to a folder called "Assets" in the program working directory.
 
 ## Running
 ### Working Directory
