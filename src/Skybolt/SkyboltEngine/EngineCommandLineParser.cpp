@@ -33,7 +33,7 @@ void EngineCommandLineParser::addOptions(po::options_description& desc)
 {
 	desc.add_options()
 		("help", "produce help message")
-		("settingsFile", po::value<double>(), "settings file");
+		("settingsFile", po::value<std::string>(), "settings file");
 }
 
 boost::optional<nlohmann::json> EngineCommandLineParser::readSettings(const boost::program_options::variables_map& params)

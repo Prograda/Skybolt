@@ -21,4 +21,13 @@ T optionalMapOrElse(const boost::optional<T>& opt, const std::function<T()> onAb
 	return onAbsent();
 }
 
+template <typename T>
+void optionalIfPresent(const boost::optional<T>& opt, const std::function<void(const T& value)> action)
+{
+	if (opt)
+	{
+		return action(*opt);
+	}
+}
+
 } // namespace skybolt

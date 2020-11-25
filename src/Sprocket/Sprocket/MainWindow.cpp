@@ -249,16 +249,6 @@ void mapContainer(const Source& c, Result& result, Functor &&f)
 	std::transform(std::begin(c), std::end(c), std::inserter(result, std::end(result)), f);
 }
 
-static nlohmann::json createDefaultSettings()
-{
-	return R"({
-	"tileApiKeys": {
-		"bing": "",
-		"mapbox": ""
-	}
-})"_json;
-}
-
 QString settingsFilenameKey = "settingsFilename";
 
 // Read the engine settings file if it already exists, otherwise prompts user to create one.
@@ -266,7 +256,7 @@ QString settingsFilenameKey = "settingsFilename";
 // while the latter configures UI defaults.
 static nlohmann::json readOrCreateEngineSettingsFile(QWidget* parent, QSettings& settings)
 {
-	nlohmann::json result = createDefaultSettings();
+	nlohmann::json result = EngineRootFactory::createDefaultSettings();
 
 	QString settingsFilename = settings.value(settingsFilenameKey).toString();
 	if (settingsFilename.isEmpty() || !QFile(settingsFilename).exists())
