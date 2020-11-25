@@ -299,33 +299,22 @@ public:
 			{
 				if (axisCount >= 2)
 				{
-					setIfPresent(*component, "stick", glm::vec2(joystick->getAxisState(1), joystick->getAxisState(0)) * 2.0f - 1.0f);
+					component->setIfPresent("stick", glm::vec2(joystick->getAxisState(1), joystick->getAxisState(0)) * 2.0f - 1.0f);
 
 					if (axisCount >= 3)
 					{
-						setIfPresent(*component, "collective", joystick->getAxisState(2));
-						setIfPresent(*component, "throttle", joystick->getAxisState(2));
+						component->setIfPresent("collective", joystick->getAxisState(2));
+						component->setIfPresent("throttle", joystick->getAxisState(2));
 
 						if (axisCount >= 4)
 						{
 							float value = joystick->getAxisState(3) * 2.0f - 1.0f;
-							setIfPresent(*component, "rudder", value);
-							setIfPresent(*component, "pedal", value);
+							component->setIfPresent("rudder", value);
+							component->setIfPresent("pedal", value);
 						}
 					}
 				}
 			}
-		}
-	}
-
-private:
-	template <typename T>
-	void setIfPresent(sim::ControlInputsComponent& component, const std::string& controlName, const T& value)
-	{
-		auto input = component.get<T>(controlName);
-		if (input)
-		{
-			input->value = value;
 		}
 	}
 

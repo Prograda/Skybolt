@@ -31,6 +31,7 @@
 #include <SkyboltSim/Components/RocketMotorComponent.h>
 #include <SkyboltSim/Components/ShipWakeComponent.h>
 #include <SkyboltSim/JsonHelpers.h>
+#include <SkyboltCommon/Json/JsonHelpers.h>
 
 namespace skybolt {
 
@@ -39,26 +40,27 @@ using namespace sim;
 static sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	FuselageParams params;
-	params.liftSlope = 5.7;
-	params.zeroLiftAlpha = 0;
-	params.stallAlpha = 0.3;
-	params.stallLift = 0;
+	params.liftSlope = readOptionalOrDefault(json, "liftSlope", 5.7);
+	params.zeroLiftAlpha = readOptionalOrDefault(json, "zeroLiftAlpha", 0.0);
+	params.stallAlpha = readOptionalOrDefault(json, "stallAlpha", 0.3);
+	params.stallLift = readOptionalOrDefault(json, "stallLift", 1.0);
+	params.liftArea = readOptionalOrDefault(json, "liftArea", 0.0);
 
 	params.momentMultiplier = json.at("momentMultiplier");
 
-	params.dragConst = Vector3(4.0f, 40.0f, 40.0f);
+	params.dragConst = readOptionalVector3(json, "dragConstant");
 
-	params.rollDueToSideSlipAngle = 0;
-	params.rollDueToRollRate = -2;
-	params.rollDueToYawRate = 0;
+	params.rollDueToSideSlipAngle = readOptionalOrDefault(json, "rollDueToSideSlipAngle", 0.0);
+	params.rollDueToRollRate = readOptionalOrDefault(json, "rollDueToRollRate", -2.0);
+	params.rollDueToYawRate = readOptionalOrDefault(json, "rollDueToYawRate", 0.0);
 
 	params.pitchNeutralMoment = 0;
-	params.pitchDueToAngleOfAttack = -0.0;
-	params.pitchDueToPitchRate = -10;
+	params.pitchDueToAngleOfAttack = readOptionalOrDefault(json, "pitchDueToAngleOfAttack", 0.0);
+	params.pitchDueToPitchRate = readOptionalOrDefault(json, "pitchDueToPitchRate", -10.0);
 
-	params.yawDueToSideSlipAngle = -0.0;
-	params.yawDueToRollRate = 0;
-	params.yawDueToYawRate = -10;
+	params.yawDueToSideSlipAngle = readOptionalOrDefault(json, "yawDueToSideSlipAngle", 0.0);
+	params.yawDueToRollRate = readOptionalOrDefault(json, "yawDueToRollRate", 0.0);
+	params.yawDueToYawRate = readOptionalOrDefault(json, "yawDueToYawRate", -10.0);
 
 	return std::make_shared<FuselageComponent>(params, entity->getFirstComponentRequired<Node>().get(), entity->getFirstComponentRequired<DynamicBodyComponent>().get());
 }

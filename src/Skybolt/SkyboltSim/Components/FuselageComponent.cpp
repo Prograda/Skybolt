@@ -59,9 +59,8 @@ void FuselageComponent::updatePreDynamicsSubstep(TimeReal dt)
 		liftCoeff = mParams.liftSlope * alphaDelta;
 	}
 
-	const float surfaceArea = 47.0f;
 	const float airDensity = calcAirDensity(calcAltitude(mNode->getPosition()));
-	lift = Vector3(0.0f, 0.0f, -liftCoeff * surfaceArea * 0.5f * airDensity * glm::dot(velocityLocal, velocityLocal));
+	lift = Vector3(0.0f, 0.0f, -liftCoeff * mParams.liftArea * 0.5f * airDensity * glm::dot(velocityLocal, velocityLocal));
 
 	double speed = glm::length(mBody->getLinearVelocity());
 	//apply forces

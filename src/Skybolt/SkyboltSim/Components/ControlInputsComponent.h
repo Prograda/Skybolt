@@ -70,6 +70,16 @@ public:
 	}
 
 	template <typename T>
+	void setIfPresent(const std::string& controlName, const T& value)
+	{
+		auto input = get<T>(controlName);
+		if (input)
+		{
+			input->value = value;
+		}
+	}
+
+	template <typename T>
 	inline std::shared_ptr<ControlInputT<T>> createOrGet(const std::string& name, const T& initialValue, const Range<T>& range = unitRange<T>())
 	{
 		auto& control = controls[name];

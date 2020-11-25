@@ -19,6 +19,7 @@ struct FuselageParams
 	float zeroLiftAlpha;
 	float stallAlpha;
 	float stallLift; // Cl in stalled region
+	float liftArea; // m^2
 
 	Vector3 dragConst; // Cd * area in each direction
 
