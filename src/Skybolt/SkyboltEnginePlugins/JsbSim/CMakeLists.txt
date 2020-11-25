@@ -25,4 +25,4 @@ target_include_directories(${TARGET_NAME} PUBLIC
 
 set_target_properties(${TARGET_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE) #Export symbols for tests
 set_engine_plugin_target_properties(${TARGET_NAME})
-skybolt_install(${TARGET_NAME})
+skybolt_plugin_install(${TARGET_NAME})
