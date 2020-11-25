@@ -1,5 +1,3 @@
-#pragma once
-
 /**
  * Real-time Realistic Ocean Lighting using Seamless Transitions from Geometry to BRDF
  * Copyright (c) 2009 INRIA
@@ -33,6 +31,9 @@
 /**
  * Author: Eric Bruneton
  */
+ 
+#ifndef BRUENTON_OCEAN_H
+#define BRUENTON_OCEAN_H
 
 uniform sampler2D environmentSampler;
 
@@ -138,3 +139,5 @@ vec3 meanSkyRadiance(vec3 V, vec3 N, vec3 Tx, vec3 Ty, vec2 sigmaSq) {
 
     return result.rgb;
 }
+
+#endif // BRUENTON_OCEAN_H

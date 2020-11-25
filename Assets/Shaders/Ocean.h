@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#ifndef OCEAN_H
+#define OCEAN_H
 
 #define NUM_OCEAN_CASCADES 1
 
@@ -32,3 +33,5 @@ float calcHackFresnel(float dotVN)
     float fresnel = clamp(1.0 - dotVN, 0.0, 1.0);
     return pow(fresnel, 3.0) * 0.5;
 }
+
+#endif // OCEAN_H

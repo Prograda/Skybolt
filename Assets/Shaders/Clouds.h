@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#ifndef CLOUDS_H
+#define CLOUDS_H
 
 #include "GlobalDefines.h"
 
@@ -23,3 +24,5 @@ vec2 uvFromPos(vec3 positionRelPlanetPlanetAxes)
 	vec2 uv = vec2(psi * M_RCP_2PI + 0.5, theta * M_RCP_PI + 0.5);
 	return offsetCloudUvByWorldDistance(uv, -cloudsDisplacementMeters);
 }
+
+#endif // CLOUDS_H

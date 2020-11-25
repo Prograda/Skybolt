@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#ifndef ATMOSPHERIC_SCATTERING_H
+#define ATMOSPHERIC_SCATTERING_H
 
 #include "GlobalUniforms.h"
 #include "ThirdParty/BrunetonAtmosphere/AtmospherePublic.glsl"
@@ -149,3 +150,5 @@ DimensionlessSpectrum GetTransmittance(
     Position camera, IN(Position) point) {
 	return GetTransmittance(transmittance_texture, camera, point);
 }
+
+#endif // ATMOSPHERIC_SCATTERING_H

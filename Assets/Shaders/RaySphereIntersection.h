@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#ifndef RAY_SPHERE_INTERSECTION_H
+#define RAY_SPHERE_INTERSECTION_H
 
 // r0: ray origin
 // rd: normalized ray direction
@@ -88,3 +89,5 @@ float raySphereFirstPositiveIntersection(vec3 r0, vec3 rd, vec3 s0, float sr)
 	}
 	return -b + sqrt(det);
 }
+
+#endif // RAY_SPHERE_INTERSECTION_H

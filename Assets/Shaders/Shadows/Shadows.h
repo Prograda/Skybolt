@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#ifndef SHADOWS_H
+#define SHADOWS_H
 
 float sampleShadow(sampler2D shadowSampler, vec2 texCoord, float receiverDepth)
 {
@@ -77,3 +78,5 @@ float sampleShadowsAtWorldPosition(vec3 positionWorldSpace)
 	float receiverDepth = 0.5; // TODO
 	return sampleShadowsAtTexCoord(shadowTexcoord, receiverDepth);
 }
+
+#endif // SHADOWS_H

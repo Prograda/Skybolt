@@ -4,9 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#ifndef TREES_H
+#define TREES_H
 
 vec3 randomizeColor(vec3 sourceColor, float unitRandom)
 {
 	return sourceColor * vec3(mix(0.7, 1.6, unitRandom));
 }
+
+#endif // TREES_H

@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#ifndef TONE_MAPPING_H
+#define TONE_MAPPING_H
 
 uniform bool convertOutputToSrgb;
 
@@ -40,3 +41,5 @@ vec3 toneMap(vec3 color)
 {
 	return getOutputAsSrgb(color * brightnessMultiplier);
 }
+
+#endif // TONE_MAPPING_H
