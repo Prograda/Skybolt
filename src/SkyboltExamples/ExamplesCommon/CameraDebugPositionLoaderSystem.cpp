@@ -23,13 +23,13 @@ DebugPositionLoaderSystem::DebugPositionLoaderSystem(InputPlatform* inputPlatfor
 	mInputPlatform(inputPlatform),
 	mNode(node)
 {
-	mInputPlatform->addEventListener<KeyEvent>(this);
+	mInputPlatform->getEventEmitter()->addEventListener<KeyEvent>(this);
 	assert(mNode);
 }
 
 DebugPositionLoaderSystem::~DebugPositionLoaderSystem()
 {
-	mInputPlatform->removeEventListener(this);
+	mInputPlatform->getEventEmitter()->removeEventListener(this);
 }
 
 void DebugPositionLoaderSystem::onEvent(const Event& event)

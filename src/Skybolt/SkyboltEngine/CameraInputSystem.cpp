@@ -23,12 +23,12 @@ CameraInputSystem::CameraInputSystem(const vis::Window* visWindow, const EntityP
 	mInputAxes(axes),
 	mInput(CameraController::Input::zero())
 {
-	mInputPlatform->addEventListener<MouseEvent>(this);
+	mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
 }
 
 CameraInputSystem::~CameraInputSystem()
 {
-	mInputPlatform->removeEventListener(this);
+	mInputPlatform->getEventEmitter()->removeEventListener(this);
 }
 
 void CameraInputSystem::updatePostDynamics(const System::StepArgs& args)

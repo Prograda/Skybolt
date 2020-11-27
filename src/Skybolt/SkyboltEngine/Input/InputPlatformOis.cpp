@@ -18,14 +18,17 @@
 
 namespace skybolt {
 
+using InputManagerPtr = std::shared_ptr<OIS::InputManager>;
+
 class KeyboardInputDevice : public InputDevice, public OIS::KeyListener
 {
 public:
-	KeyboardInputDevice(InputPlatform* platform, OIS::InputManager* inputManager) :
-		mPlatform(platform),
+	KeyboardInputDevice(const EventEmitterPtr& emitter, const InputManagerPtr& inputManager) :
+		mEmitter(emitter),
 		mInputManager(inputManager),
 		mKeyboard(nullptr)
 	{
+		assert(mEmitter);
 		setEnabled(true);
 	}
 
@@ -78,33 +81,34 @@ private:
 	bool keyPressed(const OIS::KeyEvent &arg)
 	{
 		KeyEvent event(KeyEvent::Type::Pressed, (KeyCode)arg.key);
-		mPlatform->emitEvent(event);
+		mEmitter->emitEvent(event);
 		return true;
 	}
 
 	bool keyReleased(const OIS::KeyEvent &arg)
 	{
 		KeyEvent event(KeyEvent::Type::Released, (KeyCode)arg.key);
-		mPlatform->emitEvent(event);
+		mEmitter->emitEvent(event);
 		return true;
 	}
 
 private:
-	InputPlatform* mPlatform;
-	OIS::InputManager* mInputManager;
+	EventEmitterPtr mEmitter;
+	InputManagerPtr mInputManager;
 	OIS::Keyboard* mKeyboard;
 };
 
 class MouseInputDevice : public InputDevice, public OIS::MouseListener
 {
 public:
-	MouseInputDevice(InputPlatform* platform, OIS::InputManager* inputManager, int windowWidth, int windowHeight) :
-		mPlatform(platform),
+	MouseInputDevice(const EventEmitterPtr& emitter, const InputManagerPtr& inputManager, int windowWidth, int windowHeight) :
+		mEmitter(emitter),
 		mInputManager(inputManager),
 		mMouse(nullptr),
 		mWindowWidth(windowWidth),
 		mWindowHeight(windowHeight)
 	{
+		assert(mEmitter);
 		setEnabled(true);
 	}
 
@@ -188,7 +192,7 @@ private:
 		event.relState.x = (float)arg.state.X.rel;
 		event.relState.y = (float)arg.state.Y.rel;
 		event.relState.z = (float)arg.state.Z.rel;
-		mPlatform->emitEvent(event);
+		mEmitter->emitEvent(event);
 		return true;
 	}
 
@@ -203,7 +207,7 @@ private:
 		event.relState.x = (float)arg.state.X.rel;
 		event.relState.y = (float)arg.state.Y.rel;
 		event.relState.z = (float)arg.state.Z.rel;
-		mPlatform->emitEvent(event);
+		mEmitter->emitEvent(event);
 		return true;
 	}
 
@@ -218,13 +222,13 @@ private:
 		event.relState.x = (float)arg.state.X.rel;
 		event.relState.y = (float)arg.state.Y.rel;
 		event.relState.z = (float)arg.state.Z.rel;
-		mPlatform->emitEvent(event);
+		mEmitter->emitEvent(event);
 		return true;
 	}
 
 private:
-	InputPlatform* mPlatform;
-	OIS::InputManager* mInputManager;
+	EventEmitterPtr mEmitter;
+	InputManagerPtr mInputManager;
 	OIS::Mouse* mMouse;
 	int mWindowWidth;
 	int mWindowHeight;
@@ -234,7 +238,7 @@ private:
 class JoystickInputDevice : public InputDevice
 {
 public:
-	JoystickInputDevice(OIS::InputManager* inputManager, const std::string& vendor) :
+	JoystickInputDevice(const InputManagerPtr& inputManager, const std::string& vendor) :
 		mInputManager(inputManager),
 		mJoystick(nullptr),
 		mVendor(vendor)
@@ -300,19 +304,22 @@ public:
 	}
 
 private:
-	OIS::InputManager* mInputManager;
+	InputManagerPtr mInputManager;
 	OIS::JoyStick* mJoystick;
 	std::string mVendor;
 };
 
-InputPlatformOis::InputPlatformOis(const std::string &windowHandle, int windowWidth, int windowHeight)
+InputPlatformOis::InputPlatformOis(const std::string &windowHandle, int windowWidth, int windowHeight) :
+	mEmitter(std::make_shared<EventEmitter>())
 {
 	OIS::ParamList pl;
 	pl.insert(std::make_pair(std::string("WINDOW"), windowHandle));
-	mInputManager = OIS::InputManager::createInputSystem(pl);
+	mInputManager = std::shared_ptr<OIS::InputManager>(OIS::InputManager::createInputSystem(pl), [](OIS::InputManager* mgr) {
+		OIS::InputManager::destroyInputSystem(mgr);
+	});
 
-	mKeyboard.reset(new KeyboardInputDevice(this, mInputManager));
-	mMouse.reset(new MouseInputDevice(this, mInputManager, windowWidth, windowHeight));
+	mKeyboard.reset(new KeyboardInputDevice(mEmitter, mInputManager));
+	mMouse.reset(new MouseInputDevice(mEmitter, mInputManager, windowWidth, windowHeight));
 
 	const OIS::DeviceList& deviceList = mInputManager->listFreeDevices();
 	for (OIS::DeviceList::const_iterator i = deviceList.find(OIS::OISJoyStick); i != deviceList.end(); ++i)
@@ -336,8 +343,6 @@ InputPlatformOis::~InputPlatformOis()
 	mKeyboard.reset();
 	mMouse.reset();
 	mJoysticks.clear();
-
-	OIS::InputManager::destroyInputSystem(mInputManager);
 }
 
 

@@ -189,8 +189,9 @@ public:
 
 typedef std::shared_ptr<InputDevice> InputDevicePtr;
 typedef std::vector<InputDevicePtr> InputDevices;
+typedef std::shared_ptr<EventEmitter> EventEmitterPtr;
 
-class InputPlatform : public EventEmitter
+class InputPlatform
 {
 public:
 	virtual ~InputPlatform() {};
@@ -200,6 +201,8 @@ public:
 	virtual void setEnabled(bool enabled) = 0;
 
 	virtual InputDevices getInputDevicesOfType(InputDeviceType type) const = 0;
+
+	virtual EventEmitterPtr getEventEmitter() const = 0;
 };
 
 } // namespace skybolt

@@ -157,7 +157,7 @@ public:
 	ViewportInput(const InputPlatformPtr& inputPlatform) :
 		mInputPlatform(inputPlatform)
 	{
-		mInputPlatform->addEventListener<MouseEvent>(this);
+		mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
 
 		std::vector<InputDevicePtr> keyboards = inputPlatform->getInputDevicesOfType(InputDeviceTypeKeyboard);
 		if (keyboards.empty())
@@ -178,7 +178,7 @@ public:
 
 	~ViewportInput()
 	{
-		mInputPlatform->removeEventListener(this);
+		mInputPlatform->getEventEmitter()->removeEventListener(this);
 	}
 
 	void setEnabled(bool enabled)
@@ -306,7 +306,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	mInputPlatform.reset(new InputPlatformOis(std::to_string(size_t(HWND(winId()))), 800, 600)); // TODO: use actual resolution
 	mViewportInput.reset(new ViewportInput(mInputPlatform));
 
-	mInputPlatform->addEventListener<MouseEvent>(this);
+	mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
 
 	mEngineSettings = readOrCreateEngineSettingsFile(this, mSettings);
 

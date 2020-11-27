@@ -76,11 +76,14 @@ public:
 
 	std::vector<InputDevicePtr> getInputDevicesOfType(InputDeviceType type) const override;
 
+	virtual EventEmitterPtr getEventEmitter() const override { return mEmitter; }
+
 	void setWindowWidth(int width);
 	void setWindowHeight(int height);
 
 private:
-	OIS::InputManager* mInputManager;
+	EventEmitterPtr mEmitter;
+	std::shared_ptr<OIS::InputManager> mInputManager;
 	std::shared_ptr<class KeyboardInputDevice> mKeyboard;
 	std::shared_ptr<class MouseInputDevice> mMouse;
 	std::vector<std::shared_ptr<class JoystickInputDevice> > mJoysticks;
