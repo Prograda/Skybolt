@@ -15,10 +15,12 @@
 namespace skybolt {
 namespace sim {
 
-FuselageComponent::FuselageComponent(const FuselageParams& params, Node* node, DynamicBodyComponent* body) :
-	mParams(params),
-	mNode(node),
-	mBody(body)
+FuselageComponent::FuselageComponent(const FuselageComponentConfig& config) :
+	mParams(config.params),
+	mNode(config.node),
+	mBody(config.body),
+	mStickInput(config.stickInput),
+	mRudderInput(config.rudderInput)
 {
 	assert(mNode);
 	assert(mBody);
@@ -99,14 +101,26 @@ Vector3 FuselageComponent::calcMoment(const Vector3 &angularVelocity, float angl
 
 	// Roll
 	moment.x = mParams.rollDueToSideSlipAngle * sideSlipFactor * velSqLength + mParams.rollDueToRollRate * angularVelocity.x
-		 	 + mParams.rollDueToYawRate * angularVelocity.z;
-
+		+ mParams.rollDueToYawRate * angularVelocity.z;
+	
 	// Pitch
 	moment.y = mParams.pitchNeutralMoment * velSqLength + mParams.pitchDueToAngleOfAttack * angleOfAttackFactor * velSqLength
 			 + mParams.pitchDueToPitchRate * angularVelocity.y;
 
 	// Yaw
 	moment.z = mParams.yawDueToSideSlipAngle * sideSlipFactor * velSqLength + mParams.yawDueToRollRate * angularVelocity.x + mParams.yawDueToYawRate * angularVelocity.z;
+
+	// Control inputs
+	if (mStickInput)
+	{
+		moment.x += mParams.rollDueToAileron * mStickInput->value.y * velSqLength;
+		moment.y += mParams.pitchDueToElevator * mStickInput->value.x * velSqLength;
+	}
+
+	if (mRudderInput)
+	{
+		moment.z += mParams.yawDueToRudder * mRudderInput->value * velSqLength;
+	}
 
 	return moment * (double)airDensity;
 }

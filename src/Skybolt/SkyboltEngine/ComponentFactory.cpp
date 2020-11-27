@@ -53,16 +53,31 @@ static sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryCont
 	params.rollDueToSideSlipAngle = readOptionalOrDefault(json, "rollDueToSideSlipAngle", 0.0);
 	params.rollDueToRollRate = readOptionalOrDefault(json, "rollDueToRollRate", -2.0);
 	params.rollDueToYawRate = readOptionalOrDefault(json, "rollDueToYawRate", 0.0);
+	params.rollDueToAileron = readOptionalOrDefault(json, "rollDueToAileron", 0.0);
 
 	params.pitchNeutralMoment = 0;
 	params.pitchDueToAngleOfAttack = readOptionalOrDefault(json, "pitchDueToAngleOfAttack", 0.0);
 	params.pitchDueToPitchRate = readOptionalOrDefault(json, "pitchDueToPitchRate", -10.0);
+	params.pitchDueToElevator = readOptionalOrDefault(json, "pitchDueToElevator", 0.0);
 
 	params.yawDueToSideSlipAngle = readOptionalOrDefault(json, "yawDueToSideSlipAngle", 0.0);
 	params.yawDueToRollRate = readOptionalOrDefault(json, "yawDueToRollRate", 0.0);
 	params.yawDueToYawRate = readOptionalOrDefault(json, "yawDueToYawRate", -10.0);
+	params.yawDueToRudder = readOptionalOrDefault(json, "yawDueToRudder", 0.0);
 
-	return std::make_shared<FuselageComponent>(params, entity->getFirstComponentRequired<Node>().get(), entity->getFirstComponentRequired<DynamicBodyComponent>().get());
+	FuselageComponentConfig config;
+	config.params = params;
+	config.node = entity->getFirstComponentRequired<Node>().get();
+	config.body = entity->getFirstComponentRequired<DynamicBodyComponent>().get();
+
+	auto inputs = entity->getFirstComponent<ControlInputsComponent>();
+	if (inputs)
+	{
+		config.stickInput = inputs->createOrGet("stick", glm::vec2(0), posNegUnitRange<glm::vec2>());
+		config.rudderInput = inputs->createOrGet("rudder", 0.0f, posNegUnitRange<float>());
+
+	}
+	return std::make_shared<FuselageComponent>(config);
 }
 
 static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
