@@ -37,7 +37,7 @@ public:
 	virtual void setCamera(const CameraPtr& camera);
 	CameraPtr getCamera() const { return mCamera; }
 
-	osg::ref_ptr<osg::Camera> getOsgCamera() const { mOsgCamera; }
+	osg::ref_ptr<osg::Camera> getOsgCamera() const { return mOsgCamera; }
 
 protected:
 	virtual void updatePreRender();

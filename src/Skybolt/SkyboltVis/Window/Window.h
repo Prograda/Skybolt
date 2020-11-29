@@ -36,6 +36,15 @@ public:
 	void addRenderTarget(const osg::ref_ptr<RenderTarget>& target, const RectF& rect);
 	void removeRenderTarget(const osg::ref_ptr<RenderTarget>& target);
 
+	struct Target
+	{
+		Target(const osg::ref_ptr<RenderTarget>& target, const RectF& rect) : target(target), rect(rect) {}
+		osg::ref_ptr<RenderTarget> target;
+		RectF rect;
+	};
+
+	const std::vector<Target>& getRenderTargets() const { return mTargets; }
+
 protected:
 	void configureGraphicsState();
 
@@ -45,13 +54,6 @@ protected:
 private:
 	CameraPtr mCamera;
 	osg::Uniform* mScreenSizePixelsUniform;
-
-	struct Target
-	{
-		Target(const osg::ref_ptr<RenderTarget>& target, const RectF& rect) : target(target), rect(rect) {}
-		osg::ref_ptr<RenderTarget> target;
-		RectF rect;
-	};
 
 	std::vector<Target> mTargets;
 };

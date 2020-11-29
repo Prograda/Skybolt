@@ -65,7 +65,6 @@ osg::ref_ptr<RenderTarget> createAndAddViewportToWindow(Window& window, const os
 {
 	osg::ref_ptr<Viewport> viewport = new Viewport();
 	viewport->setScene(std::make_shared<ScreenQuadRenderTarget>(createFullscreenQuad(compositorProgram)));
-	window.addRenderTarget(viewport, RectF(0, 0, 1, 1));
 
 	auto colorTextureFactory = createTextureFactory(GL_RGBA16F_ARB);
 
@@ -80,6 +79,7 @@ osg::ref_ptr<RenderTarget> createAndAddViewportToWindow(Window& window, const os
 
 	osg::ref_ptr<RenderTexture> texture = new RenderTexture(config);
 	window.addRenderTarget(texture, RectF(0, 0, 1, 1));
+	window.addRenderTarget(viewport, RectF(0, 0, 1, 1));
 	return texture;
 }
 
