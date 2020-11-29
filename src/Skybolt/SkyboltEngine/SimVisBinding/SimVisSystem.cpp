@@ -108,7 +108,7 @@ public:
 
 private:
 	const sim::World* mWorld;
-	sim::Entity* mCamera;
+	sim::Entity* mCamera = nullptr;
 };
 
 SimVisSystem::SceneOriginProvider SimVisSystem::sceneOriginFromFirstCamera(const sim::World* world)
