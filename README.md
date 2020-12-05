@@ -24,7 +24,7 @@ The Skybolt repository includes Sprocket, a GUI application for creating scenari
 ## Contact
 Skybolt/Sprocket created and maintained by Matthew Reid.
 To submit a bug report, please [raise an issue on the GitHub repository](https://github.com/Piraxus/Skybolt/issues).
-For other queries, please use the [contact form](https://piraxus.com/contact) on the [Piraxus Research website](https://piraxus.com).
+For other queries, please use the [contact form](https://piraxus.com/contact) on the [Piraxus website](https://piraxus.com).
 
 ## License
 This project is licensed under the Mozilla Public License Version 2.0 - see the [License.txt](License.txt) file for details.
