@@ -1,7 +1,7 @@
 # Skybolt Engine
 Skybolt is a real-time planetary environment rendering engine, designed for flight simulators, aerospace R&D, and geospatial applications. Skybolt is written in C++, based on OpenSceneGraph, and supports CIGI for communicating with host applications. Skybolt also features a Python API for easy integration with science and engineering research tools.
 
-The Skybolt repository includes Sprocket, a GUI application for creating scenarios and visualizing data using Skybolt. Sprocket supports python scripting and node-based graphical programming.
+The Skybolt repository includes Sprocket, a GUI application for creating scenarios and visualizing data. Sprocket supports python scripting and node-based graphical programming.
 
 ![alt text](https://piraxus.com/wp-content/uploads/2020/06/Mountain1-edited-300x162.jpg "Mointain") ![alt text](https://piraxus.com/wp-content/uploads/2020/06/Seattle2-edit-300x162.jpg "Airport")
 ![alt text](https://piraxus.com/wp-content/uploads/2020/06/Shuttle3-flipped-300x170.jpg "Shuttle in space") ![alt text](https://piraxus.com/wp-content/uploads/2020/11/ShipHeloShot1-300x169.jpg "Ship on ocean")
@@ -135,6 +135,7 @@ Requires:
 ### Sprocket
 GUI application for creating, editing and running simulation scenarios, and performing analysis.
 Requires:
+* Skybolt Python Bindings
 * [Qt](https://www.qt.io)
 * [ToolWindowManager](https://github.com/Riateche/toolwindowmanager)
 

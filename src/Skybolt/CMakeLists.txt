@@ -10,7 +10,12 @@ add_subdirectory (SkyboltCommon)
 add_subdirectory (SkyboltCommonTests)
 add_subdirectory (SkyboltEngine)
 add_subdirectory (SkyboltEnginePlugins)
-add_subdirectory (SkyboltEnginePython)
+
+OPTION(BUILD_PYTHON_BINDINGS "Build Python Bindings")
+if (BUILD_PYTHON_BINDINGS)
+	add_subdirectory (SkyboltEnginePython)
+endif()
+
 add_subdirectory (SkyboltEngineTests)
 add_subdirectory (SkyboltSim)
 add_subdirectory (SkyboltSimTests)
