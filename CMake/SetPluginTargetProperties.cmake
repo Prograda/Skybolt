@@ -18,9 +18,9 @@ macro(set_plugin_target_properties target folder)
 endmacro()
 
 macro(set_engine_plugin_target_properties target)
-	set_plugin_target_properties(${target} EnginePlugins)
+	set_plugin_target_properties(${target} SkyboltPlugins)
 endmacro()
 
 macro(set_editor_plugin_target_properties target)
-	set_plugin_target_properties(${target} EditorPlugins)
+	set_plugin_target_properties(${target} SprocketPlugins)
 endmacro()
