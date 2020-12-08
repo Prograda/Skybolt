@@ -118,12 +118,7 @@ static void setNullScene(QtNodes::FlowView& view)
 
 static FlowView* createFlowView()
 {
-	static FlowViewStyle style;
-	style.BackgroundColor = QColor::fromRgb(42, 42, 42);
-	style.FineGridColor = QColor::fromRgb(49, 49, 49);
-	style.CoarseGridColor = QColor::fromRgb(25, 25, 25);
 	FlowView* view = new FlowView();
-	view->setFlowViewStyle(&style);
 	setNullScene(*view);
 	return view;
 }

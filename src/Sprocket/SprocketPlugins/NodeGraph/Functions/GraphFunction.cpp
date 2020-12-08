@@ -10,68 +10,6 @@
 
 using namespace QtNodes;
 
-//! Extend DataModelRegistry to add nodes from a second registry
-class ExtendedDataModelRegistry : public DataModelRegistry
-{
-public:
-	ExtendedDataModelRegistry(const std::shared_ptr<DataModelRegistry>& wrappedRegistry) :
-		mWrappedRegistry(wrappedRegistry)
-	{
-		assert(mWrappedRegistry);
-	}
-
-	std::unique_ptr<NodeDataModel>create(QString const &modelName) override
-	{
-		std::unique_ptr<NodeDataModel> result = DataModelRegistry::create(modelName);
-		if (!result)
-		{
-			return mWrappedRegistry->create(modelName);
-		}
-		return result;
-	}
-
-	RegisteredModelCreatorsMap const &registeredModelCreators() const override
-	{
-		mRegisteredModelCreatorsMap = DataModelRegistry::registeredModelCreators();
-		RegisteredModelCreatorsMap b = mWrappedRegistry->registeredModelCreators();
-		mRegisteredModelCreatorsMap.insert(b.begin(), b.end());
-		return mRegisteredModelCreatorsMap;
-	}
-
-	RegisteredModelsCategoryMap const &registeredModelsCategoryAssociation() const override
-	{
-		mRegisteredModelsCategoryMap = DataModelRegistry::registeredModelsCategoryAssociation();
-		RegisteredModelsCategoryMap b = mWrappedRegistry->registeredModelsCategoryAssociation();
-		mRegisteredModelsCategoryMap.insert(b.begin(), b.end());
-		return mRegisteredModelsCategoryMap;
-	}
-
-	CategoriesSet const &categories() const override
-	{
-		mCategoriesSet = DataModelRegistry::categories();
-		CategoriesSet b = mWrappedRegistry->categories();
-		mCategoriesSet.insert(b.begin(), b.end());
-		return mCategoriesSet;
-	}
-
-	TypeConverter getTypeConverter(NodeDataType const & d1, NodeDataType const & d2) const override
-	{
-		TypeConverter result = DataModelRegistry::getTypeConverter(d1, d2);
-		if (!result)
-		{
-			return mWrappedRegistry->getTypeConverter(d1, d2);
-		}
-		return result;
-	}
-
-private:
-	std::shared_ptr<DataModelRegistry> mWrappedRegistry;
-	// Maps are mutable because getter functions must return const&
-	mutable RegisteredModelCreatorsMap mRegisteredModelCreatorsMap;
-	mutable RegisteredModelsCategoryMap mRegisteredModelsCategoryMap;
-	mutable CategoriesSet mCategoriesSet;
-};
-
 class FunctionInputsNode : public SimpleNdm
 {
 public:
@@ -127,11 +65,10 @@ GraphFunction::GraphFunction(const NodeDefPtr& nodeDef, const std::shared_ptr<Qt
 	mOutputsNodeDef->name = FunctionOutputsNode::Name();
 	mOutputsNodeDef->inputs = nodeDef->outputs;
 
-	std::shared_ptr<ExtendedDataModelRegistry> registry(new ExtendedDataModelRegistry(dataModelRegistry));
-	registry->registerModel<FunctionInputsNode>([this]() { return std::make_unique<FunctionInputsNode>(mInputsNodeDef);});
-	registry->registerModel<FunctionOutputsNode>([this]() { return std::make_unique<FunctionOutputsNode>(mOutputsNodeDef); });
+	dataModelRegistry->registerModel<FunctionInputsNode>([this]() { return std::make_unique<FunctionInputsNode>(mInputsNodeDef);});
+	dataModelRegistry->registerModel<FunctionOutputsNode>([this]() { return std::make_unique<FunctionOutputsNode>(mOutputsNodeDef); });
 
-	mScene.reset(new FlowScene(registry));
+	mScene.reset(new FlowScene(dataModelRegistry));
 	
 	mScene->createNode(std::make_unique<FunctionInputsNode>(mInputsNodeDef));
 	auto node = &mScene->createNode(std::make_unique<FunctionOutputsNode>(mOutputsNodeDef));
