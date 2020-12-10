@@ -61,6 +61,7 @@
 #include <SkyboltVis/RenderTarget/Viewport.h>
 #include <SkyboltVis/Window/CaptureScreenshot.h>
 #include <SkyboltVis/Window/Window.h>
+#include <SkyboltCommon/File/OsDirectories.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
 #include <SkyboltCommon/Json/WriteJsonFile.h>
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -257,35 +258,49 @@ QString settingsFilenameKey = "settingsFilename";
 static nlohmann::json readOrCreateEngineSettingsFile(QWidget* parent, QSettings& settings)
 {
 	nlohmann::json result = EngineRootFactory::createDefaultSettings();
-
 	QString settingsFilename = settings.value(settingsFilenameKey).toString();
-	if (settingsFilename.isEmpty() || !QFile(settingsFilename).exists())
-	{
-		QString path = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
-		settingsFilename = QDir::cleanPath(path + QDir::separator() + "Settings.json");
 
+	while (settingsFilename.isEmpty() || !QFile(settingsFilename).exists())
+	{
 		QMessageBox box;
 		box.setWindowTitle("Settings");
-		box.setText("A settings file must be created before using this program. By default one will be created in " + settingsFilename);
-		QAbstractButton* okButton = box.addButton("OK", QMessageBox::YesRole);
-		QAbstractButton* changeButton = box.addButton("Change...", QMessageBox::YesRole);
-		
-		box.exec();
-		if (box.clickedButton() == changeButton)
-		{
-			settingsFilename = QFileDialog::getSaveFileName(parent, "Save Settings File", settingsFilename, "Json (*.json)");
-		}
-		else if (box.clickedButton() != okButton)
-		{
-			throw std::runtime_error("Settings filename not specified. Program will now exit.");
-		}
+		box.setText("Settings file required to run.\nClick Create to create a new file, or Load to load an existing file");
+		QAbstractButton* createButton = box.addButton("Create...", QMessageBox::YesRole);
+		QAbstractButton* loadButton = box.addButton("Load...", QMessageBox::YesRole);
 
-		settings.setValue(settingsFilenameKey, settingsFilename);
-		QDir(path).mkdir(".");
-		writeJsonFile(result, settingsFilename.toStdString());
-		return result;
+		box.exec();
+		if (box.clickedButton() == createButton)
+		{
+			auto appUserDataDir = file::getAppUserDataDirectory("Skybolt");
+			settingsFilename = QString::fromStdString(appUserDataDir.append("Settings.json").string());
+
+			settingsFilename = QFileDialog::getSaveFileName(parent, "Create Settings File", settingsFilename, "Json (*.json)");
+
+			if (!settingsFilename.isEmpty())
+			{
+				// Create file
+				settings.setValue(settingsFilenameKey, settingsFilename);
+				boost::filesystem::create_directories(file::Path(settingsFilename.toStdString()).parent_path());
+				writeJsonFile(result, settingsFilename.toStdString());
+				return result;
+			}
+		}
+		else if (box.clickedButton() == loadButton)
+		{
+			settingsFilename = QFileDialog::getOpenFileName(parent, "Load Settings File", settingsFilename, "Json (*.json)");
+
+			if (!settingsFilename.isEmpty())
+			{
+				break;
+			}
+		}
+		else
+		{
+			throw std::runtime_error("Settings file not specified. Program will now exit.");
+		}
 	}
 
+	// Load file
 	result.update(readJsonFile(settingsFilename.toStdString()));
 	return result;
 }

@@ -6,6 +6,7 @@
 
 #include "EngineCommandLineParser.h"
 
+#include <SkyboltCommon/File/OsDirectories.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
 #include <boost/optional.hpp>
 #include <boost/log/trivial.hpp>
@@ -38,11 +39,25 @@ void EngineCommandLineParser::addOptions(po::options_description& desc)
 
 boost::optional<nlohmann::json> EngineCommandLineParser::readSettings(const boost::program_options::variables_map& params)
 {
+	file::Path settingsFilename;
 	if (params.count("settingsFile"))
 	{
-		std::string settingsFilename = params["settingsFile"].as<std::string>();
-		BOOST_LOG_TRIVIAL(warning) << "Reading settings file '" << settingsFilename << "'";
-		return readJsonFile(settingsFilename);
+		settingsFilename = params["settingsFile"].as<std::string>();
+	}
+	else
+	{
+		settingsFilename = file::getAppUserDataDirectory("Skybolt").append("Settings.json");
+		BOOST_LOG_TRIVIAL(info) << "No --settingsFile program argument specified. Using default settings file location: '" << settingsFilename << "'";
+	}
+
+	if (boost::filesystem::exists(settingsFilename))
+	{
+		BOOST_LOG_TRIVIAL(info) << "Reading settings file '" << settingsFilename << "'";
+		return readJsonFile(settingsFilename.string());
+	}
+	else
+	{
+		BOOST_LOG_TRIVIAL(warning) << "Settings file not found: '" << settingsFilename << "'";
 	}
 	return boost::none;
 }

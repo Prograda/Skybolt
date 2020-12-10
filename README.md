@@ -176,8 +176,13 @@ Only the Core package is required to run, but additional packages will add extra
 1. Ensure the engine can find shaders (included in this code repository) under either Assets/Shaders or Source/Assets/Shaders relative to the working directory.
 2. Ensure the engine can find asset models under Assets/ relative to the working directory.
 
+### Settings
+Engine settings are stored in a json file, which may be manually edited with a text editor, or edited in Sprocket with the Tools->Settings dialog.
+An example settings file template available at src/SkyboltExamples/ExamplesCommon/ExampleSettings.json.
+
+The settings file can be loaded by example applications with the --settingsFile commandline option. If the option is not specified, a default Settings.json in the Operating System user's home directory will be used. On windows, this is located at C:/Users/<Username>/AppData/Local/Skybolt/Settings.json.
+
 ### Using third party Map APIs
 By default, the PlanetEarth entity uses mapbox for albedo and elevation data. To use mapbox, you must acquire an API key from https://mapbox.com
 If desired, PlanetEarth can be edited to use Bing maps for albedo instead. A bing key can be obtained from https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key
-
-After acquiring a key, enter the key in Sprocket under the Tools->Settings dialog.
+Keys are stored in the engine json settings file (see above).
