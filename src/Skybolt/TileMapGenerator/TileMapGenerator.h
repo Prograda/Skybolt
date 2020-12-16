@@ -7,7 +7,7 @@
 #pragma once
 
 #include <SkyboltCommon/Math/Box2.h>
-#include <osg/image>
+#include <osg/Image>
 #include <osg/Vec2i>
 
 typedef skybolt::Box2T<osg::Vec2d> Box2d;

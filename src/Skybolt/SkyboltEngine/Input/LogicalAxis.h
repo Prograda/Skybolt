@@ -7,7 +7,7 @@
 #pragma once
 
 #include "SkyboltEngine/SkyboltEngineFwd.h"
-#include <osg/vec2f>
+#include <osg/Vec2f>
 
 namespace skybolt {
 

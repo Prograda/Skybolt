@@ -13,7 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include "TileableVolumeNoise.h"
 
-#include <glm\gtc\noise.hpp>
+#include <glm/gtc/noise.hpp>
 #include <math.h>
 
 // Perlin noise based on GLM http://glm.g-truc.net

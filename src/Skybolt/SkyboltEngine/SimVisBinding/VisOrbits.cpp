@@ -16,7 +16,7 @@
 
 #include <osg/Depth>
 #include <osg/Geode>
-#include <osgText/text>
+#include <osgText/Text>
 
 namespace skybolt {
 

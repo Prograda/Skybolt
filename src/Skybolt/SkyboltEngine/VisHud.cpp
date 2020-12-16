@@ -6,8 +6,8 @@
 
 #include "VisHud.h"
 
-#include <osg/geode>
-#include <osgText/text>
+#include <osg/Geode>
+#include <osgText/Text>
 
 namespace skybolt {
 

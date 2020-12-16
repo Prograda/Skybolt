@@ -14,7 +14,7 @@
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/Texture2D>
-#include <osgText/font>
+#include <osgText/Font>
 
 #include <boost/log/trivial.hpp>
 #include <assert.h>

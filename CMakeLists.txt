@@ -39,6 +39,10 @@ if (Boost_STATIC_LIBS)
 	set(Boost_USE_STATIC_LIBS ON)
 endif()
 
+if ( MSVC )
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /we4715") # Treat missing return as error
+endif()
+
 cmake_policy(SET CMP0020 NEW)
 cmake_policy(SET CMP0074 NEW) # allow <PackageName>_ROOT variables
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <osg/image>
+#include <osg/Image>
 
 namespace skybolt {
 
