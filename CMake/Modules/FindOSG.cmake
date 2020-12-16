@@ -204,6 +204,8 @@ ELSE (_osg_IN_CACHE)
 			NAMES 
 				${_osg_LIB_PREFIX}${COMPONENT}${_osg_LIB_VERSION}
 				${_osg_LIB_PREFIX}${COMPONENT}
+				${COMPONENT}${_osg_LIB_VERSION}
+				${COMPONENT}
 			PATHS  ${_osg_LIBRARIES_SEARCH_DIRS}
 			PATH_SUFFIXES lib
 		)
@@ -212,6 +214,8 @@ ELSE (_osg_IN_CACHE)
 			NAMES  
 				${_osg_LIB_PREFIX}${COMPONENT}${_osg_LIB_VERSION}${_osg_DEBUG_TAG}
 				${_osg_LIB_PREFIX}${COMPONENT}${_osg_DEBUG_TAG}
+				${COMPONENT}${_osg_LIB_VERSION}${_osg_DEBUG_TAG}
+				${COMPONENT}${_osg_DEBUG_TAG}
 			PATHS  ${_osg_LIBRARIES_SEARCH_DIRS}
 			PATH_SUFFIXES lib
 		)
