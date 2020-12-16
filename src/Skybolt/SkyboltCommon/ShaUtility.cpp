@@ -23,7 +23,7 @@ std::string calcSha1(const std::string& p_arg)
 
 	for (int i = 0; i < 5; i++)
 	{
-		sprintf_s(buf + (i << 3), 41, "%08x", hash[i]);
+		snprintf(buf + (i << 3), 41, "%08x", hash[i]);
 	}
 
 	return std::string(buf);
