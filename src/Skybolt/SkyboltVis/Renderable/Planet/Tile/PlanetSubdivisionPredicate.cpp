@@ -24,7 +24,7 @@ bool PlanetSubdivisionPredicate::operator()(const Box2d& bounds, const QuadTreeT
 		return false;
 	}
 
-	Box2d latLonBounds(swapComponentsVec2(bounds.minimum), swapComponentsVec2(bounds.maximum));
+	Box2d latLonBounds(math::vec2SwapComponents(bounds.minimum), math::vec2SwapComponents(bounds.maximum));
 
 	osg::Vec2d latLon = nearestPointInSolidBox(observerLatLon, latLonBounds);
 

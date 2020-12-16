@@ -66,7 +66,7 @@ osg::Geometry* createPlanetTileGeometry(const osg::Vec3d& tileCenter, const Box2
 			uv.x() = (float)math::clamp(x - 1, 0, innerMaxX) / (float)innerMaxX;
 			uv.y() = (float)math::clamp(y - 1, 0, innerMaxY) / (float)innerMaxY;
 
-			osg::Vec2d latLon = latLonBounds.getPointFromNormalizedCoord(swapComponentsVec2(uv));
+			osg::Vec2d latLon = latLonBounds.getPointFromNormalizedCoord(math::vec2SwapComponents(uv));
 
 			double effectiveRadius = skirt ? (radius - double(skirtLength)) : radius;
 			posBuffer->at(i) = llaToGeocentric(latLon, 0, effectiveRadius) - tileCenter;

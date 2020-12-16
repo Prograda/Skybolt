@@ -11,6 +11,39 @@
 
 using namespace skybolt::math;
 
+TEST_CASE("Component-wise multiply scalar by vector")
+{
+	float s = 5;
+	glm::vec2 v(2, 4);
+	glm::vec2 r = componentWiseMultiply(s, v);
+	CHECK(glm::distance(v * s, r) < 1e-8f);
+}
+
+TEST_CASE("Component-wise multiply vector by vector")
+{
+	glm::vec2 a(2, 4);
+	glm::vec2 b(3, 5);
+	glm::vec2 r = componentWiseMultiply(a, b);
+	CHECK(glm::distance(a * b, r) < 1e-8f);
+}
+
+TEST_CASE("Component-wise divide vector by vector")
+{
+	glm::vec2 a(10, 5);
+	glm::vec2 b(5, 2);
+	glm::vec2 r = componentWiseDivide(a, b);
+	CHECK(glm::distance(a / b, r) < 1e-8f);
+}
+
+TEST_CASE("Component-wise lerp")
+{
+	glm::vec2 a(2, 4);
+	glm::vec2 b(3, 5);
+	float t = 0.25;
+	glm::vec2 r = componentWiseLerp(a, b, t);
+	CHECK(glm::distance(glm::mix(a, b, t), r) < 1e-8f);
+}
+
 TEST_CASE("Convert euler to quaternion")
 {
 	glm::vec3 euler(0.1, 0.2, 0.3);

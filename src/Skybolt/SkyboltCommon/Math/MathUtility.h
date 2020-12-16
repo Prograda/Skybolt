@@ -28,7 +28,61 @@ T lerp(T x, T y, T t)
 	return x + t*(y-x);
 }
 
+template <class T>
+T vec2SwapComponents(const T& v)
+{
+	return T(v[1], v[0]);
+}
+
 glm::vec2 vec2Rotate(const glm::vec2 &v, float theta);
+
+template <typename T>
+constexpr size_t componentCount(const typename glm::detail::tvec2<T>& v) {	return 2; }
+
+template <typename T>
+constexpr size_t componentCount(const typename glm::detail::tvec3<T>& v) { return 3; }
+
+template <typename T>
+constexpr size_t componentCount(const typename glm::detail::tvec4<T>& v) { return 4; }
+
+template <typename T, typename V>
+T componentWiseMultiply(const V& s, const T& v)
+{
+	T r;
+	for (int i = 0; i < componentCount(v); ++i)
+	{
+		r[i] = s * v[i];
+	}
+	return r;
+}
+
+template <typename T>
+T componentWiseMultiply(const T& a, const T& b)
+{
+	T r;
+	for (int i = 0; i < componentCount(a); ++i)
+	{
+		r[i] = a[i] * b[i];
+	}
+	return r;
+}
+
+template <typename T>
+T componentWiseDivide(const T& a, const T& b)
+{
+	T r;
+	for (int i = 0; i < componentCount(a); ++i)
+	{
+		r[i] = a[i] / b[i];
+	}
+	return r;
+}
+
+template <typename T, typename V>
+T componentWiseLerp(const T& a, const T& b, V t)
+{
+	return a + componentWiseMultiply(t, (b - a));
+}
 
 //! @param normal must be normalized.
 //! Output vectors are normalized

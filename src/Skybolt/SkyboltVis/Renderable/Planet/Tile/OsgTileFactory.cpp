@@ -66,18 +66,18 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 	osg::Image* heightImagePr = heightImage.image;
 	osg::Vec2f borderRemovalScale(float(heightImagePr->s() - 2) / (float)heightImagePr->s(), float(heightImagePr->t() - 2) / (float)heightImagePr->t());
 	osg::Vec2f borderRemovalOffset(1.0f / (float)heightImagePr->s(), 1.0f / (float)heightImagePr->t());
-	heightImageScale = componentWiseMultiply(heightImageScale, borderRemovalScale);
-	heightImageOffset = componentWiseMultiply(heightImageOffset, borderRemovalScale) + borderRemovalOffset;
+	heightImageScale = math::componentWiseMultiply(heightImageScale, borderRemovalScale);
+	heightImageOffset = math::componentWiseMultiply(heightImageOffset, borderRemovalScale) + borderRemovalOffset;
 
 	OsgTile result;
 
 	// Find heightmap bounds
 	osg::Vec2d offsetNe(heightImageOffset.y(), heightImageOffset.x());
-	osg::Vec2d scaleNe = swapComponentsVec2(heightImageScale);
+	osg::Vec2d scaleNe = math::vec2SwapComponents(heightImageScale);
 
 	result.heightImage = heightImage.image;
-	result.heightImageLatLonBounds.minimum = componentWiseLerp(latLonBounds.minimum, latLonBounds.maximum, componentWiseDivide(-offsetNe, scaleNe));
-	result.heightImageLatLonBounds.maximum = componentWiseLerp(latLonBounds.minimum, latLonBounds.maximum, componentWiseDivide(osg::Vec2d(1, 1) - offsetNe, scaleNe));
+	result.heightImageLatLonBounds.minimum = math::componentWiseLerp(latLonBounds.minimum, latLonBounds.maximum, math::componentWiseDivide(-offsetNe, scaleNe));
+	result.heightImageLatLonBounds.maximum = math::componentWiseLerp(latLonBounds.minimum, latLonBounds.maximum, math::componentWiseDivide(osg::Vec2d(1, 1) - offsetNe, scaleNe));
 
 
 	// Create terrain
@@ -102,7 +102,7 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 		planetTile->latLonBounds = latLonBounds;
 		planetTile->planetRadius = mPlanetRadius;
 
-		osg::Vec2f heightImageLatLonDelta = componentWiseDivide(osg::Vec2f(latLonBounds.size()), heightImageScale);
+		osg::Vec2f heightImageLatLonDelta = math::componentWiseDivide(osg::Vec2f(latLonBounds.size()), heightImageScale);
 		osg::Vec2f texelWorldSize = osg::Vec2f(heightImageLatLonDelta.x() * mPlanetRadius / heightImagePr->t(), heightImageLatLonDelta.y() * mPlanetRadius * cos(latLonBounds.center().x()) / heightImagePr->s()); // note flip: s,t -> y,x
 
 		osg::Vec2f attributeImageScale, attributeImageOffset;

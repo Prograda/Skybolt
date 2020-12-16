@@ -6,39 +6,14 @@
 
 #pragma once
 
-#include <osg/Vec3>
-#include <osg/Vec4>
+namespace skybolt {
+namespace math {
 
-template <class T>
-T componentWiseMultiply(const T& a, const T& b)
+template <typename T>
+constexpr size_t componentCount(const T& v)
 {
-	return T(a.x() * b.x(), a.y() * b.y());
+	return T::num_components;
 }
 
-inline osg::Vec3f componentWiseMultiply(const osg::Vec3f& a, const osg::Vec3f& b)
-{
-	return osg::Vec3f(a.x() * b.x(), a.y() * b.y(), a.z() * b.z());
-}
-
-inline osg::Vec4f componentWiseMultiply(const osg::Vec4f& a, const osg::Vec4f& b)
-{
-	return osg::Vec4f(a.x() * b.x(), a.y() * b.y(), a.z() * b.z(), a.w() * b.w());
-}
-
-template <class T>
-T componentWiseDivide(const T& a, const T& b)
-{
-	return T(a.x() / b.x(), a.y() / b.y());
-}
-
-template <class T>
-inline T componentWiseLerp(const T& a, const T& b, const T& t)
-{
-	return a + componentWiseMultiply(t, (b - a));
-}
-
-template <class T>
-T swapComponentsVec2(const T& v)
-{
-	return T(v.y(), v.x());
-}
+} // namespace math
+} // namespace skybolt

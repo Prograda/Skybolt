@@ -21,8 +21,8 @@ Box2d getTileBounds(int x, int y, int numTilesX, int numTilesY)
 		osg::Vec2d(double(x + 1) / double(numTilesX), double(y + 1) / double(numTilesY)));
 
 	osg::Vec2d size = planetLonLatBounds.size();
-	bounds.minimum = planetLonLatBounds.minimum + componentWiseMultiply(bounds.minimum, size);
-	bounds.maximum = planetLonLatBounds.minimum + componentWiseMultiply(bounds.maximum, size);
+	bounds.minimum = planetLonLatBounds.minimum + math::componentWiseMultiply(bounds.minimum, size);
+	bounds.maximum = planetLonLatBounds.minimum + math::componentWiseMultiply(bounds.maximum, size);
 
 	return bounds;
 }
@@ -42,7 +42,7 @@ void postProcessStrm(osg::Image& image)
 	}
 }
 
-void main_nlcd()
+int main_nlcd()
 {
 	std::string outputDirectory = "nlcd_2011_landcover_2011_edition_2014_10_10/TMS";
 	osg::Vec2i tileDimensions(256, 256);
@@ -64,10 +64,12 @@ void main_nlcd()
 	catch (const std::exception& e)
 	{
 		std::cerr << e.what() << std::endl;
+		return EXIT_FAILURE;
 	}
+	return EXIT_SUCCESS;
 }
 
-void main_dem()
+int main_dem()
 {
 	std::string outputDirectory = "DEM/CombinedElevation";
 	osg::Vec2i tileDimensions(256, 256);
@@ -134,7 +136,9 @@ void main_dem()
 	catch (const std::exception& e)
 	{
 		std::cerr << e.what() << std::endl;
+		return EXIT_FAILURE;
 	}
+	return EXIT_SUCCESS;
 }
 
 int main()

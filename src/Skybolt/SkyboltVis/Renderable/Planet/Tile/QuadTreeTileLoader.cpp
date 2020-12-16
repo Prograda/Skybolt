@@ -220,7 +220,7 @@ void QuadTreeTileLoader::loadTile(AsyncQuadTreeTile& tile)
 		return;
 
 	tile.progressCallback = std::make_shared<TileProgressCallback>();
-	Box2d latLonBounds(swapComponentsVec2(tile.bounds.minimum), swapComponentsVec2(tile.bounds.maximum));
+	Box2d latLonBounds(math::vec2SwapComponents(tile.bounds.minimum), math::vec2SwapComponents(tile.bounds.maximum));
 	mAsyncTileLoader->load(tile.key, latLonBounds, tile.dataPtr, tile.progressCallback);
 	CALL_LISTENERS_ON_OBJECT(tileLoadRequested(), mListener);
 	mLoadQueue.push_back({ tile.progressCallback });

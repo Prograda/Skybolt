@@ -7,6 +7,7 @@
 #include "GpuTextureGeneratorStateSets.h"
 #include "SkyboltVis/OsgMathHelpers.h"
 #include "SkyboltVis/OsgStateSetHelpers.h"
+#include <SkyboltCommon/Math/MathUtility.h>
 
 namespace skybolt {
 namespace vis {
@@ -38,7 +39,7 @@ osg::StateSet* createWaveFoamMaskGeneratorStateSet(osg::ref_ptr<osg::Program> pr
 
 	const osg::Image& image = *heightTexture->getImage(0);
 	osg::Vec2f texelSizeInTextureSpace(1.0f / (float)image.s(), 1.0f / (float)image.t());
-	osg::Vec2f texelSizeInWorldSpace = componentWiseMultiply(texelSizeInTextureSpace, textureWorldSize);
+	osg::Vec2f texelSizeInWorldSpace = math::componentWiseMultiply(texelSizeInTextureSpace, textureWorldSize);
 
 	stateSet->addUniform(new osg::Uniform("lambda", lambda));
 	stateSet->addUniform(new osg::Uniform("texelSizeInTextureSpace", texelSizeInTextureSpace));

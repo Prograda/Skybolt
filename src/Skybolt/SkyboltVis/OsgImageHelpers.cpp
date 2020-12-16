@@ -166,12 +166,11 @@ osg::Vec4f getColorBilinear(const osg::Image& image, const osg::Vec2f& coord)
 	osg::Vec4f d11 = image.getColor(u1, v1);
 
 	osg::Vec4f fracUVec(fracU, fracU, fracU, fracU);
-	osg::Vec4f d0 = componentWiseLerp(d00, d10, fracUVec);
-	osg::Vec4f d1 = componentWiseLerp(d01, d11, fracUVec);
+	osg::Vec4f d0 = math::componentWiseLerp(d00, d10, fracUVec);
+	osg::Vec4f d1 = math::componentWiseLerp(d01, d11, fracUVec);
 
-	return componentWiseLerp(d0, d1, osg::Vec4f(fracV, fracV, fracV, fracV));
+	return math::componentWiseLerp(d0, d1, osg::Vec4f(fracV, fracV, fracV, fracV));
 }
-
 
 } // namespace vis
 } // namespace skybolt

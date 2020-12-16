@@ -94,13 +94,13 @@ PagedForest::PagedForest(px_sched::Scheduler& scheduler, const osg::ref_ptr<osg:
 	mBounds(bounds),
 	mVisibilityRange(maxPageSize.x(), maxPageSize.y())
 {
-	osg::Vec2f pageCountF = componentWiseDivide(bounds.size(), maxPageSize);
+	osg::Vec2f pageCountF = math::componentWiseDivide(bounds.size(), maxPageSize);
 	mPageCount.x() = (int)std::ceil(pageCountF.x());
 	mPageCount.y() = (int)std::ceil(pageCountF.y());
 	assert(mPageCount.x() > 0);
 	assert(mPageCount.y() > 0);
 
-	mPageSize = componentWiseDivide(bounds.size(), osg::Vec2f(mPageCount.x(), mPageCount.y()));
+	mPageSize = math::componentWiseDivide(bounds.size(), osg::Vec2f(mPageCount.x(), mPageCount.y()));
 
 	mModelMatrixUniform = new osg::Uniform("modelMatrix", osg::Matrixf());
 	getTransform()->getOrCreateStateSet()->addUniform(mModelMatrixUniform);

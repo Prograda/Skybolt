@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "MathUtility.h"
 #include <glm/glm.hpp>
 #include <limits>
 
@@ -22,7 +23,7 @@ struct Box2T
 	Box2T(const T& minimum, const T& maximum) : minimum(minimum), maximum(maximum) {}
 
 	inline T size() const { return maximum - minimum; }
-	inline T center() const { return (maximum + minimum) / T::value_type(2); }
+	inline T center() const { return (maximum + minimum) / (typename T::value_type)(2); }
 
 	inline bool intersects(const T& v) const
 	{
@@ -56,13 +57,13 @@ struct Box2T
 	//! @param p is a vector with compoents in range [0, 1], where 0 is at minimum bound and 1 is at maximum bound.
 	T getPointFromNormalizedCoord(const T& p) const
 	{
-		return componentWiseLerp(minimum, maximum, p);
+		return math::componentWiseLerp(minimum, maximum, p);
 	}
 
 	//! Returns vector with compoents in range [0, 1], where 0 is at minimum bound and 1 is at maximum bound.
 	T getNormalizedCoordinate(const T& p) const
 	{
-		return componentWiseDivide((p - minimum), size());
+		return math::componentWiseDivide((p - minimum), size());
 	}
 
 	static Box2T<T> unitBox()
