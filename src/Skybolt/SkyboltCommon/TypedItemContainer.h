@@ -11,6 +11,7 @@
 #include <memory>
 #include <typeindex>
 #include <vector>
+#include <algorithm>
 
 namespace skybolt {
 
