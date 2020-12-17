@@ -82,7 +82,7 @@ static double calcHourAngleOfVernalEquinox(double julianDate)
 	return 4.894961 + 230121.675315 * T;
 }
 
-static double calcHourAngle(double julianDate, const LatLon& equatorial, const LatLon& observer)
+double calcHourAngle(double julianDate, const LatLon& equatorial, const LatLon& observer)
 {
 	return calcHourAngleOfVernalEquinox(julianDate) + observer.lon - equatorial.lon;
 }
