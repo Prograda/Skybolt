@@ -47,6 +47,10 @@ Quaternion calcAttachmentPointOrientation(const Entity& entity, const Attachment
 	{
 		return *orientation * point.orientationRelBody;
 	}
+	else
+	{
+		return math::dquatIdentity();
+	}
 }
 
 } // namespace sim
