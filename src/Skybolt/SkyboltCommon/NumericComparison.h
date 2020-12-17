@@ -6,11 +6,7 @@
 
 #pragma once
 
-#include "Math.h"
-#include <stdio.h>
-#include <complex>
-#include <string>
-#include <iostream>
+#include <cmath>
 
 namespace skybolt {
 
