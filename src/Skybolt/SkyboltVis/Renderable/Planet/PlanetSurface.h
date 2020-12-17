@@ -66,8 +66,6 @@ struct PlanetSurfaceListener
 
 typedef skybolt::DiQuadTree<struct AsyncQuadTreeTile> WorldTileTree;
 typedef std::shared_ptr<WorldTileTree> WorldTileTreePtr;
-typedef skybolt::LruCachedLeafIntersector<WorldTileTree> WorldTileIntersector;
-typedef std::shared_ptr<WorldTileIntersector> WorldTileIntersectorPtr;
 
 class PlanetSurface : public skybolt::Listenable<PlanetSurfaceListener>
 {

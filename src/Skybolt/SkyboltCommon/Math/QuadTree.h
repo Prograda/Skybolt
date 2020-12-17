@@ -285,7 +285,6 @@ public:
 	//! @ThreadSafe
 	const typename TreeT::TileType* intersect(const typename TreeT::TileType::VectorType& p)
 	{
-		return tree->intersect(p, predicate);
 		const typename TreeT::TileType* tile = getLastTile();
 		if (tile && tile->bounds.intersects(p))
 		{

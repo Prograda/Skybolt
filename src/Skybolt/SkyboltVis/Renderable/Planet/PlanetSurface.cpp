@@ -115,36 +115,6 @@ namespace vis {
 		}
 	}
 
-	static osg::Vec2d getPixelWorldPosition(const osg::Vec2d& pixel, const osg::Vec2i& imageSize, const Box2T<osg::Vec2d>& bounds)
-	{
-		osg::Vec2d f(pixel.x() / (double)imageSize.x(), pixel.y() / (double)imageSize.y());
-		return bounds.getPointFromNormalizedCoord(f);
-	}
-
-	static osg::Vec4f getNearestPixelColor(const osg::Image& image, const Box2T<osg::Vec2d>& bounds, const osg::Vec2d& point)
-	{
-		osg::Vec2d coord = bounds.getNormalizedCoordinate(point);
-		osg::Vec2i pixel(image.s() * coord.x(), image.t() * coord.y());
-		pixel.x() = math::clamp(pixel.x(), 0, image.s() - 1);
-		pixel.y() = math::clamp(pixel.y(), 0, image.t() - 1);
-		return image.getColor(pixel.x(), pixel.y());
-	}
-
-	static bool getNearestPixelColor(const TileImageMap& images, WorldTileIntersector& intersector, const osg::Vec2d& point, osg::Vec4f& color)
-	{
-		const AsyncQuadTreeTile* adjacentTile = intersector.intersect(point);
-		if (adjacentTile)
-		{
-			auto it = images.find(adjacentTile->key);
-			if (it != images.end())
-			{
-				color = getNearestPixelColor(*it->second, adjacentTile->bounds, point);
-				return true;
-			}
-		}
-		return false;
-	}
-
 	typedef std::map<QuadTreeTileKey, const AsyncQuadTreeTile*> QuadTreeTilesMap;
 
 	void PlanetSurface::updateGeometry()
