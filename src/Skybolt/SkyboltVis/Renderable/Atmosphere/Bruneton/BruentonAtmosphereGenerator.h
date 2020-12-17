@@ -54,7 +54,7 @@ public:
 	const osg::ref_ptr<osg::Texture>& getTransmittanceTexture() const { return mTransmittanceTexture; }
 	const osg::ref_ptr<osg::Texture>& getScatteringTexture() const { return mScatteringTexture; }
 	const osg::ref_ptr<osg::Texture>& getIrradianceTexture() const { return mIrradianceTexture; }
-	const osg::ref_ptr<osg::Texture>& getOptionalSingleMieScatteringTexture() const { mOptionalSingleMieScatteringTexture; }
+	const osg::ref_ptr<osg::Texture>& getOptionalSingleMieScatteringTexture() const { return mOptionalSingleMieScatteringTexture; }
 
 private:
 	std::unique_ptr<class CompositingPipelineFactory> mCompositingPipelineFactory;
