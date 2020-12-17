@@ -44,9 +44,11 @@ struct PlanetConfig
 	boost::optional<file::Path> featuresDirectory;
 };
 
+class MyPlanetSurfaceListener;
+
 class Planet : public RootNode
 {
-	friend class MyPlanetSurfaceListener;
+	friend MyPlanetSurfaceListener;
 public:
 	Planet(const PlanetConfig& config);
 	~Planet();
