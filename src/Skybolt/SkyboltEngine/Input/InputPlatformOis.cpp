@@ -6,12 +6,11 @@
 
 #include "InputPlatformOis.h"
 
-#include <OISMouse.h>
-#include <OISKeyboard.h>
-#include <OISJoyStick.h>
-#include <iostream>
-#include <OISInputManager.h>
-#include <OISException.h>
+#include <OIS/OISMouse.h>
+#include <OIS/OISKeyboard.h>
+#include <OIS/OISJoyStick.h>
+#include <OIS/OISInputManager.h>
+#include <OIS/OISException.h>
 
 #include <assert.h>
 #include <boost/foreach.hpp>
