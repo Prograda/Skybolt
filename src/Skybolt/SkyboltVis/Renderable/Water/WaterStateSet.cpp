@@ -120,8 +120,8 @@ static osg::Vec2i calcHashCellCoord(const osg::Vec2f& point)
 	osg::Vec2i index;
 	osg::Vec2f indexF = math::componentWiseDivide(point, hasCellWorldSize);
 	return osg::Vec2i(
-		int(std::floorf(indexF.x())),
-		int(std::floorf(indexF.y())));
+		int(floorf(indexF.x())),
+		int(floorf(indexF.y())));
 }
 
 int modPositive(int a, int b)

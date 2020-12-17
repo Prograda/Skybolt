@@ -100,7 +100,7 @@ static void createBuilding(const Building& building, const FacadeTexture& facade
 		}
 
 		// UVs
-		int levels = std::ceilf(building.height / buildingLevelHeight);
+		int levels = ceilf(building.height / buildingLevelHeight);
 
 		// calculate vertical repeats so that texture is not cut off vertically mid level within the texture
 		float textureWorldHeight = facade.buildingLevelsInTexture * buildingLevelHeight;
