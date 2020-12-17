@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <stddef.h> // for size_t
+
 namespace skybolt {
 namespace math {
 

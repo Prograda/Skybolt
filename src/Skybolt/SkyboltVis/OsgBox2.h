@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "OsgMathHelpers.h"
 #include <SkyboltCommon/Math/Box2.h>
 #include <osg/BoundingBox>
 #include <osg/Vec2f>

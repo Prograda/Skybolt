@@ -6,16 +6,14 @@
 
 #pragma once
 
-#include <SkyboltCommon/Math/Box2.h>
+#include <SkyboltVis/OsgBox2.h>
 #include <osg/Image>
 #include <osg/Vec2i>
-
-typedef skybolt::Box2T<osg::Vec2d> Box2d;
 
 struct TileMapGeneratorLayer
 {
 	osg::ref_ptr<osg::Image> image;
-	Box2d bounds;
+	skybolt::vis::Box2d bounds;
 };
 
 enum class Filtering

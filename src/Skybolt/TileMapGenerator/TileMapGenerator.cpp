@@ -14,6 +14,7 @@
 #include <boost/filesystem.hpp>
 
 using namespace skybolt;
+using namespace vis;
 
 struct TileGenerator
 {
