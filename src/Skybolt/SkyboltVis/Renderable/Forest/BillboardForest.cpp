@@ -124,8 +124,8 @@ void BillboardForest::addGeodes(osg::Group& node, const std::vector<Tree>& trees
 	ss->setAttributeAndModes(topProgram, osg::StateAttribute::ON);
 	static osg::ref_ptr<osg::Texture2D> albedoTexture = new osg::Texture2D(readImageWithCorrectOrientation("Environment/Forest/spruceAtlas_top_albedo.tga"));
 	albedoTexture->setInternalFormat(toSrgbInternalFormat(albedoTexture->getInternalFormat()));
-	albedoTexture->setMipmapMaxLevel(4); // TODO: Modify highest mipmap levels so that they maintain alpha, tghen remove this max level
 	ss->setTextureAttributeAndModes(0, albedoTexture, osg::StateAttribute::ON);
+	// TODO: Modify alpha channel of mipmaps to achieve consistent coverage
 
 	topGeode->setStateSet(ss);
 	node.addChild(topGeode);
