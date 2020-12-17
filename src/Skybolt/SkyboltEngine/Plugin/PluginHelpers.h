@@ -10,6 +10,7 @@
 #include <boost/dll/import.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
+#include <functional>
 
 namespace skybolt {
 
