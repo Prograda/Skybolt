@@ -45,7 +45,7 @@ QuadTreeTileKey createAncestorKey(const QuadTreeTileKey& key, int level);
 template <class VecT, class DerivedT>
 struct QuadTreeTile
 {
-	typedef typename VecT VectorType;
+	typedef VecT VectorType;
 	Box2T<VecT> bounds;
 	QuadTreeTileKey key;
 	std::unique_ptr<DerivedT> children[4];
@@ -113,7 +113,7 @@ QuadTreeTileKey getKeyAtLevelIntersectingLonLatPoint(int level, const VecType& p
 template <class TileT>
 struct QuadTree
 {
-	typedef typename TileT TileType;
+	typedef TileT TileType;
 
 	typedef std::function <std::unique_ptr<TileT>(const QuadTreeTileKey& key, const Box2T<typename TileT::VectorType>& bounds)> TileCreator;
 
@@ -138,7 +138,7 @@ struct QuadTree
 		return intersectLeaf(p, getRoot());
 	}
 
-	const TileT* intersectLeaf(const typename TileT::VectorType& p, const typename TileT& tile) const
+	const TileT* intersectLeaf(const typename TileT::VectorType& p, const TileT& tile) const
 	{
 		if (tile.bounds.intersects(p))
 		{
@@ -201,12 +201,12 @@ struct QuadTree
 		int y = tile.key.y * 2;
 		int level = tile.key.level + 1;
 
-		TileT::VectorType size = tile.bounds.size() / 2;
-		TileT::VectorType center = tile.bounds.minimum + size;
-		TileT::VectorType centerE(tile.bounds.maximum.x(), center.y());
-		TileT::VectorType centerW(tile.bounds.minimum.x(), center.y());
-		TileT::VectorType centerN(center.x(), tile.bounds.maximum.y());
-		TileT::VectorType centerS(center.x(), tile.bounds.minimum.y());
+		typename TileT::VectorType size = tile.bounds.size() / 2;
+		typename TileT::VectorType center = tile.bounds.minimum + size;
+		typename TileT::VectorType centerE(tile.bounds.maximum.x(), center.y());
+		typename TileT::VectorType centerW(tile.bounds.minimum.x(), center.y());
+		typename TileT::VectorType centerN(center.x(), tile.bounds.maximum.y());
+		typename TileT::VectorType centerS(center.x(), tile.bounds.minimum.y());
 
 		tile.children[0] = mTileCreator(QuadTreeTileKey(level, x, y), Box2T<typename TileT::VectorType>(centerW, centerN)); // north west
 		tile.children[1] = mTileCreator(QuadTreeTileKey(level, x + 1, y), Box2T<typename TileT::VectorType>(center, tile.bounds.maximum)); // north east
@@ -242,7 +242,7 @@ private:
 template <typename TileT>
 struct DiQuadTree
 {
-	typedef typename TileT TileType;
+	typedef TileT TileType;
 
 	QuadTree<TileT> leftTree;
 	QuadTree<TileT> rightTree;
@@ -269,8 +269,8 @@ struct DiQuadTree
 template <class TileT>
 DiQuadTree<TileT> createGlobeQuadTree(typename QuadTree<TileT>::TileCreator tileCreator)
 {
-	static const Box2T<TileT::VectorType> leftBounds(TileT::VectorType(-skybolt::math::piD(), -skybolt::math::halfPiD()), TileT::VectorType(0, skybolt::math::halfPiD()));
-	static const Box2T<TileT::VectorType> rightBounds(TileT::VectorType(0, -skybolt::math::halfPiD()), TileT::VectorType(skybolt::math::piD(), skybolt::math::halfPiD()));
+	static const Box2T<typename TileT::VectorType> leftBounds(typename TileT::VectorType(-skybolt::math::piD(), -skybolt::math::halfPiD()), typename TileT::VectorType(0, skybolt::math::halfPiD()));
+	static const Box2T<typename TileT::VectorType> rightBounds(typename TileT::VectorType(0, -skybolt::math::halfPiD()), typename TileT::VectorType(skybolt::math::piD(), skybolt::math::halfPiD()));
 
 	return DiQuadTree<TileT>(tileCreator, QuadTreeTileKey(0, 0, 0), leftBounds, QuadTreeTileKey(0, 1, 0), rightBounds);
 }
@@ -286,7 +286,7 @@ public:
 	const typename TreeT::TileType* intersect(const typename TreeT::TileType::VectorType& p)
 	{
 		return tree->intersect(p, predicate);
-		typename const TreeT::TileType* tile = getLastTile();
+		const typename TreeT::TileType* tile = getLastTile();
 		if (tile && tile->bounds.intersects(p))
 		{
 			return tile;
@@ -304,7 +304,7 @@ public:
 	}
 
 private:
-	typename const TreeT::TileType* getLastTile()
+	const typename TreeT::TileType* getLastTile()
 	{
 		std::shared_lock<std::shared_mutex> lock(lastTileMutex);
 		auto i = lastTileMap.find(std::this_thread::get_id());
@@ -315,7 +315,7 @@ private:
 		return nullptr;
 	}
 
-	void setLastTile(typename const TreeT::TileType* tile)
+	void setLastTile(const typename TreeT::TileType* tile)
 	{
 		std::unique_lock<std::shared_mutex> lock(lastTileMutex);
 		lastTileMap[std::this_thread::get_id()] = tile;
@@ -325,7 +325,7 @@ private:
 	const std::shared_ptr<TreeT> tree;
 	typename QuadTree<typename TreeT::TileType>::IntersectionPredicate predicate;
 
-	std::map<std::thread::id, typename const TreeT::TileType*> lastTileMap;
+	std::map<std::thread::id, const typename TreeT::TileType*> lastTileMap;
 	std::shared_mutex lastTileMutex;
 };
 

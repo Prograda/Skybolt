@@ -25,7 +25,7 @@ public:
 
 	void removeListener(Listener* listener)
 	{
-		Listeners::iterator i = std::find(mListeners.begin(), mListeners.end(), listener);
+		typename Listeners::iterator i = std::find(mListeners.begin(), mListeners.end(), listener);
 		if (i != mListeners.end())
 			mListeners.erase(i);
 
