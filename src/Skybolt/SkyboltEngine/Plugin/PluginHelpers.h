@@ -32,7 +32,7 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 		dll::shared_library lib(path, dll::load_mode::default_mode);
 		if (lib.has(PluginT::factorySymbolName()))
 		{
-			boost::function<CreatePluginFunction> creator = boost::dll::import_alias<CreatePluginFunction>(
+			std::function<CreatePluginFunction> creator = boost::dll::import_alias<CreatePluginFunction>(
 				path,
 				PluginT::factorySymbolName(),
 				dll::load_mode::default_mode
