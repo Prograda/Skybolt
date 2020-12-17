@@ -8,6 +8,8 @@
 #include <SkyboltCommon/MapUtility.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
+#undef _HAS_STD_BYTE
+#define _HAS_STD_BYTE 0 // workaround for cigicl header errors with cpp17
 #include <cigicl/CigiEntityCtrlV3_3.h>
 #include <cigicl/CigiEntityCtrlV4.h>
 #include <cigicl/CigiEntityPositionCtrlV4.h>
@@ -18,6 +20,7 @@
 #include <cigicl/CigiViewCtrlV4.h>
 #include <cigicl/CigiViewDefV3.h>
 #include <cigicl/CigiViewDefV4.h>
+#undef _HAS_STD_BYTE
 
 #include <boost/log/trivial.hpp>
 

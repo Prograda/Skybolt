@@ -20,6 +20,8 @@ ${muFFT_LIBRARIES}
 xsimd
 )
 
+add_definitions(-D_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING) # disable deprecation warning for xsimd
+
 add_library(${TARGET_NAME} SHARED ${SrcFiles})
 
 target_link_libraries (${TARGET_NAME} ${LIBS})
