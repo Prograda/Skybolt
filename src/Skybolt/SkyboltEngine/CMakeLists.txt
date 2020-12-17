@@ -18,6 +18,7 @@ set(LIBRARIES
 	SkyboltVis
 	${Boost_LIBRARIES}
 	${OIS_LIBRARIES}
+	${CMAKE_DL_LIBS} # Required by gcc
 )
 
 add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
