@@ -29,14 +29,20 @@ osg::ref_ptr<osg::GraphicsContext> createOffscreenContext(int width, int height)
 
 osg::ref_ptr<osgViewer::Viewer> createOffscreenViewer(int width, int height)
 {
+	osg::ref_ptr<osg::GraphicsContext> context = createOffscreenContext(width, height);
+	if (!context)
+	{
+		throw std::runtime_error("Could not create offscreen OpenGL graphics context");
+	}
+
 	osg::ref_ptr<osgViewer::Viewer> viewer = new osgViewer::Viewer;
 	viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
-	viewer->getCamera()->setGraphicsContext(createOffscreenContext(width, height));
+	viewer->getCamera()->setGraphicsContext(context);
 	viewer->getCamera()->setRenderTargetImplementation(osg::Camera::PIXEL_BUFFER);
 	viewer->getCamera()->setViewport(new osg::Viewport(0, 0, width, height));
 	viewer->realize();
 
-	osg::State* state = viewer->getCamera()->getGraphicsContext()->getState();
+	osg::State* state = context->getState();
 	state->setUseModelViewAndProjectionUniforms(true);
 	state->setUseVertexAttributeAliasing(true);
 
