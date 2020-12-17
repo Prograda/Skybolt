@@ -6,7 +6,11 @@
 
 #include "StandaloneWindow.h"
 #include <osgViewer/ViewerEventHandlers>
+#if defined(WIN32)
 #include <osgViewer/api/Win32/GraphicsHandleWin32>
+#else
+#include <osgViewer/api/X11/GraphicsHandleX11>
+#endif
 
 using namespace skybolt::vis;
 
@@ -60,7 +64,10 @@ std::string StandaloneWindow::getHandle() const
 	mViewer->getWindows(windows);
 	if (windows.empty())
 		return "";
-	// TODO: Don't depend on Win32
+#if defined(WIN32)
 	size_t ptr = (size_t)dynamic_cast<osgViewer::GraphicsHandleWin32*>(windows[0])->getHWND();
+#else
+	size_t ptr = (size_t)dynamic_cast<osgViewer::GraphicsHandleX11*>(windows[0])->getDisplay();
+#endif
 	return std::to_string(ptr);
 }
