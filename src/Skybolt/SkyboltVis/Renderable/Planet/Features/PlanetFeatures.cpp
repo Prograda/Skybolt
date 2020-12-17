@@ -210,7 +210,6 @@ PlanetFeatures::PlanetFeatures(const PlanetFeaturesParams& params) :
 	mPlanetRadius(params.planetRadius),
 	mFeatures(createTile)
 {
-	assert(mLatLonElevationProvider);
 	assert(mScheduler);
 
 	for (int i = 0; i < PlanetFeaturesParams::featureGroupsSize; ++i)

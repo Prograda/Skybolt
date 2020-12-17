@@ -465,9 +465,7 @@ EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::v
 	assert(context.simWorld);
 	assert(context.stats);
 	assert(context.tileSourceFactory);
-	assert(context.Scene);
-	assert(context.visWindow);
-
+	assert(context.scene);
 	mBuiltinTemplates = {
 		{"SunBillboard", [this] {return createSun(); }},
 		{"MoonBillboard", [this] {return createMoon(); }},

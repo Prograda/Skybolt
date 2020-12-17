@@ -177,7 +177,7 @@ sim::Entity* getParent(const sim::Entity& entity)
 {
 	sim::ParentReferenceComponent* component = entity.getFirstComponent<sim::ParentReferenceComponent>().get();
 	sim::Entity* parent = component ? component->getParent() : nullptr;
-	assert(parent != &object);
+	assert(parent != &entity);
 	return parent;
 }
 

@@ -92,7 +92,7 @@ public:
 				{
 					sequence = std::make_shared<JulianDateSequenceController>(std::make_shared<DoubleStateSequence>(), &mEngineRoot->scenario);
 				}
-				assert(serquence);
+				assert(sequence);
 				mSequenceTreeItemRegistry->add(std::make_shared<SequenceTreeItem>(icon, QString::fromStdString(name), sequence));
 			};
 			type.itemDeleter = [this](TreeItem* item) {

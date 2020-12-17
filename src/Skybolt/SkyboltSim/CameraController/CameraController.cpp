@@ -48,6 +48,6 @@ void CameraController::setTarget(Entity* entity)
 
 void CameraController::onDestroy(Entity* entity)
 {
-	assert(object == mTarget);
+	assert(entity == mTarget);
 	setTarget(nullptr);
 }

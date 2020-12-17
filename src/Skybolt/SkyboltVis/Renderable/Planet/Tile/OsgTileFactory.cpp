@@ -45,15 +45,8 @@ OsgTileFactory::OsgTileFactory(const OsgTileFactoryConfig& config) :
 	mForestGeoVisibilityRange(config.forestGeoVisibilityRange),
 	mHasCloudShadows(config.hasCloudShadows)
 {
-	assert(scheduler);
-	assert(programs);
-
-	// FIXME: textureCompiler is currently unused, remove.
-	// It was originally used to pre-compile textures before used by the renderer,
-	// but it was found to be unnecessary because we throttle the amount of terrain tiles
-	// created each frame which limits the amount of texture compilation requred.
-	assert(textureCompiler);
-}
+	assert(mScheduler);
+	assert(mPrograms);}
 
 OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& latLonBounds, const TileImage& heightImage, osg::Image* landMaskImage,
 	const TileImage& albedoImage, const TileImage& attributeImage) const

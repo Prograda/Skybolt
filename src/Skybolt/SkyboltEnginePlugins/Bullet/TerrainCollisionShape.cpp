@@ -21,7 +21,7 @@ TerrainCollisionShape::TerrainCollisionShape(const std::shared_ptr<AltitudeProvi
 	mMaxPlanetRadius(maxPlanetRadius),
 	mLocalScaling(1,1,1)
 {
-	assert(mElevationProvider);
+	assert(mAltitudeProvider);
 
 	m_shapeType = CUSTOM_CONCAVE_SHAPE_TYPE;
 }

@@ -154,7 +154,7 @@ void PropertyEditor::setModel(const PropertiesModelPtr& model)
 
 void PropertyEditor::modelReset(PropertiesModel* model)
 {
-	assert(mModel == model);
+	assert(mModel.get() == model);
 
 	clearLayout(*mGridLayout);
 

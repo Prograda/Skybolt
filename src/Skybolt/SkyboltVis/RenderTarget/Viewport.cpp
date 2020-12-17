@@ -14,8 +14,6 @@ using namespace skybolt::vis;
 Viewport::Viewport() :
 	RenderTarget(new osg::Camera)
 {
-	assert(mWindow);
-
 	mOsgCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 	mOsgCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 	mOsgCamera->setClearColor(osg::Vec4(0, 0, 0, 0));

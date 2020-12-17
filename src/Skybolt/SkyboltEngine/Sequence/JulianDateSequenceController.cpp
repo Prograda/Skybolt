@@ -16,8 +16,7 @@ JulianDateSequenceController::JulianDateSequenceController(const std::shared_ptr
 	StateSequenceControllerT(sequence),
 	mScenario(scenario)
 {
-	assert(mEntity);
-	mInterpolator = std::make_unique<LinearInterpolatorD>(
+	assert(mScenario);	mInterpolator = std::make_unique<LinearInterpolatorD>(
 		[this] (int i) { return mSequence->values[i].value; });
 }
 
