@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 	}
 	catch (const std::exception& e)
 	{
-		printf(std::string(std::string(e.what()) + "\n").c_str());
+		printf("%s\n", e.what());
 	}
 
 	return 0;
