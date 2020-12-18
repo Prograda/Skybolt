@@ -117,7 +117,7 @@ static Entity* findObjectInWorld(const World& world, const std::string& name)
 
 static sim::AttachmentComponent* findFreeAttachmentAcceptingEntityTemplate(const Entity& entity, const std::string& templateName)
 {
-	for (auto component : entity.getComponents<sim::AttachmentComponent>())
+	for (auto component : entity.getComponentsOfType<sim::AttachmentComponent>())
 	{
 		if (!component->getTarget() && component->getEntityTemplate() == templateName)
 		{
@@ -211,7 +211,7 @@ void loadEntities(World& world, EntityFactory& factory, const QJsonValue& value)
 static QJsonArray saveEntityAttachments(const Entity& entity)
 {
 	QJsonArray json;
-	for (auto attachment : entity.getComponents<AttachmentComponent>())
+	for (auto attachment : entity.getComponentsOfType<AttachmentComponent>())
 	{
 		if (Entity* target = attachment->getTarget())
 		{

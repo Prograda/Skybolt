@@ -35,7 +35,7 @@ void syncVis(const sim::World& world, const GeocentricToNedConverter& converter)
 {
 	for (const sim::EntityPtr& entity : world.getEntities())
 	{
-		std::vector<SimVisBindingsComponentPtr> components = entity->getComponents<SimVisBindingsComponent>();
+		std::vector<SimVisBindingsComponentPtr> components = entity->getComponentsOfType<SimVisBindingsComponent>();
 		for (const SimVisBindingsComponentPtr& component : components)
 		{
 			for (const SimVisBindingPtr& bindings : component->bindings)

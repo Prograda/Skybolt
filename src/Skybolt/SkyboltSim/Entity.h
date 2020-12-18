@@ -45,7 +45,7 @@ public:
 	void removeComponent(const ComponentPtr& c);
 
 	template <class DerivedT>
-	std::vector<std::shared_ptr<DerivedT>> getComponents() const
+	std::vector<std::shared_ptr<DerivedT>> getComponentsOfType() const
 	{
 		return mComponents.getItemsOfType<DerivedT>();
 	}

@@ -37,7 +37,7 @@ sim::Entity* NamedObjectRegistry::getObjectByName(const std::string& name) const
 
 const std::string& getName(const sim::Entity& entity)
 {
-	std::vector<NameComponentPtr> comp = entity.getComponents<NameComponent>();
+	std::vector<NameComponentPtr> comp = entity.getComponentsOfType<NameComponent>();
 	if (!comp.empty())
 	{
 		return comp.front()->getName();

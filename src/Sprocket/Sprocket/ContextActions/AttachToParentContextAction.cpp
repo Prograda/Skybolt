@@ -35,7 +35,7 @@ void AttachToParentContextAction::execute(Entity& entity) const
 	std::map<QString, AttachmentComponentPtr> candidateAttachments;
 	for (const sim::EntityPtr& candidateParent : mWorld->getEntities())
 	{
-		auto components = candidateParent->getComponents<sim::AttachmentComponent>();
+		auto components = candidateParent->getComponentsOfType<sim::AttachmentComponent>();
 		for (auto component : components)
 		{
 			if (!component->getTarget() && component->getEntityTemplate() == templateName)

@@ -96,7 +96,7 @@ AttachmentComponentPtr getParentAttachment(const sim::Entity& entity)
 	if (auto parentReferenceComponent = entity.getFirstComponent<ParentReferenceComponent>())
 	{
 		auto parent = parentReferenceComponent->getParent();
-		for (auto attachment : parent->getComponents<AttachmentComponent>())
+		for (auto attachment : parent->getComponentsOfType<AttachmentComponent>())
 		{
 			if (attachment->getTarget() == &entity)
 			{
