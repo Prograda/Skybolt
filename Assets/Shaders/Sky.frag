@@ -12,11 +12,12 @@ in vec3 scattering;
 in vec3 singleScattering;
 in vec3 fragPosRelCamera;
 
+out vec4 fragColor;
+
 uniform vec3 lightDirection;
 
 void main(void)
 {
 	vec3 viewDir = normalize(fragPosRelCamera);
-	gl_FragColor.rgb = GetSkyRadianceFromScattering(scattering, singleScattering, viewDir, lightDirection);
-	gl_FragColor.a = 1.0;
+	fragColor = vec4(GetSkyRadianceFromScattering(scattering, singleScattering, viewDir, lightDirection), 1.0);
 }
