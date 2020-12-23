@@ -1,4 +1,9 @@
 cmake_minimum_required (VERSION 3.11.0)
+cmake_policy(SET CMP0020 NEW)
+cmake_policy(SET CMP0074 NEW) # allow <PackageName>_ROOT variables
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0") 
+	cmake_policy(SET CMP0111 OLD) # suppress pybind11 missing imports warnings
+endif()
 
 project(Skybolt)
 set(PACKAGE_VERSION 1.0.0)
@@ -50,9 +55,6 @@ if ( MSVC )
 else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-register") # disable warnings about use of 'register' in glm
 endif()
-
-cmake_policy(SET CMP0020 NEW)
-cmake_policy(SET CMP0074 NEW) # allow <PackageName>_ROOT variables
 
 include(AddSourceGroup)
 include(SetPluginTargetProperties)

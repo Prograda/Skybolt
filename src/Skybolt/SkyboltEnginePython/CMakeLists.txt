@@ -13,8 +13,9 @@ include_directories(${pybind11_INCLUDE_DIRS})
 set(LIBS
 	SkyboltEngine
 	${PYTHON_LIBRARY}
-	pybind11
+	pybind11::headers
 )
+
 
 include(pybind11Tools)
 pybind11_add_module(${TARGET_NAME} ${SrcFiles})

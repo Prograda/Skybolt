@@ -16,7 +16,7 @@ include_directories(${pybind11_INCLUDE_DIRS})
 set(LIBS
 	SkyboltEngine
 	${PYTHON_LIBRARY}
-	pybind11
+	pybind11::headers
 )
 
 add_library(${TARGET_NAME} SHARED ${SrcFiles})
@@ -25,4 +25,3 @@ target_link_libraries (${TARGET_NAME} ${LIBS})
 
 set_engine_plugin_target_properties(${TARGET_NAME})
 skybolt_plugin_install(${TARGET_NAME})
-skybolt_install(pybind11)

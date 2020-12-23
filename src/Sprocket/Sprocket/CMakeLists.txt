@@ -26,14 +26,14 @@ find_package(ToolWindowManager)
 include_directories(${ToolWindowManager_INCLUDE_DIR})
 
 set(LIBS
-SkyboltEngine
-Qt5::Core
-Qt5::Gui
-Qt5::Widgets
-Qt5::OpenGL
-${ToolWindowManager_LIBRARIES}
-${PYTHON_LIBRARY}
-pybind11
+	SkyboltEngine
+	Qt5::Core
+	Qt5::Gui
+	Qt5::Widgets
+	Qt5::OpenGL
+	${ToolWindowManager_LIBRARIES}
+	${PYTHON_LIBRARY}
+	pybind11::headers
 )
 
 add_library(${TARGET_NAME} STATIC ${SrcFiles})
