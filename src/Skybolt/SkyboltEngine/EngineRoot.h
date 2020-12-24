@@ -31,28 +31,29 @@ struct EngineRootConfig
 
 class EngineRoot
 {
+private:
+	// This private block is first because these objects should be disposed of last
+	std::vector<PluginFactory> mPluginFactories;
+	std::vector<PluginPtr> mPlugins;
+	std::vector<std::string> mAssetFolderNames;
+
 public:
 	EngineRoot(const EngineRootConfig& config);
 	~EngineRoot();
 
 	const std::vector<std::string>& getAssetFolderNames() const { return mAssetFolderNames; }
 
-	std::unique_ptr<sim::World> simWorld;
-	std::unique_ptr<EntityFactory> entityFactory;
-	sim::NamedObjectRegistry namedObjectRegistry;
-	EngineStats stats;
-	Scenario scenario;
 	vis::ShaderPrograms programs;
 	vis::ScenePtr scene;
 	std::unique_ptr<px_sched::Scheduler> scheduler;
 	file::FileLocator fileLocator;
 	JulianDateProvider julianDateProvider;
+	std::unique_ptr<sim::World> simWorld;
+	std::unique_ptr<EntityFactory> entityFactory;
+	sim::NamedObjectRegistry namedObjectRegistry;
+	EngineStats stats;
+	Scenario scenario;
 	sim::SystemRegistryPtr systemRegistry;
-	
-private:
-	std::vector<PluginFactory> mPluginFactories;
-	std::vector<PluginPtr> mPlugins;
-	std::vector<std::string> mAssetFolderNames;
 };
 
 //! @param relativePath is a path, relative to the asset folder name, in which to search for files

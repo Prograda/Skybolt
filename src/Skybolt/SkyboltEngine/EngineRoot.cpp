@@ -61,10 +61,10 @@ static vis::ModelFactoryPtr createModelFactory(const vis::ShaderPrograms& progra
 }
 
 EngineRoot::EngineRoot(const EngineRootConfig& config) :
-	simWorld(std::make_unique<sim::World>()),
-	scheduler(new px_sched::Scheduler),
 	mPluginFactories(config.pluginFactories),
-	fileLocator(locateFile)
+	scheduler(new px_sched::Scheduler),
+	fileLocator(locateFile),
+	simWorld(std::make_unique<sim::World>())
 {
 
 	// Create coreCount threads - 1 background threads, leaving a core for the main thread.
@@ -144,8 +144,6 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 
 EngineRoot::~EngineRoot()
 {
-	simWorld.reset();
-	scene.reset();
 }
 
 file::Paths getFilePathsInAssetFolders(const EngineRoot& engineRoot, const std::string& relativePath, const std::string& extension)
