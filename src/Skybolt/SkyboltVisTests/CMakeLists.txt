@@ -10,6 +10,6 @@ find_package(OpenGL REQUIRED) # CaptureTexture.cpp requires OpenGL to workaround
 
 add_executable(${APP_NAME} ${SOURCE_FILES})
 
-target_link_libraries (${APP_NAME} SkyboltVis catch ${OPENGL_LIBRARIES})
+target_link_libraries(${APP_NAME} SkyboltVis catch ${OPENGL_LIBRARIES})
 
 catch_discover_tests(${APP_NAME})

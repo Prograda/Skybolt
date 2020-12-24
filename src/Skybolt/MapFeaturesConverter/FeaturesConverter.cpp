@@ -31,7 +31,7 @@ static float calcBuildingHeightFromLevelCount(int levelCount)
 	return buildingGroundLevelHeight * (levelCount - 1) + buildingLevelHeight;
 }
 
-static LatLonAltPoints toLatLonAlt(const LatLonPoints& points, const vis::PlanetAltitudeProvider& provider)
+static LatLonAltPoints toLatLonAlt(const LatLonPoints& points, const sim::PlanetAltitudeProvider& provider)
 {
 	LatLonAltPoints result(points.size());
 	int i = 0;
@@ -43,7 +43,7 @@ static LatLonAltPoints toLatLonAlt(const LatLonPoints& points, const vis::Planet
 	return result;
 }
 
-static LatLonAltPoints toLatLonWithMinAlt(const LatLonPoints& points, const vis::PlanetAltitudeProvider& provider)
+static LatLonAltPoints toLatLonWithMinAlt(const LatLonPoints& points, const sim::PlanetAltitudeProvider& provider)
 {
 	LatLonAltPoints result(points.size());
 	double alt = math::posInfinity();
@@ -82,7 +82,7 @@ struct ParserData
 
 	std::vector<FeaturePtr> features;
 
-	const vis::PlanetAltitudeProvider* altitudeProvider;
+	const sim::PlanetAltitudeProvider* altitudeProvider;
 };
 
 float getHighwayRoadWidth(int laneCount) {return 3.7f * laneCount;}
@@ -637,7 +637,7 @@ std::map<std::string, AirportPtr> createAirports(const ParserData& data)
 	return result;
 }
 
-ReadPbfResult readPbf(const std::string& filename, const vis::PlanetAltitudeProvider& provider)
+ReadPbfResult readPbf(const std::string& filename, const sim::PlanetAltitudeProvider& provider)
 {
 	ParserData data;
 	data.altitudeProvider = &provider;

@@ -11,7 +11,10 @@
 #include "HeightmapLeveler.h"
 #endif
 
-#include <SkyboltVis/ElevationProvider/PlanetAltitudeProvider.h>
+#define PX_SCHED_IMPLEMENTATION 1
+#include <px_sched/px_sched.h>
+
+#include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/XyzTileSource.h>
 
 
@@ -28,7 +31,7 @@ int main()
 	config.urlTemplate = "DEM/CombinedElevation/{z}/{x}/{y}.png";
 
 	auto tileSource = std::make_shared<XyzTileSource>(config);
-	PlanetAltitudeProvider altitudeProvider(tileSource, maxLod);
+	TilePlanetAltitudeProvider altitudeProvider(tileSource, maxLod);
 	ReadPbfResult result = mapfeatures::readPbf("washington-latest.osm.pbf", altitudeProvider);
 	{
 		printf("Feature Conversion Stats:\n%s\n", mapfeatures::statsToString(result.features).c_str());

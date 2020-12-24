@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <SkyboltVis/ElevationProvider/PlanetAltitudeProvider.h>
+#include <SkyboltSim/PlanetAltitudeProvider.h>
 #include <SkyboltVis/Renderable/Planet/Features/PlanetFeaturesSource.h>
 
 namespace skybolt {
@@ -17,7 +17,7 @@ struct ReadPbfResult
 	std::vector<FeaturePtr> features; //!< All the features
 	std::map<std::string, AirportPtr> airports; //!< Map of names to airport features
 };
-ReadPbfResult readPbf(const std::string& filename, const vis::PlanetAltitudeProvider& provider);
+ReadPbfResult readPbf(const std::string& filename, const sim::PlanetAltitudeProvider& provider);
 
 } // namespace mapfeatures
 } // namespace skybolt

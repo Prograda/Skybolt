@@ -7,14 +7,14 @@
 #pragma once
 
 #include "SkyboltVis/SkyboltVisFwd.h"
-#include <SkyboltSim/Spatial/LatLon.h>
+#include <SkyboltSim/PlanetAltitudeProvider.h>
 #include <SkyboltCommon/LruCacheMap.h>
 #include <SkyboltCommon/LruCacheSet.h>
 #include <SkyboltCommon/Math/QuadTree.h>
 
 #include <osg/Image>
+#include <px_sched/px_sched.h>
 #include <boost/optional.hpp>
-#include <string>
 
 namespace skybolt {
 namespace vis {
@@ -73,13 +73,19 @@ struct LatLonVec2Adapter : public sim::LatLon
 	}
 };
 
-class PlanetAltitudeProvider
+class TilePlanetAltitudeProvider : public sim::PlanetAltitudeProvider
 {
 public:
-	PlanetAltitudeProvider(const TileSourcePtr& tileSource, int maxLod);
+	TilePlanetAltitudeProvider(const TileSourcePtr& tileSource, int maxLod);
 
-	//! Altitude above sea level, positive is up.
-	double getAltitude(const sim::LatLon& position) const;
+	//! Get altitude above sea level, positive is up.
+	//! @ThreadSafe
+	double getAltitude(const sim::LatLon& position) const override;
+
+	//! Get altitude above sea level, positive is up.
+	//! If tile is not loaded, returns immedatly with empty.
+	//! @ThreadSafe
+	boost::optional<double> tryGetAltitude(const sim::LatLon& position) const;
 
 	typedef skybolt::Box2T<LatLonVec2Adapter> LatLonBounds;
 
@@ -90,7 +96,7 @@ private:
 		osg::ref_ptr<osg::Image> image;
 	};
 
-	boost::optional<TileImage> findHighestLodTileIntersectingPoint(const sim::LatLon& position) const;
+	boost::optional<TileImage> findHighestLodTile(const QuadTreeTileKey& highestLodKey) const;
 
 private:
 	const TileSourcePtr mTileSource;
@@ -100,8 +106,24 @@ private:
 	// because lower lods will be used (and put in the cache) if the requested lod (the cache key)
 	// is unavailable.
 	mutable LruCacheMap<QuadTreeTileKey, TileImage> mTileImageCache;
+	mutable std::mutex mTileImageCacheMutex;
 };
 
+class TileAsyncPlanetAltitudeProvider : public sim::AsyncPlanetAltitudeProvider
+{
+public:
+	TileAsyncPlanetAltitudeProvider(px_sched::Scheduler* scheduler, const TileSourcePtr& tileSource, int maxLod);
+
+	//! Get altitude above sea level, positive is up.
+	//! If tile is not immediately available, requests to load tile on a background thread
+	//! and immediately returns empty optional.
+	boost::optional<double> getAltitudeOrRequestLoad(const sim::LatLon& position) const override;
+
+private:
+	px_sched::Scheduler* mScheduler;
+	mutable px_sched::Sync mLoadingTaskSync;
+	std::unique_ptr<TilePlanetAltitudeProvider> mProvider;
+};
 
 } // namespace vis
 } // namespace skybolt

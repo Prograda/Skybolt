@@ -9,6 +9,7 @@
 #include <CigiComponent/CigiClient.h>
 #include <CigiComponent/UdpCommunicator.h>
 
+#include <SkyboltCommon/Eventually.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltCommon/NumericComparison.h>
 
@@ -173,19 +174,6 @@ static std::unique_ptr<CigiClient> CreateCigiClient(int cigiMajorVersion, const 
 	config.world = world;
 
 	return std::make_unique<CigiClient>(config);
-}
-
-static bool eventually(const std::function<bool()>& fn) {
-	for (int i = 0; i < 20; ++i)
-	{
-		if (fn())
-		{
-			return true;
-		}
-		using namespace std::chrono_literals;
-		std::this_thread::sleep_for(10ms);
-	}
-	return false;
 }
 
 constexpr float epsilon = 1e-7f;

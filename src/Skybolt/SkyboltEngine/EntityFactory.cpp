@@ -35,6 +35,7 @@
 #include <SkyboltVis/OsgStateSetHelpers.h>
 #include <SkyboltVis/Scene.h>
 #include <SkyboltVis/ShaderProgramRegistry.h>
+#include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
 #include <SkyboltVis/Renderable/Atmosphere/Bruneton/BruentonAtmosphere.h>
 #include <SkyboltVis/Renderable/CameraRelativeBillboard.h>
 #include <SkyboltVis/Renderable/Polyline.h>
@@ -272,9 +273,6 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 	double planetRadius = json.at("radius").get<double>();
 	bool hasOcean = readOptionalOrDefault(json, "ocean", true);
 
-	auto planetComponent = std::make_shared<PlanetComponent>(planetRadius, hasOcean);
-	entity->addComponent(planetComponent);
-
 	vis::PlanetConfig config;
 	config.scheduler = context.scheduler;
 	config.programs = context.programs;
@@ -377,6 +375,10 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 
 	entity->addComponent(visObjectsComponent);
 	visObjectsComponent->addObject(visObject);
+
+	auto altitudeProvider = std::make_shared<vis::TileAsyncPlanetAltitudeProvider>(context.scheduler, config.planetTileSources.elevation, config.elevationMaxLodLevel);
+	auto planetComponent = std::make_shared<PlanetComponent>(planetRadius, hasOcean, altitudeProvider);
+	entity->addComponent(planetComponent);
 
 	entity->addComponent(ComponentPtr(new NameComponent("Earth", context.namedObjectRegistry, entity)));
 

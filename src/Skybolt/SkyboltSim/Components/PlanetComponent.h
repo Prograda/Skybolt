@@ -7,6 +7,7 @@
 #pragma once
 
 #include "SkyboltSim/Component.h"
+#include "SkyboltSim/PlanetAltitudeProvider.h"
 #include "SkyboltSim/SkyboltSimFwd.h"
 
 namespace skybolt {
@@ -14,14 +15,16 @@ namespace sim {
 
 struct PlanetComponent : public sim::Component
 {
-	PlanetComponent(double radius, bool hasOcean) :
+	PlanetComponent(double radius, bool hasOcean, const std::shared_ptr<AsyncPlanetAltitudeProvider>& altitudeProvider) :
 		radius(radius),
-		hasOcean(hasOcean)
+		hasOcean(hasOcean),
+		altitudeProvider(altitudeProvider)
 	{
 	}
 
 	const double radius;
 	const bool hasOcean;
+	const std::shared_ptr<AsyncPlanetAltitudeProvider> altitudeProvider;
 };
 
 } // namespace sim

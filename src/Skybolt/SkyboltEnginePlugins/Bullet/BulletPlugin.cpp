@@ -31,23 +31,36 @@ using namespace sim;
 class AltitudeProviderAdapter : public sim::AltitudeProvider
 {
 public:
+	AltitudeProviderAdapter(const std::shared_ptr<AsyncPlanetAltitudeProvider>& provider) :
+		mProvider(provider)
+	{
+		assert(mProvider);
+	}
+
 	double get(const sim::LatLon& position) const override
 	{
-		return 0; // TODO
+		auto altitude = mProvider->getAltitudeOrRequestLoad(position);
+		if (!altitude)
+		{
+			return 0.0; // TODO: what fallback to use here?
+		}
+		return *altitude;
 	}
+
+	std::shared_ptr<AsyncPlanetAltitudeProvider> mProvider;
 };
 
-static btCollisionShape* loadPlanetCollisionShape(double planetRadius, bool hasOcean)
+static btCollisionShape* loadPlanetCollisionShape(const PlanetComponent& planet)
 {
 	// TODO: dispose of the shapes
-	double maxEarthRadius = planetRadius + 9000; // TODO: work out a safe maximum terrain altitude bound
-	btCollisionShape* shape = new sim::TerrainCollisionShape(std::make_shared<AltitudeProviderAdapter>(), planetRadius, maxEarthRadius);
+	double maxEarthRadius = planet.radius + 9000; // TODO: work out a safe maximum terrain altitude bound
+	btCollisionShape* shape = new sim::TerrainCollisionShape(std::make_shared<AltitudeProviderAdapter>(planet.altitudeProvider), planet.radius, maxEarthRadius);
 
-	if (hasOcean)
+	if (planet.hasOcean)
 	{
 		// Add sphere to provide collision detection against ocean
 		btCompoundShape* compoundShape = new btCompoundShape();
-		compoundShape->addChildShape(btTransform::getIdentity(), new btSphereShape(planetRadius));
+		compoundShape->addChildShape(btTransform::getIdentity(), new btSphereShape(planet.radius));
 		compoundShape->addChildShape(btTransform::getIdentity(), shape);
 		return compoundShape;
 	}
@@ -112,7 +125,7 @@ public:
 		(*mComponentFactoryRegistry)[planetKinematicBodyComponentName] = std::make_shared<ComponentFactoryFunctionAdapter>([this](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) {
 			auto node = entity->getFirstComponentRequired<Node>().get();
 			auto planet = entity->getFirstComponentRequired<PlanetComponent>().get();
-			btCollisionShape* shape = loadPlanetCollisionShape(planet->radius, planet->hasOcean);
+			btCollisionShape* shape = loadPlanetCollisionShape(*planet);
 			return std::make_shared<KinematicBody>(mBulletWorld.get(), node, shape, CollisionGroupMasks::terrain);
 		});
 

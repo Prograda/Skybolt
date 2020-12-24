@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "SkyboltVis/ElevationProvider/PlanetAltitudeProvider.h"
+#include "SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h"
 #include <SkyboltSim/Spatial/LatLonAlt.h>
 #include <SkyboltCommon/Math/QuadTree.h>
 
