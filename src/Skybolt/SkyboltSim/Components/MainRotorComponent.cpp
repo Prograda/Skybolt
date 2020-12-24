@@ -42,8 +42,8 @@ MainRotorComponent::MainRotorComponent(const MainRotorComponentConfig& config) :
 void MainRotorComponent::updatePreDynamicsSubstep(TimeReal dt)
 {
 	// Apply controls
-	mTppPitch = mCyclicInput->value.y * mParams->maxTppPitch + mParams->tppPitchOffset;
-	mTppRoll = mCyclicInput->value.x * mParams->maxTppRoll;
+	mTppPitch = mCyclicInput->value.x * mParams->maxTppPitch + mParams->tppPitchOffset;
+	mTppRoll = mCyclicInput->value.y * mParams->maxTppRoll;
 	mDesiredPitch = mCollectiveInput->value * mParams->pitchRange + mParams->minPitch;
 
 	// 1st order lag function
