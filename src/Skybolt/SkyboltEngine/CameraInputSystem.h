@@ -19,7 +19,7 @@ namespace skybolt {
 class CameraInputSystem : public sim::System, public EventListener
 {
 public:
-	CameraInputSystem(const vis::Window* visWindow, const sim::EntityPtr& camera, const InputPlatformPtr& inputPlatform, const std::vector<LogicalAxisPtr>& axes);
+	CameraInputSystem(const sim::EntityPtr& camera, const InputPlatformPtr& inputPlatform, const std::vector<LogicalAxisPtr>& axes);
 
 	~CameraInputSystem();
 
