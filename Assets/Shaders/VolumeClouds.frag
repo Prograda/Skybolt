@@ -12,7 +12,6 @@
 #include "GlobalDefines.h"
 #include "Planet.h"
 #include "RaySphereIntersection.h"
-#include "Remap.h"
 
 in vec3 vertCameraWorldDir;
 in float cameraAltitude;
@@ -55,26 +54,11 @@ const float maximumStepSize = 200;
 const float stepSizeGrowthFactor = 1.002;
 const float maxRenderDistance = 200000;
 
-// Multiplier to turn an alpha value into an effective density value.
-// The is hand tuned to produce correct looking results.
-float alphaToDensityMultiplier = 5;
-
 float calcDensityLowRes(vec2 uv, float height, out float cloudType, vec2 lod)
 {
-	vec4 coverageNoise = textureLod(coverageDetailSampler, uv.xy * vec2(100.0, 50.0), 4 * lod.x);
-	float coverageDetail = coverageNoise.r;
-	cloudType = coverageNoise.g;
-
+	float coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod.x, cloudType);
 	float heightMultiplier = calcHeightMultiplier(height, cloudType);
-
-	float alpha = max(0.0, remapNormalized(textureLod(globalAlphaSampler, uv, 0).r, 0.05, 1.0));
-	float density = alpha * alphaToDensityMultiplier;
-	density *= heightMultiplier;
-	float coverageModulatedDensity = clamp(remapNormalized(coverageDetail, 1.0 - density, 1.0), 0.0, 1.0);
-	
-	// Return coverageModulatedDensity unless the unmodulated density is near zero, in which case
-	// blend to unmodulated density to avoid artifacts from extreme remapping.
-	return mix(density, coverageModulatedDensity, min(1.0, density * 10));
+	return calcCloudDensityLowRes(globalAlphaSampler, uv, heightMultiplier, coverageDetail);
 }
 
 const float cloudChaos = 0.7;
@@ -153,7 +137,7 @@ vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradian
 	
 		vec3 lightSamplePos = pos + (lightDir + RANDOM_VECTORS[i] * 0.4) * SAMPLE_DISTANCES[i] * scatterDistanceMultiplier;
 		float sampleHeight = length(lightSamplePos) - innerRadius;
-		vec2 sampleUv = uvFromPos(lightSamplePos);
+		vec2 sampleUv = cloudUvFromPosRelPlanet(lightSamplePos);
 		float sampleOutCloudType;
 		float density = calcDensity(lightSamplePos, sampleUv, lod, sampleHeight, sampleOutCloudType);
 		T *= exp(-density * scatterDistance * multiScatterDistanceMultiplier);
@@ -192,10 +176,10 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 ligh
 	{	
 		vec3 pos = start + dir * t;
 		
-		vec2 uv = uvFromPos(pos);
+		vec2 uv = cloudUvFromPosRelPlanet(pos);
 		float height = length(pos) - innerRadius;
 		float outCloudType;
-        float density = calcDensity(pos + vec3(cloudsDisplacementMeters.xy,0), uv, lod, height, outCloudType);
+        float density = calcDensity(pos + vec3(cloudDisplacementMeters.xy,0), uv, lod, height, outCloudType);
 		
 		if (density > 0.0)
 		{
@@ -229,7 +213,7 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 ligh
 				
 				vec3 pos = start + dir * t;
 				
-				uv = uvFromPos(pos);
+				uv = cloudUvFromPosRelPlanet(pos);
 				float height = length(pos) - innerRadius;
 				float outCloudType;
 				float density = calcDensityLowRes(uv, height, outCloudType, lod);
@@ -282,7 +266,7 @@ vec3 desaturateAndBlueShift(vec3 c)
 
 vec4 evaluateGlobalLowResColor(vec3 positionRelPlanetPlanetAxes, vec3 irradiance)
 {
-	float alpha = textureLod(globalAlphaSampler, uvFromPos(positionRelPlanetPlanetAxes), 0).r; // MTODO: auto lod
+	float alpha = textureLod(globalAlphaSampler, cloudUvFromPosRelPlanet(positionRelPlanetPlanetAxes), 0).r; // MTODO: auto lod
 	vec3 color = irradiance * alpha * oneOnFourPi;
 	color = mix(color, desaturateAndBlueShift(color), 0.8); // desaturate color to simulate scattering. This makes sunsets less extreme.
 	return vec4(color, alpha);

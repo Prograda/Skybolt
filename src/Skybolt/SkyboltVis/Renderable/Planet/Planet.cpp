@@ -512,8 +512,11 @@ Planet::Planet(const PlanetConfig& config) :
 
 		ss->addUniform(new osg::Uniform("innerRadius", (float)mInnerRadius));
 
-		mCloudsDisplacementMetersUniform = new osg::Uniform("cloudsDisplacementMeters", osg::Vec2(0, 0));
-		ss->addUniform(mCloudsDisplacementMetersUniform);
+		mCloudDisplacementMetersUniform = new osg::Uniform("cloudDisplacementMeters", osg::Vec2f(0, 0));
+		ss->addUniform(mCloudDisplacementMetersUniform);
+
+		mCloudCoverageFractionUniform = new osg::Uniform("cloudCoverageFraction", 0.5f);
+		ss->addUniform(mCloudCoverageFractionUniform);
 	}
 
 	// Create sky environment sphere
@@ -666,6 +669,7 @@ Planet::Planet(const PlanetConfig& config) :
 		mVolumeClouds.reset(new VolumeClouds(cloudsConfig));
 
 		setCloudsVisible(true);
+		setCloudCoverageFraction(boost::none);
 
 		osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
 		ss->setTextureAttributeAndModes((int)GlobalSamplerUnit::GlobalCloudAlpha, config.cloudsTexture);
@@ -765,6 +769,20 @@ void Planet::setCloudsVisible(bool visible)
 	mCloudsVisible = visible;
 }
 
+void Planet::setCloudCoverageFraction(boost::optional<float> cloudCoverageFraction)
+{
+	osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
+	if (cloudCoverageFraction)
+	{
+		mCloudCoverageFractionUniform->set(*cloudCoverageFraction);
+		ss->removeDefine("USE_CLOUD_COVERAGE_MAP");
+	}
+	else
+	{
+		ss->setDefine("USE_CLOUD_COVERAGE_MAP");
+	}
+}
+
 float Planet::getWaveHeight() const
 {
 	if (mWaveHeightTextureGenerator)
@@ -859,7 +877,7 @@ void Planet::updatePreRender(const RenderContext& context)
 	{
 		float windSpeed = 10.0;
 		osg::Vec2 displacement(0.0, -20000 + std::fmod(julianDateSeconds, 40000) * windSpeed);
-		mCloudsDisplacementMetersUniform->set(displacement);
+		mCloudDisplacementMetersUniform->set(displacement);
 	}
 
 	if (mWaveHeightTextureGenerator)

@@ -288,6 +288,7 @@ static nlohmann::json readOrCreateEngineSettingsFile(QWidget* parent, QSettings&
 		else if (box.clickedButton() == loadButton)
 		{
 			settingsFilename = QFileDialog::getOpenFileName(parent, "Load Settings File", settingsFilename, "Json (*.json)");
+		 	settings.setValue(settingsFilenameKey, settingsFilename);
 
 			if (!settingsFilename.isEmpty())
 			{
@@ -507,6 +508,7 @@ MainWindow::~MainWindow()
 
 	mSprocketModel.reset();
 	mCurrentSimCamera.reset();
+	mSimStepper.reset();
 	mEngineRoot.reset();
 }
 

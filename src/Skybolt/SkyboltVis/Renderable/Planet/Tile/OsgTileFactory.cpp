@@ -223,8 +223,8 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 
 		osg::StateSet* ss = result.transform->getOrCreateStateSet();
 
-		ss->addUniform(new osg::Uniform("cloudScale", cloudImageScale));
-		ss->addUniform(new osg::Uniform("cloudOffset", cloudImageOffset));
+		ss->addUniform(new osg::Uniform("cloudUvScaleRelTerrainUv", cloudImageScale));
+		ss->addUniform(new osg::Uniform("cloudUvOffsetRelTerrainUv", cloudImageOffset));
 	}
 
 	// Create forest

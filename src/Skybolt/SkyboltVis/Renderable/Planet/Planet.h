@@ -61,8 +61,11 @@ public:
 	}
 
 	void setCloudsVisible(bool visible);
-
 	bool getCloudsVisible(void) const { return mCloudsVisible; }
+
+	//! If set, clouds will have uniform coverage across planet.
+	//! If not set, coverage will be governed by cloud texture.
+	void setCloudCoverageFraction(boost::optional<float> cloudCoverageFraction);
 
 	float getWaveHeight() const;
 
@@ -123,7 +126,8 @@ private:
 	osg::ref_ptr<osg::MatrixTransform> mShadowSceneTransform;
 	std::unique_ptr<MyPlanetSurfaceListener> mPlanetSurfaceListener;
 	double mJulianDate = 0;
-	osg::Uniform* mCloudsDisplacementMetersUniform;
+	osg::Uniform* mCloudDisplacementMetersUniform;
+	osg::Uniform* mCloudCoverageFractionUniform;
 
 	bool mCloudsVisible = false;
 	bool mShadowsEnabled = false; // disabled because shadows are experimental

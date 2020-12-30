@@ -327,7 +327,7 @@ void main()
 
 	vec3 totalReflectance = albedo * (
 			calcLambertDirectionalLight(lightDirection, normal) * visibleSunIrradiance + 	
-			calcLambertSkyLight(lightDirection, normal) * skyIrradiance * (lightVisibility*0.5+0.5) +
+			calcLambertSkyLight(lightDirection, normal) * skyIrradiance * (lightVisibility*0.2+0.8) +
 			ambientLightColor
 		)
 		+ specularReflectance;
