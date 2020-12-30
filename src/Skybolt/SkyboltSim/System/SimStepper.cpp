@@ -25,14 +25,16 @@ SimStepper::~SimStepper()
 
 void SimStepper::step(const System::StepArgs& args)
 {
-	for (const SystemPtr& system : *mSystems)
+	auto systems = *mSystems; // Take copy in case a system adds/removes another system during step
+
+	for (const SystemPtr& system : systems)
 	{
 		system->updatePreDynamics(args);
 	}
 
 	updateDynamicsStep(args);
 
-	for (const SystemPtr& system : *mSystems)
+	for (const SystemPtr& system : systems)
 	{
 		system->updatePostDynamics(args);
 	}

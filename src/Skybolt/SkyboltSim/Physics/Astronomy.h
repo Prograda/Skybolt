@@ -12,7 +12,7 @@
 namespace skybolt {
 namespace sim {
 
-double calcJulianDate(int year, int month, int day, double UT);
+double calcJulianDate(int year, int month, int day, double hourUtc);
 void julianDateToYmd(double julianDate, int& year, int& month, int& day);
 void julianDateToHms(double julianDate, int& hour, int& minute, double& second);
 
