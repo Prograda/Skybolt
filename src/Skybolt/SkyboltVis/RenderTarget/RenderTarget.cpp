@@ -31,6 +31,9 @@ RenderTarget::RenderTarget(const osg::ref_ptr<osg::Camera>& osgCamera) :
 {
 	assert(mOsgCamera);
 	setUpdateCallback(new RenderTargetNodeCallback(this));
+
+	mFarClipDistanceUniform = new osg::Uniform("farClipDistance", 1e5f);
+	mOsgCamera->getOrCreateStateSet()->addUniform(mFarClipDistanceUniform);
 }
 
 void RenderTarget::setRect(const RectI& rect)
@@ -72,6 +75,8 @@ void RenderTarget::updatePreRender()
 		mCamera->setAspectRatio((float)mViewport->width() / (float)mViewport->height());
 		mCamera->updateOsgCameraGeometry(*mOsgCamera);
 		mScene->updatePreRender(*mCamera);
+
+		mFarClipDistanceUniform->set(mCamera->getFarClipDistance());
 	}
 }
 

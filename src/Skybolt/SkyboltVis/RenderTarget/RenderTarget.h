@@ -48,6 +48,7 @@ protected:
 	CameraPtr mCamera;
 	std::shared_ptr<Scene> mScene;
 	osg::Uniform* mRcpWindowSizeInPixelsUniform;
+	osg::Uniform* mFarClipDistanceUniform;
 };
 
 } // namespace vis

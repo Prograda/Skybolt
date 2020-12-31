@@ -19,8 +19,6 @@ FreeCameraController::FreeCameraController(Entity* camera, const Params& params)
 	mBaseFov(params.fovY)
 {
 	mCameraComponent->getState().fovY = params.fovY;
-	mCameraComponent->getState().nearClipDistance = 1.0f;
-	mCameraComponent->getState().farClipDistance = 5e7f;
 }
 
 void FreeCameraController::update(float dt)

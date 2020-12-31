@@ -174,8 +174,10 @@ VolumeClouds::VolumeClouds(const VolumeCloudsConfig& config)
 #define COMPOSITE_CLOUDS
 #ifdef COMPOSITE_CLOUDS
 	// TODO: fit to window dimensions
-	mColorTexture = createCloudColorTexture(512, 512);
-	osg::ref_ptr<osg::Texture2D> depthTexture = createCloudDepthTexture(512, 512);
+	int width = 512;
+	int height = 512;
+	mColorTexture = createCloudColorTexture(width, height);
+	osg::ref_ptr<osg::Texture2D> depthTexture = createCloudDepthTexture(width, height);
 	
 	TextureGeneratorCameraFactory factory;
 	osg::ref_ptr<osg::Camera> camera = factory.createCamera({ mColorTexture, depthTexture }, stateSet, /* clear */ false);

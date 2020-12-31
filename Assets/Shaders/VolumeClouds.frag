@@ -86,7 +86,7 @@ float calcDensity(vec3 pos, vec2 uv, vec2 lod, float height, out float cloudType
 		
 		float filteredNoise = mix(averageNoiseSamplerValue, cloudChaos*noise.r, clampedLod); // filter cloud noise based on lod.
 		
-		density =  clamp(remap(density, filteredNoise, 1.0, 0.0, 1.0), 0.0, 1.0);		
+		density = clamp(remap(density, filteredNoise, 1.0, 0.0, 1.0), 0.0, 1.0);		
 	}
 	else
 	{
@@ -181,7 +181,7 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 ligh
 		float outCloudType;
         float density = calcDensity(pos + vec3(cloudDisplacementMeters.xy,0), uv, lod, height, outCloudType);
 		
-		if (density > 0.0)
+		if (density > 0.0001)
 		{
 			vec3 radiance = radianceLowRes(pos, uv, lightDir, hg, sunIrradiance, skyIrradianceOnFourPi, lod, height, outCloudType) * density;
 #define ENERGY_CONSERVING_INTEGRATION
@@ -296,7 +296,7 @@ void main()
 		rayNear = raySphereSecondIntersection(cameraPosition, rayDir, planetCenter, innerRadius + cloudLayerMinHeight);
 		rayFar = raySphereSecondIntersection(cameraPosition, rayDir, planetCenter, innerRadius + cloudLayerMaxHeight);
 		rayFar = min(rayFar, maxRenderDistance);
-		logZ = z_logarithmic(rayNear);
+		logZ = z_logarithmic(rayNear); // TODO: this looks wrong. Shouldn't the argument be w after viewProj multiplication?
 	}
 	else if (cameraAltitude < cloudLayerMaxHeight)
 	{
