@@ -15,7 +15,7 @@ out vec3 csUpDir[];
 
 uniform mat4 viewProjectionMatrix;
 
-float lodFactor = 0.005;
+float lodFactor = 0.05;
 
 vec4 fromWorldToNdc(vec3 position)
 {
@@ -33,9 +33,10 @@ vec2 fromNdcToScreenSpace(vec4 position)
 
 bool offscreen(vec4 minBound, vec4 maxBound)
 {
-    if(maxBound.z < 0)
+	// treat a small area near camera as onscreen so the half visible polys aren't clipped
+    if(maxBound.z > 0.001)
 	{
-        return true;
+        return false;
     }
 	
 	return (maxBound.x < -screenLimit ||
@@ -88,12 +89,12 @@ void main()
 			float e2 = level(ss1, ss2);
 			float e3 = level(ss2, ss3);
 
-			gl_TessLevelInner[0] = 1;//max(e1,e2); //TODO taking max instead because points behind camera enter a singularity and give wrong results//mix(e1, e2, 0.5);
-			gl_TessLevelInner[1] = 1;//max(e0,e3); //mix(e0, e3, 0.5);		
-			gl_TessLevelOuter[0] = 1;//e0;
-			gl_TessLevelOuter[1] = 1;//e1;
-			gl_TessLevelOuter[2] = 1;//e2;
-			gl_TessLevelOuter[3] = 1;//e3;
+			gl_TessLevelInner[0] = max(e1,e2); // take max instead of mix(e1,e2,0.5) because points behind camera can produce singularities and give wrong results
+			gl_TessLevelInner[1] = max(e0,e3);
+			gl_TessLevelOuter[0] = e0;
+			gl_TessLevelOuter[1] = e1;
+			gl_TessLevelOuter[2] = e2;
+			gl_TessLevelOuter[3] = e3;
 		}
 	}
 }
