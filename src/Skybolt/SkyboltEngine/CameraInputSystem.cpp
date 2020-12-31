@@ -22,6 +22,7 @@ CameraInputSystem::CameraInputSystem(const EntityPtr& camera, const InputPlatfor
 	mInputAxes(axes),
 	mInput(CameraController::Input::zero())
 {
+	assert(mEnabled);
 	mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
 }
 
@@ -32,6 +33,11 @@ CameraInputSystem::~CameraInputSystem()
 
 void CameraInputSystem::updatePostDynamics(const System::StepArgs& args)
 {
+	if (!mEnabled)
+	{
+		return;
+	}
+
 	if (mInputAxes.size() == 2)
 	{
 		mInput.forwardSpeed = mInputAxes[0]->getState();
@@ -55,6 +61,19 @@ void CameraInputSystem::updatePostDynamics(const System::StepArgs& args)
 	{
 		cameraControllerComponent->cameraController->update(args.dtWallClock);
 	}
+}
+
+void CameraInputSystem::setInputEnabled(bool enabled)
+{
+	if (enabled && !mEnabled)
+	{
+		mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
+	}
+	else if (!enabled && mEnabled)
+	{
+		mInputPlatform->getEventEmitter()->removeEventListener(this);
+	}
+	mEnabled = enabled;
 }
 
 void CameraInputSystem::onEvent(const Event &event)

@@ -25,9 +25,12 @@ public:
 
 	void updatePostDynamics(const sim::System::StepArgs& args) override;
 
-	void onEvent(const Event &event) override;
+	void setInputEnabled(bool enabled);
 
 	static std::vector<LogicalAxisPtr> createDefaultAxes(const InputPlatform& inputPlatform);
+
+private: // EventListener interface
+	void onEvent(const Event &event) override;
 
 private:
 	const vis::Window* mWindow;
@@ -35,6 +38,7 @@ private:
 	InputPlatformPtr mInputPlatform;
 	std::vector<LogicalAxisPtr> mInputAxes;
 	sim::CameraController::Input mInput;
+	bool mEnabled = true;
 };
 
 } // skybolt
