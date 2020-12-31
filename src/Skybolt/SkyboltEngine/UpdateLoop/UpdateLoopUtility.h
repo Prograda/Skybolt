@@ -12,6 +12,8 @@
 
 namespace skybolt {
 
-void runMainLoop(vis::Window& window, EngineRoot& engineRoot, UpdateLoop::ShouldExit shouldExit);
+using SimPausedPredicate = std::function<bool()>;
+
+void runMainLoop(vis::Window& window, EngineRoot& engineRoot, UpdateLoop::ShouldExit shouldExit, SimPausedPredicate paused = [] {return false; });
 
 } // namespace skybolt

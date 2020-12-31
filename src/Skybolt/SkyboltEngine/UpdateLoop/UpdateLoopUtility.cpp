@@ -13,7 +13,7 @@ namespace skybolt {
 
 using namespace sim;
 
-void runMainLoop(vis::Window& window, EngineRoot& engineRoot, UpdateLoop::ShouldExit shouldExit)
+void runMainLoop(vis::Window& window, EngineRoot& engineRoot, UpdateLoop::ShouldExit shouldExit, SimPausedPredicate paused)
 {
 	// Run main loop
 	auto simStepper = std::make_shared<SimStepper>(engineRoot.systemRegistry);
@@ -24,7 +24,7 @@ void runMainLoop(vis::Window& window, EngineRoot& engineRoot, UpdateLoop::Should
 	UpdateLoop loop(minFrameDuration);
 	loop.exec([&](float dtWallClock) {
 		System::StepArgs args;
-		args.dtSim = dtWallClock;
+		args.dtSim = paused() ? 0.0 : dtWallClock;
 		args.dtWallClock = dtWallClock;
 		simStepper->step(args);
 		return window.render();
