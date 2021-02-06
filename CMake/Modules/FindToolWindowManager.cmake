@@ -8,22 +8,19 @@ FIND_PATH(ToolWindowManager_INCLUDE_DIR qtoolwindowmanager.h
   include
 )
 
-FIND_LIBRARY(ToolWindowManager_LIB_R
+FIND_LIBRARY(ToolWindowManager_LIBRARY_RELEASE
   NAMES qtoolwindowmanager
   PATH_SUFFIXES
   lib
 )
 
-FIND_LIBRARY(ToolWindowManager_LIB_D
+FIND_LIBRARY(ToolWindowManager_LIBRARY_DEBUG
   NAMES qtoolwindowmanagerd
   PATH_SUFFIXES
   lib
 )
 
-SET(ToolWindowManager_LIBRARIES
-	debug ${ToolWindowManager_LIB_D}
-	optimized ${ToolWindowManager_LIB_R}
-)
+select_library_configurations(ToolWindowManager)
 
 IF(ToolWindowManager_LIBRARIES AND ToolWindowManager_INCLUDE_DIR)
   SET(ToolWindowManager_FOUND "YES")

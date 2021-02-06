@@ -8,22 +8,19 @@ FIND_PATH(cigicl_INCLUDE_DIR cigicl/CigiTypes.h
   include
 )
 
-FIND_LIBRARY(cigicl_LIB_R
+FIND_LIBRARY(cigicl_LIBRARY_RELEASE
   NAMES ccl_dll
   PATH_SUFFIXES
   lib
 )
 
-FIND_LIBRARY(cigicl_LIB_D
+FIND_LIBRARY(cigicl_LIBRARY_DEBUG
   NAMES ccl_dllD
   PATH_SUFFIXES
   lib
 )
 
-SET(cigicl_LIBRARIES
-	debug ${cigicl_LIB_D}
-	optimized ${cigicl_LIB_R}
-)
+select_library_configurations(cigicl)
 
 IF(cigicl_LIBRARIES AND cigicl_INCLUDE_DIR)
   SET(cigicl_FOUND "YES")
