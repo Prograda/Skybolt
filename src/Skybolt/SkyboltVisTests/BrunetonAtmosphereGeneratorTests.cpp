@@ -33,7 +33,7 @@ static void registerShaderSearchPath()
 	registerResourceSearchPath("Source/Assets/");
 }
 
-constexpr float epsilon = 0.0001f;
+constexpr float epsilon = 0.00013f;
 
 static BruentonAtmosphereGeneratorConfig createBruentonAtmosphereGeneratorConfig()
 {
