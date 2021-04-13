@@ -86,7 +86,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 		std::string folderName = folder.stem().string();
 		mAssetFolderNames.push_back(folderName);
 		registerAssetModule(folderName);
-		BOOST_LOG_TRIVIAL(info) << "Registered asset module: " << folderName;
+		BOOST_LOG_TRIVIAL(info) << "Registered asset package: " << folderName;
 	}
 
 	programs = vis::createShaderPrograms();

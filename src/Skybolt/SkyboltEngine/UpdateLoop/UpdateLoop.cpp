@@ -23,22 +23,23 @@ UpdateLoop::UpdateLoop(float minFrameDuration) :
 
 void UpdateLoop::exec(Updatable updatable, ShouldExit shouldExit)
 {
+	// We must use double precision because time_since_epoch can exceed float precision
 	typedef std::chrono::duration<double> seconds;
-	float prevElapsedTime = 0;
+	double prevElapsedTime = 0;
 
 	while (!shouldExit())
 	{
 		// Get time delta
-		float elapsed;
+		double elapsed;
 		while (true) // this loop enforces max frame rate
 		{
 			elapsed = seconds(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-			if (elapsed - prevElapsedTime > mMinFrameDuration)
+			if (float(elapsed - prevElapsedTime) > mMinFrameDuration)
 				break;
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 
-		float dtWallClock = elapsed - prevElapsedTime;
+		float dtWallClock(elapsed - prevElapsedTime);
 		prevElapsedTime = elapsed;
 
 		if (!updatable(dtWallClock))
