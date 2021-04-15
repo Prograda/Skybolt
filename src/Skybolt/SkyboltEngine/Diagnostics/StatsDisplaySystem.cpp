@@ -14,7 +14,7 @@ namespace skybolt {
 
 StatsDisplaySystem::StatsDisplaySystem(const vis::Window& window, vis::Scene& scene)
 {
-	osgViewer::Viewer& viewer = *window._getViewer();
+	osgViewer::Viewer& viewer = window.getViewer();
 
 	mViewerStats = viewer.getStats();
 	mCameraStats = viewer.getCamera()->getStats();

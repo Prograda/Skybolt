@@ -5,6 +5,9 @@ FILE(GLOB UiSrc "*.ui")
 
 include_directories("../")
 
+find_package(OIS REQUIRED)
+include_directories(${OIS_INCLUDE_DIR})
+
 find_package(PythonInterp REQUIRED)
 find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIR})
@@ -32,6 +35,7 @@ set(LIBS
 	Qt5::Widgets
 	Qt5::OpenGL
 	${ToolWindowManager_LIBRARIES}
+	${OIS_LIBRARIES}
 	${PYTHON_LIBRARY}
 	pybind11::headers
 )

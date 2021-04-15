@@ -5,15 +5,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "InputSystem.h"
-#include "InputPlatformOis.h"
+#include "InputPlatform.h"
 #include "LogicalAxis.h"
 #include <SkyboltVis/Window/Window.h>
 
 namespace skybolt {
 
-typedef std::shared_ptr<InputPlatformOis> InputPlatformOisPtr;
-
-InputSystem::InputSystem(const InputPlatformOisPtr& inputPlatform, vis::Window* window, const std::vector<LogicalAxisPtr>& axes) :
+InputSystem::InputSystem(const InputPlatformPtr& inputPlatform, vis::Window* window, const std::vector<LogicalAxisPtr>& axes) :
 	mInputPlatform(inputPlatform),
 	mWindow(window),
 	mAxes(axes)

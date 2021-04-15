@@ -6,7 +6,7 @@
 
 #include "CameraDebugPositionLoaderSystem.h"
 
-#include <SkyboltEngine/Input/InputPlatformOis.h>
+#include <SkyboltEngine/Input/InputPlatform.h>
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltVis/SkyboltVisFwd.h>

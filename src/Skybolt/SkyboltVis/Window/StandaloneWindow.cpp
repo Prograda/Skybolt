@@ -11,7 +11,6 @@
 #else
 #include <osgViewer/api/X11/GraphicsWindowX11>
 #endif
-
 using namespace skybolt::vis;
 
 StandaloneWindow::StandaloneWindow(const RectI& rect)
@@ -30,7 +29,6 @@ StandaloneWindow::StandaloneWindow(const RectI& rect)
 
 	// FIXME: The Viewer's default camera clears the frame before our Camera is rendered from, which clears the frame a second time.
 	// The first frame clearing is unnecessary and should be eliminated.
-
 }
 
 int StandaloneWindow::getWidth() const

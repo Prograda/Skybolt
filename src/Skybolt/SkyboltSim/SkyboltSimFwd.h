@@ -42,6 +42,7 @@ typedef std::shared_ptr<Component> ComponentPtr;
 typedef std::shared_ptr<Entity> EntityPtr;
 typedef std::shared_ptr<MainRotorComponent> MainRotorComponentPtr;
 typedef std::shared_ptr<NameComponent> NameComponentPtr;
+typedef std::shared_ptr<NamedObjectRegistry> NamedObjectRegistryPtr;
 typedef std::shared_ptr<Orientation> OrientationPtr;
 typedef std::shared_ptr<ParentReferenceComponent> ParentReferenceComponentPtr;
 typedef std::shared_ptr<Position> PositionPtr;

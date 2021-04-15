@@ -40,7 +40,7 @@ OsgWidget::OsgWidget(QWidget* parent):
 
 	mWindow.reset(new skybolt::vis::EmbeddedWindow(width(), height()));
 
-	auto camera = mWindow->_getViewer()->getCamera();
+	auto camera = mWindow->getViewer().getCamera();
 	camera->setPreDrawCallback(new DrawCallback(this));
 	camera->getOrCreateStateSet()->addUniform(new osg::Uniform("convertOutputToSrgb", true));
 }

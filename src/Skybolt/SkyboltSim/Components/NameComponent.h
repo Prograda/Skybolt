@@ -36,7 +36,7 @@ private:
 class NameComponent : public sim::Component
 {
 public:
-	NameComponent(const std::string& name, NamedObjectRegistry* registry, sim::Entity* entity)
+	NameComponent(const std::string& name, const NamedObjectRegistryPtr& registry, sim::Entity* entity)
 	: mName(name), mRegistry(registry)
 	{
 		mRegistry->add(name, entity);
@@ -51,7 +51,7 @@ public:
 
 private:
 	std::string mName;
-	NamedObjectRegistry* mRegistry;
+	NamedObjectRegistryPtr mRegistry;
 };
 
 const std::string& getName(const sim::Entity& entity);

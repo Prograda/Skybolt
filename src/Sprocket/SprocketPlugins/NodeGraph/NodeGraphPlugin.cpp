@@ -226,7 +226,7 @@ NodeGraphPlugin::NodeGraphPlugin(const EditorPluginConfig& config) :
 	{
 		skybolt::EngineRoot* root = config.engineRoot;
 		mNodeContext.simWorld = root->simWorld.get();
-		mNodeContext.namedObjectRegistry = &root->namedObjectRegistry;
+		mNodeContext.namedObjectRegistry = root->namedObjectRegistry.get();
 		mNodeContext.flowFunctionRegistry = mFlowFunctionRegistry.get();
 		mNodeContext.dataSeriesRegistry = config.dataSeriesRegistry;
 		mNodeContext.timeSource = &root->scenario.timeSource;

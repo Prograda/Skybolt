@@ -64,7 +64,8 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	mPluginFactories(config.pluginFactories),
 	scheduler(new px_sched::Scheduler),
 	fileLocator(locateFile),
-	simWorld(std::make_unique<sim::World>())
+	simWorld(std::make_unique<sim::World>()),
+	namedObjectRegistry(std::make_shared<sim::NamedObjectRegistry>())
 {
 
 	// Create coreCount threads - 1 background threads, leaving a core for the main thread.
@@ -111,7 +112,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	context.scene = scene.get();
 	context.programs = &programs;
 	context.julianDateProvider = julianDateProvider;
-	context.namedObjectRegistry = &namedObjectRegistry;
+	context.namedObjectRegistry = namedObjectRegistry;
 	context.stats = &stats;
 	context.visFactoryRegistry = visFactoryRegistry;
 	context.tileSourceFactory = std::make_shared<vis::JsonTileSourceFactory>(config.tileSourceFactoryConfig);

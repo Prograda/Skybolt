@@ -29,15 +29,15 @@ void captureScreenshot(Window& window, const std::string& filename)
 	osg::ref_ptr<osgViewer::ScreenCaptureHandler::WriteToFile> writeToFile = new osgViewer::ScreenCaptureHandler::WriteToFile(filename, ".png");
 	osg::ref_ptr<osgViewer::ScreenCaptureHandler> screenCaptureHandler = new osgViewer::ScreenCaptureHandler(writeToFile);
 
-	osgViewer::Viewer* viewer = window._getViewer();
+	osgViewer::Viewer& viewer = window.getViewer();
 
 	osg::ref_ptr<MyFinalDrawCallback> callback = new MyFinalDrawCallback();
 
 	//screenCaptureHandler->setFramesToCapture(1);
 	//screenCaptureHandler->captureNextFrame(*viewer);
-	viewer->getCamera()->addFinalDrawCallback(callback);
+	viewer.getCamera()->addFinalDrawCallback(callback);
 	window.render();
-	viewer->getCamera()->removeFinalDrawCallback(callback);
+	viewer.getCamera()->removeFinalDrawCallback(callback);
 	//screenCaptureHandler->stopCapture();
 }
 

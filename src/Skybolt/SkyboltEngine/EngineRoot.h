@@ -50,7 +50,7 @@ public:
 	JulianDateProvider julianDateProvider;
 	std::unique_ptr<sim::World> simWorld;
 	std::unique_ptr<EntityFactory> entityFactory;
-	sim::NamedObjectRegistry namedObjectRegistry;
+	sim::NamedObjectRegistryPtr namedObjectRegistry;
 	EngineStats stats;
 	Scenario scenario;
 	sim::SystemRegistryPtr systemRegistry;

@@ -47,7 +47,7 @@ osg::ref_ptr<vis::RenderTarget> viewport = createAndAddViewportToWindowWithEngin
 viewport->setCamera(getVisCamera(*simCamera));
 
 // Create input
-auto inputPlatform = std::make_shared<InputPlatformOis>(window->getHandle(), window->getWidth(), window->getHeight()));
+auto inputPlatform = std::make_shared<InputPlatformOsg>(window->getViewerPtr());
 std::vector<LogicalAxisPtr> axes = CameraInputSystem::createDefaultAxes(*inputPlatform);
 root->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, window.get(), axes));
 root->systemRegistry->push_back(std::make_shared<CameraInputSystem>(window.get(), simCamera, inputPlatform, axes));
@@ -102,7 +102,6 @@ Requires:
 * [Boost](www.boost.com)
 * [GLM (header only)](https://github.com/g-truc/glm)
 * [nlohmann/json (header only)](https://github.com/nlohmann/json)
-* [OpenInputSystem](https://github.com/wgois/OIS)
 * [OpenSceneGraph](https://github.com/openscenegraph/OpenSceneGraph)
 
 ### Skybolt Python Bindings
@@ -136,6 +135,7 @@ Requires:
 GUI application for creating, editing and running simulation scenarios, and performing analysis.
 Requires:
 * Skybolt Python Bindings
+* [OpenInputSystem](https://github.com/wgois/OIS)
 * [Qt](https://www.qt.io)
 * [ToolWindowManager](https://github.com/Riateche/toolwindowmanager)
 

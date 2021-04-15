@@ -10,6 +10,7 @@
 #include "CaptureImageDailog.h"
 #include "EditorPlugin.h"
 #include "IconFactory.h"
+#include "InputPlatformOis.h"
 #include "QDialogHelpers.h"
 #include "OsgWidget.h"
 #include "RecentFilesMenuPopulator.h"
@@ -319,20 +320,21 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	ui->actionNewEntityTemplate->setEnabled(false); // Entity Template editing is not implemented
 	mRecentFilesMenuPopulator.reset(new RecentFilesMenuPopulator(ui->menuRecentFiles, &mSettings, fileOpener));
 
-	mInputPlatform.reset(new InputPlatformOis(std::to_string(size_t(HWND(winId()))), 800, 600)); // TODO: use actual resolution
-	mViewportInput.reset(new ViewportInput(mInputPlatform));
-
-	mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
-
 	mEngineSettings = readOrCreateEngineSettingsFile(this, mSettings);
 
 	mEngineRoot = EngineRootFactory::create(enginePluginFactories, mEngineSettings);
-	mSprocketModel.reset(new SprocketModel(mEngineRoot.get(), mInputPlatform.get()));
 	mSimStepper = std::make_unique<SimStepper>(mEngineRoot->systemRegistry);
 
 	mOsgWidget = new OsgWidget();
 	mRenderTarget = vis::createAndAddViewportToWindow(*mOsgWidget->getWindow(), mEngineRoot->programs.compositeFinal);
 	mRenderTarget->setScene(std::make_shared<vis::RenderTargetSceneAdapter>(mEngineRoot->scene));
+
+	mInputPlatform.reset(new InputPlatformOis(std::to_string(size_t(HWND(winId()))), 800, 600)); // TODO: use actual resolution
+	mViewportInput.reset(new ViewportInput(mInputPlatform));
+
+	mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
+
+	mSprocketModel.reset(new SprocketModel(mEngineRoot.get(), mInputPlatform.get()));
 
 	setProjectFilename("");
 	

@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "CameraInputSystem.h"
-#include "Input/InputPlatformOis.h"
+#include "Input/InputPlatform.h"
 #include "Input/LogicalAxis.h"
 #include "SimVisBinding/CameraSimVisBinding.h"
 #include <SkyboltSim/Components/CameraControllerComponent.h>

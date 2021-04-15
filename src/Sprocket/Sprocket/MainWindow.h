@@ -9,7 +9,6 @@
 #include "SprocketFwd.h"
 #include "WorldTreeWidget.h"
 #include <SkyboltEngine/EngineRoot.h>
-#include <SkyboltEngine/Input/InputPlatformOis.h>
 #include <SkyboltEngine/Plugin/PluginHelpers.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltCommon/Event.h>
@@ -106,7 +105,7 @@ private:
 	std::shared_ptr<class PropertiesModel> mPropertiesModel;
 
 	bool mDisableInputSystemOnNextUpdate = false;
-	std::shared_ptr<skybolt::InputPlatformOis> mInputPlatform;
+	std::shared_ptr<skybolt::InputPlatform> mInputPlatform;
 	std::unique_ptr<class ViewportInput> mViewportInput;
 
 	skybolt::vis::ArrowsPtr mArrows;

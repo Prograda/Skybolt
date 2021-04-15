@@ -28,9 +28,8 @@ public:
 	virtual int getWidth() const = 0;
 	virtual int getHeight() const = 0;
 
-	osg::GraphicsContext* _getGraphicsContext() const;
-	osgViewer::Viewer* _getViewer() const {return mViewer.get();}
-	osg::Group* _getSceneGraphRoot() const;
+	osgViewer::Viewer& getViewer() const { return *mViewer; }
+	std::weak_ptr<osgViewer::Viewer> getViewerPtr() const {return mViewer;}
 
 	//! @param rect is dimensions normalized by parent window dimensions. Range is [0, 1]
 	void addRenderTarget(const osg::ref_ptr<RenderTarget>& target, const RectF& rect);
@@ -47,9 +46,10 @@ public:
 
 protected:
 	void configureGraphicsState();
+	osg::Group* getSceneGraphRoot() const;
 
 protected:
-	std::unique_ptr<osgViewer::Viewer> mViewer;
+	std::shared_ptr<osgViewer::Viewer> mViewer;
 
 private:
 	CameraPtr mCamera;

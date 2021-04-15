@@ -46,7 +46,7 @@ bool Window::render()
 	}
 
 	mScreenSizePixelsUniform->set(osg::Vec2f(getWidth(), getHeight()));
-	_getViewer()->frame();
+	mViewer->frame();
 
 	return !mViewer->done();
 }
@@ -54,12 +54,12 @@ bool Window::render()
 void Window::addRenderTarget(const osg::ref_ptr<RenderTarget>& target, const RectF& rect)
 {
 	mTargets.push_back(Target(target, rect));
-	_getSceneGraphRoot()->addChild(target);
+	getSceneGraphRoot()->addChild(target);
 }
 
 void Window::removeRenderTarget(const osg::ref_ptr<RenderTarget>& target)
 {
-	_getSceneGraphRoot()->removeChild(target);
+	getSceneGraphRoot()->removeChild(target);
 	for (auto i = mTargets.begin(); i < mTargets.end(); ++i)
 	{
 		mTargets.erase(i);
@@ -67,12 +67,7 @@ void Window::removeRenderTarget(const osg::ref_ptr<RenderTarget>& target)
 	}
 }
 
-osg::GraphicsContext* Window::_getGraphicsContext() const
-{
-	return mViewer->getCamera()->getGraphicsContext();
-}
-
-osg::Group* Window::_getSceneGraphRoot() const
+osg::Group* Window::getSceneGraphRoot() const
 {
 	return mViewer->getSceneData()->asGroup();
 }
@@ -80,7 +75,13 @@ osg::Group* Window::_getSceneGraphRoot() const
 void Window::configureGraphicsState()
 {
 	// Set global graphics state
-	osg::State* state = mViewer->getCamera()->getGraphicsContext()->getState();
+	osg::GraphicsContext* context = mViewer->getCamera()->getGraphicsContext();
+	if (!context)
+	{
+		throw std::runtime_error("Could not initialize graphics context");
+	}
+	osg::State* state = context->getState();
+
 	state->setUseModelViewAndProjectionUniforms(true);
 	state->setUseVertexAttributeAliasing(true);
 

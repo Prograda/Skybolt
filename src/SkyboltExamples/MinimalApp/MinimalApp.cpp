@@ -11,7 +11,7 @@
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EntityFactory.h>
-#include <SkyboltEngine/Input/InputPlatformOis.h>
+#include <SkyboltEngine/Input/InputPlatformOsg.h>
 #include <SkyboltEngine/Input/InputSystem.h>
 #include <SkyboltEngine/Input/LogicalAxis.h>
 #include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 		viewport->setCamera(getVisCamera(*simCamera));
 
 		// Create input
-		InputPlatformOisPtr inputPlatform(new InputPlatformOis(window->getHandle(), window->getWidth(), window->getHeight()));
+		auto inputPlatform = std::make_shared<InputPlatformOsg>(window->getViewerPtr());
 		std::vector<LogicalAxisPtr> axes = CameraInputSystem::createDefaultAxes(*inputPlatform);
 
 		// Create systems

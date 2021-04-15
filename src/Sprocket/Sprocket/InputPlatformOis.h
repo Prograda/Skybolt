@@ -6,9 +6,8 @@
 
 #pragma once
 
-#include "InputPlatform.h"
 #include "SkyboltCommon/Event.h"
-#include "SkyboltCommon/Math/MathUtility.h"
+#include <SkyboltEngine/Input/InputPlatform.h>
 #include <string>
 
 namespace OIS
@@ -17,51 +16,6 @@ namespace OIS
 }
 
 namespace skybolt {
-
-struct KeyEvent : public Event
-{
-	enum Type
-	{
-		Pressed,
-		Released
-	};
-
-	KeyEvent(Type type, KeyCode code) :
-		type(type),
-		code(code)
-	{
-	}
-
-	Type type;
-	KeyCode code;
-};
-
-struct MouseEvent : public Event
-{
-	enum Type
-	{
-		Pressed,
-		Released,
-		Moved
-	};
-
-	enum ButtonId
-	{
-		Left,
-		Right,
-		Middle,
-		Button3,
-		Button4,
-		Button5,
-		Button6,
-		Button7
-	};
-
-	Type type;
-	ButtonId buttonId;
-	glm::vec3 absState;
-	glm::vec3 relState;
-};
 
 class InputPlatformOis : public InputPlatform
 {
