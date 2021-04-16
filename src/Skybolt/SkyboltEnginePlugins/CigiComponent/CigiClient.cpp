@@ -4,10 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "CigiClient.h"
-#include <SkyboltCommon/MapUtility.h>
-#include <SkyboltCommon/Math/MathUtility.h>
-
 #undef _HAS_STD_BYTE
 #define _HAS_STD_BYTE 0 // workaround for cigicl header errors with cpp17
 #include <cigicl/CigiEntityCtrlV3_3.h>
@@ -21,6 +17,10 @@
 #include <cigicl/CigiViewDefV3.h>
 #include <cigicl/CigiViewDefV4.h>
 #undef _HAS_STD_BYTE
+
+#include "CigiClient.h"
+#include <SkyboltCommon/MapUtility.h>
+#include <SkyboltCommon/Math/MathUtility.h>
 
 #include <boost/log/trivial.hpp>
 
