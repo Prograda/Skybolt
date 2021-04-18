@@ -35,13 +35,13 @@ private:
 	// This private block is first because these objects should be disposed of last
 	std::vector<PluginFactory> mPluginFactories;
 	std::vector<PluginPtr> mPlugins;
-	std::vector<std::string> mAssetFolderNames;
+	std::vector<std::string> mAssetPackageNames;
 
 public:
 	EngineRoot(const EngineRootConfig& config);
 	~EngineRoot();
 
-	const std::vector<std::string>& getAssetFolderNames() const { return mAssetFolderNames; }
+	const std::vector<std::string>& getAssetPackageNames() const { return mAssetPackageNames; }
 
 	vis::ShaderPrograms programs;
 	vis::ScenePtr scene;
@@ -56,7 +56,7 @@ public:
 	sim::SystemRegistryPtr systemRegistry;
 };
 
-//! @param relativePath is a path, relative to the asset folder name, in which to search for files
-file::Paths getFilePathsInAssetFolders(const EngineRoot& engineRoot, const std::string& relativePath, const std::string& extension);
+file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackageNames, const std::string& relativePath);
+file::Paths getFilesWithExtensionInDirectoryInAssetPackages(const std::vector<std::string>& assetPackageNames, const std::string& relativeDirectory, const std::string& extension);
 
 } // namespace skybolt

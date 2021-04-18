@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "EntityFactory.h"
+#include "EngineRoot.h"
 #include "EngineStats.h"
 #include "TemplateNameComponent.h"
 #include "VisObjectsComponent.h"
@@ -280,6 +281,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 	config.innerRadius = planetRadius;
 	config.visFactoryRegistry = context.visFactoryRegistry.get();
 	config.waterEnabled = hasOcean;
+	config.fileLocator = context.fileLocator;
 	
 	{
 		auto it = json.find("clouds");
@@ -354,8 +356,9 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 		auto it = json.find("features");
 		if (it != json.end())
 		{
-			const nlohmann::json& features = it.value();
-			config.featuresDirectory = context.fileLocator(features.at("directory"), file::FileLocatorMode::Required);
+			std::string directory = it.value().at("directory");
+			config.featureTreeFiles = getPathsInAssetPackages(context.assetPackageNames, directory + "/tree.json");
+			config.featureTilesDirectoryRelAssetPackage = directory;
 		}
 	}
 

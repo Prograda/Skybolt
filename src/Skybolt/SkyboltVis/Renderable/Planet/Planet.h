@@ -12,6 +12,7 @@
 #include "SkyboltVis/SkyboltVisFwd.h"
 #include "SkyboltVis/Renderable/Atmosphere/Bruneton/BruentonAtmosphere.h"
 #include "SkyboltVis/Renderable/Clouds/VolumeClouds.h"
+#include "SkyboltVis/Renderable/Planet/Features/PlanetFeaturesSource.h"
 #include "SkyboltVis/Renderable/Water/WaterStateSet.h"
 
 #include <SkyboltSim/SkyboltSimFwd.h>
@@ -41,7 +42,9 @@ struct PlanetConfig
 	bool waterEnabled = true;
 	osg::ref_ptr<osg::Texture2D> cloudsTexture; //!< Set to null to disable clouds
 	boost::optional<BruentonAtmosphereConfig> atmosphereConfig;
-	boost::optional<file::Path> featuresDirectory;
+	file::FileLocator fileLocator;
+	std::vector<file::Path> featureTreeFiles;
+	std::string featureTilesDirectoryRelAssetPackage;
 };
 
 class MyPlanetSurfaceListener;

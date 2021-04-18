@@ -639,11 +639,13 @@ Planet::Planet(const PlanetConfig& config) :
 	// Features
 	if (mWaterStateSet)
 	{
-		if (config.featuresDirectory)
+		if (!config.featureTreeFiles.empty())
 		{
 			PlanetFeaturesParams params;
 			params.scheduler = config.scheduler;
-			params.directory = *config.featuresDirectory;
+			params.treeFiles = config.featureTreeFiles;
+			params.fileLocator = config.fileLocator;
+			params.tilesDirectoryRelAssetPackage = config.featureTilesDirectoryRelAssetPackage;
 			params.programs = config.programs;
 			params.waterStateSet = mWaterStateSet;
 			params.planetRadius = mInnerRadius;

@@ -407,12 +407,12 @@ static nlohmann::json tileToJsonRecursive(const FeatureTile& tile)
 	return j;
 }
 
-static void jsonToTileRecursive(FeatureTile& tile, WorldFeatures::QuadTree& tree, const nlohmann::json& j)
+static void addJsonTilesToTreeRecursive(FeatureTile& tile, WorldFeatures::QuadTree& tree, const nlohmann::json& j)
 {
 	tile.key.level = j["level"];
 	tile.key.x = j["x"];
 	tile.key.y = j["y"];
-	tile.featureCountInFile = j["featureCount"];
+	tile.featureCountInFile += j["featureCount"];
 	
 	auto it = j.find("children");
 	if (it != j.end())
@@ -426,10 +426,13 @@ static void jsonToTileRecursive(FeatureTile& tile, WorldFeatures::QuadTree& tree
 			}
 			else
 			{
-				tree.subdivide(tile);
+				if (!tile.hasChildren())
+				{
+					tree.subdivide(tile);
+				}
 				for (int i = 0; i < children.size(); ++i)
 				{
-					jsonToTileRecursive(*tile.children[i], tree, children[i]);
+					addJsonTilesToTreeRecursive(*tile.children[i], tree, children[i]);
 				}
 			}
 		}
@@ -478,23 +481,23 @@ void save(const WorldFeatures::DiQuadTree& tree, const std::string& directory)
 	saveTileRecursive(tree.rightTree.getRoot(), directory);
 }
 
-void loadJsonFromDirectory(WorldFeatures& features, const std::string& directory)
+void addJsonFileTilesToTree(WorldFeatures& features, const std::string& filename)
 {
 	WorldFeatures::DiQuadTree& tree = features.tree;
 
-	std::ifstream f(directory + "/" + treeFilename, std::ios::in | std::ios::binary);
+	std::ifstream f(filename, std::ios::in | std::ios::binary);
 	if (f.is_open())
 	{
 		nlohmann::json j;
 		f >> j;
 		f.close();
 
-		jsonToTileRecursive(tree.leftTree.getRoot(), tree.leftTree, j["leftRoot"]);
-		jsonToTileRecursive(tree.rightTree.getRoot(), tree.rightTree, j["rightRoot"]);
+		addJsonTilesToTreeRecursive(tree.leftTree.getRoot(), tree.leftTree, j["leftRoot"]);
+		addJsonTilesToTreeRecursive(tree.rightTree.getRoot(), tree.rightTree, j["rightRoot"]);
 	}
 	else
 	{
-		throw skybolt::Exception("Could not load WorldFeatures tree from directory: " + directory);
+		throw skybolt::Exception("Could not load WorldFeatures tree from file: " + filename);
 	}
 }
 

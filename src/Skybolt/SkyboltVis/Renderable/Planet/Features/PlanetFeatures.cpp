@@ -204,10 +204,11 @@ std::unique_ptr<FeatureTile> createTile(const QuadTreeTileKey& key, const LatLon
 };
 
 PlanetFeatures::PlanetFeatures(const PlanetFeaturesParams& params) :
-	mTileDirectory(params.directory.string()),
 	mScheduler(params.scheduler),
 	mVisObjectsLoadTask(new VisObjectsLoadTask(params.programs, params.waterStateSet, params.shadowMaps)),
 	mPlanetRadius(params.planetRadius),
+	mFileLocator(params.fileLocator),
+	mTilesDirectoryRelAssetPackage(params.tilesDirectoryRelAssetPackage),
 	mFeatures(createTile)
 {
 	assert(mScheduler);
@@ -217,7 +218,10 @@ PlanetFeatures::PlanetFeatures(const PlanetFeaturesParams& params) :
 		mGroups[i] = params.groups[i];
 	}
 
-	mapfeatures::loadJsonFromDirectory(mFeatures, params.directory.string());
+	for (const auto& path : params.treeFiles)
+	{
+		mapfeatures::addJsonFileTilesToTree(mFeatures, path.string());
+	}
 }
 
 bool shouldTraverse(const VisFeatureTile& tile) { return tile.loaded; }
@@ -295,7 +299,7 @@ void PlanetFeatures::loadTile(VisFeatureTile& tile)
 		if (tile.featureCountInFile > 0)
 		{
 			tile.loaded = true;
-			std::string filename = mTileDirectory + "/" + mapfeatures::getTilePathFromKey(tile.key);
+			std::string filename = mFileLocator(mTilesDirectoryRelAssetPackage + "/" + mapfeatures::getTilePathFromKey(tile.key), file::FileLocatorMode::Required).string();
 			sim::LatLon origin = tile.bounds.center();
 
 			LoadingItemPtr loadingItem(new LoadingItem);

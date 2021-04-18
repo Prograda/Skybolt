@@ -11,7 +11,7 @@
 #include "SkyboltVis/Renderable/Planet/Features/PlanetFeaturesSource.h"
 #include "SkyboltVis/Renderable/Water/LakesBatch.h"
 
-#include <SkyboltCommon/File/FileUtility.h>
+#include <SkyboltCommon/File/FileLocator.h>
 #include <SkyboltCommon/Math/QuadTree.h>
 #include <px_sched/px_sched.h>
 #include <osg/MatrixTransform>
@@ -32,7 +32,9 @@ struct PlanetFeaturesParams
 	static const int featureGroupsSize = 2;
 
 	px_sched::Scheduler* scheduler;
-	file::Path directory;
+	std::vector<file::Path> treeFiles;
+	file::FileLocator fileLocator;
+	std::string tilesDirectoryRelAssetPackage;
 	const ShaderPrograms* programs;
 	osg::ref_ptr<osg::StateSet> waterStateSet;
 	double planetRadius;
@@ -61,7 +63,6 @@ private:
 	void unload(LoadedVisObjects& objects) const;
 
 private:
-	const std::string mTileDirectory;
 	px_sched::Scheduler* mScheduler;
 	std::unique_ptr<class VisObjectsLoadTask> mVisObjectsLoadTask;
 
@@ -69,6 +70,8 @@ private:
 	const double mPlanetRadius;
 
 	mapfeatures::WorldFeatures mFeatures;
+	const file::FileLocator mFileLocator;
+	const std::string mTilesDirectoryRelAssetPackage;
 	std::vector<LoadedVisObjects*> mLoadedVisObjects;
 
 	struct LoadingItem

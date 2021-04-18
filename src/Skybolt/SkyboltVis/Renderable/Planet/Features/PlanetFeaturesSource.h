@@ -136,7 +136,7 @@ void saveTile(const FeatureTile& tile, const std::string& filename);
 void loadTile(const std::string& filename, std::vector<FeaturePtr>& features);
 
 void save(const WorldFeatures::DiQuadTree& tree, const std::string& directory);
-void loadJsonFromDirectory(WorldFeatures& features, const std::string& directory);
+void addJsonFileTilesToTree(WorldFeatures& features, const std::string& filename);
 
 void saveAirports(const std::map<std::string, AirportPtr>& airports, const std::string& filename);
 std::map<std::string, AirportPtr> loadAirports(const std::string& filename);

@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.11.0)
+cmake_minimum_required (VERSION 3.13.0)
 cmake_policy(SET CMP0020 NEW)
 cmake_policy(SET CMP0074 NEW) # allow <PackageName>_ROOT variables
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0") 

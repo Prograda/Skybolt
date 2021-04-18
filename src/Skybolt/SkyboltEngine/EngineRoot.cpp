@@ -85,7 +85,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	for (const auto& folder : folders)
 	{
 		std::string folderName = folder.stem().string();
-		mAssetFolderNames.push_back(folderName);
+		mAssetPackageNames.push_back(folderName);
 		registerAssetModule(folderName);
 		BOOST_LOG_TRIVIAL(info) << "Registered asset package: " << folderName;
 	}
@@ -118,8 +118,9 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	context.tileSourceFactory = std::make_shared<vis::JsonTileSourceFactory>(config.tileSourceFactoryConfig);
 	context.modelFactory = createModelFactory(programs);
 	context.fileLocator = locateFile;
+	context.assetPackageNames = mAssetPackageNames;
 
-	file::Paths paths = getFilePathsInAssetFolders(*this, "Entities", ".json");
+	file::Paths paths = getFilesWithExtensionInDirectoryInAssetPackages(mAssetPackageNames, "Entities", ".json");
 	entityFactory.reset(new EntityFactory(context, paths));
 
 	// Create default systems
@@ -147,13 +148,26 @@ EngineRoot::~EngineRoot()
 {
 }
 
-file::Paths getFilePathsInAssetFolders(const EngineRoot& engineRoot, const std::string& relativePath, const std::string& extension)
+file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackageNames, const std::string& relativePath)
 {
 	file::Paths result;
-	auto folderNames = engineRoot.getAssetFolderNames();
-	for (const auto& folderName : folderNames)
+	for (const auto& packageName : assetPackageNames)
 	{
-		std::string path = "Assets/" + folderName + "/" + relativePath;
+		std::string path = "Assets/" + packageName + "/" + relativePath;
+		if (boost::filesystem::exists(path))
+		{
+			result.push_back(path);
+		}
+	}
+	return result;
+}
+
+file::Paths getFilesWithExtensionInDirectoryInAssetPackages(const std::vector<std::string>& assetPackageNames, const std::string& relativeDirectory, const std::string& extension)
+{
+	file::Paths result;
+	for (const auto& packageName : assetPackageNames)
+	{
+		std::string path = "Assets/" + packageName + "/" + relativeDirectory;
 		if (boost::filesystem::exists(path))
 		{
 			auto paths = file::findFilenamesInDirectory(path, extension);
