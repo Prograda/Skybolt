@@ -220,17 +220,17 @@ private:
 	std::shared_ptr<EventHandlerT> handler;
 };
 
-class KeyboardInputDevice : public InputDevice
+class KeyboardInputDeviceOsg : public InputDevice
 {
 public:
-	KeyboardInputDevice(const EventEmitterPtr& emitter) :
+	KeyboardInputDeviceOsg(const EventEmitterPtr& emitter) :
 		mEmitter(emitter)
 	{
 		assert(mEmitter);
 		setEnabled(true);
 	}
 
-	~KeyboardInputDevice()
+	~KeyboardInputDeviceOsg()
 	{
 		setEnabled(false);
 	}
@@ -298,127 +298,100 @@ private:
 	bool mEnabled = true;
 };
 
-class MouseInputDevice : public InputDevice
+MouseInputDeviceOsg::MouseInputDeviceOsg(const EventEmitterPtr& emitter) :
+	mEmitter(emitter)
 {
-public:
-	MouseInputDevice(const EventEmitterPtr& emitter) :
-		mEmitter(emitter)
-	{
-		assert(mEmitter);
-		setEnabled(true);
-	}
+	assert(mEmitter);
+	setEnabled(true);
+}
 
-	~MouseInputDevice()
-	{
-		setEnabled(false);
-	}
+MouseInputDeviceOsg::~MouseInputDeviceOsg()
+{
+	setEnabled(false);
+}
 
-	void setEnabled(bool enabled) override
+void MouseInputDeviceOsg::setEnabled(bool enabled)
+{
+	mEnabled = enabled;
+	if (!mEnabled)
 	{
-		mEnabled = enabled;
-		if (!mEnabled)
+		mPressedButtons.clear();
+	}
+}
+
+bool MouseInputDeviceOsg::handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa)
+{
+	if (mEnabled)
+	{
+		switch (ea.getEventType())
 		{
-			mPressedButtons.clear();
-		}
-	}
-
-	virtual size_t getButtonCount() const { return 7; }
-	virtual bool isButtonPressed(size_t i) const
-	{
-		return mEnabled && mPressedButtons.find(i) != mPressedButtons.end();
-	}
-
-	virtual size_t getAxisCount() const { return 0; }
-	virtual float getAxisState(size_t i) const { assert(0); return 0.0f; }
-
-	virtual const std::string& getName() const
-	{
-		static std::string mouse = "Mouse";
-		return mouse;
-	}
-
-	bool handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa)
-	{
-		if (mEnabled)
-		{
-			switch (ea.getEventType())
+			case osgGA::GUIEventAdapter::PUSH:
 			{
-				case osgGA::GUIEventAdapter::PUSH:
-				{
-					MouseEvent event;
-					event.type = MouseEvent::Type::Pressed;
-					event.buttonId = (MouseEvent::ButtonId)ea.getButton();
-					setMouseState(event, ea, aa);
-					mEmitter->emitEvent(event);
-					return true;
-				}
-				case osgGA::GUIEventAdapter::RELEASE:
-				{
-					MouseEvent event;
-					event.type = MouseEvent::Type::Released;
-					event.buttonId = (MouseEvent::ButtonId)ea.getButton();
-					setMouseState(event, ea, aa);
-					mEmitter->emitEvent(event);
-					return true;
-				}
-				case osgGA::GUIEventAdapter::MOVE:
-				{
-					MouseEvent event;
-					event.type = MouseEvent::Type::Moved;
-					event.buttonId = MouseEvent::ButtonId::Left;
-					setMouseState(event, ea, aa);
-					mEmitter->emitEvent(event);
-					return true;
-				}
-				case osgGA::GUIEventAdapter::SCROLL:
-				{
-					MouseEvent event;
-					event.type = MouseEvent::Type::Moved;
-					event.buttonId = MouseEvent::ButtonId::Left;
-					setMouseState(event, ea, aa);
-					mEmitter->emitEvent(event);
-					return true;
-				}
+				MouseEvent event;
+				event.type = MouseEvent::Type::Pressed;
+				event.buttonId = (MouseEvent::ButtonId)(ea.getButton() - 1);
+				setMouseState(event, ea, aa);
+				mEmitter->emitEvent(event);
+				return true;
+			}
+			case osgGA::GUIEventAdapter::RELEASE:
+			{
+				MouseEvent event;
+				event.type = MouseEvent::Type::Released;
+				event.buttonId = (MouseEvent::ButtonId)(ea.getButton() - 1);
+				setMouseState(event, ea, aa);
+				mEmitter->emitEvent(event);
+				return true;
+			}
+			case osgGA::GUIEventAdapter::MOVE:
+			{
+				MouseEvent event;
+				event.type = MouseEvent::Type::Moved;
+				event.buttonId = MouseEvent::ButtonId::Left;
+				setMouseState(event, ea, aa);
+				mEmitter->emitEvent(event);
+				return true;
+			}
+			case osgGA::GUIEventAdapter::SCROLL:
+			{
+				MouseEvent event;
+				event.type = MouseEvent::Type::Moved;
+				event.buttonId = MouseEvent::ButtonId::Left;
+				setMouseState(event, ea, aa);
+				mEmitter->emitEvent(event);
+				return true;
 			}
 		}
-		return false;
 	}
+	return false;
+}
 
-private:
-	void setMouseState(MouseEvent& event, const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa)
+void MouseInputDeviceOsg::setMouseState(MouseEvent& event, const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa)
+{
+	// OSG uses +Y upwards by default. Flip to +Y downwards coordinates.
+	float flippedY = float(ea.getWindowHeight() - 1) - ea.getY();
+
+	event.absState.x = ea.getX();
+	event.absState.y = flippedY;
+	event.absState.z = 0;
+	event.relState.x = std::floor(ea.getX() - mPrevX);
+	event.relState.y = -std::floor(ea.getY() - mPrevY); // negate to flip from +Y upward to +Y downwards
+	event.relState.z = ea.getScrollingDeltaY();
+
+	if (mWrapEnabled && (event.relState.x != 0.0 || event.relState.y != 0.0))
 	{
-		// OSG uses +Y upwards by default. Flip to +Y downwards coordinates.
-		float flippedY = float(ea.getWindowHeight() - 1) - ea.getY();
-
-		event.absState.x = ea.getX();
-		event.absState.y = flippedY;
-		event.absState.z = 0;
-		event.relState.x = std::floor(ea.getX() - mCenterX);
-		event.relState.y = -std::floor(ea.getY() - mCenterY); // negate to flip from +Y upward to +Y downwards
-		event.relState.z = ea.getScrollingDeltaY();
-
-		if (event.relState.x != 0.0 || event.relState.y != 0.0)
-		{
-			mCenterX = (ea.getXmin() + ea.getXmax()) / 2.0f;
-			mCenterY = (ea.getYmin() + ea.getYmax()) / 2.0f;
-			aa.requestWarpPointer(mCenterX, mCenterY);
-		}
+		mPrevX = (ea.getXmin() + ea.getXmax()) / 2.0f;
+		mPrevY = (ea.getYmin() + ea.getYmax()) / 2.0f;
+		aa.requestWarpPointer(mPrevX, mPrevY);
 	}
-
-private:
-	EventEmitterPtr mEmitter;
-	std::set<int> mPressedButtons;
-	bool mEnabled = true;
-	double mCenterX = 0;
-	double mCenterY = 0;
-};
+}
 
 InputPlatformOsg::InputPlatformOsg(const std::weak_ptr<osgViewer::Viewer>& viewer) :
 	mViewer(viewer),
 	mEmitter(std::make_shared<EventEmitter>())
 {
-	mKeyboard = std::make_shared<KeyboardInputDevice>(mEmitter);
-	mMouse = std::make_shared<MouseInputDevice>(mEmitter);
+	mKeyboard = std::make_shared<KeyboardInputDeviceOsg>(mEmitter);
+	mMouse = std::make_shared<MouseInputDeviceOsg>(mEmitter);
 
 	addEventHandler(osg::ref_ptr<osgGA::GUIEventHandler>(new EventHandlerFwd(mKeyboard)));
 	addEventHandler(osg::ref_ptr<osgGA::GUIEventHandler>(new EventHandlerFwd(mMouse)));

@@ -79,7 +79,6 @@ public:
 private:
 	bool keyPressed(const OIS::KeyEvent &arg)
 	{
-		printf("Key pressed\n");
 		KeyEvent event(KeyEvent::Type::Pressed, (KeyCode)arg.key);
 		mEmitter->emitEvent(event);
 		return true;
@@ -127,14 +126,12 @@ public:
 			const OIS::MouseState &s = mMouse->getMouseState();
 			s.width = mWindowWidth;
 			s.height = mWindowHeight;
-			printf("mouse enabled\n");
 
 		}
 		else if (mMouse && !enabled)
 		{
 			mInputManager->destroyInputObject(mMouse);
 			mMouse = nullptr;
-			printf("mouse disabled\n");
 		}
 	}
 
@@ -186,7 +183,6 @@ public:
 private:
 	bool mousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id)
 	{
-		printf("Mouse pressed\n");
 		MouseEvent event;
 		event.type = MouseEvent::Type::Pressed;
 		event.buttonId = (MouseEvent::ButtonId)id;
@@ -217,7 +213,6 @@ private:
 
 	bool mouseMoved(const OIS::MouseEvent &arg)
 	{
-		printf("Mouse moved\n");
 		MouseEvent event;
 		event.type = MouseEvent::Type::Moved;
 		event.buttonId = MouseEvent::ButtonId::Left;
@@ -357,7 +352,7 @@ void InputPlatformOis::update()
 {
 	mMouse->capture();
 	mKeyboard->capture();
-	//printf("pressed ? %i\n", (int)mMouse->isButtonPressed(0));
+
 	for (const std::shared_ptr<JoystickInputDevice>& joystick : mJoysticks)
 		joystick->capture();
 }

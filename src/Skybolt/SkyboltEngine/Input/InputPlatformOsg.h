@@ -12,12 +12,52 @@
 #include <osgGA/GUIEventHandler>
 #include <string>
 
-namespace osgViewer
-{
+namespace osgViewer {
 	class Viewer;
 }
 
 namespace skybolt {
+
+class MouseInputDeviceOsg : public InputDevice
+{
+public:
+	MouseInputDeviceOsg(const EventEmitterPtr& emitter);
+
+	~MouseInputDeviceOsg();
+
+	void setEnabled(bool enabled) override;
+
+	size_t getButtonCount() const override { return 7; }
+
+	bool isButtonPressed(size_t i) const override
+	{
+		return mEnabled && mPressedButtons.find(i) != mPressedButtons.end();
+	}
+
+	size_t getAxisCount() const override { return 0; }
+	float getAxisState(size_t i) const override { assert(0); return 0.0f; }
+
+	const std::string& getName() const override
+	{
+		static std::string mouse = "Mouse";
+		return mouse;
+	}
+
+	bool handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa);
+
+	void enablePointerWrap(bool wrap) { mWrapEnabled = wrap; }
+
+private:
+	void setMouseState(MouseEvent& event, const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa);
+
+private:
+	EventEmitterPtr mEmitter;
+	std::set<int> mPressedButtons;
+	bool mEnabled = true;
+	double mPrevX = 0;
+	double mPrevY = 0;
+	bool mWrapEnabled = true;
+};
 
 class InputPlatformOsg : public InputPlatform
 {
@@ -37,8 +77,8 @@ private:
 private:
 	std::weak_ptr<osgViewer::Viewer> mViewer;
 	EventEmitterPtr mEmitter;
-	std::shared_ptr<class KeyboardInputDevice> mKeyboard;
-	std::shared_ptr<class MouseInputDevice> mMouse;
+	std::shared_ptr<class KeyboardInputDeviceOsg> mKeyboard;
+	std::shared_ptr<MouseInputDeviceOsg> mMouse;
 	std::vector<osg::ref_ptr<osgGA::GUIEventHandler>> mEventHandlers;
 };
 
