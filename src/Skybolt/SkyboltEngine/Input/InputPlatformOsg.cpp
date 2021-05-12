@@ -344,6 +344,7 @@ bool MouseInputDeviceOsg::handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIAct
 				return true;
 			}
 			case osgGA::GUIEventAdapter::MOVE:
+			case osgGA::GUIEventAdapter::DRAG:
 			{
 				MouseEvent event;
 				event.type = MouseEvent::Type::Moved;

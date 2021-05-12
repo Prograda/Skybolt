@@ -65,7 +65,10 @@ public:
 		auto it = mListenerMap.find(typeid(EventT));
 		if (it != mListenerMap.end())
 		{
-			for (const auto& item : it->second)
+			// Take copy of listeners before calling onEvent(),
+			// incase the listeners list changes as a result of onEvent().
+			std::set<EventListener*> listeners = it->second;
+			for (const auto& item : listeners)
 			{
 				item->onEvent(event);
 			}

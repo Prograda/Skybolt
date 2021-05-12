@@ -33,7 +33,6 @@ private: // EventListener interface
 	void onEvent(const Event &event) override;
 
 private:
-	const vis::Window* mWindow;
 	sim::EntityPtr mCamera;
 	InputPlatformPtr mInputPlatform;
 	std::vector<LogicalAxisPtr> mInputAxes;
