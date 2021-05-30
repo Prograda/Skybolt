@@ -312,10 +312,17 @@ MouseInputDeviceOsg::~MouseInputDeviceOsg()
 
 void MouseInputDeviceOsg::setEnabled(bool enabled)
 {
-	mEnabled = enabled;
-	if (!mEnabled)
+	if (mEnabled != enabled)
 	{
-		mPressedButtons.clear();
+		mEnabled = enabled;
+		if (!mEnabled)
+		{
+			mPressedButtons.clear();
+		}
+		else
+		{
+			mPrevPosition.reset();
+		}
 	}
 }
 
@@ -375,16 +382,28 @@ void MouseInputDeviceOsg::setMouseState(MouseEvent& event, const osgGA::GUIEvent
 	event.absState.x = ea.getX();
 	event.absState.y = flippedY;
 	event.absState.z = 0;
-	event.relState.x = std::floor(ea.getX() - mPrevX);
-	event.relState.y = -std::floor(ea.getY() - mPrevY); // negate to flip from +Y upward to +Y downwards
+	event.relState.x = mPrevPosition ? std::floor(ea.getX() - mPrevPosition->x) : 0.0;
+	event.relState.y = mPrevPosition  ? -std::floor(ea.getY() - mPrevPosition->y) : 0.0; // negate to flip from +Y upward to +Y downwards
 	event.relState.z = ea.getScrollingDeltaY();
 
-	if (mWrapEnabled && (event.relState.x != 0.0 || event.relState.y != 0.0))
+	if (mWrapEnabled)
 	{
-		mPrevX = (ea.getXmin() + ea.getXmax()) / 2.0f;
-		mPrevY = (ea.getYmin() + ea.getYmax()) / 2.0f;
-		aa.requestWarpPointer(mPrevX, mPrevY);
+		mPrevPosition = glm::vec2(
+			(ea.getXmin() + ea.getXmax()) / 2.0f,
+			(ea.getYmin() + ea.getYmax()) / 2.0f);
+
+		aa.requestWarpPointer(mPrevPosition->x, mPrevPosition->y);
 	}
+	else
+	{
+		mPrevPosition = glm::vec2(ea.getX(), ea.getY());
+	}
+}
+
+void MouseInputDeviceOsg::enablePointerWrap(bool wrap)
+{
+	mWrapEnabled = wrap;
+	mPrevPosition.reset();
 }
 
 InputPlatformOsg::InputPlatformOsg(const std::weak_ptr<osgViewer::Viewer>& viewer) :

@@ -7,9 +7,11 @@
 #pragma once
 
 #include "InputPlatform.h"
-#include "SkyboltCommon/Event.h"
+#include <SkyboltCommon/Event.h>
+#include <SkyboltCommon/Math/MathUtility.h>
 
 #include <osgGA/GUIEventHandler>
+#include <optional>
 #include <string>
 
 namespace osgViewer {
@@ -45,7 +47,7 @@ public:
 
 	bool handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa);
 
-	void enablePointerWrap(bool wrap) { mWrapEnabled = wrap; }
+	void enablePointerWrap(bool wrap);
 
 private:
 	void setMouseState(MouseEvent& event, const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa);
@@ -54,8 +56,7 @@ private:
 	EventEmitterPtr mEmitter;
 	std::set<int> mPressedButtons;
 	bool mEnabled = true;
-	double mPrevX = 0;
-	double mPrevY = 0;
+	std::optional<glm::vec2> mPrevPosition;
 	bool mWrapEnabled = true;
 };
 

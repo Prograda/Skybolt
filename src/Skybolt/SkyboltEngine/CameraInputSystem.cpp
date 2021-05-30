@@ -67,6 +67,7 @@ void CameraInputSystem::setInputEnabled(bool enabled)
 {
 	if (enabled && !mEnabled)
 	{
+		mInput = CameraController::Input::zero();
 		mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
 	}
 	else if (!enabled && mEnabled)
