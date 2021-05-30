@@ -9,6 +9,8 @@
 
 #include "HudDrawer.h"
 
+namespace skybolt {
+
 class RollAngleRibbonModel
 {
 public:
@@ -46,3 +48,4 @@ private:
 	Parameters mParams;
 };
 
+} // namespace skybolt

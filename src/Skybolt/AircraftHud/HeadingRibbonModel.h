@@ -9,6 +9,8 @@
 
 #include "HudDrawer.h"
 
+namespace skybolt {
+
 class HeadingRibbonModel
 {
 public:
@@ -61,3 +63,4 @@ private:
 	Parameters mParams;
 };
 
+} // namespace skybolt

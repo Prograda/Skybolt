@@ -9,6 +9,8 @@
 
 #include "HudDrawer.h"
 
+namespace skybolt {
+
 class PitchLadderModel
 {
 public:
@@ -31,3 +33,4 @@ private:
 	HudDrawer::DashedLineParams mDashedLineParams;
 };
 
+} // namespace skybolt

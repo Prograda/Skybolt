@@ -10,6 +10,7 @@
 #include "SkyboltSim/System/System.h"
 #include "SkyboltVis/SkyboltVisFwd.h"
 
+#include <osg/ref_ptr>
 #include <osg/Stats>
 
 namespace skybolt {
@@ -17,14 +18,14 @@ namespace skybolt {
 class StatsDisplaySystem : public sim::System
 {
 public:
-	StatsDisplaySystem(const vis::Window& window, vis::Scene& Scene);
+	StatsDisplaySystem(const vis::Window& window);
 
 	void updatePostDynamics(const System::StepArgs& args) override;
 
 private:
 	osg::Stats* mViewerStats;
 	osg::Stats* mCameraStats;
-	std::unique_ptr<VisHud> mStatsHud;
+	osg::ref_ptr<class VisHud> mStatsHud;
 };
 
 } // namespace skybolt

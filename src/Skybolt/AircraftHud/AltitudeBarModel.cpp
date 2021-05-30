@@ -25,7 +25,7 @@ void AltitudeBarModel::drawBar(float altitude)
 		altitude = mParams.maxAltitude;
 	}
 	float height = mParams.height * altitude / mParams.maxAltitude;
-	mDrawer->drawSolidBox(mParams.position + glm::vec2(0, height*0.5f), height, mParams.width);
+	mDrawer->drawSolidBox(mParams.position + glm::vec2(0, height*0.5f), mParams.width, height);
 }
 
 void AltitudeBarModel::drawMarker(float markerAltitude)

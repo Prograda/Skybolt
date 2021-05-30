@@ -10,6 +10,8 @@
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <string>
 
+namespace skybolt {
+
 class HudDrawer
 {
 public:
@@ -29,7 +31,7 @@ public:
 	*/
 	virtual void drawText(const glm::vec2 &p, const std::string &message, float rotation, float size = -1) = 0;
 	//! @param position is center of box
-	virtual void drawSolidBox(const glm::vec2 &position, float height, float width) = 0;
+	virtual void drawSolidBox(const glm::vec2 &position, float width, float height) = 0;
 	
 	virtual void drawCircle(const glm::vec2 &center, float radius, int segmentCount, float startAngle = 0, float angleRange = skybolt::math::twoPiF())
 	{
@@ -45,3 +47,5 @@ public:
 		}
 	}
 };
+
+} // namespace skybolt

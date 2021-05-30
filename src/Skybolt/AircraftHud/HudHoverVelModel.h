@@ -9,6 +9,8 @@
 
 #include "HudDrawer.h"
 
+namespace skybolt {
+
 class HudHoverVelModel
 {
 public:
@@ -21,3 +23,4 @@ private:
 	float mMarkerRadius;
 };
 
+} // namespace skybolt

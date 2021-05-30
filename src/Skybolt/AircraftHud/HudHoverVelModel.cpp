@@ -7,6 +7,8 @@
 
 #include "HudHoverVelModel.h"
 
+using namespace skybolt;
+
 HudHoverVelModel::HudHoverVelModel(HudDrawer* drawer, float speedScale, float markerRadius) :
 	mDrawer(drawer),
 	mSpeedScale(speedScale),

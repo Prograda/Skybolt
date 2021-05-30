@@ -12,7 +12,7 @@
 
 namespace skybolt {
 
-StatsDisplaySystem::StatsDisplaySystem(const vis::Window& window, vis::Scene& scene)
+StatsDisplaySystem::StatsDisplaySystem(const vis::Window& window)
 {
 	osgViewer::Viewer& viewer = window.getViewer();
 
@@ -30,13 +30,14 @@ StatsDisplaySystem::StatsDisplaySystem(const vis::Window& window, vis::Scene& sc
 		mCameraStats->collectStats("scene", true);
 	}
 
-	const float aspectRatio = (float)window.getWidth() / (float)window.getHeight();
-	mStatsHud = std::make_unique<VisHud>(aspectRatio);
-	scene.addObject(mStatsHud.get());
+	mStatsHud = osg::ref_ptr<VisHud>(new VisHud());
+	window.getRenderTargets().back().target->getOsgCamera()->addChild(mStatsHud);
 }
 
 void StatsDisplaySystem::updatePostDynamics(const System::StepArgs& args)
 {
+	mStatsHud->clear();
+
 	int line = 0;
 	int frameNumber = mViewerStats->getLatestFrameNumber() - 1;
 

@@ -9,6 +9,8 @@
 
 #include "HudDrawer.h"
 
+namespace skybolt {
+
 class ZenithCompassModel
 {
 public:
@@ -33,3 +35,4 @@ private:
 	Parameters mParams;
 };
 
+} // namespace skybolt

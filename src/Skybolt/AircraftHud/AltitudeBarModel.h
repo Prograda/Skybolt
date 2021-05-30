@@ -10,6 +10,8 @@
 #include "HudDrawer.h"
 #include <vector>
 
+namespace skybolt {
+
 class AltitudeBarModel
 {
 public:
@@ -18,7 +20,7 @@ public:
 	{
 		void makeDefault()
 		{
-			maxAltitude= 200;
+			maxAltitude = 200;
 			position = glm::vec2(0.4f, -0.3f);
 			height = 0.5f;
 			width = 0.01f;
@@ -27,9 +29,9 @@ public:
 			tickOffset = 0.003f;
 			hideBarWhenExceeded = true;
 
-			for (int i=0; i < 5; i++)
+			for (int i = 0; i < 5; i++)
 				ticks.push_back(20.0f*(float)i);
-			for (int i=0; i<5; i++)
+			for (int i = 0; i < 5; i++)
 				ticks.push_back(50.0f*(float)i);
 		}
 
@@ -48,7 +50,7 @@ public:
 	// marker is optional
 	void draw(float altitude, const float* markerAltitude = 0);
 
-	const Parameters &getParameters() {return mParams;}
+	const Parameters &getParameters() { return mParams; }
 
 private:
 	void drawBar(float altitude);
@@ -58,3 +60,4 @@ private:
 	Parameters mParams;
 };
 
+} // namespace skybolt

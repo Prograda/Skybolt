@@ -11,38 +11,31 @@
 
 namespace skybolt {
 
-class VisHud : public vis::VisObject, public HudDrawer
+class VisHud : public HudDrawer, public osg::Group
 {
 public:
-	VisHud(float aspectRatio);
+	VisHud();
 	~VisHud();
 
-	// VisObject interface
-	virtual void setPosition(const osg::Vec3f &position) {}
-	virtual void setOrientation(const osg::Quat &orientation) {}
-
-	virtual osg::Vec3f getPosition() const {return osg::Vec3f();}
-	virtual osg::Quat getOrientation() const {return osg::Quat();}
-
-	virtual void updatePreRender(const vis::RenderContext& context);
-
-	virtual osg::Node* _getNode() const;
+	void clear();
 
 	// HudDrawer interface
-	virtual void drawLine(const glm::vec2 &p0, const glm::vec2 &p1);
-	virtual void drawLineDashed(const glm::vec2 &p0, const glm::vec2 &p1, const DashedLineParams& params);
-	virtual void drawText(const glm::vec2 &p, const std::string &message, float rotation, float size = -1);
-	virtual void drawSolidBox(const glm::vec2 &position, float height, float width);
+	void drawLine(const glm::vec2 &p0, const glm::vec2 &p1) override;
+	void drawLineDashed(const glm::vec2 &p0, const glm::vec2 &p1, const DashedLineParams& params) override;
+	void drawText(const glm::vec2 &p, const std::string &message, float rotation = 0.f, float size = -1) override;
+	void drawSolidBox(const glm::vec2 &position, float width, float height) override;
 	
 private:
-	void nextFrame();
+	void traverse(osg::NodeVisitor& visitor) override;
+	void setDirty();
 
 private:
-	osg::Camera* mCamera;
-	osg::ref_ptr<osg::Geode> mGeode;
-	osg::Vec3Array* mLineVertices;
-	osg::Vec3Array* mQuadVertices;
+	osg::ref_ptr<osg::Geode> mPrimitivesGeode;
+	osg::ref_ptr<osg::Geode> mTextGeode;
+	osg::ref_ptr<osg::Vec3Array> mLineVertices;
+	osg::ref_ptr<osg::Vec3Array> mQuadVertices;
 	std::unique_ptr<class TextPool> mTextPool;
+	bool mDirty = false;
 };
 
 } // namespace skybolt

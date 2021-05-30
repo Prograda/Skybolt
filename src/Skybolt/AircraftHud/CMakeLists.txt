@@ -12,3 +12,5 @@ find_package(glm REQUIRED)
 add_library(AircraftHud STATIC ${SOURCE})
 
 target_link_libraries(AircraftHud glm)
+
+skybolt_install(AircraftHud)
