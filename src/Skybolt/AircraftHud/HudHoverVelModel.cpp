@@ -19,7 +19,7 @@ HudHoverVelModel::HudHoverVelModel(HudDrawer* drawer, float speedScale, float ma
 
 void HudHoverVelModel::draw(const glm::vec2 &vel)
 {
-	glm::vec2 markerPos = vel * mSpeedScale;
+	glm::vec2 markerPos = glm::vec2(vel.y, vel.x) * mSpeedScale;
 	mDrawer->drawLine(glm::vec2(0.0f), markerPos);
 	mDrawer->drawLine(glm::vec2(markerPos.x - mMarkerRadius, markerPos.y), glm::vec2(markerPos.x + mMarkerRadius, markerPos.y));
 	mDrawer->drawLine(glm::vec2(markerPos.x, markerPos.y - mMarkerRadius), glm::vec2(markerPos.x, markerPos.y + mMarkerRadius));

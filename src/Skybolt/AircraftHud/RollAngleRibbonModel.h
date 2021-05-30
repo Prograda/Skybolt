@@ -25,7 +25,8 @@ public:
 			majorLineLength = 0.01f;
 			minorLineLength = 0.005f;
 			markerLineLength = majorLineLength;
-			lineRadius = 0.25f;
+			lineRadius = 0.3f;
+			centerVerticalPosition = 0.3;
 		}
 
 		float angleLimitDeg;
@@ -35,6 +36,7 @@ public:
 		float minorLineLength;
 		float markerLineLength;
 		float lineRadius;
+		float centerVerticalPosition;
 	};
 
 	RollAngleRibbonModel(HudDrawer* drawer, const Parameters &params);

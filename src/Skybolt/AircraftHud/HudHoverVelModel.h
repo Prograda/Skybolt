@@ -15,6 +15,8 @@ class HudHoverVelModel
 {
 public:
 	HudHoverVelModel(HudDrawer* drawer, float speedScale, float markerRadius);
+
+	//! @param vel x is forward speed, y is right speed
 	void draw(const glm::vec2 &vel);
 
 private:

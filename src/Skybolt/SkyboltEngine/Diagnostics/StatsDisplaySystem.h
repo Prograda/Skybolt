@@ -10,6 +10,7 @@
 #include "SkyboltSim/System/System.h"
 #include "SkyboltVis/SkyboltVisFwd.h"
 
+#include <osg/Camera>
 #include <osg/ref_ptr>
 #include <osg/Stats>
 
@@ -19,6 +20,7 @@ class StatsDisplaySystem : public sim::System
 {
 public:
 	StatsDisplaySystem(const vis::Window& window);
+	~StatsDisplaySystem();
 
 	void updatePostDynamics(const System::StepArgs& args) override;
 
@@ -26,6 +28,7 @@ private:
 	osg::Stats* mViewerStats;
 	osg::Stats* mCameraStats;
 	osg::ref_ptr<class VisHud> mStatsHud;
+	osg::ref_ptr<osg::Camera> mCamera;
 };
 
 } // namespace skybolt

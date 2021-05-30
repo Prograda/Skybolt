@@ -8,8 +8,6 @@
 #include "HeadingRibbonModel.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 
-#include <boost/lexical_cast.hpp>
-
 using namespace skybolt;
 
 HeadingRibbonModel::HeadingRibbonModel(HudDrawer* drawer, const Parameters &params) :
@@ -39,7 +37,7 @@ void HeadingRibbonModel::draw(float refHeadingDeg, float* markerHeadingDeg)
 			if (isMajorIncrement(heading))
 			{
 				height = mParams.majorHeight;
-				label = getTickLabel(heading);
+				label = getTickLabel(int(std::round(heading)));
 			}
 			else
 			{
@@ -63,21 +61,21 @@ bool HeadingRibbonModel::isMajorIncrement(float val)
 	return (fmodf(val, mParams.majorIncrementDegrees) == 0.0f);
 }
 
-std::string HeadingRibbonModel::getTickLabel(float heading)
+std::string HeadingRibbonModel::getTickLabel(int heading)
 {
 	if (mParams.useLettersForNSEW)
 	{
-		if (heading == 0.0f)
+		if (heading == 0)
 			return "N";
-		else if (heading == 90.0f)
+		else if (heading == 90)
 			return "E";
-		else if (heading == 180.0f)
+		else if (heading == 180)
 			return "S";
-		else if (heading == 270.0f)
+		else if (heading == 270)
 			return "W";
 	}
 
-	return boost::lexical_cast<std::string>(heading);
+	return std::to_string(heading);
 }
 
 float HeadingRibbonModel::getXForHeading(float refHeading, float heading)
@@ -93,7 +91,7 @@ void HeadingRibbonModel::drawTick(float height, const std::string &label, float 
 					   glm::vec2(x, yStart + height) );
 
 	if (!label.empty())
-		mDrawer->drawText(glm::vec2(x, mParams.center.y + (mParams.majorHeight + mParams.textGap)), label, 0);
+		mDrawer->drawText(glm::vec2(x, mParams.center.y + (mParams.majorHeight + mParams.textGap)), label, 0, -1.0, HudDrawer::Alignment::Center);
 
 }
 

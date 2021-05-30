@@ -79,9 +79,9 @@ int main(int argc, char *argv[])
 		engineRoot->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, window.get(), axes));
 		engineRoot->systemRegistry->push_back(std::make_shared<CameraInputSystem>(simCamera, inputPlatform, axes));
 
-//#define SHOW_STATS // FIXME: enabling stats adds an unacceptable performance hit due to drawing the hud text
+//#define SHOW_STATS
 #ifdef SHOW_STATS
-		engineRoot->systemRegistry->push_back(std::make_shared<StatsDisplaySystem>(window, *engineRoot->scene));
+		engineRoot->systemRegistry->push_back(std::make_shared<StatsDisplaySystem>(*window));
 #endif
 
 		// Create entities

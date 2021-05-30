@@ -59,7 +59,7 @@ public:
 	std::map<std::string, ControlInputPtr> controls;
 
 	template <typename T>
-	inline std::shared_ptr<ControlInputT<T>> get(const std::string& name)
+	inline std::shared_ptr<ControlInputT<T>> get(const std::string& name) const
 	{
 		auto i = controls.find(name);
 		if (i != controls.end())

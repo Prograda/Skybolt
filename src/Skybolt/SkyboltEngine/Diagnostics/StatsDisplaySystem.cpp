@@ -15,6 +15,7 @@ namespace skybolt {
 StatsDisplaySystem::StatsDisplaySystem(const vis::Window& window)
 {
 	osgViewer::Viewer& viewer = window.getViewer();
+	mCamera = window.getRenderTargets().back().target->getOsgCamera();
 
 	mViewerStats = viewer.getStats();
 	mCameraStats = viewer.getCamera()->getStats();
@@ -31,11 +32,19 @@ StatsDisplaySystem::StatsDisplaySystem(const vis::Window& window)
 	}
 
 	mStatsHud = osg::ref_ptr<VisHud>(new VisHud());
-	window.getRenderTargets().back().target->getOsgCamera()->addChild(mStatsHud);
+	mCamera->addChild(mStatsHud);
+}
+
+StatsDisplaySystem::~StatsDisplaySystem()
+{
+	mCamera->removeChild(mStatsHud);
 }
 
 void StatsDisplaySystem::updatePostDynamics(const System::StepArgs& args)
 {
+	osg::Viewport* viewport = mCamera->getViewport();
+	mStatsHud->setAspectRatio(viewport->width() / viewport->height());
+
 	mStatsHud->clear();
 
 	int line = 0;

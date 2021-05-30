@@ -20,6 +20,7 @@
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Plugin/Plugin.h>
 #include <SkyboltCommon/VectorUtility.h>
+#include <SkyboltCommon/Json/JsonHelpers.h>
 
 #include <boost/config.hpp>
 #include <boost/dll/alias.hpp>
@@ -75,11 +76,16 @@ static sim::ComponentPtr loadBulletDynamicBody(BulletWorld& world, Entity* entit
 	int collisionGroupMask = CollisionGroupMasks::simBody;
 	int collisionFilterMask = ~0;
 
-	btVector3 momentOfInertia;
 	// TODO: dispose of shape
 	btCollisionShape* shape = new btBoxShape(toBtVector3(readVector3(json.at("size")) * 0.5));
-	shape->calculateLocalInertia(mass, momentOfInertia);
-	momentOfInertia *= 0.7; // TODO: remove hack
+
+	btVector3 momentOfInertia = toBtVector3(readOptionalVector3(json, "momentOfInertia"));
+	if (momentOfInertia == btVector3(0, 0, 0))
+	{
+		// Calculate an approx moment of inertia
+		shape->calculateLocalInertia(mass, momentOfInertia);
+		momentOfInertia *= 0.25;
+	}
 
 	auto body = std::make_shared<BulletDynamicBodyComponent>(&world, entity->getFirstComponentRequired<sim::Node>().get(), mass, momentOfInertia, shape,
 		velocity, collisionGroupMask, collisionFilterMask);

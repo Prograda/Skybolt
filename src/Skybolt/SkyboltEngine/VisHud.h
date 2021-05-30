@@ -17,12 +17,14 @@ public:
 	VisHud();
 	~VisHud();
 
+	void setAspectRatio(double value);
+
 	void clear();
 
 	// HudDrawer interface
 	void drawLine(const glm::vec2 &p0, const glm::vec2 &p1) override;
 	void drawLineDashed(const glm::vec2 &p0, const glm::vec2 &p1, const DashedLineParams& params) override;
-	void drawText(const glm::vec2 &p, const std::string &message, float rotation = 0.f, float size = -1) override;
+	void drawText(const glm::vec2 &p, const std::string &message, float rotation = 0.f, float size = -1, Alignment alignment = Alignment::Left) override;
 	void drawSolidBox(const glm::vec2 &position, float width, float height) override;
 	
 private:
@@ -30,6 +32,7 @@ private:
 	void setDirty();
 
 private:
+	osg::ref_ptr<osg::Camera> mCamera;
 	osg::ref_ptr<osg::Geode> mPrimitivesGeode;
 	osg::ref_ptr<osg::Geode> mTextGeode;
 	osg::ref_ptr<osg::Vec3Array> mLineVertices;

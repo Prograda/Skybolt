@@ -20,9 +20,9 @@ void RollAngleRibbonModel::drawTick(float angle, float length)
 {
 	angle *= skybolt::math::degToRadF();
 	float r = mParams.lineRadius + glm::sign(length) * (mParams.majorLineLength - abs(length)) * 0.5f;
-	glm::vec2 p0(r * glm::sin(angle), r * glm::cos(angle));
+	glm::vec2 p0(r * glm::sin(angle), mParams.centerVerticalPosition + r * glm::cos(angle));
 	r += length;
-	glm::vec2 p1(r * glm::sin(angle), r * glm::cos(angle));
+	glm::vec2 p1(r * glm::sin(angle), mParams.centerVerticalPosition + r * glm::cos(angle));
 
 	mDrawer->drawLine(p0, p1);
 }

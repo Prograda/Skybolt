@@ -56,7 +56,7 @@ protected:
 	float clampXToHeadingRange(float x);
 
 	bool isMajorIncrement(float val);
-	std::string getTickLabel(float heading);
+	std::string getTickLabel(int heading);
 
 private:
 	HudDrawer* mDrawer;

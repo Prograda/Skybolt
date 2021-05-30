@@ -12,18 +12,13 @@
 
 using namespace skybolt;
 
-PitchLadderModel::PitchLadderModel(HudDrawer* drawer, float pitchAngleIncrement, float pitchGapHeight, float lineWidth, float wingletHeight, float textGap, float maxPitchAngle) :
+PitchLadderModel::PitchLadderModel(HudDrawer* drawer, const Parameters& param) :
 	mDrawer(drawer),
-	mPitchAngleIncrement(pitchAngleIncrement),
-	mPitchGapHeight(pitchGapHeight),
-	mLineWidth(lineWidth),
-	mWingletHeight(wingletHeight),
-	mTextGap(textGap),
-	mMaxPitchAngle(maxPitchAngle)
+	mParam(param)
 {
 	int dashCount = 4;
 	float gapFraction = 0.2f;
-	float actualLineWidth = lineWidth*0.25f; // drawn lines are a quater of the specified length
+	float actualLineWidth = mParam.lineWidth * 0.25f; // drawn lines are a quater of the specified length
 	mDashedLineParams.dashLength = (actualLineWidth) / ((dashCount-1) * (gapFraction+1) + 1); // determine perfect dash length for ending on a complete dash
 	mDashedLineParams.gapLength = mDashedLineParams.dashLength * gapFraction;
 
@@ -32,7 +27,7 @@ PitchLadderModel::PitchLadderModel(HudDrawer* drawer, float pitchAngleIncrement,
 void PitchLadderModel::drawHalfRung(float relY, float rungPitch, float roll, float signedWidth, const HudDrawer::DashedLineParams* params)
 {
 	float halfSignedWidth = signedWidth * 0.5f;
-	glm::vec2 p0 = math::vec2Rotate( glm::vec2(halfSignedWidth, relY + glm::sign(rungPitch) * -mWingletHeight), roll);
+	glm::vec2 p0 = math::vec2Rotate( glm::vec2(halfSignedWidth, relY + glm::sign(rungPitch) * -mParam.wingletHeight), roll);
 	glm::vec2 p1 = math::vec2Rotate( glm::vec2(halfSignedWidth, relY), roll);
 	glm::vec2 p2 = math::vec2Rotate( glm::vec2(halfSignedWidth * 0.5, relY), roll);
 
@@ -44,16 +39,16 @@ void PitchLadderModel::drawHalfRung(float relY, float rungPitch, float roll, flo
 	else
 		mDrawer->drawLine(p1, p2);
 
-	glm::vec2 textPos(halfSignedWidth + glm::sign(halfSignedWidth) * mTextGap, relY);
+	glm::vec2 textPos(halfSignedWidth + glm::sign(halfSignedWidth) * mParam.textOffset, relY);
 	float angleTextValue = skybolt::math::radToDegF() * rungPitch;
 	if (angleTextValue > 90)
 		angleTextValue = 180 - angleTextValue;
-	mDrawer->drawText(math::vec2Rotate(textPos, roll), boost::lexical_cast<std::string>(round(angleTextValue)), roll);
+	mDrawer->drawText(math::vec2Rotate(textPos, roll), boost::lexical_cast<std::string>(round(angleTextValue)), roll, -1.0, HudDrawer::Alignment::Center);
 }
 
 void PitchLadderModel::drawRung(float rungPitch, float pitch, float roll, float width, const HudDrawer::DashedLineParams* params)
 {
-	float relY = (rungPitch - pitch) * mPitchGapHeight / mPitchAngleIncrement;
+	float relY = (rungPitch - pitch) * mParam.pitchGapHeight / mParam.pitchAngleIncrement;
 
 	drawHalfRung(relY, rungPitch, roll, -width, params);
 	drawHalfRung(relY, rungPitch, roll, width, params);
@@ -61,11 +56,11 @@ void PitchLadderModel::drawRung(float rungPitch, float pitch, float roll, float 
 
 void PitchLadderModel::draw(float pitch, float roll)
 {
-	drawRung(0, pitch, roll, mLineWidth * 1.5f); // horizon
+	drawRung(0, pitch, roll, mParam.lineWidth * 1.5f); // horizon
 
-	for (float p = mPitchAngleIncrement; p <= mMaxPitchAngle; p += mPitchAngleIncrement)
-		drawRung(p, pitch, roll, mLineWidth);
+	for (float p = mParam.pitchAngleIncrement; p <= mParam.maxPitchAngle; p += mParam.pitchAngleIncrement)
+		drawRung(p, pitch, roll, mParam.lineWidth);
 
-	for (float p = -mPitchAngleIncrement; p >= -mMaxPitchAngle; p -= mPitchAngleIncrement)
-		drawRung(p, pitch, roll, mLineWidth, &mDashedLineParams);
+	for (float p = -mParam.pitchAngleIncrement; p >= -mParam.maxPitchAngle; p -= mParam.pitchAngleIncrement)
+		drawRung(p, pitch, roll, mParam.lineWidth, &mDashedLineParams);
 }
