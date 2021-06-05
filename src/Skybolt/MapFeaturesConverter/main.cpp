@@ -22,11 +22,13 @@ using namespace skybolt;
 using namespace mapfeatures;
 using namespace vis;
 
+int maxLod = 10;
+std::string outputDirectory = "Assets/Seattle/Tiles/Earth/Features";
+std::string heightmapSourceDirectory = "DEM/CombinedElevation";
+std::string heightmapDestinationDirectory = "Assets/SeattleElevation/Tiles/Earth/Elevation";
+
 int main()
 {
-	int maxLod = 10;
-	std::string directory = "Assets/Core/Tiles/Earth/Features";
-
 	XyzTileSourceConfig config;
 	config.urlTemplate = "DEM/CombinedElevation/{z}/{x}/{y}.png";
 
@@ -42,8 +44,6 @@ int main()
 		mapfeatures::WorldFeatures worldFeatures = mapfeatures::createWorldFeatures(treeCreatorParams, result.features);
 
 #ifdef SAVE_LEVELED_HEIGHTMAPS
-		std::string heightmapSourceDirectory = "DEM/CombinedElevation";
-		std::string heightmapDestinationDirectory = "Assets/Core/Tiles/Earth/Elevation";
 		double borderMeters = 100.0;
 		std::vector<Feature*> airportFeatures;
 		for (const auto& a : result.airports)
@@ -57,7 +57,7 @@ int main()
 			static_cast<Airport*>(airport)->altitude = mapfeatures::getAltitudeAtPosition(heightmapDestinationDirectory, airport->calcBounds().center());
 		}
 #endif
-		mapfeatures::save(worldFeatures.tree, directory);
+		mapfeatures::save(worldFeatures.tree, outputDirectory);
 		mapfeatures::saveAirports(result.airports, "Assets/Core/Airports/airports.apt");
 	}
 }
