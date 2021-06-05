@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include "SkyboltVis/OsgBox2.h"
 #include "SkyboltVis/SkyboltVisFwd.h"
-#include "SkyboltVis/Renderable/Planet/PlanetSurface.h"
 #include <SkyboltCommon/Listenable.h>
 #include <SkyboltCommon/Math/QuadTree.h>
 
@@ -26,12 +26,44 @@ struct AsyncQuadTreeTile : public skybolt::QuadTreeTile<osg::Vec2d, AsyncQuadTre
 	~AsyncQuadTreeTile();
 
 	//! @returns null if the tile is not visible (for example, if the descendent leaves of this tile are visible instead)
-	const OsgTile* getData() const;
+	const TileImages* getData() const;
 
 	//! The stored as shared_pointer to ensure threadsafe modification from nullptr to a valid object by the producer.
-	std::shared_ptr<OsgTilePtr> dataPtr;
-	ProgressCallbackPtr progressCallback;
+	std::shared_ptr<TileImagesPtr> dataPtr;
+
+	enum class State
+	{
+		NotLoaded, // not loaded and not in the loading queue
+		Loading, // in the loading queue
+		Loaded // loaded
+	};
+
+	State getState() const;
+
+	void requestCancelLoad();
+
+	ProgressCallbackPtr progressCallback; //!< nullptr if load has not been initiated
 };
+
+typedef skybolt::DiQuadTree<struct AsyncQuadTreeTile> WorldTileTree;
+typedef std::shared_ptr<WorldTileTree> WorldTileTreePtr;
+
+struct QuadTreeTileLoaderListener
+{
+	virtual ~QuadTreeTileLoaderListener() = default;
+	virtual void tileLoadRequested() {}
+	virtual void tileLoaded() {}
+	virtual void tileLoadCanceled() {}
+};
+
+struct QuadTreeSubdivisionPredicate
+{
+	virtual ~QuadTreeSubdivisionPredicate() = default;
+
+	virtual bool operator()(const Box2d& bounds, const QuadTreeTileKey& key) = 0;
+};
+
+using QuadTreeSubdivisionPredicatePtr = std::shared_ptr<QuadTreeSubdivisionPredicate>;
 
 //! QuadTreeTileLoader loads a quadtree of tiles to satisfy a predicate governing whether a given tile is of sufficient resolution.
 //! While a tile is of sufficient resolution, child tiles will not be loaded.
@@ -39,10 +71,10 @@ struct AsyncQuadTreeTile : public skybolt::QuadTreeTile<osg::Vec2d, AsyncQuadTre
 //! This strategy causes tiles to appear in sequential increments of detail, i.e first level 0, then level 1 etc.
 //! This was found to give the appearance of faster map loading because the 'next-best' resolution tile is available
 //! while the best resolution tile is still loading.
-class QuadTreeTileLoader
+class QuadTreeTileLoader : public skybolt::Listenable<QuadTreeTileLoaderListener>
 {
 public:
-	QuadTreeTileLoader(const AsyncTileLoaderPtr& asyncTileLoader, PlanetSubdivisionPredicate* predicate, skybolt::Listenable<PlanetSurfaceListener>* listener);
+	QuadTreeTileLoader(const AsyncTileLoaderPtr& asyncTileLoader, const QuadTreeSubdivisionPredicatePtr& predicate);
 
 	~QuadTreeTileLoader();
 
@@ -59,9 +91,8 @@ private:
 
 private:
 	AsyncTileLoaderPtr mAsyncTileLoader;
-	PlanetSubdivisionPredicate* mSubdivisionRequiredPredicate;
+	QuadTreeSubdivisionPredicatePtr mSubdivisionPredicate;
 	WorldTileTreePtr mWorldTree;
-	skybolt::Listenable<PlanetSurfaceListener>* mListener;
 
 	struct LoadRequest
 	{

@@ -655,7 +655,7 @@ Planet::Planet(const PlanetConfig& config) :
 			params.groups[PlanetFeaturesParams::groupsNonBuildingsIndex] = nonBuildingsGroup;
 			mPlanetFeatures.reset(new PlanetFeatures(params));
 			
-			mPlanetSurface->addListener(mPlanetSurfaceListener.get());
+			mPlanetSurface->Listenable<PlanetSurfaceListener>::addListener(mPlanetSurfaceListener.get());
 		}
 	}
 
@@ -752,7 +752,7 @@ Planet::~Planet()
 	setCloudsVisible(false);
 
 	// Remove listener to decouple shutdown order of mPlanetSurface and mPlanetSurfaceListener
-	mPlanetSurface->removeListener(mPlanetSurfaceListener.get());
+	mPlanetSurface->Listenable<PlanetSurfaceListener>::removeListener(mPlanetSurfaceListener.get());
 }
 
 void Planet::setCloudsVisible(bool visible)

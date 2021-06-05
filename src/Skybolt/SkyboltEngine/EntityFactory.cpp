@@ -222,16 +222,18 @@ static void loadVisualCamera(Entity* entity, const EntityFactory::Context& conte
 	simVisBindingComponent->bindings.push_back(cameraSimVisBinding);
 }
 
-struct PlanetStatsUpdater : vis::PlanetSurfaceListener, sim::Component
+struct PlanetStatsUpdater : vis::PlanetSurfaceListener, vis::QuadTreeTileLoaderListener, sim::Component
 {
 	PlanetStatsUpdater(EngineStats* stats, vis::PlanetSurface* surface)
 		: mStats(stats), mSurface(surface)
 	{
 		mSurface->addListener(this);
+		mSurface->getTileLoaderListenable()->addListener(this);
 	}
 
 	~PlanetStatsUpdater()
 	{
+		mSurface->getTileLoaderListenable()->removeListener(this);
 		mSurface->removeListener(this);
 		mStats->tileLoadQueueSize -= mOwnTilesLoading;
 	}

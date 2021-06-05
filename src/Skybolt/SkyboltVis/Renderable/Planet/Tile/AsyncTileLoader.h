@@ -21,18 +21,18 @@ struct TileProgressCallback
 {
 	enum class State
 	{
-		NotLoaded,
 		Loading,
-		Loaded
+		Loaded,
+		FailedOrCanceled
 	};
 
-	std::atomic<State> state = State::NotLoaded;
+	std::atomic<State> state = State::Loading;
 
-	bool isCanceled() const { return canceled; }
-	void cancel() { canceled = true; }
+	bool isCancelRequested() const { return canceledRequested; }
+	void requestCancel() { canceledRequested = true; }
 
 private:
-	std::atomic<bool> canceled = false;
+	std::atomic<bool> canceledRequested = false;
 };
 
 typedef std::shared_ptr<OsgTilePtr> OsgTilePtrPtr;
@@ -40,33 +40,28 @@ typedef std::shared_ptr<OsgTilePtr> OsgTilePtrPtr;
 class AsyncTileLoader
 {
 public:
-	AsyncTileLoader(const TileImageLoaderPtr& tileImageLoader, const OsgTileFactoryPtr& tileFactory, px_sched::Scheduler* scheduler);
+	AsyncTileLoader(const TileImagesLoaderPtr& tileImageLoader, px_sched::Scheduler* scheduler);
 
 	~AsyncTileLoader();
 
-	void load(const skybolt::QuadTreeTileKey& key, Box2d latLonBounds, const OsgTilePtrPtr& result, const ProgressCallbackPtr& progress);
+	typedef std::shared_ptr<TileImagesPtr> TileImagesPtrPtr;
+
+	void load(const skybolt::QuadTreeTileKey& key, const TileImagesPtrPtr& result, const ProgressCallbackPtr& progress);
 
 	void waitForLoads();
 
 	void update();
 
 private:
-	TileImageLoaderPtr mTileImageLoader;
-	OsgTileFactoryPtr mTileFactory;
+	TileImagesLoaderPtr mTileImageLoader;
 	px_sched::Scheduler* mScheduler;
 	px_sched::Sync mLoadingTaskSync;
-
-	typedef std::shared_ptr<struct LeafTileData> LeafTileDataPtr;
-	typedef std::shared_ptr<LeafTileDataPtr> LeafTileDataPtrPtr;
 
 	struct Request
 	{
 		skybolt::QuadTreeTileKey key;
-		Box2d latLonBounds;
-		OsgTilePtrPtr tileResult; //!< The outer pointer is used to share the lifetime of the inner pointer between producer and consumer. The inner pointer is changed from nullptr to containing a valid object by producer.
-		LeafTileDataPtrPtr imagesResult; //!< The outer pointer is used to share the lifetime of the inner pointer between producer and consumer. The inner pointer is changed from nullptr to containing a valid object by producer.
-		ProgressCallbackPtr tileProgressCallback;
-		ProgressCallbackPtr imagesProcessCallback;
+		TileImagesPtrPtr result; //!< The outer pointer is used to share the lifetime of the inner pointer between producer and consumer. The inner pointer is changed from nullptr to containing a valid object by producer.
+		ProgressCallbackPtr progressCallback;
 	};
 
 	std::vector<Request> mRequests;

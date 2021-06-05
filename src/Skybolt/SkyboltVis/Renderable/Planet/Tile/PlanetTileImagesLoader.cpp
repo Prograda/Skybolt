@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "TileImageLoader.h"
+#include "PlanetTileImagesLoader.h"
 #include "TileSource/TileSource.h"
 #include "SkyboltVis/Renderable/Planet/AttributeMapHelpers.h"
 #include <algorithm>
@@ -73,7 +73,7 @@ static void fillBathymetryInHeightmap(osg::Image& src)
 }
 
 //! May be called from multiple threads
-LeafTileDataPtr TileImageLoader::load(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
+TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
 {
 	if (cancelSupplier())
 	{
@@ -84,11 +84,11 @@ LeafTileDataPtr TileImageLoader::load(const QuadTreeTileKey& key, std::function<
 	cxxtimer::Timer timer;
 	timer.start();
 #endif
-	LeafTileDataPtr data(new LeafTileData);
+	auto images = std::make_shared< PlanetTileImages>();
 	{
 		QuadTreeTileKey elevationKey = createAncestorKey(key, std::min(maxElevationLod, key.level));
 
-		data->heightMapImage = getOrCreateImage(elevationKey, CacheIndex::Elevation, [this, cancelSupplier](const QuadTreeTileKey& key) {
+		images->heightMapImage = getOrCreateImage(elevationKey, size_t(CacheIndex::Elevation), [this, cancelSupplier](const QuadTreeTileKey& key) {
 			osg::ref_ptr<osg::Image> image = elevationLayer->createImage(key, cancelSupplier);
 
 			if (image)
@@ -108,15 +108,15 @@ LeafTileDataPtr TileImageLoader::load(const QuadTreeTileKey& key, std::function<
 		static osg::ref_ptr<osg::Image> defaultImage = createDefaultImage();
 		static osg::ref_ptr<osg::Image> defaultLandMask = convertHeightmapToLandMask(*defaultImage);
 
-		if (!data->heightMapImage.image)
+		if (!images->heightMapImage.image)
 		{
-			data->heightMapImage.image = defaultImage;
+			images->heightMapImage.image = defaultImage;
 		}
 
-		osg::ref_ptr<osg::Image> heightImage = data->heightMapImage.image;
+		osg::ref_ptr<osg::Image> heightImage = images->heightMapImage.image;
 		if (heightImage)
 		{
-			data->landMaskImage = getOrCreateImage(data->heightMapImage.key, CacheIndex::LandMask, [heightImage](const QuadTreeTileKey& key) {
+			images->landMaskImage = getOrCreateImage(images->heightMapImage.key, size_t(CacheIndex::LandMask), [heightImage](const QuadTreeTileKey& key) {
 				if (heightImage == defaultImage)
 				{
 					return defaultLandMask;
@@ -134,7 +134,7 @@ LeafTileDataPtr TileImageLoader::load(const QuadTreeTileKey& key, std::function<
 #endif
 	}
 
-	data->albedoMapImage = getOrCreateImage(key, CacheIndex::Albedo, [this, cancelSupplier](const QuadTreeTileKey& key) {
+	images->albedoMapImage = getOrCreateImage(key, size_t(CacheIndex::Albedo), [this, cancelSupplier](const QuadTreeTileKey& key) {
 		osg::ref_ptr<osg::Image> image = albedoLayer->createImage(key, cancelSupplier);
 		return image;
 	});
@@ -147,7 +147,7 @@ LeafTileDataPtr TileImageLoader::load(const QuadTreeTileKey& key, std::function<
 
 	if (landUseLayer && key.level >= minAttributeLod)
 	{
-		data->attributeMapImage = getOrCreateImage(key, CacheIndex::LandUse, [this, cancelSupplier](const QuadTreeTileKey& key) {
+		images->attributeMapImage = getOrCreateImage(key, size_t(CacheIndex::LandUse), [this, cancelSupplier](const QuadTreeTileKey& key) {
 			osg::ref_ptr<osg::Image> image = landUseLayer->createImage(key, cancelSupplier);
 			if (image)
 			{
@@ -170,46 +170,7 @@ LeafTileDataPtr TileImageLoader::load(const QuadTreeTileKey& key, std::function<
 	{
 		return nullptr;
 	}
-	return data;
-}
-
-TileImage TileImageLoader::getOrCreateImage(const QuadTreeTileKey& requestedKey, CacheIndex cacheIndex, Factory factory) const
-{
-	TileCache& cache = mImageCache[(int)cacheIndex];
-
-	bool added = false;
-	CacheEntryPtr entry;
-	{
-		{
-			std::lock_guard<std::mutex> lock(mCacheMutex[(int)cacheIndex]);
-			entry = cache[requestedKey];
-		}
-		if (!entry)
-		{
-			entry = std::make_shared<CacheEntry>();
-			added = true;
-		}
-	}
-
-	if (added)
-	{
-		std::lock_guard<std::mutex> lock(entry->mImageMutex);
-
-		int level = requestedKey.level;
-		QuadTreeTileKey key = requestedKey;
-		while (level >= 0)
-		{
-			entry->image.image = factory(key);
-			if (entry->image.image)
-			{
-				entry->image.key = key;
-				break;
-			}
-			--level;
-			key = createAncestorKey(requestedKey, level);
-		}				
-	}
-	return entry->image;
+	return images;
 }
 
 } // namespace vis

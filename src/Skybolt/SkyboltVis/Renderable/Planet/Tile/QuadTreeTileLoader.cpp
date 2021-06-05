@@ -26,28 +26,55 @@ std::ostream& operator<<(std::ostream& s, const osg::Vec3f& v)
 int maxHeightMapTileLevel = 10;
 
 AsyncQuadTreeTile::AsyncQuadTreeTile() :
-	progressCallback(new TileProgressCallback),
-	dataPtr(new OsgTilePtr)
+	dataPtr(new TileImagesPtr)
 {
 }
 
 AsyncQuadTreeTile::~AsyncQuadTreeTile()
 {
-	progressCallback->cancel();
+	if (progressCallback)
+	{
+		progressCallback->requestCancel();
+	}
 }
 
-const OsgTile* AsyncQuadTreeTile::getData() const
+const TileImages* AsyncQuadTreeTile::getData() const
 {
 	assert(dataPtr);
 	return dataPtr->get();
 }
 
-QuadTreeTileLoader::QuadTreeTileLoader(const AsyncTileLoaderPtr& asyncTileLoader, PlanetSubdivisionPredicate* predicate, skybolt::Listenable<PlanetSurfaceListener>* listener) :
+AsyncQuadTreeTile::State AsyncQuadTreeTile::getState() const
+{
+	if (progressCallback)
+	{
+		auto progressState = progressCallback->state.load();
+		if (progressState == TileProgressCallback::State::Loaded)
+		{
+			return State::Loaded;
+		}
+		else if (progressState == TileProgressCallback::State::Loading)
+		{
+			return State::Loading;
+		}
+	}
+	return State::NotLoaded;
+}
+
+void AsyncQuadTreeTile::requestCancelLoad()
+{
+	if (progressCallback)
+	{
+		progressCallback->requestCancel();
+	}
+}
+
+QuadTreeTileLoader::QuadTreeTileLoader(const AsyncTileLoaderPtr& asyncTileLoader, const QuadTreeSubdivisionPredicatePtr& predicate) :
 	mAsyncTileLoader(asyncTileLoader),
-	mSubdivisionRequiredPredicate(predicate),
-	mListener(listener)
+	mSubdivisionPredicate(predicate)
 {
 	assert(mAsyncTileLoader);
+	assert(mSubdivisionPredicate);
 
 	QuadTree<AsyncQuadTreeTile>::TileCreator tileCreator = [](const QuadTreeTileKey& key, const Box2T<typename AsyncQuadTreeTile::VectorType>& bounds)
 	{
@@ -65,15 +92,18 @@ QuadTreeTileLoader::QuadTreeTileLoader(const AsyncTileLoaderPtr& asyncTileLoader
 QuadTreeTileLoader::~QuadTreeTileLoader()
 {
 	// Unload all tiles
-	mWorldTree->leftTree.merge(mWorldTree->leftTree.getRoot());
-	mWorldTree->leftTree.getRoot().progressCallback->cancel();
-	mWorldTree->rightTree.merge(mWorldTree->rightTree.getRoot());
-	mWorldTree->rightTree.getRoot().progressCallback->cancel();
+	auto& leftRoot = mWorldTree->leftTree.getRoot();
+	mWorldTree->leftTree.merge(leftRoot);
+	leftRoot.requestCancelLoad();
+
+	auto& rightRoot = mWorldTree->rightTree.getRoot();
+	mWorldTree->rightTree.merge(rightRoot);
+	rightRoot.requestCancelLoad();
 
 	mAsyncTileLoader.reset();
 
 	for (size_t i = 0; i < mLoadQueue.size(); ++i)
-		CALL_LISTENERS_ON_OBJECT(tileLoadCanceled(), mListener);
+		CALL_LISTENERS(tileLoadCanceled());
 }
 
 void QuadTreeTileLoader::update(std::vector<AsyncQuadTreeTile*>& addedTiles, std::vector<QuadTreeTileKey>& removedTiles)
@@ -86,15 +116,16 @@ void QuadTreeTileLoader::update(std::vector<AsyncQuadTreeTile*>& addedTiles, std
 	for (auto it = mLoadQueue.begin(); it != mLoadQueue.end();)
 	{
 		const LoadRequest& request = *it;
+		assert(request.progressCallback); // must exist if tile is in queue
 		if (request.progressCallback->state != TileProgressCallback::State::Loading)
 		{
 			if (request.progressCallback->state == TileProgressCallback::State::Loaded)
 			{
-				CALL_LISTENERS_ON_OBJECT(tileLoaded(), mListener);
+				CALL_LISTENERS(tileLoaded());
 			}
-			else // tile no longer loading and not loaded. Must have been cancelled.
+			else // tile no longer loading and not loaded. Must have either been cancelled or failed
 			{
-				CALL_LISTENERS_ON_OBJECT(tileLoadCanceled(), mListener);
+				CALL_LISTENERS(tileLoadCanceled());
 			}
 			it = mLoadQueue.erase(it);
 		}
@@ -121,26 +152,25 @@ void QuadTreeTileLoader::update(std::vector<AsyncQuadTreeTile*>& addedTiles, std
 
 void QuadTreeTileLoader::traveseToLoadAndUnload(QuadTree<AsyncQuadTreeTile>& tree, AsyncQuadTreeTile& tile, bool parentIsSufficient)
 {
-	bool sufficient = !(*mSubdivisionRequiredPredicate)(tile.bounds, tile.key);
+	bool sufficient = !(*mSubdivisionPredicate)(tile.bounds, tile.key);
 
-	// Copy loaded state so that it doesn't change from another thread during this traversal logic, which might violate assumptions
-	bool loaded = tile.progressCallback->state == TileProgressCallback::State::Loaded;
+	auto state = tile.getState();
 
 	// Load tile if it should be loaded and isn't currently
 	bool shouldBeLoaded = !parentIsSufficient;
 	if (shouldBeLoaded)
 	{
-		if (tile.progressCallback->state == TileProgressCallback::State::NotLoaded)
+		if (state == AsyncQuadTreeTile::State::NotLoaded)
 		{
 			loadTile(tile);
 		}
 	}
-	else if (!loaded) // cancel loading if tile should not be loaded
+	else if (state != AsyncQuadTreeTile::State::Loaded) // cancel loading if tile should not be loaded
 	{
-		tile.progressCallback->cancel();
+		tile.requestCancelLoad();
 	}
 
-	if (loaded)
+	if (state == AsyncQuadTreeTile::State::Loaded)
 	{
 		// If tile is loaded and not sufficiently detailed, subdive it
 		if (!sufficient)
@@ -216,13 +246,14 @@ void QuadTreeTileLoader::traveseToCollectVisibleTiles(QuadTree<AsyncQuadTreeTile
 
 void QuadTreeTileLoader::loadTile(AsyncQuadTreeTile& tile)
 {
+	assert(tile.getState() == AsyncQuadTreeTile::State::NotLoaded);
+
 	if (mLoadQueue.size() > 32)
 		return;
 
 	tile.progressCallback = std::make_shared<TileProgressCallback>();
-	Box2d latLonBounds(math::vec2SwapComponents(tile.bounds.minimum), math::vec2SwapComponents(tile.bounds.maximum));
-	mAsyncTileLoader->load(tile.key, latLonBounds, tile.dataPtr, tile.progressCallback);
-	CALL_LISTENERS_ON_OBJECT(tileLoadRequested(), mListener);
+	mAsyncTileLoader->load(tile.key, tile.dataPtr, tile.progressCallback);
+	CALL_LISTENERS(tileLoadRequested());
 	mLoadQueue.push_back({ tile.progressCallback });
 }
 

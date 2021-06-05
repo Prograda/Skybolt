@@ -20,7 +20,7 @@
 #include "SkyboltVis/Renderable/Planet/Tile/OsgTileFactory.h"
 #include "SkyboltVis/Renderable/Planet/Tile/QuadTreeTileLoader.h"
 #include "SkyboltVis/Renderable/Planet/Tile/PlanetSubdivisionPredicate.h"
-#include "SkyboltVis/Renderable/Planet/Tile/TileImageLoader.h"
+#include "SkyboltVis/Renderable/Planet/Tile/PlanetTileImagesLoader.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <cxxtimer/cxxtimer.hpp>
 
@@ -80,24 +80,24 @@ namespace vis {
 		factoryConfig.planetRadius = mRadius;
 		factoryConfig.forestGeoVisibilityRange = config.forestGeoVisibilityRange;
 		factoryConfig.hasCloudShadows = config.cloudsTexture != nullptr;
-		auto tileFactory = std::make_shared<OsgTileFactory>(factoryConfig);
+		mOsgTileFactory = std::make_unique<OsgTileFactory>(factoryConfig);
 
-		mPredicate.reset(new PlanetSubdivisionPredicate);
+		mPredicate = std::make_shared<PlanetSubdivisionPredicate>();
 		mPredicate->maxLevel = std::max(config.albedoMaxLodLevel, config.elevationMaxLodLevel);
 		mPredicate->observerAltitude = 20;
 		mPredicate->observerLatLon = osg::Vec2(0, 0);
 		mPredicate->planetRadius = mRadius;
 
-		TileImageLoaderPtr imageLoader(new TileImageLoader);
+		auto imageLoader = std::make_shared<PlanetTileImagesLoader>();
 		imageLoader->elevationLayer = mPlanetTileSources.elevation;
 		imageLoader->landUseLayer = mPlanetTileSources.attribute;
 		imageLoader->albedoLayer = mPlanetTileSources.albedo;
 		imageLoader->maxElevationLod = config.elevationMaxLodLevel;
 		imageLoader->minAttributeLod = 9;
 
-		AsyncTileLoaderPtr loader(new AsyncTileLoader(imageLoader, tileFactory, config.scheduler));
+		AsyncTileLoaderPtr loader(new AsyncTileLoader(imageLoader, config.scheduler));
 
-		mTileSource.reset(new QuadTreeTileLoader(loader, mPredicate.get(), this));
+		mTileSource.reset(new QuadTreeTileLoader(loader, mPredicate));
 	}
 
 	PlanetSurface::~PlanetSurface()
@@ -122,10 +122,7 @@ namespace vis {
 		std::vector<AsyncQuadTreeTile*> addedTiles;
 		std::vector<QuadTreeTileKey> removedTiles;
 
-		{
-			std::unique_lock<std::shared_mutex> lock(mTileSourceMutex);
-			mTileSource->update(addedTiles, removedTiles);
-		}
+		mTileSource->update(addedTiles, removedTiles);
 
 		for (const QuadTreeTileKey& key : removedTiles)
 		{
@@ -140,22 +137,25 @@ namespace vis {
 				}
 				mTileNodes.erase(it);
 			}
-			CALL_LISTENERS(tileRemovedFromSceneGraph(key));
+			CALL_LISTENERS(tileRemovedFromSceneGraph(key), Listenable<PlanetSurfaceListener>::mListeners);
 		}
 
 		for (AsyncQuadTreeTile* tile : addedTiles)
 		{
 			assert(tile && tile->getData());
 
-			const OsgTile& result = *tile->getData();
-			mGroup->addChild(result.transform);
-			mTileNodes[tile->key] = result;
+			const PlanetTileImages& images = static_cast<const PlanetTileImages&>(*tile->getData());
+			Box2d latLonBounds(math::vec2SwapComponents(tile->bounds.minimum), math::vec2SwapComponents(tile->bounds.maximum));
+			OsgTile osgTile = mOsgTileFactory->createOsgTile(tile->key, latLonBounds, images.heightMapImage, images.landMaskImage, images.albedoMapImage, images.attributeMapImage);
 
-			if (result.forest)
+			mGroup->addChild(osgTile.transform);
+			mTileNodes[tile->key] = osgTile;
+
+			if (osgTile.forest)
 			{
-				mForestGroup->addChild(result.forest->_getNode());
+				mForestGroup->addChild(osgTile.forest->_getNode());
 			}
-			CALL_LISTENERS(tileAddedToSceneGraph(tile->key));
+			CALL_LISTENERS(tileAddedToSceneGraph(tile->key), Listenable<PlanetSurfaceListener>::mListeners);
 		}
 	}
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "QuadTreeTileLoader.h"
 #include "SkyboltVis/SkyboltVisFwd.h"
 #include "SkyboltVis/OsgBox2.h"
 #include <SkyboltCommon/Math/QuadTree.h>
@@ -14,11 +15,11 @@
 namespace skybolt {
 namespace vis {
 
-struct PlanetSubdivisionPredicate
+struct PlanetSubdivisionPredicate : public QuadTreeSubdivisionPredicate
 {
-	PlanetSubdivisionPredicate() {}
+	~PlanetSubdivisionPredicate() override = default;
 
-	bool operator()(const Box2d& bounds, const skybolt::QuadTreeTileKey& key);
+	bool operator()(const Box2d& bounds, const skybolt::QuadTreeTileKey& key) override;
 
 	osg::Vec2d observerLatLon;
 	double observerAltitude;

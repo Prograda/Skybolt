@@ -5,16 +5,15 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "AsyncTileLoader.h"
-#include "OsgTileFactory.h"
-#include "TileImageLoader.h"
+#include "TileImagesLoader.h"
 
 using namespace skybolt;
 
 namespace skybolt {
 namespace vis {
 
-AsyncTileLoader::AsyncTileLoader(const TileImageLoaderPtr& tileImageLoader, const OsgTileFactoryPtr& tileFactory, px_sched::Scheduler* scheduler) :
-	mTileImageLoader(tileImageLoader), mTileFactory(tileFactory), mScheduler(scheduler)
+AsyncTileLoader::AsyncTileLoader(const TileImagesLoaderPtr& tileImageLoader, px_sched::Scheduler* scheduler) :
+	mTileImageLoader(tileImageLoader), mScheduler(scheduler)
 {
 }
 
@@ -22,32 +21,26 @@ AsyncTileLoader::~AsyncTileLoader()
 {
 	for (const Request& request : mRequests)
 	{
-		request.imagesProcessCallback->cancel();
+		request.progressCallback->requestCancel();
 	}
 	waitForLoads();
 }
 
-void AsyncTileLoader::load(const QuadTreeTileKey& key, Box2d latLonBounds, const OsgTilePtrPtr& result, const ProgressCallbackPtr& progress)
+void AsyncTileLoader::load(const QuadTreeTileKey& key, const TileImagesPtrPtr& result, const ProgressCallbackPtr& progress)
 {
 	Request request;
 	request.key = key;
-	request.latLonBounds = latLonBounds;
-	request.tileResult = result;
-	request.tileProgressCallback = progress;
-	request.imagesResult.reset(new LeafTileDataPtr);
-	request.imagesProcessCallback.reset(new TileProgressCallback);
-
-	request.tileProgressCallback->state = TileProgressCallback::State::Loading;
+	request.result = result;
+	request.progressCallback = progress;
 
 	typedef std::shared_ptr<TileProgressCallback> TileProgressCallbackPtr;
-	TileProgressCallbackPtr imagesProcessCallback = request.imagesProcessCallback;
+	request.progressCallback->state = TileProgressCallback::State::Loading;
 
 	mRequests.push_back(request);
 
 	mScheduler->run([=]() {
-		imagesProcessCallback->state = TileProgressCallback::State::Loading;
-		*request.imagesResult = mTileImageLoader->load(key, [=] {return imagesProcessCallback->isCanceled(); });
-		imagesProcessCallback->state = *request.imagesResult ? TileProgressCallback::State::Loaded : TileProgressCallback::State::NotLoaded;
+		*request.result = mTileImageLoader->load(key, [=] {return progress->isCancelRequested(); });
+		request.progressCallback->state = *request.result ? TileProgressCallback::State::Loaded : TileProgressCallback::State::FailedOrCanceled;
 	}, &mLoadingTaskSync);
 }
 
@@ -65,24 +58,14 @@ void AsyncTileLoader::update()
 	for (int i = 0; i < (int)mRequests.size(); ++i)
 	{
 		const Request& request = mRequests[i];
-		if (request.tileProgressCallback->isCanceled())
+		auto state = request.progressCallback->state.load();
+		if (state == TileProgressCallback::State::FailedOrCanceled)
 		{
-			request.imagesProcessCallback->cancel();
-			request.tileProgressCallback->state = TileProgressCallback::State::NotLoaded;
 			mRequests.erase(mRequests.begin() + i);
 			--i;
 		}
-		else if (request.imagesProcessCallback->state == TileProgressCallback::State::Loading)
+		else if (request.result->get() && tileLoads < maxTileLoadsPerUpdate)
 		{
-			request.tileProgressCallback->state = TileProgressCallback::State::Loading;
-		}
-		else if (request.imagesResult->get() && tileLoads < maxTileLoadsPerUpdate)
-		{
-			const LeafTileData& data = *request.imagesResult->get();
-			OsgTilePtr tile(new OsgTile(mTileFactory->createOsgTile(request.key, request.latLonBounds, data.heightMapImage, data.landMaskImage, data.albedoMapImage, data.attributeMapImage)));
-			*request.tileResult = tile;
-
-			request.tileProgressCallback->state = request.imagesProcessCallback->state.load();
 			mRequests.erase(mRequests.begin() + i);
 
 			++tileLoads;

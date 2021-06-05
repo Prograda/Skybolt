@@ -13,6 +13,7 @@
 #include "SkyboltVis/ShaderProgramRegistry.h"
 #include "SkyboltVis/ShadowHelpers.h"
 #include "SkyboltVis/Renderable/Planet/Tile/OsgTile.h"
+#include "SkyboltVis/Renderable/Planet/Tile/QuadTreeTileLoader.h"
 #include <SkyboltCommon/Listenable.h>
 #include <SkyboltCommon/Math/QuadTree.h>
 #include <osg/Matrix>
@@ -21,7 +22,6 @@
 #include <osg/Texture2D>
 
 #include <boost/optional.hpp>
-#include <mutex>
 
 namespace skybolt {
 namespace vis {
@@ -56,16 +56,10 @@ struct PlanetSurfaceConfig
 
 struct PlanetSurfaceListener
 {
-	virtual ~PlanetSurfaceListener() {}
-	virtual void tileLoadRequested() {}
-	virtual void tileLoaded() {}
-	virtual void tileLoadCanceled() {}
+	virtual ~PlanetSurfaceListener() = default;
 	virtual void tileAddedToSceneGraph(const skybolt::QuadTreeTileKey& key) {}
 	virtual void tileRemovedFromSceneGraph(const skybolt::QuadTreeTileKey& key) {}
 };
-
-typedef skybolt::DiQuadTree<struct AsyncQuadTreeTile> WorldTileTree;
-typedef std::shared_ptr<WorldTileTree> WorldTileTreePtr;
 
 class PlanetSurface : public skybolt::Listenable<PlanetSurfaceListener>
 {
@@ -78,6 +72,8 @@ public:
 
 	void updatePreRender(const RenderContext& context);
 
+	skybolt::Listenable<QuadTreeTileLoaderListener>* getTileLoaderListenable() const { return mTileSource.get(); }
+
 private:
 	void updateGeometry();
 
@@ -87,13 +83,12 @@ private:
 	std::string mCacheDirectory;
 
 	std::unique_ptr<class QuadTreeTileLoader> mTileSource;
-	std::unique_ptr<struct PlanetSubdivisionPredicate> mPredicate;
+	std::unique_ptr<OsgTileFactory> mOsgTileFactory;
+	std::shared_ptr<struct PlanetSubdivisionPredicate> mPredicate;
 
 	osg::ref_ptr<osg::MatrixTransform> mParentTransform;
 	osg::ref_ptr<osg::Group> mGroup;
 	osg::Group* mForestGroup;
-
-	mutable std::shared_mutex mTileSourceMutex;
 
 	typedef std::map<skybolt::QuadTreeTileKey, OsgTile> TileNodeMap;
 	TileNodeMap mTileNodes;

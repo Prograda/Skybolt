@@ -40,8 +40,4 @@ public:
 for (int i = (int)mListeners.size()-1; i >= 0; --i) \
 	mListeners[i]->fn;
 
-#define CALL_LISTENERS_ON_OBJECT(fn, object) \
-for (int i = (int)object->mListeners.size() - 1; i >= 0; --i) \
-	object->mListeners[i]->fn;
-
 } // namespace skybolt
