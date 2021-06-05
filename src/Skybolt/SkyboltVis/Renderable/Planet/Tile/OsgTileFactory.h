@@ -36,6 +36,7 @@ struct OsgTileFactoryConfig
 	px_sched::Scheduler* scheduler;
 	const ShaderPrograms* programs;
 	ShadowMaps shadowMaps;
+	std::vector<osg::ref_ptr<osg::Texture2D>> albedoDetailMaps;
 
 	double planetRadius;
 	float forestGeoVisibilityRange;
@@ -55,9 +56,9 @@ private:
 	double mPlanetRadius;
 	px_sched::Scheduler* mScheduler;
 	const ShaderPrograms* mPrograms;
-	TerrainConfig mCommonTerrainConfig;
 	float mForestGeoVisibilityRange;
 	ShadowMaps mShadowMaps;
+	std::vector<osg::ref_ptr<osg::Texture2D>> mAlbedoDetailMaps;
 	bool mHasCloudShadows;
 
 	using TextureCache = LruCacheMap<osg::ref_ptr<osg::Image>, osg::ref_ptr<osg::Texture2D>>;

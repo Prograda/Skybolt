@@ -77,6 +77,7 @@ namespace vis {
 		factoryConfig.scheduler = config.scheduler;
 		factoryConfig.programs = config.programs;
 		factoryConfig.shadowMaps = config.shadowMaps;
+		factoryConfig.albedoDetailMaps = config.albedoDetailMaps;
 		factoryConfig.planetRadius = mRadius;
 		factoryConfig.forestGeoVisibilityRange = config.forestGeoVisibilityRange;
 		factoryConfig.hasCloudShadows = config.cloudsTexture != nullptr;

@@ -48,6 +48,7 @@ struct PlanetSurfaceConfig
 	float forestGeoVisibilityRange; //!< range beyond which the forestAlbedoMap will be used
 
 	ShadowMaps shadowMaps;
+	std::vector<osg::ref_ptr<osg::Texture2D>> albedoDetailMaps;
 
 	int elevationMaxLodLevel = 1;
 	int albedoMaxLodLevel = 1;

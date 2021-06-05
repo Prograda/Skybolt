@@ -41,6 +41,7 @@ OsgTileFactory::OsgTileFactory(const OsgTileFactoryConfig& config) :
 	mScheduler(config.scheduler),
 	mPrograms(config.programs),
 	mShadowMaps(config.shadowMaps),
+	mAlbedoDetailMaps(config.albedoDetailMaps),
 	mPlanetRadius(config.planetRadius),
 	mForestGeoVisibilityRange(config.forestGeoVisibilityRange),
 	mHasCloudShadows(config.hasCloudShadows)
@@ -101,7 +102,7 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 		osg::Vec2f attributeImageScale, attributeImageOffset;
 		getTileTransformInParentSpace(key, attributeImage.key.level, attributeImageScale, attributeImageOffset);
 
-		TerrainConfig config = mCommonTerrainConfig;
+		TerrainConfig config;
 		config.program = mPrograms->getRequiredProgram("terrainPlanetTile");
 		config.tile = planetTile;
 
@@ -162,7 +163,9 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 		}
 		else
 		{
-			config.detailMaps.reset();
+			//config.detailMaps.reset();
+			config.detailMaps = TerrainConfig::DetailMaps();
+			config.detailMaps->albedoDetailMaps = mAlbedoDetailMaps;
 		}
 		
 		config.heightMapUvScale = heightImageScale;

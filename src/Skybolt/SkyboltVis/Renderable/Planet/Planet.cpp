@@ -476,6 +476,31 @@ private:
 	double mPrevTimeSeconds = 0;
 };
 
+// Creates a 'textureizer map' which is a detail map that can be added
+// to a lower detail base map.
+// To produce a texturizer map, we take an original detail map, find the average,
+// subtract the average, and add 0.5 to all channels. The result is a map that contains
+// just the offsets to apply the original texture to a base map while preserving the average
+// color of the base map.
+// TODO: need to test this more to see if it is worth using. Currently unused.
+static void convertSrgbToTexturizerMap(osg::Image& image)
+{
+	osg::Vec4f averageLinearSpace = srgbToLinear(averageSrgbColor(image));
+
+	osg::Vec4f color;
+	size_t pixels = 0;
+	for (size_t t = 0; t < image.t(); ++t)
+	{
+		for (size_t s = 0; s < image.s(); ++s)
+		{
+			osg::Vec4f c = srgbToLinear(image.getColor(s, t));
+			c = c - averageLinearSpace + osg::Vec4f(0.5, 0.5, 0.5, 0.5);
+			image.setColor(linearToSrgb(c), s, t);
+		}
+	}
+}
+
+
 Planet::Planet(const PlanetConfig& config) :
 	mScene(config.scene),
 	mInnerRadius(config.innerRadius),
@@ -541,6 +566,16 @@ Planet::Planet(const PlanetConfig& config) :
 		surfaceConfig.cloudsTexture = config.cloudsTexture;
 		surfaceConfig.elevationMaxLodLevel = config.elevationMaxLodLevel;
 		surfaceConfig.albedoMaxLodLevel = config.albedoMaxLodLevel;
+
+		{
+			osg::ref_ptr<osg::Image> image = osgDB::readImageFile("Environment/Ground/Ground026_1K_Color.jpg");
+			image->setInternalTextureFormat(vis::toSrgbInternalFormat(image->getInternalTextureFormat()));
+			convertSrgbToTexturizerMap(*image);
+			osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
+			texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
+			texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+			surfaceConfig.albedoDetailMaps.push_back(texture);
+		}
 
 		mPlanetSurface.reset(new PlanetSurface(surfaceConfig));
 	}
