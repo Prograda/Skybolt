@@ -18,6 +18,8 @@ namespace vis {
 
 using TextureFactory = std::function<osg::ref_ptr<osg::Texture>(const osg::Vec2i&)>;
 
+TextureFactory createTextureFactory(GLint internalFormat);
+
 struct RenderTextureConfig
 {
 	TextureFactory colorTextureFactory;

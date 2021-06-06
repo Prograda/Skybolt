@@ -45,22 +45,6 @@ private:
 	std::shared_ptr<ScreenQuad> mQuad;
 };
 
-static TextureFactory createTextureFactory(GLint internalFormat)
-{
-	return [internalFormat](const osg::Vec2i& size) {
-		osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D();
-		texture->setTextureSize(size.x(), size.y());
-		texture->setResizeNonPowerOfTwoHint(false);
-		texture->setInternalFormat(internalFormat);
-		texture->setFilter(osg::Texture2D::FilterParameter::MIN_FILTER, osg::Texture2D::FilterMode::LINEAR);
-		texture->setFilter(osg::Texture2D::FilterParameter::MAG_FILTER, osg::Texture2D::FilterMode::LINEAR);
-		texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
-		texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
-
-		return texture;
-	};
-}
-
 osg::ref_ptr<RenderTarget> createAndAddViewportToWindow(Window& window, const osg::ref_ptr<osg::Program>& compositorProgram)
 {
 	osg::ref_ptr<Viewport> viewport = new Viewport();
