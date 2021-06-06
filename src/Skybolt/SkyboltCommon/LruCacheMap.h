@@ -20,21 +20,28 @@ struct LruCacheMap
 	{
 	}
 
-	//! @returns true on put, false on get
-	bool putOrGet(const KeyT& key, ValueT& valueOut)
+	//! @returns true on put
+	bool putSafe(const KeyT& key, const ValueT& value)
 	{
 		auto it = mEntries.find(key);
 		if (it == mEntries.end())
 		{
-			mQueue.push_front(std::make_pair(key, valueOut));
+			mQueue.push_front(std::make_pair(key, value));
 			mEntries[key] = mQueue.begin();
 			prune();
 			return true;
 		}
 
-		mQueue.splice(mQueue.begin(), mQueue, it->second); // move item to the beginning of the queue
-		valueOut = it->second->second;
 		return false;
+	}
+
+	void put(const KeyT& key, const ValueT& value)
+	{
+		assert(mEntries.find(key) == mEntries.end());
+
+		mQueue.push_front(std::make_pair(key, value));
+		mEntries[key] = mQueue.begin();
+		prune();
 	}
 
 	bool get(const KeyT& key, ValueT& valueOut)

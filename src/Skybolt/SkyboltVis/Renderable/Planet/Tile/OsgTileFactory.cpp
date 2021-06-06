@@ -105,17 +105,19 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 		config.program = mPrograms->terrainPlanetTile;
 		config.tile = planetTile;
 
-		if (mCacheHeight.putOrGet(heightImage.image, config.heightMap))
+		if (!mCacheHeight.get(heightImage.image, config.heightMap))
 		{
 			osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(heightImage.image);
 			texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
 			texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
 			texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
 			texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+
+			mCacheHeight.put(heightImage.image, texture);
 			config.heightMap = texture;
 		};
 
-		if (mCacheNormal.putOrGet(heightImage.image, config.normalMap))
+		if (!mCacheNormal.get(heightImage.image, config.normalMap))
 		{
 			osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(createNormalmapFromHeightmap(*heightImage.image, texelWorldSize));
 			texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
@@ -126,10 +128,12 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 			// which makes mip-mapping unnecessary.
 			texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
 			texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+
+			mCacheNormal.put(heightImage.image, texture);
 			config.normalMap = texture;
 		};
 
-		if (mCacheAlbedo.putOrGet(albedoImage.image, config.overallAlbedoMap))
+		if (!mCacheAlbedo.get(albedoImage.image, config.overallAlbedoMap))
 		{
 			osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(albedoImage.image);
 			texture->setInternalFormat(toSrgbInternalFormat(texture->getInternalFormat()));
@@ -138,17 +142,21 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 			texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR_MIPMAP_LINEAR);
 			texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
 			config.overallAlbedoMap = texture;
+
+			mCacheAlbedo.put(albedoImage.image, texture);
 		};
 
 		if (config.detailMaps && attributeImage.image)
 		{
-			if (mCacheAttribute.putOrGet(attributeImage.image, config.detailMaps->attributeMap))
+			if (!mCacheAttribute.get(attributeImage.image, config.detailMaps->attributeMap))
 			{
 				osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(attributeImage.image);
 				texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
 				texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
 				texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
 				texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+
+				mCacheAttribute.put(attributeImage.image, texture);
 				config.detailMaps->attributeMap = texture;
 			}
 		}
@@ -181,7 +189,7 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 		ss->addUniform(new osg::Uniform("albedoImageOffset", albedoImageOffset));
 
 		osg::ref_ptr<osg::Texture2D> texture;
-		if (mCacheAlbedo.putOrGet(albedoImage.image, texture))
+		if (!mCacheAlbedo.get(albedoImage.image, texture))
 		{
 			texture = new osg::Texture2D(albedoImage.image);
 			texture->setInternalFormat(toSrgbInternalFormat(texture->getInternalFormat()));
@@ -190,18 +198,22 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 			texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR_MIPMAP_LINEAR);
 			texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
 			// TODO: set clamping mode. Height points should be on edges of terrain
+
+			mCacheAlbedo.put(albedoImage.image, texture);
 		}
 		ss->setTextureAttributeAndModes(unit, texture);
 		ss->addUniform(createUniformSampler2d("albedoSampler", unit++));
 
 		// TODO: fix land mask not lining up exactly with albedo map
-		if (mCacheLandMask.putOrGet(landMaskImage, texture))
+		if (!mCacheLandMask.get(landMaskImage, texture))
 		{
 			texture = new osg::Texture2D(landMaskImage);
 			texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
 			texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
 			texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
 			texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+
+			mCacheLandMask.put(landMaskImage, texture);
 		}
 		ss->setTextureAttributeAndModes(unit, texture);
 		ss->addUniform(createUniformSampler2d("landMaskSampler", unit++));

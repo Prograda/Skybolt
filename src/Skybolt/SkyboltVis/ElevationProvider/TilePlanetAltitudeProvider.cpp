@@ -86,13 +86,13 @@ boost::optional<TilePlanetAltitudeProvider::TileImage> TilePlanetAltitudeProvide
 			// Add to cache at highest LOD level
 			{
 				std::scoped_lock<std::mutex> lock(mTileImageCacheMutex);
-				mTileImageCache.putOrGet(highestLodKey, result);
+				mTileImageCache.putSafe(highestLodKey, result);
 
 				// Add to cache at lower LOD level so if the highest level has a cache miss
 				// we can still potentially avoid reloading the image
 				if (level != highestLodKey.level)
 				{
-					mTileImageCache.putOrGet(key, result);
+					mTileImageCache.putSafe(key, result);
 				}
 			}
 
