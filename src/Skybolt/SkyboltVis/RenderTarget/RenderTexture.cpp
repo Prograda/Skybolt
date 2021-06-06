@@ -47,11 +47,13 @@ void RenderTexture::updatePreRender()
 
 		mTexture = mColorTextureFactory(osg::Vec2i(width, height));
 		mOsgCamera->attach(osg::Camera::COLOR_BUFFER, mTexture, 0, 0, false, mMultisampleSampleCount);
+		colorTextureCreated(mTexture);
 
 		if (mDepthTextureFactory)
 		{
 			auto texture = (*mDepthTextureFactory)(osg::Vec2i(width, height));
 			mOsgCamera->attach(osg::Camera::DEPTH_BUFFER, texture);
+			depthTextureCreated(texture);
 		}
 		mOsgCamera->setViewport(0, 0, width, height);
 	}

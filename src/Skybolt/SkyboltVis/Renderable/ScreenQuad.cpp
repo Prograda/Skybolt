@@ -27,9 +27,6 @@ ScreenQuad::ScreenQuad(osg::StateSet* stateSet, const BoundingBox2f& bounds)
 	osg::Geometry* quad = createQuadWithUvs(bounds, QuadUpDirectionY);
 
 	quad->setStateSet(stateSet);
-	quad->setUseDisplayList(false);
-	quad->setUseVertexBufferObjects(true);
-	quad->setUseVertexArrayObject(true);
 	quad->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
 
 	//create the geode 

@@ -10,6 +10,7 @@
 #include "RenderTarget.h"
 #include <osg/Texture2D>
 #include <boost/optional.hpp>
+#include <boost/signals2.hpp>
 #include <functional>
 
 namespace skybolt {
@@ -29,6 +30,12 @@ class RenderTexture : public RenderTarget
 public:
 	RenderTexture(const RenderTextureConfig& config);
 	~RenderTexture();
+
+	//! Called whenever the color texture is (re)created, e.g if render target is resized
+	boost::signals2::signal<void(const osg::ref_ptr<osg::Texture>& texture)> colorTextureCreated;
+
+	//! Called whenever the depth texture is (re)created, e.g if render target is resized
+	boost::signals2::signal<void(const osg::ref_ptr<osg::Texture>& texture)> depthTextureCreated;
 
 public: // RenderTarget interface
 	void updatePreRender() override;

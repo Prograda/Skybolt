@@ -151,6 +151,9 @@ osg::Geometry* createQuad(const BoundingBox2f& box, QuadUpDirection upDir)
 	}
 	quad->setVertexArray(verts);
 	quad->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::TRIANGLE_STRIP, 0, 4));
+	quad->setUseDisplayList(false);
+	quad->setUseVertexBufferObjects(true);
+	quad->setUseVertexArrayObject(true);
 
 	return quad;
 }
@@ -185,6 +188,9 @@ osg::Geometry* createQuadWithUvs(const BoundingBox2f& box, QuadUpDirection upDir
 	quad->setTexCoordArray(0, uvs);
 
 	quad->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::TRIANGLE_STRIP, 0, 4));
+	quad->setUseDisplayList(false);
+	quad->setUseVertexBufferObjects(true);
+	quad->setUseVertexArrayObject(true);
 
 	return quad;
 }

@@ -29,9 +29,6 @@ Billboard::Billboard(const osg::ref_ptr<osg::StateSet>& stateSet, float width, f
 	float halfHeight = height * 0.5f;
 
 	osg::ref_ptr<osg::Geometry> geometry = createQuadWithUvs(BoundingBox2f(osg::Vec2f(-halfWidth, -halfHeight), osg::Vec2f(halfWidth, halfHeight)), QuadUpDirectionY);
-	geometry->setUseDisplayList(false);
-	geometry->setUseVertexBufferObjects(true);
-	geometry->setUseVertexArrayObject(true);
 	geometry->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
 	geometry->setStateSet(stateSet);
 

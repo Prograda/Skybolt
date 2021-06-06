@@ -37,9 +37,6 @@ Starfield::Starfield(const StarfieldConfig& config)
 {
 	// Create geo
 	osg::Geometry* geometry = createQuad(BoundingBox2f(osg::Vec2f(-0.5, -0.5), osg::Vec2f(0.5, 0.5)), QuadUpDirectionY);
-	geometry->setUseDisplayList(false);
-	geometry->setUseVertexBufferObjects(true);
-	geometry->setUseVertexArrayObject(true);
 	geometry->getPrimitiveSet(0)->setNumInstances(BrightStarCatelog::stars.size());
 	geometry->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
 
