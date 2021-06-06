@@ -146,6 +146,8 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 
 EngineRoot::~EngineRoot()
 {
+	// shutdown all systems first
+	systemRegistry->clear();
 }
 
 file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackageNames, const std::string& relativePath)

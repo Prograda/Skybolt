@@ -43,9 +43,9 @@ public:
 
 	const std::vector<std::string>& getAssetPackageNames() const { return mAssetPackageNames; }
 
+	std::unique_ptr<px_sched::Scheduler> scheduler;
 	vis::ShaderPrograms programs;
 	vis::ScenePtr scene;
-	std::unique_ptr<px_sched::Scheduler> scheduler;
 	file::FileLocator fileLocator;
 	JulianDateProvider julianDateProvider;
 	std::unique_ptr<sim::World> simWorld;
