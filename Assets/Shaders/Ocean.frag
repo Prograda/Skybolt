@@ -318,8 +318,7 @@ void main(void)
 #else
 	color.a = 1.0;
 #endif
-	gl_FragDepth = fragDepth_logarithmic(logZ);
-	
+	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 #ifdef ENABLE_DEPTH_OFFSET
 	gl_FragDepth += depthOffset;
 #endif

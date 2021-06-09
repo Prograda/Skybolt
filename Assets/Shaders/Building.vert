@@ -41,8 +41,7 @@ void main()
 	texCoord = osg_MultiTexCoord0.xyz;
 	normalWS = mat3(modelMatrix) * osg_Normal.xyz;
 	
-	gl_Position.z = logarithmicZ(gl_Position.w);
-	logZ = z_logarithmic(gl_Position.w);
+	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
 	
 	vec4 positionWS = modelMatrix * osg_Vertex;
 	positionRelCamera = positionWS.xyz - cameraPosition;

@@ -5,7 +5,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #version 330 core
-#include "DepthPrecision.h"
 #include "AtmosphericScattering.h"
 
 // Based on GPU Gems 2 Chapter 16. Accurate Atmospheric Scattering.
@@ -36,5 +35,4 @@ void main()
 	
 	vec3 transmittance;
 	scattering = GetSkyRadianceScattering(cameraPositionRelPlanetCenter, rayDir, 0, lightDirection, transmittance, singleScattering);
-	gl_Position.z = logarithmicZ(gl_Position.w);
 }

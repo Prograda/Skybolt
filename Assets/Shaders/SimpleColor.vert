@@ -18,8 +18,7 @@ uniform mat4 osg_ModelViewProjectionMatrix;
 void main()
 {
 	gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;
+	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
+	
 	vsColor = osg_Color;
-
-	gl_Position.z = logarithmicZ(gl_Position.w);
-	logZ = z_logarithmic(gl_Position.w);
 }

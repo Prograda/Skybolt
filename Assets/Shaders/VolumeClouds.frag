@@ -296,7 +296,7 @@ void main()
 		rayNear = raySphereSecondIntersection(cameraPosition, rayDir, planetCenter, innerRadius + cloudLayerMinHeight);
 		rayFar = raySphereSecondIntersection(cameraPosition, rayDir, planetCenter, innerRadius + cloudLayerMaxHeight);
 		rayFar = min(rayFar, maxRenderDistance);
-		logZ = z_logarithmic(rayNear); // TODO: this looks wrong. Shouldn't the argument be w after viewProj multiplication?
+		logZ = calcLogZNdc(rayNear);
 	}
 	else if (cameraAltitude < cloudLayerMaxHeight)
 	{
@@ -321,7 +321,7 @@ void main()
 		float t1;
 		raySphereIntersections(cameraPosition, rayDir, planetCenter, innerRadius + cloudLayerMaxHeight, t0, t1);
 		rayNear = t0;
-		logZ = z_logarithmic(rayNear*0.5);
+		logZ = calcLogZNdc(rayNear*0.5);
 		
 		if (hitPlanet)
 		{
@@ -387,5 +387,5 @@ void main()
 	// Store the square root of color to minimize banding artifacts by giving  better precision at low color values.
 	// We must sqare the value read from the output texture before use.
 	colorOut.rgb = sqrt(colorOut.rgb);
-	depthOut = fragDepth_logarithmic(logZ);	
+	depthOut = logarithmicZ_fragmentShader(logZ);	
 }

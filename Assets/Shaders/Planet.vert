@@ -44,9 +44,7 @@ void main()
 	normal = normalize(positionRelPlanet);
 
 	gl_Position = viewProjectionMatrix * vec4(positionWorldSpace, 1);
-	
-	gl_Position.z = logarithmicZ(gl_Position.w);
-	logZ = z_logarithmic(gl_Position.w);
+	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
 	
 	// Calculate lighting
 #ifdef ENABLE_ATMOSPHERE

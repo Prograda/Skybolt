@@ -17,5 +17,5 @@ uniform sampler2D albedoSampler;
 void main()
 {
 	color = texture(albedoSampler, texCoord.xy);
-	gl_FragDepth = fragDepth_logarithmic(logZ);
+	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }

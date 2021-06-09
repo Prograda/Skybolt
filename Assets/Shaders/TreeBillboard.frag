@@ -35,5 +35,5 @@ void main()
 		
 	color.rgb = color.rgb * transmittance + skyRadianceToPoint;
 	
-	gl_FragDepth = fragDepth_logarithmic(logZ);
+	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }

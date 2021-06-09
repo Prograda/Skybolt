@@ -14,5 +14,5 @@ out vec4 color;
 void main()
 {
 	color = vsColor;
-	gl_FragDepth = fragDepth_logarithmic(logZ);
+	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }

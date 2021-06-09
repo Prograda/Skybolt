@@ -39,11 +39,10 @@ uniform sampler2D cloudSampler;
 void main()
 {
 	gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;
+	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
+	
 	texCoord = osg_MultiTexCoord0.xyz;
 	normalWS = mat3(modelMatrix) * osg_Normal.xyz;
-	
-	gl_Position.z = logarithmicZ(gl_Position.w);
-	logZ = z_logarithmic(gl_Position.w);
 	
 	vec4 positionWS = modelMatrix * osg_Vertex;
 	positionRelCamera = positionWS.xyz - cameraPosition;

@@ -123,6 +123,7 @@ osg::ref_ptr<osg::StateSet> createStateSet(const osg::ref_ptr<osg::Program>& pro
 
 	ss->addUniform(new osg::Uniform("depthOffset", -0.001f));
 	ss->setDefine("ENABLE_DEPTH_OFFSET");
+	ss->setDefine("ACCURATE_LOG_Z"); // enabled because geometry is sparsely tessellated
 
 #ifdef WIREFRAME
 	osg::PolygonMode * polygonMode = new osg::PolygonMode;

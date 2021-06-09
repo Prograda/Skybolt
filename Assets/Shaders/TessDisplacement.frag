@@ -9,6 +9,7 @@
 #pragma import_defines ( ENABLE_SHADOWS )
 
 #include "CloudShadows.h"
+#include "DepthPrecision.h"
 #include "NormalMapping.h"
 #include "Ocean.h"
 #include "Rerange.h"
@@ -27,6 +28,7 @@ in vec3 sunIrradiance;
 in vec3 skyIrradiance;
 in vec3 transmittance;
 in vec3 skyRadianceToPoint;
+in float logZ;
 
 out vec4 color;
 
@@ -349,5 +351,6 @@ void main()
 		color.rgb = vec3(1,0,0);
 	}
 #endif
+	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 	color.a = 1;
 }

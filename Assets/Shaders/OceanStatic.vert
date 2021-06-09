@@ -52,8 +52,7 @@ void main()
 	positionRelCameraWS = positionWS - cameraPosition;
 	
 	gl_Position = viewProjectionMatrix * vec4(positionWS, 1);
-	gl_Position.z = logarithmicZ(gl_Position.w);
-	logZ = z_logarithmic(gl_Position.w);
+	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
 	
 	// Atmospheric scattering
 	vec3 positionRelPlanet = positionWS.xyz - planetCenter;

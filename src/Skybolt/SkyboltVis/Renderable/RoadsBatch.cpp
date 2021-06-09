@@ -18,7 +18,7 @@
 #include <osgUtil/Tessellator>
 
 
-float roadHeightAboveTerrain = 0.01f;
+float roadHeightAboveTerrain = 0.0f;
 int numLanesInTexture = 2;
 
 using namespace skybolt;
@@ -176,6 +176,7 @@ static osg::ref_ptr<osg::StateSet> createStateSet(const osg::ref_ptr<osg::Progra
 	ss->setAttribute(program);
 	ss->addUniform(uniforms.modelMatrix);
 	ss->setDefine("ENABLE_DEPTH_OFFSET");
+	ss->setDefine("ACCURATE_LOG_Z"); // enabled because geometry is sparsely tessellated
 	ss->addUniform(new osg::Uniform("depthOffset", -0.005f));
 
 	osg::Depth* depth = new osg::Depth;

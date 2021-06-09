@@ -25,5 +25,5 @@ void main()
 	
 	color.rgb = ambientLightColor + reflection;
 	color.a = 0.2;
-	gl_FragDepth = fragDepth_logarithmic(logZ);
+	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }

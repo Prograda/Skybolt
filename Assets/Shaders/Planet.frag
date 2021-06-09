@@ -38,7 +38,7 @@ uniform vec3 ambientLightColor;
 void main()
 {
 	color = texture(albedoSampler, albedoTexCoord.xy);
-	gl_FragDepth = fragDepth_logarithmic(logZ);
+	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 
 	vec3 viewDirection = normalize(-positionRelCamera);
 	vec3 waterColor = deepScatterColor;

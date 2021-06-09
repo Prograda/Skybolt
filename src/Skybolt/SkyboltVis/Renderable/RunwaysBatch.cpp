@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <cctype>
 
-const float runwayHeightAboveTerrain = 0.01f;
+const float runwayHeightAboveTerrain = 0.0f;
 const float runwayTextureAspectRatio = 0.5f;
 
 using namespace skybolt;
@@ -428,6 +428,7 @@ static osg::ref_ptr<osg::StateSet> createStateSet(const RunwaysBatch::Uniforms& 
 	ss->addUniform(createUniformSampler2d("albedoSampler", 0));
 	ss->addUniform(uniforms.modelMatrix);
 	ss->setDefine("ENABLE_DEPTH_OFFSET");
+	ss->setDefine("ACCURATE_LOG_Z"); // enabled because geometry is sparsely tessellated
 
 	osg::Depth* depth = new osg::Depth;
 	depth->setWriteMask(false);

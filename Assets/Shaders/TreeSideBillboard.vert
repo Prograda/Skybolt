@@ -60,6 +60,7 @@ void main()
 	pos.xyz += posOffset;
 	
 	gl_Position = osg_ModelViewProjectionMatrix * pos;
+	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
 	texCoord = vec2(x, y);
 
 	texCoord.x = (texCoord.x + yawIndex) / 8.0f;
@@ -85,7 +86,4 @@ void main()
 #endif
 	
 	irradiance = (sunIrradiance + skyIrradiance) * occlusion;
-	
-	gl_Position.z = logarithmicZ(gl_Position.w);
-	logZ = z_logarithmic(gl_Position.w);
 }

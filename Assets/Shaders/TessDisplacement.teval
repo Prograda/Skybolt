@@ -22,6 +22,7 @@ out vec3 sunIrradiance;
 out vec3 skyIrradiance;
 out vec3 transmittance;
 out vec3 skyRadianceToPoint;
+out float logZ;
 
 uniform sampler2D heightSampler;
 uniform sampler2D cloudSampler;
@@ -107,7 +108,7 @@ void main()
 	gl_ClipDistance[0] = (dot(osg_ClipPlane.xyz, position_worldSpace) + osg_ClipPlane.w) / length(osg_ClipPlane.xyz);
 	
 	gl_Position = viewProjectionMatrix * vec4(position_worldSpace, 1);
-	gl_Position.z = logarithmicZ(gl_Position.w);
+	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
 	
 	wrappedNoiseCoord = calcWrappedNoiseCoord(position_worldSpace);
 	

@@ -40,5 +40,5 @@ float bounceLightFromEarth = 0.005;
 void main()
 {
 	color = max(bounceLightFromEarth, lighting(texCoord.xy, moonPhase)) * texture(albedoSampler, texCoord.xy);
-	gl_FragDepth = fragDepth_logarithmic(logZ);
+	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }

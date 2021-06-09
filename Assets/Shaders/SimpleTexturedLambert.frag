@@ -53,7 +53,7 @@ void main()
 #ifdef ENABLE_ATMOSPHERE
 	color.rgb = color.rgb * transmittance + skyRadianceToPoint;
 #endif
-	gl_FragDepth = fragDepth_logarithmic(logZ);
+	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 
 #ifdef ENABLE_DEPTH_OFFSET
 	gl_FragDepth += depthOffset;
