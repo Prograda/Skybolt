@@ -59,7 +59,7 @@ namespace vis {
 		mParentTransform->addChild(mGroup);
 
 		osg::StateSet* ss = mGroup->getOrCreateStateSet();
-		ss->setAttribute(config.programs->planet);
+		ss->setAttribute(config.programs->getRequiredProgram("planet"));
 
 		if (config.oceanEnabled)
 		{
@@ -137,7 +137,7 @@ namespace vis {
 				}
 				mTileNodes.erase(it);
 			}
-			CALL_LISTENERS(tileRemovedFromSceneGraph(key), Listenable<PlanetSurfaceListener>::mListeners);
+			CALL_LISTENERS(tileRemovedFromSceneGraph(key));
 		}
 
 		for (AsyncQuadTreeTile* tile : addedTiles)
@@ -155,7 +155,7 @@ namespace vis {
 			{
 				mForestGroup->addChild(osgTile.forest->_getNode());
 			}
-			CALL_LISTENERS(tileAddedToSceneGraph(tile->key), Listenable<PlanetSurfaceListener>::mListeners);
+			CALL_LISTENERS(tileAddedToSceneGraph(tile->key));
 		}
 	}
 

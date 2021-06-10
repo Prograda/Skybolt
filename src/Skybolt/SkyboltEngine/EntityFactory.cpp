@@ -35,7 +35,6 @@
 #include <SkyboltVis/OsgImageHelpers.h>
 #include <SkyboltVis/OsgStateSetHelpers.h>
 #include <SkyboltVis/Scene.h>
-#include <SkyboltVis/ShaderProgramRegistry.h>
 #include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
 #include <SkyboltVis/Renderable/Atmosphere/Bruneton/BruentonAtmosphere.h>
 #include <SkyboltVis/Renderable/CameraRelativeBillboard.h>
@@ -45,6 +44,7 @@
 #include <SkyboltVis/Renderable/Stars/Starfield.h>
 #include <SkyboltVis/Renderable/Model/Model.h>
 #include <SkyboltVis/Renderable/Model/ModelFactory.h>
+#include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 
 #include <SkyboltCommon/StringVector.h>
 #include <SkyboltCommon/File/FileUtility.h>
@@ -526,7 +526,7 @@ const float moonDiameter = 2.0f * tan(skybolt::math::degToRadF() * 0.52f * 0.5f)
 EntityPtr EntityFactory::createSun() const
 {
 	osg::StateSet* ss = new osg::StateSet;
-	ss->setAttribute(mContext.programs->sun);
+	ss->setAttribute(mContext.programs->getRequiredProgram("sun"));
 	ss->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
 
 	osg::Depth* depth = new osg::Depth;
@@ -571,7 +571,7 @@ EntityPtr EntityFactory::createSun() const
 EntityPtr EntityFactory::createMoon() const
 {
 	osg::StateSet* ss = new osg::StateSet;
-	ss->setAttribute(mContext.programs->moon);
+	ss->setAttribute(mContext.programs->getRequiredProgram("moon"));
 	ss->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
 
 	osg::Depth* depth = new osg::Depth;
@@ -606,7 +606,7 @@ EntityPtr EntityFactory::createMoon() const
 EntityPtr EntityFactory::createStars() const
 {
 	vis::StarfieldConfig config;
-	config.program = mContext.programs->starfield;
+	config.program = mContext.programs->getRequiredProgram("starfield");
 	vis::RootNodePtr starfield(new vis::Starfield(config));
 
 	auto calcStarfieldEclipticPosition = [](double julianDate) { return LatLon(0, 0); };
@@ -629,7 +629,7 @@ EntityPtr EntityFactory::createStars() const
 EntityPtr EntityFactory::createPolyline() const
 {
 	vis::Polyline::Params params;
-	params.program = mContext.programs->unlitColored;
+	params.program = mContext.programs->getRequiredProgram("unlitColored");
 
 	vis::PolylinePtr polyline(new vis::Polyline(params));
 

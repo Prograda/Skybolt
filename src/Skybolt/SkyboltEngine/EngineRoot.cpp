@@ -47,12 +47,14 @@ static std::vector<std::string> transparentMaterialNames() { return { "transpare
 
 static vis::ModelFactoryPtr createModelFactory(const vis::ShaderPrograms& programs)
 {
+	osg::ref_ptr<osg::Program> glassProgram = programs.getRequiredProgram("glass");
+
 	vis::ModelFactoryConfig config;
-	config.defaultProgram = programs.model;
+	config.defaultProgram = programs.getRequiredProgram("model");
 	for (const std::string& name : transparentMaterialNames())
 	{
 		config.stateSetModifiers[name] = [=](osg::StateSet& stateSet, const osg::Material& material) {
-			stateSet.setAttribute(programs.glass);
+			stateSet.setAttribute(glassProgram);
 			vis::makeStateSetTransparent(stateSet);
 		};
 	}

@@ -7,10 +7,10 @@
 
 #include <catch/catch.hpp>
 
+#include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <SkyboltVis/TextureGenerator/GpuTextureGenerator.h>
 #include "SkyboltVis/TextureGenerator/GpuTextureGeneratorStateSets.h"
 #include <SkyboltVis/Window/OffscreenViewer.h>
-#include <SkyboltVis/ShaderProgramRegistry.h>
 
 #include <osgDB/WriteFile>
 

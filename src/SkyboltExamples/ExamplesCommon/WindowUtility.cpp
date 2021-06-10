@@ -14,7 +14,7 @@ namespace skybolt {
 
 osg::ref_ptr<vis::RenderTarget> createAndAddViewportToWindowWithEngine(vis::Window& window, const EngineRoot& engineRoot)
 {
-	auto viewport = createAndAddViewportToWindow(window, engineRoot.programs.compositeFinal);
+	auto viewport = createAndAddViewportToWindow(window, engineRoot.programs.getRequiredProgram("compositeFinal"));
 	viewport->setScene(std::make_shared<vis::RenderTargetSceneAdapter>(engineRoot.scene));
 	return viewport;
 }

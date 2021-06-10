@@ -57,6 +57,7 @@ private slots:
 	void exit();
 	void captureImage();
 	void editEngineSettings();
+	void setLiveShaderEditingEnabled(bool enabled);
 
 	void toolWindowActionToggled(bool state);
 	void toolWindowVisibilityChanged(QWidget* toolWindow, bool visible);
@@ -98,6 +99,7 @@ private:
 	std::unique_ptr<Ui::MainWindow> ui;
 	QToolWindowManager* mToolWindowManager;
 	std::vector<QAction*> mToolActions;
+	std::unique_ptr<skybolt::vis::ShaderSourceFileChangeMonitor> mShaderSourceFileChangeMonitor;
 
 	class EntitiesTableModel* mEntitiesTableModel;
 	class PictureTableModel* mPictureTableModel;

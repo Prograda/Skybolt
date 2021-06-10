@@ -10,10 +10,10 @@
 #include "SkyboltVis/SkyboltVisFwd.h"
 #include "SkyboltVis/OsgBox2.h"
 #include "SkyboltVis/VisObject.h"
-#include "SkyboltVis/ShaderProgramRegistry.h"
 #include "SkyboltVis/ShadowHelpers.h"
 #include "SkyboltVis/Renderable/Planet/Tile/OsgTile.h"
 #include "SkyboltVis/Renderable/Planet/Tile/QuadTreeTileLoader.h"
+#include "SkyboltVis/Shader/ShaderProgramRegistry.h"
 #include <SkyboltCommon/Listenable.h>
 #include <SkyboltCommon/Math/QuadTree.h>
 #include <osg/Matrix>

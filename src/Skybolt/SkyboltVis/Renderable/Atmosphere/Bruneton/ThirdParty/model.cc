@@ -44,7 +44,7 @@ of the following C++ code.
 #include "model.h"
 #include "constants.h"
 
-#include <SkyboltVis/OsgShaderHelpers.h>
+#include <SkyboltVis/Shader/OsgShaderHelpers.h>
 
 #include <cassert>
 #include <cmath>

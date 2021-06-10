@@ -95,7 +95,7 @@ static Vector3 normalizeFunc(const Vector3& v)
 
 static bool attachCameraToWindowWithEngine(sim::Entity& camera, vis::Window& window, EngineRoot& engineRoot)
 {
-	auto viewport = createAndAddViewportToWindow(window, engineRoot.programs.compositeFinal);
+	auto viewport = createAndAddViewportToWindow(window, engineRoot.programs.getRequiredProgram("compositeFinal"));
 	viewport->setScene(std::make_shared<vis::RenderTargetSceneAdapter>(engineRoot.scene));
 	vis::CameraPtr visCamera = getVisCamera(camera);
 	if (visCamera)

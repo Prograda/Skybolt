@@ -82,7 +82,7 @@ osg::Shader* readShaderFile(osg::Shader::Type type, const std::string& filename)
 	source = preprocessIncludes(source, includeDirPath);
 
 	osg::Shader* shader = new osg::Shader(type, source);
-	shader->setName(filename);
+	shader->setFileName(filename);
 	return shader;
 }
 

@@ -6,7 +6,7 @@
 
 #include "BillboardTextureGenerator.h"
 #include <SkyboltVis/OsgImageHelpers.h>
-#include "SkyboltVis/OsgShaderHelpers.h"
+#include "SkyboltVis/Shader/OsgShaderHelpers.h"
 #include <SkyboltCommon/Exception.h>
 
 #include <osg/Camera>

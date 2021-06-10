@@ -9,11 +9,11 @@
 #include "SkyboltVis/OsgGeocentric.h"
 #include "SkyboltVis/OsgImageHelpers.h"
 #include "SkyboltVis/OsgStateSetHelpers.h"
-#include "SkyboltVis/ShaderProgramRegistry.h"
-#include "SkyboltVis/Renderable/Forest/PagedForest.h"
 #include "SkyboltVis/ElevationProvider/HeightmapElevationProvider.h"
+#include "SkyboltVis/Renderable/Forest/PagedForest.h"
 #include "SkyboltVis/Renderable/Planet/PlanetTileGeometry.h"
 #include "SkyboltVis/Renderable/Planet/TextureCompiler.h"
+#include "SkyboltVis/Shader/ShaderProgramRegistry.h"
 
 #include <osg/Geode>
 
@@ -102,7 +102,7 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 		getTileTransformInParentSpace(key, attributeImage.key.level, attributeImageScale, attributeImageOffset);
 
 		TerrainConfig config = mCommonTerrainConfig;
-		config.program = mPrograms->terrainPlanetTile;
+		config.program = mPrograms->getRequiredProgram("terrainPlanetTile");
 		config.tile = planetTile;
 
 		if (!mCacheHeight.get(heightImage.image, config.heightMap))

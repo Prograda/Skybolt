@@ -8,7 +8,7 @@
 #include "GeocentricToNedConverter.h"
 #include "TemplateNameComponent.h"
 #include <SkyboltSim/Components/NameComponent.h>
-#include "SkyboltVis/ShaderProgramRegistry.h"
+#include "SkyboltVis/Shader/ShaderProgramRegistry.h"
 #include <osg/Depth>
 #include <osg/Geode>
 #include <osgText/Text>
@@ -22,7 +22,7 @@ VisNameLabels::VisNameLabels(World* world, osg::Group* parent, const vis::Shader
 {
 	osg::ref_ptr<osg::StateSet> ss = mGroup->getOrCreateStateSet();
 	{
-		ss->setAttributeAndModes(programs.hudText, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+		ss->setAttributeAndModes(programs.getRequiredProgram("hudText"), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 
 		ss->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
 		ss->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);

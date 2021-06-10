@@ -8,11 +8,11 @@
 #include "SkyboltVis/GlobalSamplerUnit.h"
 #include "SkyboltVis/OsgTextureHelpers.h"
 #include "SkyboltVis/RenderContext.h"
-#include "SkyboltVis/ShaderProgramRegistry.h"
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/Light.h"
 #include "SkyboltVis/Scene.h"
 #include "SkyboltVis/RenderTarget/RenderTexture.h"
+#include "SkyboltVis/Shader/ShaderProgramRegistry.h"
 #include "SkyboltVis/Window/Window.h"
 #include "SkyboltVis/TextureGenerator/GpuTextureGenerator.h"
 #include "SkyboltVis/TextureGenerator/GpuTextureGeneratorStateSets.h"
@@ -495,7 +495,7 @@ Planet::Planet(const PlanetConfig& config) :
 		mTransform->getOrCreateStateSet()->setDefine("ENABLE_ATMOSPHERE");
 
 		PlanetSkyConfig skyConfig;
-		skyConfig.program = config.programs->sky;
+		skyConfig.program = config.programs->getRequiredProgram("sky");
 		skyConfig.radius = config.atmosphereConfig->topRadius;
 		mPlanetSky.reset(new PlanetSky(skyConfig));
 		mScene->addObject(mPlanetSky.get());
@@ -521,10 +521,10 @@ Planet::Planet(const PlanetConfig& config) :
 
 	// Create sky environment sphere
 	osg::ref_ptr<osg::Texture2D> environmentTexture = createEnvironmentTexture(128, 128);
-	mEnvironmentMapGpuTextureGenerator = new GpuTextureGenerator(environmentTexture, createSkyToEnvironmentMapStateSet(config.programs->skyToEnvironmentMap), /* generateMipMaps */ true);
+	mEnvironmentMapGpuTextureGenerator = new GpuTextureGenerator(environmentTexture, createSkyToEnvironmentMapStateSet(config.programs->getRequiredProgram("skyToEnvironmentMap")), /* generateMipMaps */ true);
 	addTextureGeneratorToSceneGraph(mEnvironmentMapGpuTextureGenerator);
 
-	mShadowMapGenerator = std::make_unique<ShadowMapGenerator>(config.programs->shadowCaster);
+	mShadowMapGenerator = std::make_unique<ShadowMapGenerator>(config.programs->getRequiredProgram("shadowCaster"));
 
 	// Create terrain
 	{
@@ -571,12 +571,12 @@ Planet::Planet(const PlanetConfig& config) :
 				osg::Vec2f textureWorldSize(mWaveHeightTextureGenerator->getWorldSize(i), mWaveHeightTextureGenerator->getWorldSize(i));
 				const bool generateMipMaps = true;
 				stateSetConfig.waveNormalTexture[i] = createNormalTexture(width, height);
-				osg::ref_ptr<GpuTextureGenerator> generator = new GpuTextureGenerator(stateSetConfig.waveNormalTexture[i], createVectorDisplacementToNormalMapStateSet(config.programs->vectorDisplacementToNormal, stateSetConfig.waveHeightTexture[i], textureWorldSize), generateMipMaps);
+				osg::ref_ptr<GpuTextureGenerator> generator = new GpuTextureGenerator(stateSetConfig.waveNormalTexture[i], createVectorDisplacementToNormalMapStateSet(config.programs->getRequiredProgram("vectorDisplacementToNormal"), stateSetConfig.waveHeightTexture[i], textureWorldSize), generateMipMaps);
 				mWaterSurfaceGpuTextureGenerators.push_back(generator);
 				addTextureGeneratorToSceneGraph(generator);
 
 				WaveFoamMaskGeneratorConfig generatorConfig;
-				generatorConfig.program = config.programs->waveFoamMaskGenerator;
+				generatorConfig.program = config.programs->getRequiredProgram("waveFoamMaskGenerator");
 				generatorConfig.textureSizePixels = osg::Vec2i(width, height);
 				generatorConfig.textureWorldSize = textureWorldSize;
 				generatorConfig.waveVectorDisplacementTexture = stateSetConfig.waveHeightTexture[i];
@@ -601,7 +601,7 @@ Planet::Planet(const PlanetConfig& config) :
 		OceanConfig oceanConfig;
 		if (mWaterStateSet)
 		{
-			oceanConfig.oceanProgram = config.programs->ocean;
+			oceanConfig.oceanProgram = config.programs->getRequiredProgram("ocean");
 			oceanConfig.waterStateSet = mWaterStateSet;
 
 //#define ENVIRONMENT_MAP_TEXTURE_DEBUG_VIZ
@@ -663,8 +663,8 @@ Planet::Planet(const PlanetConfig& config) :
 	if (config.cloudsTexture)
 	{
 		VolumeCloudsConfig cloudsConfig;
-		cloudsConfig.program = config.programs->volumeClouds;
-		cloudsConfig.compositorProgram = config.programs->compositeClouds;
+		cloudsConfig.program = config.programs->getRequiredProgram("volumeClouds");
+		cloudsConfig.compositorProgram = config.programs->getRequiredProgram("compositeClouds");
 		cloudsConfig.innerCloudLayerRadius = config.innerRadius + 3000;
 		cloudsConfig.outerCloudLayerRadius = config.innerRadius + 8000;
 		cloudsConfig.cloudsTexture = config.cloudsTexture;
@@ -712,7 +712,7 @@ Planet::Planet(const PlanetConfig& config) :
 			osg::Vec2f pos(0.2, 0.7);
 			osg::Vec2f size(0.3, 0.3);
 			BoundingBox2f box(pos, pos + size);
-			ScreenQuad* quad = new ScreenQuad(createTexturedQuadStateSet(config.programs->hudGeometry, mShadowMapGenerator->getTexture()), box);
+			ScreenQuad* quad = new ScreenQuad(createTexturedQuadStateSet(config.programs->getRequiredProgram("hudGeometry"), mShadowMapGenerator->getTexture()), box);
 			mScene->addObject(quad);
 		}
 

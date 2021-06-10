@@ -13,7 +13,7 @@
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/System/SystemRegistry.h>
 #include <SkyboltVis/Scene.h>
-#include <SkyboltVis/ShaderProgramRegistry.h>
+#include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 #include <SkyboltCommon/File/FileUtility.h>
 

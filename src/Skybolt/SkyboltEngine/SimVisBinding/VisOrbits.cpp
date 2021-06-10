@@ -11,8 +11,8 @@
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Physics/Astronomy.h>
 #include <SkyboltSim/Physics/Orbit.h>
+#include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
-#include <SkyboltVis/ShaderProgramRegistry.h>
 
 #include <osg/Depth>
 #include <osg/Geode>

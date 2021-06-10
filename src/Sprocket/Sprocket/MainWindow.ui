@@ -76,6 +76,7 @@
      </property>
      <addaction name="actionCaptureImage"/>
      <addaction name="actionSettings"/>
+     <addaction name="actionLiveShaderEditing"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -123,6 +124,14 @@
    <action name="actionSettings">
      <property name="text">
        <string>Settings...</string>
+     </property>
+   </action>
+   <action name="actionLiveShaderEditing">
+     <property name="text">
+       <string>Live Shader Editing</string>
+     </property>
+     <property name="checkable">
+       <bool>true</bool>
      </property>
    </action>
   <action name="actionAbout">

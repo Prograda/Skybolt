@@ -55,11 +55,13 @@
 #include <SkyboltSim/System/SystemRegistry.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltVis/Camera.h>
+#include <SkyboltVis/Shader/OsgShaderHelpers.h>
 #include <SkyboltVis/Scene.h>
 #include <SkyboltVis/Renderable/Arrows.h>
 #include <SkyboltVis/RenderTarget/RenderTargetSceneAdapter.h>
 #include <SkyboltVis/RenderTarget/ViewportHelpers.h>
 #include <SkyboltVis/RenderTarget/Viewport.h>
+#include <SkyboltVis/Shader/ShaderSourceFileChangeMonitor.h>
 #include <SkyboltVis/Window/CaptureScreenshot.h>
 #include <SkyboltVis/Window/Window.h>
 #include <SkyboltCommon/File/OsDirectories.h>
@@ -326,7 +328,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	mSimStepper = std::make_unique<SimStepper>(mEngineRoot->systemRegistry);
 
 	mOsgWidget = new OsgWidget();
-	mRenderTarget = vis::createAndAddViewportToWindow(*mOsgWidget->getWindow(), mEngineRoot->programs.compositeFinal);
+	mRenderTarget = vis::createAndAddViewportToWindow(*mOsgWidget->getWindow(), mEngineRoot->programs.getRequiredProgram("compositeFinal"));
 	mRenderTarget->setScene(std::make_shared<vis::RenderTargetSceneAdapter>(mEngineRoot->scene));
 
 	mInputPlatform.reset(new InputPlatformOis(std::to_string(size_t(HWND(winId()))), 800, 600)); // TODO: use actual resolution
@@ -348,21 +350,24 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	QObject::connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(exit()));
 	QObject::connect(ui->actionCaptureImage, SIGNAL(triggered()), this, SLOT(captureImage()));
 	QObject::connect(ui->actionSettings, SIGNAL(triggered()), this, SLOT(editEngineSettings()));
+	QObject::connect(ui->actionLiveShaderEditing, SIGNAL(triggered(bool)), this, SLOT(setLiveShaderEditingEnabled(bool)));
 	
 	World* world = mEngineRoot->simWorld.get();
 	Scenario& scenario = mEngineRoot->scenario;
 
 	mVisNameLabels.reset(new VisNameLabels(world, mEngineRoot->scene->_getGroup(), mEngineRoot->programs));
 
+	osg::ref_ptr<osg::Program> unlitColoredProgram = mEngineRoot->programs.getRequiredProgram("unlitColored");
+
 	{
 		vis::Polyline::Params params;
-		params.program = mEngineRoot->programs.unlitColored;
+		params.program = unlitColoredProgram;
 		mVisOrbits.reset(new VisOrbits(world, mEngineRoot->scene->_getGroup(), params, mEngineRoot->julianDateProvider));
 	}
 	
 	{
 		vis::Arrows::Params params;
-		params.program = mEngineRoot->programs.unlitColored;
+		params.program = unlitColoredProgram;
 
 		mArrows.reset(new vis::Arrows(params));
 		mEngineRoot->scene->addObject(mArrows.get());
@@ -578,6 +583,11 @@ void MainWindow::update()
 	EngineRoot* engineRoot = mSprocketModel->engineRoot;
 
 	engineRoot->scenario.timeSource.update(dt);
+
+	if (mShaderSourceFileChangeMonitor)
+	{
+		mShaderSourceFileChangeMonitor->update();
+	}
 
 	auto simVisSystem = findSystem<SimVisSystem>(*engineRoot->systemRegistry);
 	assert(simVisSystem);
@@ -1138,6 +1148,15 @@ void MainWindow::editEngineSettings()
 		settingsFilename = editor.getSettingsFilename();
 		mSettings.setValue(settingsFilenameKey, settingsFilename);
 		writeJsonFile(editor.getJson(), settingsFilename.toStdString());
+	}
+}
+
+void MainWindow::setLiveShaderEditingEnabled(bool enabled)
+{
+	mShaderSourceFileChangeMonitor.reset();
+	if (enabled)
+	{
+		mShaderSourceFileChangeMonitor = std::make_unique<vis::ShaderSourceFileChangeMonitor>(mEngineRoot->programs);
 	}
 }
 
