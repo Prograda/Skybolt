@@ -31,11 +31,11 @@ uniform vec3 ambientLightColor;
 const float cloudLayerMaxHeight = 5000;
 const float cloudLayerMinHeight = 2000;
 const vec2 cloudTopZeroDensityHeight = vec2(3500, 5000);
-const vec2 cloudTopFullDensityHeight = vec2(2850, 2850);
+const vec2 cloudTopFullDensityHeight = vec2(3000, 3850);
 const vec2 cloudBottomFullDensityHeight = vec2(2800, 2800);
 const vec2 cloudBottomZeroDensity = vec2(2400, 2000);
 const vec2 cloudOcclusionStrength = vec2(0.4, 0.8);
-const vec2 cloudDensityMultiplier = vec2(0.001, 0.005);
+const vec2 cloudDensityMultiplier = vec2(0.005, 0.005);
 
 const vec3 noiseFrequencyScale = vec3(0.0001);
 
@@ -124,13 +124,14 @@ const float powderStrength = 0.2; // TODO: get this looking right
 const float multiScatterDistanceMultiplier = 1.0;
 const float scatterDistanceMultiplier = initialStepSize * 6;
 
-vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradiance, vec3 skyIrradianceOnFourPi, vec2 lod, float height, float cloudType)
+vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradiance, vec2 lod, float height, float cloudType)
 {
 	// It looks better to make scatterDistance a fixed size, in this case the initialStepSize multiplied by a hand tuned factor.
 	// Making it a function of the adpstepSize makes the lighting look inconsistent and less realistic.
 
-	float T = 1.0;
-	float powderT = 1.0;
+	float Texponent = 0.0;
+	float powerTexponent = 0.0;
+	
 	for (int i = 0; i < lightSampleCount; ++i)
 	{
 		float scatterDistance = SAMPLE_SEGMENT_LENGTHS[i] * scatterDistanceMultiplier;
@@ -140,22 +141,43 @@ vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradian
 		vec2 sampleUv = cloudUvFromPosRelPlanet(lightSamplePos);
 		float sampleOutCloudType;
 		float density = calcDensity(lightSamplePos, sampleUv, lod, sampleHeight, sampleOutCloudType);
-		T *= exp(-density * scatterDistance * multiScatterDistanceMultiplier);
-		powderT *= exp(-density * scatterDistance * 2);
+		Texponent -= density * scatterDistance * multiScatterDistanceMultiplier;
+		powerTexponent -= density * scatterDistance * 2;
 	}
 
+	float T = exp(Texponent);
+	float powderT = exp(powerTexponent);
+	
 	vec2 occlusionByType = clamp(remap(vec2(height), cloudBottomZeroDensity, cloudTopZeroDensityHeight, vec2(0.0), vec2(1.0)), vec2(0.0), vec2(1.0));
 	occlusionByType = occlusionByType * cloudOcclusionStrength + (1.0 - cloudOcclusionStrength);
 	float occlusion = mix(occlusionByType.x, occlusionByType.y, cloudType);
 
-	float beer = T;
-	float powder = 1.0 - powderStrength * powderT;
-	return occlusion * sunIrradiance * albedo * beer * powder * hg + skyIrradianceOnFourPi + ambientLightColor;
+	vec3 radiance = vec3(0);
+	for (int N = 0; N < 3; ++N) // multi scattering octaves
+	{
+		// Calculate multi-scattering approximation coefficeints for technique described in
+		// "Oz: The Great and Volumetric"
+		// http://magnuswrenninge.com/wp-content/uploads/2010/03/Wrenninge-OzTheGreatAndVolumetric.pdf
+		// and also used in "Physically Based Sky, Atmosphere and Cloud Rendering in Frostbite"
+		// https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
+	
+		float albedoMScat = pow(0.5, N);
+		float extinctionMScat = albedoMScat;
+		float hgMScat = albedoMScat;
+	
+		// Now perform single scattering calc modified by the coefficients for fake multiscattering
+		float beer = pow(T, extinctionMScat);
+		float powder = 1.0 - powderStrength * pow(powderT, extinctionMScat);
+		
+		radiance += occlusion * sunIrradiance * albedo * albedoMScat * beer * powder * mix(oneOnFourPi, hg, hgMScat);
+	}
+	radiance += ambientLightColor;
+	return radiance;
 }
 
 float effectiveZeroT = 0.01;
 
-vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 lightDir, vec3 sunIrradiance, vec3 skyIrradiance)
+vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 lightDir, vec3 sunIrradiance)
 {
 	float cosAngle = dot(lightDir, dir);
 
@@ -163,8 +185,6 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 ligh
 	// See http://wiki.nuaj.net/index.php?title=Clouds
 	float hg = dot(henyeyGreenstein(cosAngle, vec4(-0.2, 0.3, 0.96, 0)), vec4(0.5, 0.5, 0.03, 0.0));
 	
-	vec3 skyIrradianceOnFourPi = skyIrradiance * oneOnFourPi;
-
     // the color that is accumulated during raymarching
     vec3 totalRadiance = vec3(0, 0, 0);
     float T = 1.0;
@@ -183,7 +203,7 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 ligh
 		
 		if (density > 0.0001)
 		{
-			vec3 radiance = radianceLowRes(pos, uv, lightDir, hg, sunIrradiance, skyIrradianceOnFourPi, lod, height, outCloudType) * density;
+			vec3 radiance = radianceLowRes(pos, uv, lightDir, hg, sunIrradiance, lod, height, outCloudType) * density;
 #define ENERGY_CONSERVING_INTEGRATION
 #ifdef ENERGY_CONSERVING_INTEGRATION
 			const float clampedDensity = max(density, 0.0000001);
@@ -373,7 +393,7 @@ void main()
 	lod.x = smoothstep(0.1, 1.0, stepSize / maximumStepSize);
 	lod.y = max(0.0, 150000 / (rayNear + 0.1) - 1.0);
 	
-	colorOut = march(positionRelPlanetPlanetAxes, rayDirPlanetAxes, stepSize, rayFar-rayNear, lod, lightDirPlanetAxes, directIrradiance, indirectIrradiance);
+	colorOut = march(positionRelPlanetPlanetAxes, rayDirPlanetAxes, stepSize, rayFar-rayNear, lod, lightDirPlanetAxes, directIrradiance);
 	
 	vec4 lowResColor = evaluateGlobalLowResColor(positionRelPlanetPlanetAxes, directIrradiance + indirectIrradiance) * lowResBrightnessMultiplier;
 	colorOut = mix(colorOut, vec4(lowResColor), lod.x);
