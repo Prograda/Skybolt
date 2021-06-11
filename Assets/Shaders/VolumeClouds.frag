@@ -177,7 +177,7 @@ vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradian
 
 float effectiveZeroT = 0.01;
 
-vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 lightDir, vec3 sunIrradiance)
+vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 lightDir, vec3 sunIrradiance, out float meanCloudFrontDistance)
 {
 	float cosAngle = dot(lightDir, dir);
 
@@ -185,11 +185,18 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 ligh
 	// See http://wiki.nuaj.net/index.php?title=Clouds
 	float hg = dot(henyeyGreenstein(cosAngle, vec4(-0.2, 0.3, 0.96, 0)), vec4(0.5, 0.5, 0.03, 0.0));
 	
-    // the color that is accumulated during raymarching
+    // The color that is accumulated during raymarching
     vec3 totalRadiance = vec3(0, 0, 0);
     float T = 1.0;
 
-    // do the actual raymarching
+	// As we march, also calculate the transmittance-weigthed mean cloud scene depth.
+	// Based on "Physically Based Sky, Atmosphere and Cloud Rendering in Frostbite"
+	// section 5.9.1 Aerial perspective affecting clouds
+	// https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
+	float sumTransmissionWeightedDistance = 0.0;
+	float sumTransmissionWeights = 0.0;
+	
+    // Do the actual raymarching
     float t = 0.0;
 	bool lastStep = false;
     for (int i = 0; i < iterations; ++i)
@@ -219,6 +226,8 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 ligh
 			totalRadiance += radiance * stepSize * T;
 			T *= exp(-density * stepSize);
 #endif
+			sumTransmissionWeightedDistance += T * t;
+			sumTransmissionWeights += T;
 		}
 		else
 		{
@@ -264,6 +273,8 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 ligh
 		}
     }
 
+	meanCloudFrontDistance = (sumTransmissionWeights > 0) ? (sumTransmissionWeightedDistance / sumTransmissionWeights) : -1.0;
+	
     return vec4(totalRadiance, 1.0-max(0.0, remapNormalized(T, effectiveZeroT, 1.0)));
 }
 
@@ -316,7 +327,6 @@ void main()
 		rayNear = raySphereSecondIntersection(cameraPosition, rayDir, planetCenter, innerRadius + cloudLayerMinHeight);
 		rayFar = raySphereSecondIntersection(cameraPosition, rayDir, planetCenter, innerRadius + cloudLayerMaxHeight);
 		rayFar = min(rayFar, maxRenderDistance);
-		logZ = calcLogZNdc(rayNear);
 	}
 	else if (cameraAltitude < cloudLayerMaxHeight)
 	{
@@ -332,8 +342,6 @@ void main()
 			// Far is the intersection with the cloud top
 			rayFar = raySphereSecondIntersection(cameraPosition, rayDir, planetCenter, innerRadius + cloudLayerMaxHeight);
 		}
-			
-		logZ = 0.0;
 	}
 	else
 	{
@@ -377,8 +385,12 @@ void main()
 	vec3 rayDirPlanetAxes = mat3(planetMatrixInv) * rayDir;
 	vec3 lightDirPlanetAxes = mat3(planetMatrixInv) * lightDirection;
 	
+	vec3 positionRelPlanetFar = cameraPositionRelPlanet + rayFar * rayDir;
+	vec3 positionRelPlanetFarSafe = positionRelPlanetFar;
+	vec3 positionRelPlanetSafe = positionRelPlanet*1.0003;
+	
 	vec3 skyIrradiance;
-	vec3 sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet*1.0003, lightDirection, skyIrradiance);
+	vec3 sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanetFarSafe, lightDirection, skyIrradiance);
 	
 	// Add sky radiance to sun radiance, to simulate multi scattering
 	vec3 directIrradiance = (sunIrradiance + skyIrradiance);
@@ -393,19 +405,34 @@ void main()
 	lod.x = smoothstep(0.1, 1.0, stepSize / maximumStepSize);
 	lod.y = max(0.0, 150000 / (rayNear + 0.1) - 1.0);
 	
-	colorOut = march(positionRelPlanetPlanetAxes, rayDirPlanetAxes, stepSize, rayFar-rayNear, lod, lightDirPlanetAxes, directIrradiance);
+	
+	float meanCloudFrontDistance; // negative value means no samples
+	colorOut = march(positionRelPlanetPlanetAxes, rayDirPlanetAxes, stepSize, rayFar-rayNear, lod, lightDirPlanetAxes, directIrradiance, meanCloudFrontDistance);
+	
+	if (meanCloudFrontDistance >= 0.0)
+	{
+		logZ = calcLogZNdc(meanCloudFrontDistance);
+	}
 	
 	vec4 lowResColor = evaluateGlobalLowResColor(positionRelPlanetPlanetAxes, directIrradiance + indirectIrradiance) * lowResBrightnessMultiplier;
 	colorOut = mix(colorOut, vec4(lowResColor), lod.x);
 
-#ifdef APPLY_EXPERIMENTAL_ATMOSPHERIC_EXTINCTION
-	float transmission = exp(-rayNear * 0.00001);
-	colorOut *= mix(0.2, 1.0, transmission);
-#endif
+	if (meanCloudFrontDistance >= 0.0)
+	{
+		// Apply 'aerial perspective'
+		vec3 transmittance;
+		vec3 cloudFrontPositionRelPlanet = cameraPositionRelPlanet + meanCloudFrontDistance * rayDir;
+		vec3 skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, cloudFrontPositionRelPlanet, 0, lightDirection, transmittance);
+		
+		float weight = colorOut.a * colorOut.a * colorOut.a; // Blend between no aerial perspective for 0 density and full aerial for 1 density. This curve is a fudge, but looks about right.
+		colorOut.rgb = mix(colorOut.rgb, colorOut.rgb * transmittance + skyRadianceToPoint, weight);
+	}
+	
 	colorOut *= alpha;
 
 	// Store the square root of color to minimize banding artifacts by giving  better precision at low color values.
 	// We must sqare the value read from the output texture before use.
 	colorOut.rgb = sqrt(colorOut.rgb);
+	
 	depthOut = logarithmicZ_fragmentShader(logZ);	
 }

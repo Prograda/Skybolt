@@ -40,7 +40,7 @@ vec2 cloudUvFromPosRelPlanet(vec3 positionRelPlanetPlanetAxes)
 
 float sampleCoverageDetail(sampler2D coverageDetailSampler, vec2 uv, float lod, out float cloudType)
 {
-	vec4 coverageNoise = textureLod(coverageDetailSampler, uv.xy * vec2(100.0, 50.0), 4 * lod);
+	vec4 coverageNoise = textureLod(coverageDetailSampler, uv.xy * vec2(160.0, 80.0), 4 * lod);
 	float coverageDetail = coverageNoise.r;
 	cloudType = coverageNoise.g;
 	return coverageDetail;
