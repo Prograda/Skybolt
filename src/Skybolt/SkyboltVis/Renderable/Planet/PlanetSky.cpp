@@ -37,7 +37,7 @@ static osg::StateSet* createStateSet(const osg::ref_ptr<osg::Program>& program)
 	osg::Depth* depth = new osg::Depth;
 	depth->setWriteMask(false);
 	stateSet->setAttributeAndModes(depth, osg::StateAttribute::ON);
-
+	stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 	stateSet->setAttributeAndModes(new osg::BlendEquation(osg::BlendEquation::FUNC_ADD, osg::BlendEquation::FUNC_ADD));
 	stateSet->setAttributeAndModes(new osg::BlendFunc(osg::BlendFunc::ONE, osg::BlendFunc::ONE));
 

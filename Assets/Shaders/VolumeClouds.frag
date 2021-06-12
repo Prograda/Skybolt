@@ -25,6 +25,7 @@ uniform sampler3D baseNoiseSampler;
 
 uniform vec3 cameraPosition;
 uniform vec3 lightDirection;
+uniform vec3 cameraCenterDirection;
 uniform vec3 ambientLightColor;
 
 // Cloud geometry heights for each cloud type
@@ -49,10 +50,10 @@ float calcHeightMultiplier(float height, float cloudType)
 }
 
 const int iterations = 1000;
-const float initialStepSize = 10;
-const float maximumStepSize = 200;
+const float initialStepSize = 50;
+const float maximumStepSize = 500;
 const float stepSizeGrowthFactor = 1.002;
-const float maxRenderDistance = 200000;
+const float maxRenderDistance = 300000;
 
 float calcDensityLowRes(vec2 uv, float height, out float cloudType, vec2 lod)
 {
@@ -78,12 +79,14 @@ float calcDensity(vec3 pos, vec2 uv, vec2 lod, float height, out float cloudType
 		vec4 noise = textureLod(baseNoiseSampler, pos*noiseFrequencyScale, 0); // MTODO: tweak
 		
 		// Apply high detail
+//#define ENABLE_HIGH_DETAIL_CLOUDS
+#ifdef ENABLE_HIGH_DETAIL_CLOUDS
 		if (lod.y > 4)
 		{
 			float highDetailStrength = min(lod.y - 4, 0.7);
 			noise.r = mix(noise.r, noise.r * textureLod(baseNoiseSampler, pos * noiseFrequencyScale * 5, 0).g, highDetailStrength);
 		}
-		
+#endif		
 		float filteredNoise = mix(averageNoiseSamplerValue, cloudChaos*noise.r, clampedLod); // filter cloud noise based on lod.
 		
 		density = clamp(remap(density, filteredNoise, 1.0, 0.0, 1.0), 0.0, 1.0);		
@@ -121,8 +124,7 @@ const int lightSampleCount = 6;
 const vec3 albedo = vec3(1.0);
 
 const float powderStrength = 0.2; // TODO: get this looking right
-const float multiScatterDistanceMultiplier = 1.0;
-const float scatterDistanceMultiplier = initialStepSize * 6;
+const float scatterDistanceMultiplier = initialStepSize * 1;
 
 vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradiance, vec2 lod, float height, float cloudType)
 {
@@ -136,12 +138,12 @@ vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradian
 	{
 		float scatterDistance = SAMPLE_SEGMENT_LENGTHS[i] * scatterDistanceMultiplier;
 	
-		vec3 lightSamplePos = pos + (lightDir + RANDOM_VECTORS[i] * 0.4) * SAMPLE_DISTANCES[i] * scatterDistanceMultiplier;
+		vec3 lightSamplePos = pos + (lightDir + RANDOM_VECTORS[i] * 0.8) * SAMPLE_DISTANCES[i] * scatterDistanceMultiplier;
 		float sampleHeight = length(lightSamplePos) - innerRadius;
 		vec2 sampleUv = cloudUvFromPosRelPlanet(lightSamplePos);
 		float sampleOutCloudType;
 		float density = calcDensity(lightSamplePos, sampleUv, lod, sampleHeight, sampleOutCloudType);
-		Texponent -= density * scatterDistance * multiScatterDistanceMultiplier;
+		Texponent -= density * scatterDistance;
 		powerTexponent -= density * scatterDistance * 2;
 	}
 
@@ -285,9 +287,7 @@ float antiAliasSmoothStep(float value, float pixelCount)
 	return smoothstep(0, width, value);
 }
 
-// TODO: Rationalize this number. Why does the multiplier need to be so high? Looks best to set to about 7 during day and 1.5 at dusk
-const float multiScatteringBrightnessMultiplier = 7; // fudge factor to add in missing energy from not simulating multiscatter
-const float lowResBrightnessMultiplier = 3.0; // fudge factor to make low res clouds match brightness of high res clouds, needed because low res does not simulate any scattering
+const float lowResBrightnessMultiplier = 4.5; // fudge factor to make low res clouds match brightness of high res clouds, needed because low res does not simulate any scattering
 
 // Simulates colour change due to scattering
 vec3 desaturateAndBlueShift(vec3 c)
@@ -309,7 +309,6 @@ void main()
 	
 	float rayNear;
 	float rayFar;
-	float logZ = 1;
 
 	bool hitPlanet = (raySphereFirstIntersection(cameraPosition, rayDir, planetCenter, innerRadius) >= 0.0);
 
@@ -349,7 +348,6 @@ void main()
 		float t1;
 		raySphereIntersections(cameraPosition, rayDir, planetCenter, innerRadius + cloudLayerMaxHeight, t0, t1);
 		rayNear = t0;
-		logZ = calcLogZNdc(rayNear*0.5);
 		
 		if (hitPlanet)
 		{
@@ -385,19 +383,13 @@ void main()
 	vec3 rayDirPlanetAxes = mat3(planetMatrixInv) * rayDir;
 	vec3 lightDirPlanetAxes = mat3(planetMatrixInv) * lightDirection;
 	
-	vec3 positionRelPlanetFar = cameraPositionRelPlanet + rayFar * rayDir;
-	vec3 positionRelPlanetFarSafe = positionRelPlanetFar;
 	vec3 positionRelPlanetSafe = positionRelPlanet*1.0003;
 	
 	vec3 skyIrradiance;
-	vec3 sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanetFarSafe, lightDirection, skyIrradiance);
+	vec3 sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanetSafe, lightDirection, skyIrradiance);
 	
 	// Add sky radiance to sun radiance, to simulate multi scattering
 	vec3 directIrradiance = (sunIrradiance + skyIrradiance);
-	
-	// Add some sun radiance to the sky radiance, to simulate light reflected off earth's surface
-	const vec3 desaturatedSunIrradiance = mix(sunIrradiance, desaturateAndBlueShift(sunIrradiance), 0.8);
-	vec3 indirectIrradiance = (skyIrradiance + desaturatedSunIrradiance) / M_PI * multiScatteringBrightnessMultiplier;
 	
 	float stepSize = initialStepSize;
 	stepSize = min(stepSize + rayNear / 10000, maximumStepSize);
@@ -409,30 +401,40 @@ void main()
 	float meanCloudFrontDistance; // negative value means no samples
 	colorOut = march(positionRelPlanetPlanetAxes, rayDirPlanetAxes, stepSize, rayFar-rayNear, lod, lightDirPlanetAxes, directIrradiance, meanCloudFrontDistance);
 	
-	if (meanCloudFrontDistance >= 0.0)
-	{
-		logZ = calcLogZNdc(meanCloudFrontDistance);
-	}
+	bool hasSample = (meanCloudFrontDistance >= 0.0);
+	meanCloudFrontDistance += rayNear;
 	
-	vec4 lowResColor = evaluateGlobalLowResColor(positionRelPlanetPlanetAxes, directIrradiance + indirectIrradiance) * lowResBrightnessMultiplier;
+	float logZ;
+	if (lod.x < 0.99 && hasSample)
+	{
+		logZ = calcLogZNdc(dot(rayDir * meanCloudFrontDistance, cameraCenterDirection));
+	}
+	else
+	{
+		float precisionBias = 0.99; // needed to avoid z fighting at extreme distances
+		logZ = calcLogZNdc(precisionBias*dot(rayDir * rayFar, cameraCenterDirection));
+	}
+
+	float lowResColorMultiScatterMultiplier = 1.5;
+	vec4 lowResColor = evaluateGlobalLowResColor(positionRelPlanetPlanetAxes, directIrradiance) * lowResBrightnessMultiplier;
 	colorOut = mix(colorOut, vec4(lowResColor), lod.x);
 
-	if (meanCloudFrontDistance >= 0.0)
+	if (hasSample)
 	{
 		// Apply 'aerial perspective'
 		vec3 transmittance;
 		vec3 cloudFrontPositionRelPlanet = cameraPositionRelPlanet + meanCloudFrontDistance * rayDir;
 		vec3 skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, cloudFrontPositionRelPlanet, 0, lightDirection, transmittance);
 		
-		float weight = colorOut.a * colorOut.a * colorOut.a; // Blend between no aerial perspective for 0 density and full aerial for 1 density. This curve is a fudge, but looks about right.
+		float weight = min(1.0, colorOut.a * colorOut.a * colorOut.a); // Blend between no aerial perspective for 0 density and full aerial for 1 density. This curve is a fudge, but looks about right.
 		colorOut.rgb = mix(colorOut.rgb, colorOut.rgb * transmittance + skyRadianceToPoint, weight);
 	}
-	
+
 	colorOut *= alpha;
 
-	// Store the square root of color to minimize banding artifacts by giving  better precision at low color values.
+	// Store the square root of color to minimize banding artifacts by giving better precision at low color values.
 	// We must sqare the value read from the output texture before use.
-	colorOut.rgb = sqrt(colorOut.rgb);
+	colorOut.rgba = sqrt(colorOut.rgba);
 	
-	depthOut = logarithmicZ_fragmentShader(logZ);	
+	depthOut = logZ;	
 }

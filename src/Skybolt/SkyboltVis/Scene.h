@@ -56,6 +56,7 @@ private:
 	Light* mPrimaryLight;
 	Planet* mPrimaryPlanet;
 	osg::Uniform* mCameraPositionUniform;
+	osg::Uniform* mCameraCenterDirectionUniform;
 	osg::Uniform* mViewMatrixUniform;
 	osg::Uniform* mViewProjectionMatrixUniform;
 	osg::Uniform* mLightDirectionUniform;

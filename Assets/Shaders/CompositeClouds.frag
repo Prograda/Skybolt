@@ -19,5 +19,5 @@ void main()
 
 	// Square the color value stored in the texture to undo the sqrt that was applied when the texture was written to.
 	// This gets us back into linear color space.
-	color.rgb *= color.rgb;
+	color.rgba *= color.rgba;
 }
