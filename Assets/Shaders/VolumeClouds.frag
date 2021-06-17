@@ -38,7 +38,7 @@ const vec2 cloudBottomZeroDensity = vec2(2400, 2000);
 const vec2 cloudOcclusionStrength = vec2(0.4, 0.8);
 const vec2 cloudDensityMultiplier = vec2(0.005, 0.005);
 
-const vec3 noiseFrequencyScale = vec3(0.0001);
+const vec3 noiseFrequencyScale = vec3(0.0002);
 
 //! @param cloudTypes goes from 0 (small cloud) to 1 (big cloud)
 float calcHeightMultiplier(float height, float cloudType)
@@ -62,7 +62,7 @@ float calcDensityLowRes(vec2 uv, float height, out float cloudType, vec2 lod)
 	return calcCloudDensityLowRes(globalAlphaSampler, uv, heightMultiplier, coverageDetail);
 }
 
-const float cloudChaos = 0.7;
+const float cloudChaos = 0.9;
 const float averageNoiseSamplerValue = cloudChaos * 0.7;
 		
 //! @param lod is 0 for zero detail, 1 where frequencies of pos*noiseFrequencyScale should be visible
