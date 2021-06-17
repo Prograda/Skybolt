@@ -87,7 +87,7 @@ void ShaderSourceFileChangeMonitor::reloadShadersUsingFile(const std::string& fi
 {
 	for (const auto& [programName, program] : mPrograms.getPrograms())
 	{
-		std::vector<osg::Shader*> shaders(program->getNumShaders());
+		std::vector<osg::ref_ptr<osg::Shader>> shaders(program->getNumShaders());
 		for (unsigned int i = 0; i < program->getNumShaders(); ++i)
 		{
 			shaders[i] = program->getShader(i);
@@ -99,8 +99,7 @@ void ShaderSourceFileChangeMonitor::reloadShadersUsingFile(const std::string& fi
 			{
 				// Reload
 				program->removeShader(shader);
-				osg::Shader::Type shaderType = shader->getType();
-				program->addShader(vis::readShaderFile(shaderType, shader->getFileName()));
+				program->addShader(vis::readShaderFile(shader->getType(), shader->getFileName()));
 			}
 		}
 	}
