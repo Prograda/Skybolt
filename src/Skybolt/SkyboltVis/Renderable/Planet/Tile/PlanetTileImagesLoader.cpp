@@ -7,6 +7,8 @@
 #include "PlanetTileImagesLoader.h"
 #include "TileSource/TileSource.h"
 #include "SkyboltVis/Renderable/Planet/AttributeMapHelpers.h"
+#include "SkyboltVis/OsgImageHelpers.h"
+#include "SkyboltVis/OsgTextureHelpers.h"
 #include <algorithm>
 #include <osg/Texture>
 
@@ -145,16 +147,25 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 	timer.start();
 #endif
 
-	if (landUseLayer && key.level >= minAttributeLod)
+	if (key.level >= minAttributeLod)
 	{
-		images->attributeMapImage = getOrCreateImage(key, size_t(CacheIndex::LandUse), [this, cancelSupplier](const QuadTreeTileKey& key) {
-			osg::ref_ptr<osg::Image> image = landUseLayer->createImage(key, cancelSupplier);
-			if (image)
-			{
-				image = convertAttributeMap(*image, getNlcdAttributeColors());
-			}
-			return image;
-		});
+		if (landUseLayer)
+		{
+			images->attributeMapImage = getOrCreateImage(key, size_t(CacheIndex::LandUse), [this, cancelSupplier](const QuadTreeTileKey& key) {
+				osg::ref_ptr<osg::Image> image = landUseLayer->createImage(key, cancelSupplier);
+				if (image)
+				{
+					image = convertAttributeMap(*image, getNlcdAttributeColors());
+				}
+				return image;
+			});
+		}
+		else if (false) // Experimental. If enabled, attribute map will be generated from the albedo map, otherwise no attributes will be used.
+		{
+			images->attributeMapImage = getOrCreateImage(key, size_t(CacheIndex::LandUse), [this, cancelSupplier, albedo = images->albedoMapImage.image](const QuadTreeTileKey& key) {
+				return convertToAttributeMap(*albedo);
+			});
+		}
 
 #ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
 		printf("Attribute, %i, %i\n", key.level, timer.count());

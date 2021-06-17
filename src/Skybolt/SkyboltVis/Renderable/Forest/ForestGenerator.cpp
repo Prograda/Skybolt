@@ -38,7 +38,7 @@ std::vector<BillboardForest::Tree> ForestGenerator::generate(const ElevationProv
 	{
 		for (int x = xStart; x < xEnd; ++x)
 		{
-			int attribute = image.data[x + y * image.width];
+			int attribute = image.data[4 * (x + y * image.width) + 3];
 			Attributes::const_iterator it = image.attributes.find(attribute);
 			if (it != image.attributes.end())
 			{

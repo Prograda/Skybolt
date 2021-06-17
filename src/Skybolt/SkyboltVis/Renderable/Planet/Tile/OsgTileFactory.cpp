@@ -147,8 +147,9 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 			mCacheAlbedo.put(albedoImage.image, texture);
 		};
 
-		if (config.detailMaps && attributeImage.image)
+		if (attributeImage.image)
 		{
+			config.detailMaps = TerrainConfig::DetailMaps();
 			if (!mCacheAttribute.get(attributeImage.image, config.detailMaps->attributeMap))
 			{
 				osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(attributeImage.image);
@@ -158,14 +159,10 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 				texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
 
 				mCacheAttribute.put(attributeImage.image, texture);
+
 				config.detailMaps->attributeMap = texture;
+				config.detailMaps->albedoDetailMaps = mAlbedoDetailMaps;
 			}
-		}
-		else
-		{
-			//config.detailMaps.reset();
-			config.detailMaps = TerrainConfig::DetailMaps();
-			config.detailMaps->albedoDetailMaps = mAlbedoDetailMaps;
 		}
 		
 		config.heightMapUvScale = heightImageScale;

@@ -59,7 +59,7 @@ public:
 		const float treesPerSquareMeter = 0.01f;
 		const float radiusOfEarth = 6371000.0f;
 		attribute.density = treesPerSquareMeter * radiusOfEarth * radiusOfEarth; // trees per sterradian
-		image.attributes[9] = attribute;
+		image.attributes[2] = attribute;
 
 		ForestGenerator generator;
 		std::vector<BillboardForest::Tree> trees = generator.generate(*mElevationProvider, image, worldBounds, imageBounds);

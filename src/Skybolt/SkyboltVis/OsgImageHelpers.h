@@ -52,7 +52,7 @@ inline void setPixelColor(osg::Image& image, int x, int y, const osg::Vec4f& col
 }
 
 //! Returns the SRGB-space average colour of an SRGB-space image
-osg::Vec4f averageSrgbColor(const osg::Image& image);
+osg::Vec4f averageSrgbColor(const osg::Image& image, float alphaRejectionThreshold = 0.5);
 
 osg::ref_ptr<osg::Image> loadRawImage16bit(const std::string& filename, int width, int height);
 

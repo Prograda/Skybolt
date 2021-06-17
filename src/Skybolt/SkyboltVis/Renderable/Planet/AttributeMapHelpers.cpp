@@ -5,7 +5,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "AttributeMapHelpers.h"
+#include "SkyboltVis/OsgImageHelpers.h"
+#include "SkyboltVis/OsgTextureHelpers.h"
 #include <MapAttributesConverter/MapAttributesConverter.h>
+
+#include <algorithm>
 
 namespace skybolt {
 namespace vis {
@@ -43,6 +47,175 @@ const AttributeColors& getNlcdAttributeColors()
 	};
 
 	return c;
+}
+
+
+//! Writes a 3d texture of the RGB color space, i.e each axis has RGB values [0-255].
+//! This texture is used by the artist as a basis to paint the mapping form RGB value to material ID.
+static void writeRgbCubeTemplate(int width = 10)
+{
+	size_t size = width * width * width;
+
+	osg::ref_ptr<osg::Image> image = new osg::Image;
+	image->allocateImage(width, width, width, GL_RGBA, GL_UNSIGNED_BYTE);
+
+	unsigned char* p = image->data();
+	for (size_t i = 0; i < size; ++i)
+	{
+		int x = i % width;
+		int y = (i / width) % width;
+		int z = i / (width * width);
+
+		*p++ = float(x) / float(width) * 255;
+		*p++ = float(y) / float(width) * 255;
+		*p++ = float(z) / float(width) * 255;
+		*p++ = 255;
+	}
+
+	writeTexture3d(*image, "TerrainMaterialColorCube.png");
+}
+
+//! @return material ID for a pixel of color c.
+static int sampleMaterialColorMap(const osg::Vec4& c, const osg::Image& rgbToMaterialIdMappingCube)
+{
+	int x = std::clamp(int(c.x() * float(rgbToMaterialIdMappingCube.s())), 0, rgbToMaterialIdMappingCube.s() - 1);
+	int y = std::clamp(int(c.y() * float(rgbToMaterialIdMappingCube.t())), 0, rgbToMaterialIdMappingCube.t() - 1);
+	int z = std::clamp(int(c.z() * float(rgbToMaterialIdMappingCube.r())), 0, rgbToMaterialIdMappingCube.r() - 1);
+	int v = std::round(255.0 * rgbToMaterialIdMappingCube.getColor(x, y, z).r());
+
+	if (v == 0)
+	{
+		return 255;
+	}
+	else if (v == 255)
+	{
+		return 0;
+	}
+	else if (v == 48)
+	{
+		return 2;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+osg::ref_ptr<osg::Image> convertToAttributeMap(const osg::Image& srcImage)
+{
+	static osg::ref_ptr<osg::Image> materialColorMap = readTexture3d("TerrainMaterialColorCube.png");
+
+	osg::ref_ptr<osg::Image> dstImage(new osg::Image());
+	dstImage->allocateImage(srcImage.s(),
+		srcImage.t(),
+		1,   // 2D texture is 1 pixel deep
+		GL_RGBA,
+		GL_UNSIGNED_BYTE);
+
+	dstImage->setInternalTextureFormat(vis::toSrgbInternalFormat(GL_RGBA8));
+
+	// Fill alpha channel with material ID
+	unsigned char* p = (unsigned char*)dstImage->getDataPointer() + 3;
+	for (size_t y = 0; y < srcImage.t(); ++y)
+	{
+		for (size_t x = 0; x < srcImage.s(); ++x)
+		{
+#define DESPECKLE
+#ifdef DESPECKLE
+			std::map<int, int> idCounters;
+			int kernalRadius = 2;
+			for (int py = y - kernalRadius; py <= y + kernalRadius; ++py)
+			{
+				for (int px = x - kernalRadius; px <= x + kernalRadius; ++px)
+				{
+					if (px >= 0 && px < srcImage.s() &&
+						py >= 0 && py < srcImage.t())
+					{
+						osg::Vec4 c = srcImage.getColor(px, py);
+						int id = sampleMaterialColorMap(c, *materialColorMap);
+						idCounters[id]++;
+					}
+				}
+			}
+			int bestId = 255;
+			int bestIdCount = 0;
+			for (const auto&[id, count] : idCounters)
+			{
+				if (count > bestIdCount)
+				{
+					bestId = id;
+					bestIdCount = count;
+				}
+			}
+			*p = bestId;
+#else
+			osg::Vec4 c = srcImage.getColor(x, y);
+			int id = sampleMaterialColorMap(c, *materialColorMap);
+			*p = id;
+#endif
+			p += 4;
+		}
+	}
+
+	// Fill RGB channels with blurred copy of the albedo map
+	p = (unsigned char*)dstImage->getDataPointer();
+	for (int y = 0; y < srcImage.t(); ++y)
+	{
+		for (int x = 0; x < srcImage.s(); ++x)
+		{
+			int id = p[3];
+			osg::Vec4 averagedColor(0, 0, 0, 0);
+			int sampleCount = 0;
+
+			int kernalRadius = 3;
+			for (int py = y - kernalRadius; py <= y + kernalRadius; ++py)
+			{
+				for (int px = x - kernalRadius; px <= x + kernalRadius; ++px)
+				{
+					if (px >= 0 && px < srcImage.s() &&
+						py >= 0 && py < srcImage.t())
+					{
+						int sampleId = std::round(255 * dstImage->getColor(px, py).a());
+						bool canReplaceId = (id == 255 && sampleId != 255);
+						if ((sampleId != 255 && sampleId == id) || canReplaceId)
+						{
+							if (canReplaceId)
+							{
+								id = sampleId;
+								p[3] = id;
+							}
+
+							osg::Vec4f sourceColor = srcImage.getColor(px, py);
+							if (sampleId == 1)
+							{
+								averagedColor += osg::Vec4f(0.02, 0.1, 0.02, 0.0)*0.9;
+							}
+							else if (sampleId == 2)
+							{
+								averagedColor += osg::Vec4f(0.02, 0.1, 0.02, 0.0)*0.35;
+							}
+							else
+							{
+								averagedColor += srgbToLinear(sourceColor);
+							}
+							++sampleCount;
+						}
+					}
+				}
+			}
+
+			if (sampleCount > 0)
+				averagedColor = linearToSrgb(averagedColor / sampleCount);
+			else
+				averagedColor = osg::Vec4(1.0, 1.0, 0.5, 1.0);
+			*p++ = char(averagedColor.r() * 255);
+			*p++ = char(averagedColor.g() * 255);
+			*p = char(averagedColor.b() * 255);
+			p += 2;
+		}
+	}
+
+	return dstImage;
 }
 
 } // namespace vis

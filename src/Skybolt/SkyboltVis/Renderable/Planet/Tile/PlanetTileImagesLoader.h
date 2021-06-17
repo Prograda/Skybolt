@@ -25,9 +25,9 @@ struct PlanetTileImages : TileImages
 class PlanetTileImagesLoader : public TileImagesLoader
 {
 public:
-	TileSourcePtr elevationLayer;
+	TileSourcePtr elevationLayer; //!< never null
 	TileSourcePtr landUseLayer; //!< can be null
-	TileSourcePtr albedoLayer;
+	TileSourcePtr albedoLayer; //!< never null
 	int maxElevationLod;
 	int minAttributeLod; //!< Load attribute tiles for lod levels of at least this
 

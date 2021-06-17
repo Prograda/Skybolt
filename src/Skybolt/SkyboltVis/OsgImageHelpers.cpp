@@ -26,7 +26,7 @@ osg::Vec4f applyGamma(const osg::Vec4f& c, float gamma)
 	return r;
 }
 
-osg::Vec4f averageSrgbColor(const osg::Image& image)
+osg::Vec4f averageSrgbColor(const osg::Image& image, float alphaRejectionThreshold)
 {
 	static const float gamma = srgbGamma();
 	osg::Vec4f color;
@@ -36,7 +36,7 @@ osg::Vec4f averageSrgbColor(const osg::Image& image)
 		for (size_t s = 0; s < image.s(); ++s)
 		{
 			osg::Vec4f c = image.getColor(s, t);
-			if (c.a() > 0.5f)
+			if (c.a() >= alphaRejectionThreshold)
 			{
 				color += srgbToLinear(c);
 				++pixels;

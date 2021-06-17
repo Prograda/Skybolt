@@ -172,7 +172,7 @@ void QuadTreeTileLoader::traveseToLoadAndUnload(QuadTree<AsyncQuadTreeTile>& tre
 
 	if (state == AsyncQuadTreeTile::State::Loaded)
 	{
-		// If tile is loaded and not sufficiently detailed, subdive it
+		// If tile is loaded and not sufficiently detailed, subdivide it
 		if (!sufficient)
 		{
 			if (!tile.hasChildren())

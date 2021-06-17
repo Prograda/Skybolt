@@ -485,7 +485,8 @@ private:
 // TODO: need to test this more to see if it is worth using. Currently unused.
 static void convertSrgbToTexturizerMap(osg::Image& image)
 {
-	osg::Vec4f averageLinearSpace = srgbToLinear(averageSrgbColor(image));
+	float alphaRejectionThreshold = -1.0; // don't reject alpha
+	osg::Vec4f averageLinearSpace = srgbToLinear(averageSrgbColor(image, alphaRejectionThreshold));
 
 	osg::Vec4f color;
 	size_t pixels = 0;
@@ -493,9 +494,12 @@ static void convertSrgbToTexturizerMap(osg::Image& image)
 	{
 		for (size_t s = 0; s < image.s(); ++s)
 		{
-			osg::Vec4f c = srgbToLinear(image.getColor(s, t));
+			osg::Vec4f originalColor = image.getColor(s, t);
+			osg::Vec4f c = srgbToLinear(originalColor);
 			c = c - averageLinearSpace + osg::Vec4f(0.5, 0.5, 0.5, 0.5);
-			image.setColor(linearToSrgb(c), s, t);
+			c = linearToSrgb(c);
+			c.a() = originalColor.a(); // perserve alpha
+			image.setColor(c, s, t);
 		}
 	}
 }
@@ -567,14 +571,24 @@ Planet::Planet(const PlanetConfig& config) :
 		surfaceConfig.elevationMaxLodLevel = config.elevationMaxLodLevel;
 		surfaceConfig.albedoMaxLodLevel = config.albedoMaxLodLevel;
 
+		if (false)
 		{
-			osg::ref_ptr<osg::Image> image = osgDB::readImageFile("Environment/Ground/Ground026_1K_Color.jpg");
-			image->setInternalTextureFormat(vis::toSrgbInternalFormat(image->getInternalTextureFormat()));
-			convertSrgbToTexturizerMap(*image);
-			osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
-			texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
-			texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
-			surfaceConfig.albedoDetailMaps.push_back(texture);
+			std::vector<std::string> textureFileNames = {
+				"Environment/Ground/Ground026_1K_Color.png",
+				"Environment/Ground/Grass004_1K_Color.png",
+				"Environment/Ground/Grass004_1K_Color.png"
+			};
+
+			for (const auto& filename : textureFileNames)
+			{
+				osg::ref_ptr<osg::Image> image = osgDB::readImageFile(filename);
+				image->setInternalTextureFormat(vis::toSrgbInternalFormat(image->getInternalTextureFormat()));
+				convertSrgbToTexturizerMap(*image);
+				osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
+				texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
+				texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+				surfaceConfig.albedoDetailMaps.push_back(texture);
+			}
 		}
 
 		mPlanetSurface.reset(new PlanetSurface(surfaceConfig));

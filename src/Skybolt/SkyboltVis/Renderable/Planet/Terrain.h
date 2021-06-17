@@ -44,7 +44,6 @@ struct TerrainConfig
 	{
 		osg::ref_ptr<osg::Texture2D> attributeMap;
 		std::vector<osg::ref_ptr<osg::Texture2D>> albedoDetailMaps;
-		osg::ref_ptr<osg::Texture2D> noiseMap;
 	};
 
 	osg::ref_ptr<osg::Texture2D> heightMap;

@@ -179,10 +179,11 @@ static void setupTerrainStateSet(osg::StateSet& ss, const TerrainConfig& config)
 
 	if (config.detailMaps)
 	{
+		ss.setDefine("ENABLE_DETAIL_ALBEDO_TEXTURES");
 		const auto& detailMaps = *config.detailMaps;
 		{
-			//ss.setTextureAttributeAndModes(unit, detailMaps.attributeMap);
-			//ss.addUniform(createUniformSampler2d("attributeSampler", unit++));
+			ss.setTextureAttributeAndModes(unit, detailMaps.attributeMap);
+			ss.addUniform(createUniformSampler2d("attributeSampler", unit++));
 		}
 
 		osg::Uniform* uniform = new osg::Uniform(osg::Uniform::SAMPLER_2D, "albedoDetailSamplers", detailMaps.albedoDetailMaps.size());
