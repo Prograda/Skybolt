@@ -37,7 +37,20 @@ StatsDisplaySystem::StatsDisplaySystem(const vis::Window& window)
 
 StatsDisplaySystem::~StatsDisplaySystem()
 {
-	mCamera->removeChild(mStatsHud);
+	setVisible(false);
+}
+
+void StatsDisplaySystem::setVisible(bool visible)
+{
+	bool currentlyVisible = (mStatsHud->getNumParents() > 0);
+	if (visible && !currentlyVisible)
+	{
+		mCamera->addChild(mStatsHud);
+	}
+	else if (!visible && currentlyVisible)
+	{
+		mCamera->removeChild(mStatsHud);
+	}
 }
 
 void StatsDisplaySystem::updatePostDynamics(const System::StepArgs& args)
@@ -54,9 +67,12 @@ void StatsDisplaySystem::updatePostDynamics(const System::StepArgs& args)
 	auto attributes2 = mCameraStats->getAttributeMap(frameNumber);
 	attributes.insert(attributes2.begin(), attributes2.end());
 
+	const float lineHeight = 0.05f;
+	const float textSize = lineHeight * 0.8f;
+
 	for (const auto& value : attributes)
 	{
-		mStatsHud->drawText(glm::vec2(-0.9f, 0.9f - line * 0.05f), value.first + ": " + std::to_string(value.second), 0.0f, 0.2);
+		mStatsHud->drawText(glm::vec2(-0.9f, 0.9f - line * lineHeight), value.first + ": " + std::to_string(value.second), 0.0f, textSize);
 		++line;
 	}
 }

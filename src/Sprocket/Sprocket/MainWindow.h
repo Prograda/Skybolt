@@ -100,6 +100,7 @@ private:
 	QToolWindowManager* mToolWindowManager;
 	std::vector<QAction*> mToolActions;
 	std::unique_ptr<skybolt::vis::ShaderSourceFileChangeMonitor> mShaderSourceFileChangeMonitor;
+	std::shared_ptr<skybolt::StatsDisplaySystem> mStatsDisplaySystem;
 
 	class EntitiesTableModel* mEntitiesTableModel;
 	class PictureTableModel* mPictureTableModel;

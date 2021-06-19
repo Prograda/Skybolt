@@ -22,6 +22,8 @@ public:
 	StatsDisplaySystem(const vis::Window& window);
 	~StatsDisplaySystem();
 
+	void setVisible(bool visible);
+
 	void updatePostDynamics(const System::StepArgs& args) override;
 
 private:

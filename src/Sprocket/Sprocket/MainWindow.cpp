@@ -36,6 +36,7 @@
 #include <SkyboltEngine/Scenario.h>
 #include <SkyboltEngine/TemplateNameComponent.h>
 #include <SkyboltEngine/VisObjectsComponent.h>
+#include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltEngine/Input/LogicalAxis.h>
 #include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
 #include <SkyboltEngine/SimVisBinding/ForcesVisBinding.h>
@@ -331,6 +332,10 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	mRenderTarget = vis::createAndAddViewportToWindow(*mOsgWidget->getWindow(), mEngineRoot->programs.getRequiredProgram("compositeFinal"));
 	mRenderTarget->setScene(std::make_shared<vis::RenderTargetSceneAdapter>(mEngineRoot->scene));
 
+	mStatsDisplaySystem = std::make_shared<StatsDisplaySystem>(*mOsgWidget->getWindow());
+	mStatsDisplaySystem->setVisible(false);
+	mEngineRoot->systemRegistry->push_back(mStatsDisplaySystem);
+
 	mInputPlatform.reset(new InputPlatformOis(std::to_string(size_t(HWND(winId()))), 800, 600)); // TODO: use actual resolution
 	mViewportInput.reset(new ViewportInput(mInputPlatform));
 
@@ -348,11 +353,13 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	QObject::connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(saveAs()));
 	QObject::connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
 	QObject::connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(exit()));
+	QObject::connect(ui->actionShowViewportStats, &QAction::triggered, this, [this](bool visible) {mStatsDisplaySystem->setVisible(visible); });
 	QObject::connect(ui->actionCaptureImage, SIGNAL(triggered()), this, SLOT(captureImage()));
 	QObject::connect(ui->actionSettings, SIGNAL(triggered()), this, SLOT(editEngineSettings()));
 	QObject::connect(ui->actionLiveShaderEditing, SIGNAL(triggered(bool)), this, SLOT(setLiveShaderEditingEnabled(bool)));
 	
 	World* world = mEngineRoot->simWorld.get();
+
 	Scenario& scenario = mEngineRoot->scenario;
 
 	mVisNameLabels.reset(new VisNameLabels(world, mEngineRoot->scene->_getGroup(), mEngineRoot->programs));

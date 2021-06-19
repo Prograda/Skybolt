@@ -28,6 +28,7 @@ class PolylineVisBinding;
 struct Scenario;
 class SimVisBinding;
 class StateSequenceController;
+class StatsDisplaySystem;
 class TimeSource;
 class TriggerZone;
 class Updatable;
