@@ -7,67 +7,51 @@
 #pragma once
 
 #include "OsgTile.h"
-#include "TileImage.h"
+#include "TileTexture.h"
 #include "SkyboltVis/ShadowHelpers.h"
 #include "SkyboltVis/SkyboltVisFwd.h"
 #include "SkyboltVis/Renderable/Planet/Terrain.h"
-#include <SkyboltCommon/LruCacheMap.h>
 #include <SkyboltCommon/Math/QuadTree.h>
 
 #include <osg/Image>
 #include <map>
-
-namespace std {
-template <typename T>
-struct hash<osg::ref_ptr<T>>
-{
-	size_t operator()(const osg::ref_ptr<T>& p) const
-	{
-		return std::hash<T*>()(p.get());
-	}
-};
-}
 
 namespace skybolt {
 namespace vis {
 
 struct OsgTileFactoryConfig
 {
-	px_sched::Scheduler* scheduler;
 	const ShaderPrograms* programs;
 	ShadowMaps shadowMaps;
 	std::vector<osg::ref_ptr<osg::Texture2D>> albedoDetailMaps;
 
 	double planetRadius;
-	float forestGeoVisibilityRange;
 	bool hasCloudShadows;
 };
 
 class OsgTileFactory
 {
 public:
-	//! @param textureCompiler is used to compile OpenGL textures (upload textures to GPU) as the tile is created, rather than letting OSG compile them all at once when they are added to the scene graph. This avoids stalls.
 	OsgTileFactory(const OsgTileFactoryConfig& config);
+	~OsgTileFactory();
 
-	OsgTile createOsgTile(const skybolt::QuadTreeTileKey& key, const Box2d& latLonBounds, const TileImage& heightImage, osg::Image* landMaskImage,
-		const TileImage& albedoImage, const TileImage& attributeImage) const;
+	struct TileTextures
+	{
+		TileTexture height;
+		osg::ref_ptr<osg::Texture2D> normal; //!< Same key as height texture
+		osg::ref_ptr<osg::Texture2D> landMask; //!< Same key as height texture
+		TileTexture albedo;
+		std::optional<TileTexture> attribute;
+	};
+
+	OsgTile createOsgTile(const skybolt::QuadTreeTileKey& key, const Box2d& latLonBounds, const TileTextures& textures) const;
 
 private:
 	double mPlanetRadius;
-	px_sched::Scheduler* mScheduler;
 	const ShaderPrograms* mPrograms;
-	float mForestGeoVisibilityRange;
 	ShadowMaps mShadowMaps;
 	std::vector<osg::ref_ptr<osg::Texture2D>> mAlbedoDetailMaps;
 	bool mHasCloudShadows;
-
-	using TextureCache = LruCacheMap<osg::ref_ptr<osg::Image>, osg::ref_ptr<osg::Texture2D>>;
-	constexpr static size_t lruCacheSize = 256;
-	mutable TextureCache mCacheHeight = TextureCache(lruCacheSize);
-	mutable TextureCache mCacheNormal = TextureCache(lruCacheSize);
-	mutable TextureCache mCacheLandMask = TextureCache(lruCacheSize);
-	mutable TextureCache mCacheAlbedo = TextureCache(lruCacheSize);
-	mutable TextureCache mCacheAttribute = TextureCache(lruCacheSize);
 };
 
 } // namespace vis

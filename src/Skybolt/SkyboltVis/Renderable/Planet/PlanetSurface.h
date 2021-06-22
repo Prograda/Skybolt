@@ -11,7 +11,8 @@
 #include "SkyboltVis/OsgBox2.h"
 #include "SkyboltVis/VisObject.h"
 #include "SkyboltVis/ShadowHelpers.h"
-#include "SkyboltVis/Renderable/Planet/Tile/OsgTile.h"
+#include "SkyboltVis/Renderable/Forest/GpuForest.h"
+#include "SkyboltVis/Renderable/Planet/Tile/OsgTileFactory.h"
 #include "SkyboltVis/Renderable/Planet/Tile/QuadTreeTileLoader.h"
 #include "SkyboltVis/Shader/ShaderProgramRegistry.h"
 #include <SkyboltCommon/Listenable.h>
@@ -41,17 +42,17 @@ struct PlanetSurfaceConfig
 	const ShaderPrograms* programs;
 	osg::ref_ptr<osg::MatrixTransform> parentTransform; //!< Planet transform
 	PlanetTileSources planetTileSources;
-	float radius;
+	float radius; //!< Radius of planet surface
 	osg::ref_ptr<osg::Texture2D> cloudsTexture; //!< Set to null to disable clouds
 
-	osg::Group* forestGroup; //!< Group under scene root in which to add forests
-	float forestGeoVisibilityRange; //!< range beyond which the forestAlbedoMap will be used
+	std::shared_ptr<OsgTileFactory> osgTileFactory;
 
-	ShadowMaps shadowMaps;
-	std::vector<osg::ref_ptr<osg::Texture2D>> albedoDetailMaps;
+	GpuForestPtr gpuForest; //!< Can be null
 
 	int elevationMaxLodLevel = 1;
 	int albedoMaxLodLevel = 1;
+	int attributeMinLodLevel = 9;
+	int attributeMaxLodLevel = 9;
 	bool oceanEnabled = true;
 };
 
@@ -77,22 +78,23 @@ public:
 
 private:
 	void updateGeometry();
+	OsgTileFactory::TileTextures createTileTextures(const struct PlanetTileImages& images);
 
 private:
 	PlanetTileSources mPlanetTileSources;
 	float mRadius;
-	std::string mCacheDirectory;
 
 	std::unique_ptr<class QuadTreeTileLoader> mTileSource;
-	std::unique_ptr<OsgTileFactory> mOsgTileFactory;
+	std::shared_ptr<OsgTileFactory> mOsgTileFactory;
 	std::shared_ptr<struct PlanetSubdivisionPredicate> mPredicate;
+	GpuForestPtr mGpuForest;
 
 	osg::ref_ptr<osg::MatrixTransform> mParentTransform;
 	osg::ref_ptr<osg::Group> mGroup;
-	osg::Group* mForestGroup;
 
 	typedef std::map<skybolt::QuadTreeTileKey, OsgTile> TileNodeMap;
 	TileNodeMap mTileNodes;
+	std::unique_ptr<class TileTextureCache> mTextureCache;
 };
 
 } // namespace vis

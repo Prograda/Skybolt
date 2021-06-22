@@ -38,6 +38,7 @@
 #include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
 #include <SkyboltVis/Renderable/Atmosphere/Bruneton/BruentonAtmosphere.h>
 #include <SkyboltVis/Renderable/CameraRelativeBillboard.h>
+#include <SkyboltVis/Renderable/Forest/GpuForest.h>
 #include <SkyboltVis/Renderable/Polyline.h>
 #include <SkyboltVis/Renderable/Planet/Planet.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
@@ -352,6 +353,8 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 	if (it != layers.end())
 	{
 		config.planetTileSources.attribute = context.tileSourceFactory->createTileSourceFromJson(*it);
+		config.attributeMinLodLevel = it->at("minLevel");
+		config.attributeMaxLodLevel = it->at("maxLevel");
 	}
 
 	{
@@ -361,6 +364,20 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 			std::string directory = it.value().at("directory");
 			config.featureTreeFiles = getPathsInAssetPackages(context.assetPackagePaths, directory + "/tree.json");
 			config.featureTilesDirectoryRelAssetPackage = directory;
+		}
+	}
+
+	std::optional<vis::ForestParams> forestParams;
+	{
+		auto it = json.find("forest");
+		if (it != json.end())
+		{
+			vis::ForestParams params;
+			params.forestGeoVisibilityRange = 8192;
+			params.treesPerLinearMeter = it.value().at("treesPerLinearMeter");
+			params.minTileLodLevelToDisplayForest = it.value().at("minLevel");
+			params.maxTileLodLevelToDisplayForest = std::max(config.elevationMaxLodLevel, config.attributeMaxLodLevel);
+			config.forestParams = params;
 		}
 	}
 

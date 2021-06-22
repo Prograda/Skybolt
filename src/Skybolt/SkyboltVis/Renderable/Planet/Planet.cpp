@@ -21,6 +21,7 @@
 #include "SkyboltVis/Renderable/Planet/PlanetSky.h"
 #include "SkyboltVis/Renderable/Planet/Terrain.h"
 #include "SkyboltVis/Renderable/Planet/Features/PlanetFeatures.h"
+#include "SkyboltVis/Renderable/Planet/Tile/OsgTileFactory.h"
 #include "SkyboltVis/Renderable/Billboard.h"
 #include "SkyboltVis/Renderable/Water/ReflectionCameraController.h"
 #include "SkyboltVis/Renderable/Water/Ocean.h"
@@ -512,8 +513,6 @@ Planet::Planet(const PlanetConfig& config) :
 	mShadowSceneTransform(new osg::MatrixTransform),
 	mPlanetSurfaceListener(new MyPlanetSurfaceListener(this))
 {
-	const float forestGeoVisibilityRange = 8192;
-
 	if (config.atmosphereConfig)
 	{
 		mAtmosphereScaleHeight = config.atmosphereConfig->rayleighScaleHeight;
@@ -557,39 +556,42 @@ Planet::Planet(const PlanetConfig& config) :
 
 	// Create terrain
 	{
+		std::shared_ptr<OsgTileFactory> osgTileFactory;
+		{
+			OsgTileFactoryConfig factoryConfig;
+			factoryConfig.programs = config.programs;
+			factoryConfig.shadowMaps = {mShadowMapGenerator->getTexture()};
+			factoryConfig.planetRadius = mInnerRadius;
+			factoryConfig.hasCloudShadows = config.cloudsTexture != nullptr;
+			osgTileFactory = std::make_shared<OsgTileFactory>(factoryConfig);
+		}
+
+		GpuForestPtr forest;
+		if (config.forestParams)
+		{
+			vis::GpuForestConfig forestConfig;
+			forestConfig.forestParams = *config.forestParams;
+			forestConfig.parentGroup = config.scene->_getGroup();
+			forestConfig.parentTransform = mTransform;
+			forestConfig.planetRadius = mInnerRadius;
+			forestConfig.programs = config.programs;
+			forest = std::make_shared<vis::GpuForest>(forestConfig);
+		}
+
 		PlanetSurfaceConfig surfaceConfig;
 		surfaceConfig.scheduler = config.scheduler;
 		surfaceConfig.programs = config.programs;
 		surfaceConfig.radius = mInnerRadius;
-		surfaceConfig.forestGeoVisibilityRange = forestGeoVisibilityRange;
+		surfaceConfig.osgTileFactory = osgTileFactory;
 		surfaceConfig.parentTransform = mTransform;
-		surfaceConfig.forestGroup = mScene->_getGroup();
+		surfaceConfig.gpuForest = forest;
 		surfaceConfig.planetTileSources = config.planetTileSources;
-		surfaceConfig.shadowMaps = { mShadowMapGenerator->getTexture() };
 		surfaceConfig.oceanEnabled = config.waterEnabled;
 		surfaceConfig.cloudsTexture = config.cloudsTexture;
 		surfaceConfig.elevationMaxLodLevel = config.elevationMaxLodLevel;
 		surfaceConfig.albedoMaxLodLevel = config.albedoMaxLodLevel;
-
-		if (false)
-		{
-			std::vector<std::string> textureFileNames = {
-				"Environment/Ground/Ground026_1K_Color.png",
-				"Environment/Ground/Grass004_1K_Color.png",
-				"Environment/Ground/Grass004_1K_Color.png"
-			};
-
-			for (const auto& filename : textureFileNames)
-			{
-				osg::ref_ptr<osg::Image> image = osgDB::readImageFile(filename);
-				image->setInternalTextureFormat(vis::toSrgbInternalFormat(image->getInternalTextureFormat()));
-				convertSrgbToTexturizerMap(*image);
-				osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
-				texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
-				texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
-				surfaceConfig.albedoDetailMaps.push_back(texture);
-			}
-		}
+		surfaceConfig.attributeMinLodLevel = config.attributeMinLodLevel;
+		surfaceConfig.attributeMaxLodLevel = config.attributeMaxLodLevel;
 
 		mPlanetSurface.reset(new PlanetSurface(surfaceConfig));
 	}

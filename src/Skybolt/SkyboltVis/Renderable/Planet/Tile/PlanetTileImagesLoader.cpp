@@ -7,6 +7,7 @@
 #include "PlanetTileImagesLoader.h"
 #include "TileSource/TileSource.h"
 #include "SkyboltVis/Renderable/Planet/AttributeMapHelpers.h"
+#include "SkyboltVis/Renderable/Planet/Tile/NormalMaphelpers.h"
 #include "SkyboltVis/OsgImageHelpers.h"
 #include "SkyboltVis/OsgTextureHelpers.h"
 #include <algorithm>
@@ -108,16 +109,20 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 #endif
 
 		static osg::ref_ptr<osg::Image> defaultImage = createDefaultImage();
+		static osg::ref_ptr<osg::Image> defaultNormalMap = createNormalmapFromHeightmap(*defaultImage, osg::Vec2(1,1));
 		static osg::ref_ptr<osg::Image> defaultLandMask = convertHeightmapToLandMask(*defaultImage);
-
-		if (!images->heightMapImage.image)
-		{
-			images->heightMapImage.image = defaultImage;
-		}
 
 		osg::ref_ptr<osg::Image> heightImage = images->heightMapImage.image;
 		if (heightImage)
 		{
+			auto bounds = getKeyLonLatBounds<osg::Vec2>(key);
+			osg::Vec2 heightImageLonLatDelta = bounds.size();
+			osg::Vec2 texelWorldSize = osg::Vec2f(
+				heightImageLonLatDelta.y() * mPlanetRadius * std::cos(bounds.center().x()) / heightImage->s(),
+				heightImageLonLatDelta.x() * mPlanetRadius / heightImage->t()
+			);
+			images->normalMapImage = createNormalmapFromHeightmap(*heightImage, texelWorldSize);
+
 			images->landMaskImage = getOrCreateImage(images->heightMapImage.key, size_t(CacheIndex::LandMask), [heightImage](const QuadTreeTileKey& key) {
 				if (heightImage == defaultImage)
 				{
@@ -127,6 +132,11 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 				fillBathymetryInHeightmap(*heightImage); // TODO: Remove this hack of modifying the heightImage in the factory for the land mask.
 				return image;
 			}).image;
+		}
+		else
+		{
+			images->heightMapImage.image = defaultImage;
+			images->normalMapImage = defaultNormalMap;
 		}
 
 #ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
@@ -149,10 +159,10 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 
 	if (key.level >= minAttributeLod)
 	{
-		if (landUseLayer)
+		if (attributeLayer)
 		{
-			images->attributeMapImage = getOrCreateImage(key, size_t(CacheIndex::LandUse), [this, cancelSupplier](const QuadTreeTileKey& key) {
-				osg::ref_ptr<osg::Image> image = landUseLayer->createImage(key, cancelSupplier);
+			images->attributeMapImage = getOrCreateImage(key, size_t(CacheIndex::Attribute), [this, cancelSupplier](const QuadTreeTileKey& key) {
+				osg::ref_ptr<osg::Image> image = attributeLayer->createImage(key, cancelSupplier);
 				if (image)
 				{
 					image = convertAttributeMap(*image, getNlcdAttributeColors());
@@ -162,7 +172,7 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 		}
 		else if (false) // Experimental. If enabled, attribute map will be generated from the albedo map, otherwise no attributes will be used.
 		{
-			images->attributeMapImage = getOrCreateImage(key, size_t(CacheIndex::LandUse), [this, cancelSupplier, albedo = images->albedoMapImage.image](const QuadTreeTileKey& key) {
+			images->attributeMapImage = getOrCreateImage(key, size_t(CacheIndex::Attribute), [this, cancelSupplier, albedo = images->albedoMapImage.image](const QuadTreeTileKey& key) {
 				return convertToAttributeMap(*albedo);
 			});
 		}

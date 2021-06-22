@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "OsgTile.h"
 #include <SkyboltVis/OsgBox2.h>
 #include <SkyboltVis/SkyboltVisFwd.h>
 #include <SkyboltCommon/Math/QuadTree.h>
@@ -34,8 +33,6 @@ struct TileProgressCallback
 private:
 	std::atomic<bool> canceledRequested = false;
 };
-
-typedef std::shared_ptr<OsgTilePtr> OsgTilePtrPtr;
 
 class AsyncTileLoader
 {

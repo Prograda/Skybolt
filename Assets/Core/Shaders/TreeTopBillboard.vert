@@ -6,12 +6,17 @@
 
 #version 420 core
 #pragma import_defines ( ENABLE_CLOUDS )
+#pragma import_defines ( GPU_PLACEMENT )
 
 #include "AtmosphericScattering.h"
 #include "CloudShadows.h"
 #include "DepthPrecision.h"
 #include "GlobalDefines.h"
 #include "Noise/FastRandom.h"
+
+#ifdef GPU_PLACEMENT
+#include "TreeBillboards.h"
+#endif
 
 in vec4 osg_Vertex;
 
@@ -43,6 +48,24 @@ uniform sampler2D cloudSampler;
 void main()
 {
 	vec4 pos = osg_Vertex;
+	
+#ifdef GPU_PLACEMENT // place trees on GPU
+	int attributeId = getTerrainAttributeId(pos.xy);
+	if (attributeId != 9)
+	{
+		gl_Position = vec4(0,0,0,1);
+		return;
+	}
+
+	pos.xyz = getWorldBillboardPositionFromVertexPosition(pos.xy);
+	
+	if (pos.z > -3)
+	{
+		gl_Position = vec4(0,0,0,1);
+		return;
+	}
+#endif
+	
 	vec4 worldPos = modelMatrix * pos;
 	
 	vec3 posRelCamera = vec3(worldPos.xyz - cameraPosition);
@@ -50,7 +73,7 @@ void main()
 	float x = ((gl_VertexID + 1) % 4) > 1 ? 1.0f : 0.0f;
 	float y = (gl_VertexID % 4) / 2;
 
-	int id = gl_VertexID / 4;
+	int id = (gl_VertexID / 4) % textureSize(treeParamsSampler);;
 	vec4 data = texelFetch(treeParamsSampler, id);
 	float type = data.r;
 	float height = data.g;
@@ -89,6 +112,6 @@ void main()
 #ifdef ENABLE_CLOUDS
 	sunIrradiance *= sampleCloudShadowMaskAtPositionRelPlanet(cloudSampler, positionRelPlanet, lightDirection);
 #endif
-	
-	irradiance = sunIrradiance + skyIrradiance;
+	float occlusion = y;
+	irradiance = (sunIrradiance + skyIrradiance) * occlusion;
 }

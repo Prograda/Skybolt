@@ -44,6 +44,8 @@ uniform vec2 heightMapUvScale;
 uniform vec2 heightMapUvOffset;
 uniform vec2 overallAlbedoMapUvScale;
 uniform vec2 overallAlbedoMapUvOffset;
+uniform vec2 attributeMapUvScale;
+uniform vec2 attributeMapUvOffset;
 uniform vec3 lightDirection;
 uniform vec3 cameraPosition;
 uniform vec3 ambientLightColor;
@@ -226,16 +228,17 @@ vec4 sampleAttributeDetailTextures(vec3 normal, vec2 normalUv)
 {
 	vec3 detailTexCoordPerMeter = wrappedNoiseCoord * 10000.0; // repeats [0,1) per meter
 	vec3 defaultAlbedoDetailTexCoord = detailAlbedoUvScale[0] * detailTexCoordPerMeter;
+	vec2 attributeTexCoord = texCoord.xy * attributeMapUvScale + attributeMapUvOffset;
 	
 	// Sample and blend attribute albedos
 	vec4 attrWeights;
 //#define TERRAIN_DETAIL_NOISE_BLEND
 #ifdef TERRAIN_DETAIL_NOISE_BLEND
-	vec2 noise = texture(noiseSampler, texCoord.xy * 5).rg;
-	ivec4 attrIndices = bilinearFetchIndicesWithNoise(attributeSampler, texCoord.xy, attrWeights, noise);
-	//ivec4 attrIndices = fetchIndicesWithNoise(attributeSampler, texCoord.xy, attrWeights, noise);
+	vec2 noise = texture(noiseSampler, attributeTexCoord * 5).rg;
+	ivec4 attrIndices = bilinearFetchIndicesWithNoise(attributeSampler, attributeTexCoord, attrWeights, noise);
+	//ivec4 attrIndices = fetchIndicesWithNoise(attributeSampler, attributeTexCoord, attrWeights, noise);
 #else
-	ivec4 attrIndices = bilinearFetchIndices(attributeSampler, texCoord.xy, attrWeights);
+	ivec4 attrIndices = bilinearFetchIndices(attributeSampler, attributeTexCoord, attrWeights);
 #endif
 
 #define DETAIL_HEIGHTMAP_BLEND
@@ -299,7 +302,7 @@ void main()
 
 #ifdef ENABLE_DETAIL_ALBEDO_TEXTURES
 	float albedoBlend = clamp(length(position_worldSpace) / 4000, 0.0, 1.0);
-	vec3 filteredAlbedo = texture(attributeSampler, texCoord.xy * overallAlbedoMapUvScale + overallAlbedoMapUvOffset).rgb;
+	vec3 filteredAlbedo = texture(attributeSampler, texCoord.xy * attributeMapUvScale + attributeMapUvOffset).rgb;
 	albedo = mix(filteredAlbedo+1.0*(attributeColor.ggg-0.5), albedo, albedoBlend);
 #endif
 	vec3 viewDirection = normalize(cameraPosition - position_worldSpace);

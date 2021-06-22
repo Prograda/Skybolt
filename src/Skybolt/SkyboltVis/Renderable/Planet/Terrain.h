@@ -6,17 +6,15 @@
 
 #pragma once
 
-#include "DefaultRootNode.h"
-#include "OsgBox2.h"
-#include "ShadowHelpers.h"
+#include "SkyboltVis/DefaultRootNode.h"
+#include "SkyboltVis/OsgBox2.h"
+#include "SkyboltVis/ShadowHelpers.h"
 #include <osg/Texture2D>
 
 #include <boost/optional.hpp>
 
 namespace skybolt {
 namespace vis {
-
-osg::ref_ptr<osg::Image> createNormalmapFromHeightmap(const osg::Image& heightmap, const osg::Vec2f& texelWorldSize);
 
 struct TerrainConfig
 {
@@ -59,6 +57,8 @@ struct TerrainConfig
 	osg::Vec2f heightMapUvOffset = osg::Vec2f(0, 0);
 	osg::Vec2f overallAlbedoMapUvScale = osg::Vec2f(1, 1);
 	osg::Vec2f overallAlbedoMapUvOffset = osg::Vec2f(0, 0);
+	osg::Vec2f attributeMapUvScale = osg::Vec2f(1, 1);
+	osg::Vec2f attributeMapUvOffset = osg::Vec2f(0, 0);
 };
 
 class Terrain : public DefaultRootNode

@@ -4,23 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#include <SkyboltCommon/Math/QuadTree.h>
 
-#include "SkyboltVis/OsgBox2.h"
-#include "SkyboltVis/SkyboltVisFwd.h"
+#include <osg/Vec2>
 
-#include <osg/MatrixTransform>
-#include <osg/ref_ptr>
+using namespace skybolt;
 
 namespace skybolt {
 namespace vis {
 
-struct OsgTile
-{
-	osg::ref_ptr<osg::MatrixTransform> transform;
-	TerrainPtr highResTerrain; //!< optional
-	osg::Uniform* modelMatrixUniform;
-};
+void getTileTransformInParentSpace(const QuadTreeTileKey& key, int parentLod, osg::Vec2f& scale, osg::Vec2f& offset);
 
 } // namespace vis
 } // namespace skybolt

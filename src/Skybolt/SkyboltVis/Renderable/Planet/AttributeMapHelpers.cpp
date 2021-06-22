@@ -120,7 +120,7 @@ osg::ref_ptr<osg::Image> convertToAttributeMap(const osg::Image& srcImage)
 	{
 		for (size_t x = 0; x < srcImage.s(); ++x)
 		{
-#define DESPECKLE
+//#define DESPECKLE
 #ifdef DESPECKLE
 			std::map<int, int> idCounters;
 			int kernalRadius = 2;

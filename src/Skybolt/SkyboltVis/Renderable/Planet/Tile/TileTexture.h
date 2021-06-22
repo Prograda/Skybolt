@@ -6,20 +6,17 @@
 
 #pragma once
 
-#include "SkyboltVis/OsgBox2.h"
-#include "SkyboltVis/SkyboltVisFwd.h"
+#include <SkyboltCommon/Math/QuadTree.h>
 
-#include <osg/MatrixTransform>
-#include <osg/ref_ptr>
+#include <osg/Texture2D>
 
 namespace skybolt {
 namespace vis {
 
-struct OsgTile
+struct TileTexture
 {
-	osg::ref_ptr<osg::MatrixTransform> transform;
-	TerrainPtr highResTerrain; //!< optional
-	osg::Uniform* modelMatrixUniform;
+	osg::ref_ptr<osg::Texture2D> texture;
+	skybolt::QuadTreeTileKey key;
 };
 
 } // namespace vis

@@ -31,14 +31,17 @@ osg::Geometry* createGeometry(const std::vector<BillboardForest::Tree>& trees)
 
 	// TODO: optimize using instancing
 	osg::Vec3Array* vertPositions = new osg::Vec3Array;
+	vertPositions->resize(trees.size() * 4);
 
+	int vertexIndex = 0;
 	for (int i = 0; i < trees.size(); ++i)
 	{
 		const BillboardForest::Tree& tree = trees[i];
 
 		for (int j = 0; j < 4; ++j)
 		{
-			vertPositions->push_back(tree.position);
+			(*vertPositions)[vertexIndex] = tree.position;
+			++vertexIndex;
 		}
 	}
 
@@ -58,7 +61,7 @@ struct Uniforms
 	osg::Uniform* maxVisibilityRange;
 };
 
-osg::StateSet* createStateSet(osg::ref_ptr<osg::Program> program, const Uniforms& uniforms, const std::vector<BillboardForest::Tree>& trees)
+osg::StateSet* createStateSet(osg::ref_ptr<osg::Program> program, const Uniforms& uniforms, const std::vector<BillboardForest::Tree>& trees, int subTileCount)
 {
 	osg::StateSet* ss = new osg::StateSet;
 
@@ -74,12 +77,14 @@ osg::StateSet* createStateSet(osg::ref_ptr<osg::Program> program, const Uniforms
 	ss->setTextureAttributeAndModes(0, albedoTexture, osg::StateAttribute::ON);
 
 	// Create texture to store tree parameters
+	int treeCount = (int)trees.size() / subTileCount;
 	osg::ref_ptr<osg::Image> treeParamsImage = new osg::Image;
-	treeParamsImage->allocateImage(trees.size(), 1, 1, GL_RGBA, GL_FLOAT); // TODO: save memory be using GL_RGB. The alpha channel is unused.
+	treeParamsImage->allocateImage(treeCount, 1, 1, GL_RGBA, GL_FLOAT); // TODO: save memory be using GL_RGB. The alpha channel is unused.
 
 	osg::Vec4f* ptr = (osg::Vec4f*)treeParamsImage->data();
-	for (const BillboardForest::Tree& tree : trees)
+	for (int i = 0; i < treeCount; ++i)
 	{
+		const BillboardForest::Tree& tree = trees[i];
 		*ptr = osg::Vec4f(tree.type, tree.height, tree.yaw, 0.f);
 		++ptr;
 	}
@@ -103,12 +108,12 @@ osg::Geode* createGeode(osg::Geometry* geometry)
 	return geode;
 }
 
-BillboardForest::BillboardForest(const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange)
+BillboardForest::BillboardForest(const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange, int subTileCount)
 {
-	addGeodes(*mTransform, trees, sideProgram, topProgram, maxVisibilityRange);
+	addGeodes(*mTransform, trees, sideProgram, topProgram, maxVisibilityRange, subTileCount);
 }
 
-void BillboardForest::addGeodes(osg::Group& node, const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange)
+void BillboardForest::addGeodes(osg::Group& node, const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange, int subTileCount)
 {
 	Uniforms uniforms;
 	uniforms.maxVisibilityRange = new osg::Uniform("maxVisibilityRange", maxVisibilityRange);
@@ -116,9 +121,10 @@ void BillboardForest::addGeodes(osg::Group& node, const std::vector<Tree>& trees
 	osg::Geometry* geometry = createGeometry(trees);
 
 	osg::Geode* sideGeode = createGeode(geometry);
-	sideGeode->setStateSet(createStateSet(sideProgram, uniforms, trees));
+	sideGeode->setStateSet(createStateSet(sideProgram, uniforms, trees, subTileCount));
 	node.addChild(sideGeode);
 
+#ifdef TREE_TOP_VIEW_BILLBOARDS
 	osg::Geode* topGeode = createGeode(geometry);
 	osg::StateSet* ss = new osg::StateSet(*sideGeode->getStateSet(), osg::CopyOp::SHALLOW_COPY);
 	ss->setAttributeAndModes(topProgram, osg::StateAttribute::ON);
@@ -129,6 +135,7 @@ void BillboardForest::addGeodes(osg::Group& node, const std::vector<Tree>& trees
 
 	topGeode->setStateSet(ss);
 	node.addChild(topGeode);
+#endif
 }
 
 } // namespace vis

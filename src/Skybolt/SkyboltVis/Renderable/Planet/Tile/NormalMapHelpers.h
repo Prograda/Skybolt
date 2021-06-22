@@ -6,21 +6,12 @@
 
 #pragma once
 
-#include "SkyboltVis/OsgBox2.h"
-#include "SkyboltVis/SkyboltVisFwd.h"
-
-#include <osg/MatrixTransform>
-#include <osg/ref_ptr>
+#include <osg/Image>
 
 namespace skybolt {
 namespace vis {
 
-struct OsgTile
-{
-	osg::ref_ptr<osg::MatrixTransform> transform;
-	TerrainPtr highResTerrain; //!< optional
-	osg::Uniform* modelMatrixUniform;
-};
+osg::ref_ptr<osg::Image> createNormalmapFromHeightmap(const osg::Image& heightmap, const osg::Vec2f& texelWorldSize);
 
 } // namespace vis
 } // namespace skybolt
