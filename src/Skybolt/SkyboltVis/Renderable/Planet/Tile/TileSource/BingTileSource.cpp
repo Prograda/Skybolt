@@ -51,7 +51,7 @@ static std::string tileXYToQuadKey(int tileX, int tileY, int levelOfDetail)
 
 BingTileSource::BingTileSource(const BingTileSourceConfig& config)
 {
-	httplib::Client cli(config.url);
+	httplib::Client cli(config.url.c_str());
 
 	std::string request = "/REST/V1/Imagery/Metadata/Aerial?output=json&include=ImageryProviders&key=" + config.apiKey;
 	auto res = cli.Get(request.c_str());

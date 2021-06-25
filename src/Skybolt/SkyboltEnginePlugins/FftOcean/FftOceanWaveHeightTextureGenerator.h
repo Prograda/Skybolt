@@ -27,7 +27,7 @@ public:
 		config.seed = 0;
 		config.textureSizePixels = 512;
 		config.textureWorldSize = textureWorldSize;
-		config.windVelocity = glm::vec2(mWindSpeed, 0);
+		config.windVelocity = glm::vec2(mWindSpeed.load(), 0);
 		config.normalizedFrequencyRange = normalizedFrequencyRange;
 
 		mGeneratorResult = std::vector<glm::vec3>(config.textureSizePixels * config.textureSizePixels, glm::vec3(0,0,0));

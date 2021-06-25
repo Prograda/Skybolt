@@ -74,7 +74,7 @@
 
 #include <px_sched/px_sched.h>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/log/trivial.hpp>
 
 #include <qabstracttoolwindowmanagerarea.h>
@@ -284,7 +284,7 @@ static nlohmann::json readOrCreateEngineSettingsFile(QWidget* parent, QSettings&
 			{
 				// Create file
 				settings.setValue(settingsFilenameKey, settingsFilename);
-				boost::filesystem::create_directories(file::Path(settingsFilename.toStdString()).parent_path());
+				std::filesystem::create_directories(file::Path(settingsFilename.toStdString()).parent_path());
 				writeJsonFile(result, settingsFilename.toStdString());
 				return result;
 			}
@@ -1128,7 +1128,7 @@ void MainWindow::captureImage()
 	QString defaultSequenceName = "untitled";
 	if (!mProjectFilename.isEmpty())
 	{
-		defaultSequenceName = QString::fromStdString(boost::filesystem::path(mProjectFilename.toStdString()).stem().string());
+		defaultSequenceName = QString::fromStdString(std::filesystem::path(mProjectFilename.toStdString()).stem().string());
 	}
 
 	showCaptureImageSequenceDialog([=](double time, const QString& filename) {
@@ -1240,7 +1240,7 @@ void MainWindow::setProjectFilename(const QString& filename)
 	if (!mProjectFilename.isEmpty())
 	{
 		;
-		mSprocketModel->removeFileSearchPath(boost::filesystem::path(mProjectFilename.toStdString()).parent_path().string());
+		mSprocketModel->removeFileSearchPath(std::filesystem::path(mProjectFilename.toStdString()).parent_path().string());
 	}
 
 	mProjectFilename = filename;
@@ -1251,7 +1251,7 @@ void MainWindow::setProjectFilename(const QString& filename)
 	}
 	setWindowTitle(title);
 
-	mSprocketModel->addFileSearchPath(boost::filesystem::path(mProjectFilename.toStdString()).parent_path().string());
+	mSprocketModel->addFileSearchPath(std::filesystem::path(mProjectFilename.toStdString()).parent_path().string());
 }
 
 void MainWindow::onEvent(const Event& event)

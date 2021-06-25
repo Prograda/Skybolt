@@ -7,8 +7,8 @@
 #include "OsgShaderHelpers.h"
 #include <SkyboltCommon/Exception.h>
 
-#include <boost/filesystem.hpp>
-#include <boost/regex.hpp>
+#include <filesystem>
+#include <regex>
 
 #include <osgDB/FileUtils>
 
@@ -48,18 +48,18 @@ static std::string preprocessIncludes(const std::string& source, const std::stri
 		throw std::runtime_error("header inclusion depth limit reached, might be caused by cyclic header inclusion");
 	using namespace std;
  
-	static const boost::regex re("^[ ]*#[ ]*include[ ]+[\"<](.*)[\">].*");
+	static const std::regex re("^[ ]*#[ ]*include[ ]+[\"<](.*)[\">].*");
 	stringstream input;
 	stringstream output;
 	input << source;
  
 	size_t line_number = 1;
-	boost::smatch matches;
+	std::smatch matches;
  
 	string line;
 	while(std::getline(input,line))
 	{
-		if (boost::regex_search(line, matches, re))
+		if (std::regex_search(line, matches, re))
 		{
 			std::string includeFile = matches[1];
 			std::string includeSource = loadFileToString(includeDirPath + "/" + includeFile);
@@ -77,7 +77,7 @@ static std::string preprocessIncludes(const std::string& source, const std::stri
 osg::Shader* readShaderFile(osg::Shader::Type type, const std::string& filename)
 {
 	std::string source = loadFileToString(filename);
-	std::string includeDirPath = boost::filesystem::path(filename).parent_path().string();
+	std::string includeDirPath = std::filesystem::path(filename).parent_path().string();
 
 	source = preprocessIncludes(source, includeDirPath);
 

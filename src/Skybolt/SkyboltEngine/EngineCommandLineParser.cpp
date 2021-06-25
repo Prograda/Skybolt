@@ -50,7 +50,7 @@ boost::optional<nlohmann::json> EngineCommandLineParser::readSettings(const boos
 		BOOST_LOG_TRIVIAL(info) << "No --settingsFile program argument specified. Using default settings file location: '" << settingsFilename << "'";
 	}
 
-	if (boost::filesystem::exists(settingsFilename))
+	if (std::filesystem::exists(settingsFilename))
 	{
 		BOOST_LOG_TRIVIAL(info) << "Reading settings file '" << settingsFilename << "'";
 		return readJsonFile(settingsFilename.string());

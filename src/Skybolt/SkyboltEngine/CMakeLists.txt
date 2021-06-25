@@ -4,7 +4,7 @@ add_source_group_tree(. SOURCE_FILES)
 
 include_directories("../")
 
-find_package(Boost COMPONENTS log date_time filesystem program_options regex system REQUIRED)
+find_package(Boost COMPONENTS log program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

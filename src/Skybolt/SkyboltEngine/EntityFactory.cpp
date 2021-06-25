@@ -52,7 +52,7 @@
 #include <SkyboltCommon/Json/ReadJsonFile.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include <osg/BlendFunc>
 #include <osg/Depth>
@@ -147,7 +147,7 @@ static osg::Quat readOptionalQuat(const nlohmann::json& j, const std::string& na
 
 static std::string getParentDirectory(const std::string& filename)
 {
-	boost::filesystem::path p(filename);
+	std::filesystem::path p(filename);
 	return p.parent_path().string();
 }
 
@@ -463,7 +463,7 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 	return entity;
 }
 
-EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::vector<boost::filesystem::path>& entityFilenames) :
+EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::vector<std::filesystem::path>& entityFilenames) :
 	mContext(context)
 {
 	assert(context.julianDateProvider);
@@ -480,7 +480,7 @@ EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::v
 		{"Polyline", [this] {return createPolyline(); }}
 	};
 
-	for (const boost::filesystem::path& filename : entityFilenames)
+	for (const std::filesystem::path& filename : entityFilenames)
 	{
 		std::string name = filename.stem().string();
 		mTemplateJsonMap[name] = readJsonFile(filename.string());

@@ -8,8 +8,6 @@
 #include "PitchLadderModel.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 
-#include <boost/lexical_cast.hpp>
-
 using namespace skybolt;
 
 PitchLadderModel::PitchLadderModel(HudDrawer* drawer, const Parameters& param) :
@@ -43,7 +41,7 @@ void PitchLadderModel::drawHalfRung(float relY, float rungPitch, float roll, flo
 	float angleTextValue = skybolt::math::radToDegF() * rungPitch;
 	if (angleTextValue > 90)
 		angleTextValue = 180 - angleTextValue;
-	mDrawer->drawText(math::vec2Rotate(textPos, roll), boost::lexical_cast<std::string>(round(angleTextValue)), roll, -1.0, HudDrawer::Alignment::Center);
+	mDrawer->drawText(math::vec2Rotate(textPos, roll), std::to_string(round(angleTextValue)), roll, -1.0, HudDrawer::Alignment::Center);
 }
 
 void PitchLadderModel::drawRung(float rungPitch, float pitch, float roll, float width, const HudDrawer::DashedLineParams* params)

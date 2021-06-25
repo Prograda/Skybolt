@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include <osg/Vec3d>
 
 inline void check(const osg::Vec2d& a, const osg::Vec2d& b, double eps)

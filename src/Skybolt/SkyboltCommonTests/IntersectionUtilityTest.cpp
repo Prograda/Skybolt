@@ -8,7 +8,7 @@
 #define CATCH_CONFIG_MAIN
 #include <SkyboltCommon/NumericComparison.h>
 #include <SkyboltCommon/Math/IntersectionUtility.h>
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 
 using namespace skybolt;
 

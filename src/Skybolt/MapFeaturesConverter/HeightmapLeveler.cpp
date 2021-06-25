@@ -9,7 +9,7 @@
 #include <SkyboltVis/GeoImageHelpers.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <osgDB/ReadFile>
 #include <osgDB/WriteFile>
 
@@ -99,7 +99,7 @@ KeyBounds findTilesIntersectingBounds(const std::string& heightmapSourceDirector
 {
 	KeyBounds keyBounds;
 
-	namespace fs = boost::filesystem;
+	namespace fs = std::filesystem;
 
 	std::vector<const FeatureTile*> tiles;
 	auto subdivisionRequiredPredicate = [&](const FeatureTile& tile) {
@@ -196,7 +196,7 @@ void levelHeightmapsUnderFeatures(const std::string& heightmapSourceDirectory, c
 
 		levelHeightmapUnderFeatures(v.first, v.second, *image, featureInfoMap);
 
-		boost::filesystem::create_directories(heightmapDestinationDirectory + "/" + getDir(v.first));
+		std::filesystem::create_directories(heightmapDestinationDirectory + "/" + getDir(v.first));
 		osgDB::writeImageFile(*image, heightmapDestinationDirectory + "/" + filename);
 	}
 }

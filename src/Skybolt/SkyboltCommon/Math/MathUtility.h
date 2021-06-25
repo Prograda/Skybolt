@@ -37,13 +37,13 @@ T vec2SwapComponents(const T& v)
 glm::vec2 vec2Rotate(const glm::vec2 &v, float theta);
 
 template <typename T>
-constexpr size_t componentCount(const typename glm::detail::tvec2<T>& v) {return 2; }
+constexpr size_t componentCount(const typename glm::tvec2<T>& v) {return 2; }
 
 template <typename T>
-constexpr size_t componentCount(const typename glm::detail::tvec3<T>& v) { return 3; }
+constexpr size_t componentCount(const typename glm::tvec3<T>& v) { return 3; }
 
 template <typename T>
-constexpr size_t componentCount(const typename glm::detail::tvec4<T>& v) { return 4; }
+constexpr size_t componentCount(const typename glm::tvec4<T>& v) { return 4; }
 
 template <typename T, typename V>
 T componentWiseMultiply(const V& s, const T& v)

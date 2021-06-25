@@ -7,7 +7,7 @@
 #include "PluginHelpers.h"
 #include <set>
  
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 namespace skybolt {
 

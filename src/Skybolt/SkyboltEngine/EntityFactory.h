@@ -42,7 +42,7 @@ public:
 		std::vector<std::string> assetPackageNames;
 	};
 
-	EntityFactory(const Context& context, const std::vector<boost::filesystem::path>& entityFilenames);
+	EntityFactory(const Context& context, const std::vector<std::filesystem::path>& entityFilenames);
 
 	sim::EntityPtr createEntity(const std::string& templateName, const std::string& instanceName = "", const sim::Vector3& position = math::dvec3Zero(), const sim::Quaternion& orientation = math::dquatIdentity()) const;
 

@@ -8,7 +8,7 @@
 
 #include <SkyboltCommon/NumericComparison.h>
 
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include <osg/Vec3d>
 #include <osg/Vec4d>
 

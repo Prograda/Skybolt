@@ -6,14 +6,16 @@
 
 #include "ReadJsonFile.h"
 #include "SkyboltCommon/Exception.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
+#include <fstream>
+#include <istream>
 
 namespace skybolt {
 
 nlohmann::json readJsonFile(const std::string& filename)
 {
-	boost::filesystem::path p(filename);
-	if (!boost::filesystem::exists(p))
+	std::filesystem::path p(filename);
+	if (!std::filesystem::exists(p))
 	{
 		throw Exception("File does not exist: '" + filename + "'");
 	}

@@ -6,7 +6,7 @@
 
 #define CATCH_CONFIG_MAIN
 #include "TestHelpers.h"
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include <SkyboltEngine/SimVisBinding/GeocentricToNedConverter.h>
 #include <SkyboltCommon/NumericComparison.h>
 #include <osg/Vec3d>

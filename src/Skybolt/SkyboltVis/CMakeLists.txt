@@ -4,11 +4,11 @@ add_source_group_tree(. SOURCE_FILES)
 
 include_directories("../")
 
-find_package(Boost COMPONENTS log date_time filesystem regex system REQUIRED)
+find_package(Boost COMPONENTS log REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(OSG REQUIRED COMPONENTS osg osgDB osgGA osgText osgUtil osgViewer)
-include_directories(${OSG_INCLUDE_DIR})
+include_directories(${OSG_INCLUDE_DIR} REQUIRED VERSION 3.6.5)
 
 find_package(OpenThreads)
 

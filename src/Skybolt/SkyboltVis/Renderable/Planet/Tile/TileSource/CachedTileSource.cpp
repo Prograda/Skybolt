@@ -9,7 +9,7 @@
 
 #include <osgDB/WriteFile>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace skybolt {
 namespace vis {
@@ -26,7 +26,7 @@ osg::ref_ptr<osg::Image> CachedTileSource::createImage(const skybolt::QuadTreeTi
 	std::string imageDirectory = mCacheDirectory + "/" + std::to_string(key.level) + "/" + std::to_string(key.x) + "/";
 	std::string filename = imageDirectory + std::to_string(key.y) + ".png";
 
-	if (boost::filesystem::exists(filename))
+	if (std::filesystem::exists(filename))
 	{
 		osg::ref_ptr<osg::Image> image = readImageWithoutWarnings(filename);
 		return image;
@@ -36,7 +36,7 @@ osg::ref_ptr<osg::Image> CachedTileSource::createImage(const skybolt::QuadTreeTi
 		osg::ref_ptr<osg::Image> image = mTileSource->createImage(key, cancelSupplier);
 		if (image)
 		{
-			boost::filesystem::create_directories(imageDirectory);
+			std::filesystem::create_directories(imageDirectory);
 			osgDB::writeImageFile(*image, filename);
 		}
 		return image;

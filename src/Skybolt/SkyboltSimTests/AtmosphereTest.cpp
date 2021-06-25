@@ -7,7 +7,7 @@
 
 #include <SkyboltSim/Physics/Atmosphere.h>
 #include <SkyboltCommon/NumericComparison.h>
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 
 #include <assert.h>
 

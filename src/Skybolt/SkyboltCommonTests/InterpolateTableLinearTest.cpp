@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <SkyboltCommon/Math/InterpolateTableLinear.h>
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 
 using namespace skybolt;
 using namespace math;

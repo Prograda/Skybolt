@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <earcut/earcut.hpp>
+#include <mapbox/earcut.hpp>
 #include <osg/Vec2>
 
 namespace mapbox {

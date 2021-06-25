@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #define CATCH_CONFIG_MAIN
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include <CigiComponent/CigiClient.h>
 #include <CigiComponent/UdpCommunicator.h>
 

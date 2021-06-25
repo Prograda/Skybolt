@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltVis/Renderable/Forest/BillboardTextureGenerator.h>
 #include <SkyboltVis/Renderable/Model/ModelPreparer.h>

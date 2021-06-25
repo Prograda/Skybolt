@@ -6,12 +6,12 @@
 
 
 #include "FileUtility.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace skybolt {
 namespace file {
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 static bool isDir(const Path &file)
 {

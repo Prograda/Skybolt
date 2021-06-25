@@ -9,9 +9,9 @@
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <nlohmann/json.hpp>
 
-#include <boost/filesystem.hpp>
-#include <limits>
+#include <filesystem>
 #include <fstream>
+#include <limits>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -449,7 +449,7 @@ static void saveTileRecursive(const FeatureTile& tile, const std::string& direct
 	if (!tile.features.empty())
 	{
 		std::string tileDirectory = directory + "/" + std::to_string(tile.key.level) + "/" + std::to_string(tile.key.x);
-		boost::filesystem::create_directories(tileDirectory);
+		std::filesystem::create_directories(tileDirectory);
 		saveTile(tile, tileDirectory + "/" + std::to_string(tile.key.y) + ".ftr");
 	}
 
@@ -466,7 +466,7 @@ static const std::string treeFilename = "tree.json";
 
 void save(const WorldFeatures::DiQuadTree& tree, const std::string& directory)
 {
-	boost::filesystem::create_directory(directory);
+	std::filesystem::create_directory(directory);
 	std::ofstream f(directory + "/" + treeFilename, std::ios::out | std::ios::binary);
 
 	nlohmann::json j;

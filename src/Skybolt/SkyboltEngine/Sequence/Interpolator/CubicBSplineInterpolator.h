@@ -69,7 +69,7 @@ private:
 		int indexPrev = glm::max(0, index - 1);
 		int indexNext = glm::min(size - 1, index + 1);
 
-		using vec = glm::detail::tvec2<T>;
+		using vec = glm::tvec2<T>;
 		vec p0(mTimeGetter(indexPrev), mValueGetter(indexPrev));
 		vec p1(mTimeGetter(index), mValueGetter(index));
 		vec p2(mTimeGetter(indexNext), mValueGetter(indexNext));

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include <string>
 #include <vector>
@@ -14,7 +14,7 @@
 namespace skybolt {
 namespace file {
 
-using Path = boost::filesystem::path;
+using Path = std::filesystem::path;
 
 typedef std::vector<Path> Paths;
 

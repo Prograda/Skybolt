@@ -7,7 +7,7 @@
 #include "SprocketModel.h"
 #include <SkyboltSim/Entity.h>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 using namespace skybolt;
 
@@ -23,7 +23,7 @@ SprocketModel::SprocketModel(EngineRoot* root, InputPlatform* inputPlatform) :
 			file::Path p(path);
 			file::Path f = p.append(filename);
 
-			if (boost::filesystem::exists(f))
+			if (std::filesystem::exists(f))
 			{
 				return f;
 			}

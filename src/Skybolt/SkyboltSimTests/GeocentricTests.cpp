@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TestHelpers.h"
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltCommon/Math/MathUtility.h>

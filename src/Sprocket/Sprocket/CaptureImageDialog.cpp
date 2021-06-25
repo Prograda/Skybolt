@@ -9,7 +9,7 @@
 #include "QDialogHelpers.h"
 
 #include <QProgressDialog>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 static QString specializeImageSequenceFilenameTemplate(QString str, int frameNumber)
 {
@@ -49,8 +49,8 @@ void showCaptureImageSequenceDialog(const FrameImageWriter& frameImageWriter, co
 			double time = startTime->value.toDouble() + (double)frame / frameRate->value.toDouble();
 
 			QString frameStr = specializeImageSequenceFilenameTemplate(filenameTemplate->value.toString(), frame);
-			boost::filesystem::path directory = boost::filesystem::path(frameStr.toStdString()).parent_path();
-			boost::filesystem::create_directories(directory);
+			std::filesystem::path directory = std::filesystem::path(frameStr.toStdString()).parent_path();
+			std::filesystem::create_directories(directory);
 			frameImageWriter(time, frameStr);
 
 			progress.setValue(frame);

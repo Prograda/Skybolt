@@ -4,10 +4,10 @@ file(GLOB SOURCE_FILES *.cpp *.h)
 
 include_directories("../")
 
-find_package(catch)
+find_package(Catch2)
 
 add_executable(${APP_NAME} ${SOURCE_FILES})
 
-target_link_libraries (${APP_NAME} SkyboltSim catch)
+target_link_libraries (${APP_NAME} SkyboltSim Catch2)
 
 catch_discover_tests(${APP_NAME})

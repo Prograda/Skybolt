@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TestHelpers.h"
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include <SkyboltEngine/Sequence/Interpolator/CubicBSplineInterpolator.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <osg/Vec3d>

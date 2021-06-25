@@ -8,7 +8,7 @@
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/Physics/Astronomy.h>
 
-#include <boost/filesystem/path.hpp>
+#include <filesystem>
 
 #pragma push_macro("slots")
 #undef slots

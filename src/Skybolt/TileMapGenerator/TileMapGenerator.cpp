@@ -11,7 +11,7 @@
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltCommon/Math/QuadTree.h>
 #include <osgDB/WriteFile>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 using namespace skybolt;
 using namespace vis;
@@ -82,9 +82,9 @@ struct TileGenerator
 		}
 
 		std::string path = outputDirectory + "/" + std::to_string(tile.key.level);
-		boost::filesystem::create_directory(path);
+		std::filesystem::create_directory(path);
 		path += +"/" + std::to_string(tile.key.x);
-		boost::filesystem::create_directory(path);
+		std::filesystem::create_directory(path);
 
 		path += "/" + std::to_string(tile.key.y) + ".png";
 
@@ -109,7 +109,7 @@ void generateTileMap(const std::string& outputDirectory, const osg::Vec2i& tileD
 		throw skybolt::Exception("No tile map generator input layers layers");
 	}
 
-	if (!boost::filesystem::is_directory(outputDirectory))
+	if (!std::filesystem::is_directory(outputDirectory))
 	{
 		throw skybolt::Exception("Output directory '" + outputDirectory + "' does not exist");
 	}

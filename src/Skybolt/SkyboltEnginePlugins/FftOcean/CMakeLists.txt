@@ -14,10 +14,10 @@ find_package(cxxtimer)
 find_package(xsimd)
 
 set(LIBS
-cxxtimer
-SkyboltEngine
-${muFFT_LIBRARIES}
-xsimd
+	cxxtimer
+	SkyboltEngine
+	${muFFT_LIBRARIES}
+	xsimd
 )
 
 add_definitions(-D_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING) # disable deprecation warning for xsimd

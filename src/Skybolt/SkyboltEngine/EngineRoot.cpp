@@ -158,7 +158,7 @@ file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackage
 	for (const auto& packageName : assetPackageNames)
 	{
 		std::string path = "Assets/" + packageName + "/" + relativePath;
-		if (boost::filesystem::exists(path))
+		if (std::filesystem::exists(path))
 		{
 			result.push_back(path);
 		}
@@ -172,7 +172,7 @@ file::Paths getFilesWithExtensionInDirectoryInAssetPackages(const std::vector<st
 	for (const auto& packageName : assetPackageNames)
 	{
 		std::string path = "Assets/" + packageName + "/" + relativeDirectory;
-		if (boost::filesystem::exists(path))
+		if (std::filesystem::exists(path))
 		{
 			auto paths = file::findFilenamesInDirectory(path, extension);
 			result.insert(result.end(), paths.begin(), paths.end());

@@ -6,7 +6,17 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0")
 endif()
 
 project(Skybolt)
-set(PACKAGE_VERSION 1.0.0)
+set(PACKAGE_VERSION 1.1.0)
+
+enable_testing()
+
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/" "${CMAKE_SOURCE_DIR}/CMake/Modules/")
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Allow user to overwrite install path.
 # Solution from https://stackoverflow.com/questions/39481958/setting-cmake-install-prefix-from-cmakelists-txt-file
@@ -16,12 +26,11 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 	endif()
 endif()
 
-
-enable_testing()
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake/" "${CMAKE_SOURCE_DIR}/CMake/Modules/")
-
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+#-------------------------------------------------------------
+# Compiler flags
+#-------------------------------------------------------------
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 OPTION(DISABLE_OPTIMIZATION_RELWITHDEBINFO "Disable Optimization in RelWithDebInfo")
 if(DISABLE_OPTIMIZATION_RELWITHDEBINFO)
@@ -35,18 +44,6 @@ if(DISABLE_OPTIMIZATION_RELWITHDEBINFO)
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-${OPT_OFF} -Zi")
 endif()
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
-OPTION(Boost_STATIC_LIBS "Boost use static libs")
-if (Boost_STATIC_LIBS)
-	set(Boost_USE_STATIC_LIBS ON)
-endif()
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 if ( MSVC )
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /we4715") # Treat missing return as error
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd5033") # disable warnings about use of 'register' in glm
@@ -56,6 +53,17 @@ else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-register") # disable warnings about use of 'register' in glm
 endif()
 
+#-------------------------------------------------------------
+# Dependency options
+#-------------------------------------------------------------
+OPTION(Boost_STATIC_LIBS "Boost use static libs")
+if (Boost_STATIC_LIBS)
+	set(Boost_USE_STATIC_LIBS ON)
+endif()
+
+#-------------------------------------------------------------
+# Build tree
+#-------------------------------------------------------------
 include(AddSourceGroup)
 include(SetPluginTargetProperties)
 include(Catch)
@@ -69,6 +77,9 @@ if (BUILD_SPROCKET)
 	add_subdirectory (src/Sprocket)
 endif()
 
+#-------------------------------------------------------------
+# Installation
+#-------------------------------------------------------------
 # Install headers
 install(
 	DIRECTORY ${CMAKE_SOURCE_DIR}/src/Skybolt
