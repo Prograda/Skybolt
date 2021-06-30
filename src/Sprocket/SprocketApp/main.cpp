@@ -12,6 +12,7 @@
 #include <Sprocket/ThirdParty/DarkStyle.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
 #include <SkyboltSim/World.h>
+#include <SkyboltCommon/Stringify.h>
 
 #pragma push_macro("slots")
 #undef slots
@@ -22,8 +23,7 @@ using namespace skybolt;
 
 namespace py = pybind11;
 
-#define STRINGIFY(a) STRINGIFY2(a)
-#define STRINGIFY2(a) #a
+
 
 static std::string appendConfigurationDir(const std::string& dir)
 {

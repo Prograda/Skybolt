@@ -9,6 +9,7 @@
 
 #include <SkyboltVis/Renderable/Atmosphere/Bruneton/BruentonAtmosphereGenerator.h>
 #include <SkyboltVis/Window/OffscreenViewer.h>
+#include <SkyboltCommon/Stringify.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
 #include <osg/Camera>
@@ -31,6 +32,7 @@ static void registerResourceSearchPath(const std::string& path)
 static void registerShaderSearchPath()
 {
 	registerResourceSearchPath("Source/Assets/");
+	registerResourceSearchPath(STRINGIFY(CMAKE_SOURCE_DIR) "/Assets/");
 }
 
 constexpr float epsilon = 0.00013f;
