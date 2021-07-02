@@ -39,7 +39,7 @@ public:
 		vis::ModelFactoryPtr modelFactory;
 		EngineStats* stats;
 		file::FileLocator fileLocator;
-		std::vector<std::string> assetPackageNames;
+		std::vector<std::string> assetPackagePaths;
 	};
 
 	EntityFactory(const Context& context, const std::vector<std::filesystem::path>& entityFilenames);

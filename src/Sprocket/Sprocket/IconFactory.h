@@ -34,7 +34,7 @@ public:
 	QIcon createIcon(const Icon& type) const;
 
 private:
-	void registerIcon(const Icon& icon, const QString& filename);
+	void registerIcon(const Icon& icon, const std::string& filename);
 
 private:
 	std::map<Icon, QIcon> m_icons;

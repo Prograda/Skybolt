@@ -8,7 +8,7 @@ The Skybolt repository includes Sprocket, a GUI application for creating scenari
 
 
 ## Features
-* Realistic environment rendering at multiple levels of detail, from orbit to planet surface
+* Realistic environment rendering at a range of levels of detail, from ground level through to outer space
 * Tile streaming from geospatial data sources
 * Atmospheric scattering
 * Volumetric clouds
@@ -22,7 +22,7 @@ The Skybolt repository includes Sprocket, a GUI application for creating scenari
 * Integrates with Sprocket R&D GUI platform, with node-based graphical programming system
 
 ## Contact
-Skybolt/Sprocket created and maintained by Matthew Reid.
+Skybolt and Sprocket created and maintained by Matthew Reid.
 To submit a bug report, please [raise an issue on the GitHub repository](https://github.com/Piraxus/Skybolt/issues).
 For other queries, please use the [contact form](https://piraxus.com/contact) on the [Piraxus website](https://piraxus.com).
 
@@ -167,22 +167,36 @@ Application for converting Open Street Map data to Skybolt feature tile format.
 Use CMake to configure and generate a build. Optional projects within the repository can be enabled/disabled with CMake BUILD_xxx properties as desired.
 
 ## Installing Asset Packages
-Skybolt requires runtime assets which are not included in this repository. Assets are split up into separate packages, which can be downloaded from https://piraxus.com/downloads/assetpackages.html
+At runtime, Skybolt uses assets such as meshes, textures, and shaders. These assets are organized into packages. Each package is a folder containing a hierarchy of asset files on disk.
 
-Only the Core package is required to run, but additional packages will add extra assets. To install a package, extract the zip file to a folder called "Assets" in the program working directory.
+Skybolt searches for asset packages in these locations:
+1. <CurrentWorkingDirectory>/Assets
+2. Paths in the SKYBOLT_ASSETS_PATH environment variable
+
+To run Skybolt, you must ensure the required packages are avilable to Skybolt using either of the above mechanisms.
+
+### Core Package (Required)
+Skybolt cannot run without the Core package. It is located under /Assets in this repository.
+
+### SkyboltAssets Packages (Required for Example Applications)
+Additional packages for running the example applications are located in the [SkyboltAssets](https://github.com/Piraxus/SkyboltAssets) repository. SkyboltAssets uses [DVC](https://dvc.org) for remote storage and retrieval of large files which are not stored in the git repository itself.
+
+To checkout the SktboltAssets repository:
+1. If you do not already have DVC installed, run `pip install dvc` to install with [pip](https://pypi.org/project/pip)
+2. Clone [SkyboltAssets](https://github.com/Piraxus/SkyboltAssets) and checkout desired git branch/tag
+3. Run `dvc checkout` command in the SkyboltAssets root directory to fetch the remote files
+
+### Seattle Map Features (Optional)
+The Seattle package provides map features (buildings, roads, lakes etc) for the city of Seattle. These features were generated from OpenStreetMap data using the MapFeaturesConverter tool. This package can be downloaded [here](https://f000.backblazeb2.com/file/skybolt/Seattle_1_1_0.zip).
 
 ## Running
-### Working Directory
-1. Ensure the engine can find shaders (included in this code repository) under either Assets/Shaders or Source/Assets/Shaders relative to the working directory.
-2. Ensure the engine can find asset models under Assets/ relative to the working directory.
-
 ### Settings
 Engine settings are stored in a json file, which may be manually edited with a text editor, or edited in Sprocket with the Tools->Settings dialog.
-An example settings file template available at src/SkyboltExamples/ExamplesCommon/ExampleSettings.json.
+An example settings file template is available in this repository under src/SkyboltExamples/ExamplesCommon/ExampleSettings.json.
 
 The settings file can be loaded by example applications with the --settingsFile commandline option. If the option is not specified, a default Settings.json in the Operating System user's home directory will be used. On windows, this is located at C:/Users/<Username>/AppData/Local/Skybolt/Settings.json.
 
 ### Using third party Map APIs
 By default, the PlanetEarth entity uses mapbox for albedo and elevation data. To use mapbox, you must acquire an API key from https://mapbox.com
-If desired, PlanetEarth can be edited to use Bing maps for albedo instead. A bing key can be obtained from https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key
+Without an API key, the tiles will not download, the the planet will not render correctly. If desired, PlanetEarth can be edited to use Bing maps for albedo instead. A bing key can be obtained from https://docs.microsoft.com/en-us/bingmaps/getting-started/bing-maps-dev-center-help/getting-a-bing-maps-key
 Keys are stored in the engine json settings file (see above).

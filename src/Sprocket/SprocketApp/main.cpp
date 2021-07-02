@@ -61,7 +61,7 @@ public:
 			py::list sysPath = py::module::import("sys").attr("path").cast<py::list>();
 			sysPath.append(getLibDirectory());
 
-			auto scriptFolders = getPathsInAssetPackages(mMainWindow->getEngineRoot()->getAssetPackageNames(), "Scripts");
+			auto scriptFolders = getPathsInAssetPackages(mMainWindow->getEngineRoot()->getAssetPackagePaths(), "Scripts");
 			for (const file::Path& scriptFolder : scriptFolders)
 			{
 				sysPath.append(scriptFolder);

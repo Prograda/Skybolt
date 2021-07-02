@@ -31,8 +31,8 @@ static void registerResourceSearchPath(const std::string& path)
 
 static void registerShaderSearchPath()
 {
-	registerResourceSearchPath("Source/Assets/");
-	registerResourceSearchPath(STRINGIFY(CMAKE_SOURCE_DIR) "/Assets/");
+	registerResourceSearchPath("Assets/Core");
+	registerResourceSearchPath(STRINGIFY(CMAKE_SOURCE_DIR) "/Assets/Core");
 }
 
 constexpr float epsilon = 0.00013f;

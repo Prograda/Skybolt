@@ -1,0 +1,6 @@
+{
+	"description": "Core assets required to run the engine",
+	"packageVersion": "1.1.0",
+	"skyboltVersion": "1.1.0",
+	"author": "Matthew Reid"
+}

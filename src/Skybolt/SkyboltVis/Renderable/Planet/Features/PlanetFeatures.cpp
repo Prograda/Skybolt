@@ -292,11 +292,7 @@ void PlanetFeatures::updatePreRender(const RenderContext& context)
 
 void PlanetFeatures::loadTile(VisFeatureTile& tile)
 {
-	if (tile.loaded)
-	{
-		// TODO: If tile is already loaded, just re-clamp it to terrain
-	}
-	else
+	if (!tile.loaded)
 	{
 		if (tile.featureCountInFile > 0)
 		{
@@ -310,7 +306,7 @@ void PlanetFeatures::loadTile(VisFeatureTile& tile)
 
 			mScheduler->run([=]()
 			{
-				if (!loadingItem->cancel) // if Tile hasn't been cancled by the time the scheduled task runs
+				if (!loadingItem->cancel) // if Tile hasn't been canceled by the time the scheduled task runs
 				{
 					std::vector<mapfeatures::FeaturePtr> features;
 					mapfeatures::loadTile(filename, features);

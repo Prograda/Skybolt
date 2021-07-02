@@ -76,7 +76,13 @@ static std::string preprocessIncludes(const std::string& source, const std::stri
 
 osg::Shader* readShaderFile(osg::Shader::Type type, const std::string& filename)
 {
-	std::string source = loadFileToString(filename);
+	auto resolvedFilename = osgDB::Registry::instance()->findDataFile(filename, nullptr, osgDB::CASE_SENSITIVE);
+	if (resolvedFilename.empty())
+	{
+		throw std::runtime_error("Could not find shader file: " + filename);
+	}
+
+	std::string source = loadFileToString(resolvedFilename);
 	std::string includeDirPath = std::filesystem::path(filename).parent_path().string();
 
 	source = preprocessIncludes(source, includeDirPath);

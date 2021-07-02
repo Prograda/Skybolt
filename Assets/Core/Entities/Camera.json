@@ -1,0 +1,10 @@
+{
+	"components": [
+		{"node": {
+		}},
+		{"camera": {
+		}},
+    {"cameraController": {
+    }}
+	]
+}

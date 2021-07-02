@@ -466,7 +466,7 @@ static const std::string treeFilename = "tree.json";
 
 void save(const WorldFeatures::DiQuadTree& tree, const std::string& directory)
 {
-	std::filesystem::create_directory(directory);
+	std::filesystem::create_directories(directory);
 	std::ofstream f(directory + "/" + treeFilename, std::ios::out | std::ios::binary);
 
 	nlohmann::json j;

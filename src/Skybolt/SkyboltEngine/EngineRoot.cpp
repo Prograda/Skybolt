@@ -24,12 +24,12 @@
 
 namespace skybolt {
 
-static void registerAssetModule(const std::string& folderName)
+static void registerAssetPackage(const std::string& folderPath)
 {
-	osgDB::Registry::instance()->getDataFilePathList().push_back("Assets/" + folderName + "/");
+	osgDB::Registry::instance()->getDataFilePathList().push_back(folderPath + "/");
 }
 
-static file::Path locateFile(const std::string& filename, file::FileLocatorMode mode)
+file::Path locateFile(const std::string& filename, file::FileLocatorMode mode)
 {
 	auto resolvedFilename = osgDB::Registry::instance()->findDataFile(filename, nullptr, osgDB::CASE_SENSITIVE);
 	if (resolvedFilename.empty())
@@ -80,16 +80,43 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	schedulerParams.num_threads = threadCount;
 	scheduler->init(schedulerParams);
 
-	osgDB::Registry::instance()->getDataFilePathList().push_back("Source/Assets/");
-	osgDB::Registry::instance()->getDataFilePathList().push_back("Assets/");
+	std::vector<std::string> assetSearchPaths = {
+		"Assets/"
+	};
 
-	file::Paths folders = file::findFoldersInDirectory("Assets");
-	for (const auto& folder : folders)
+	if (const char* path = std::getenv("SKYBOLT_ASSETS_PATH"); path)
 	{
-		std::string folderName = folder.stem().string();
-		mAssetPackageNames.push_back(folderName);
-		registerAssetModule(folderName);
-		BOOST_LOG_TRIVIAL(info) << "Registered asset package: " << folderName;
+		auto paths = file::splitByPathListSeparator(std::string(path));
+		assetSearchPaths.insert(assetSearchPaths.begin(), paths.begin(), paths.end());
+	}
+	else
+	{
+		BOOST_LOG_TRIVIAL(warning) << "SKYBOLT_ASSETS_PATH environment variable not set. Skybolt may not be able to find assets. "
+			"Please refer to Skybolt documentation for information about setting this variable.";
+	}
+
+	bool foundCoreAssets = false;
+	for (const auto& assetSearchPath : assetSearchPaths)
+	{
+		file::Paths folders = file::findFoldersInDirectory(assetSearchPath);
+		for (const auto& folder : folders)
+		{
+			std::string folderName = folder.stem().string();
+			mAssetPackagePaths.push_back(folder.string());
+			registerAssetPackage(folder.string());
+			BOOST_LOG_TRIVIAL(info) << "Registered asset package: " << folderName;
+
+			if (folderName == "Core")
+			{
+				foundCoreAssets = true;
+			}
+		}
+	}
+
+	if (!foundCoreAssets)
+	{
+		throw std::runtime_error("Could not find 'Core' assets package. Ensure working directory or SKYBOLT_ASSETS_PATH is set correctly. "
+			"Please refer to Skybolt documentation for information about finding assets.");
 	}
 
 	programs = vis::createShaderPrograms();
@@ -120,9 +147,9 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	context.tileSourceFactory = std::make_shared<vis::JsonTileSourceFactory>(config.tileSourceFactoryConfig);
 	context.modelFactory = createModelFactory(programs);
 	context.fileLocator = locateFile;
-	context.assetPackageNames = mAssetPackageNames;
+	context.assetPackagePaths = mAssetPackagePaths;
 
-	file::Paths paths = getFilesWithExtensionInDirectoryInAssetPackages(mAssetPackageNames, "Entities", ".json");
+	file::Paths paths = getFilesWithExtensionInDirectoryInAssetPackages(mAssetPackagePaths, "Entities", ".json");
 	entityFactory.reset(new EntityFactory(context, paths));
 
 	// Create default systems
@@ -152,12 +179,12 @@ EngineRoot::~EngineRoot()
 	systemRegistry->clear();
 }
 
-file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackageNames, const std::string& relativePath)
+file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativePath)
 {
 	file::Paths result;
-	for (const auto& packageName : assetPackageNames)
+	for (const auto& packagePath : assetPackagePaths)
 	{
-		std::string path = "Assets/" + packageName + "/" + relativePath;
+		std::string path = packagePath + "/" + relativePath;
 		if (std::filesystem::exists(path))
 		{
 			result.push_back(path);
@@ -166,12 +193,12 @@ file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackage
 	return result;
 }
 
-file::Paths getFilesWithExtensionInDirectoryInAssetPackages(const std::vector<std::string>& assetPackageNames, const std::string& relativeDirectory, const std::string& extension)
+file::Paths getFilesWithExtensionInDirectoryInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativeDirectory, const std::string& extension)
 {
 	file::Paths result;
-	for (const auto& packageName : assetPackageNames)
+	for (const auto& packagePath : assetPackagePaths)
 	{
-		std::string path = "Assets/" + packageName + "/" + relativeDirectory;
+		std::string path = packagePath + "/" + relativeDirectory;
 		if (std::filesystem::exists(path))
 		{
 			auto paths = file::findFilenamesInDirectory(path, extension);

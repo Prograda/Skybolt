@@ -35,13 +35,13 @@ private:
 	// This private block is first because these objects should be disposed of last
 	std::vector<PluginFactory> mPluginFactories;
 	std::vector<PluginPtr> mPlugins;
-	std::vector<std::string> mAssetPackageNames;
+	std::vector<std::string> mAssetPackagePaths;
 
 public:
 	EngineRoot(const EngineRootConfig& config);
 	~EngineRoot();
 
-	const std::vector<std::string>& getAssetPackageNames() const { return mAssetPackageNames; }
+	const std::vector<std::string>& getAssetPackagePaths() const { return mAssetPackagePaths; }
 
 	std::unique_ptr<px_sched::Scheduler> scheduler;
 	vis::ShaderPrograms programs;
@@ -56,7 +56,8 @@ public:
 	sim::SystemRegistryPtr systemRegistry;
 };
 
-file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackageNames, const std::string& relativePath);
-file::Paths getFilesWithExtensionInDirectoryInAssetPackages(const std::vector<std::string>& assetPackageNames, const std::string& relativeDirectory, const std::string& extension);
+file::Path locateFile(const std::string& filename, file::FileLocatorMode mode);
+file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativePath);
+file::Paths getFilesWithExtensionInDirectoryInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativeDirectory, const std::string& extension);
 
 } // namespace skybolt

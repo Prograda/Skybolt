@@ -359,7 +359,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 		if (it != json.end())
 		{
 			std::string directory = it.value().at("directory");
-			config.featureTreeFiles = getPathsInAssetPackages(context.assetPackageNames, directory + "/tree.json");
+			config.featureTreeFiles = getPathsInAssetPackages(context.assetPackagePaths, directory + "/tree.json");
 			config.featureTilesDirectoryRelAssetPackage = directory;
 		}
 	}

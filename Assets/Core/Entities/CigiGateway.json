@@ -1,0 +1,13 @@
+{
+	"components": [
+		{"cigi": {
+			"cigiMajorVersion": 3,
+			"hostAddress": "localhost",
+			"hostPort": 8001,
+			"igPort": 8002,
+			"entityTypes": {
+				"118": "UH60"
+			}
+		}}
+	]
+}

@@ -5,28 +5,33 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "IconFactory.h"
+#include <SkyboltEngine/EngineRoot.h>
+
+#include <boost/log/trivial.hpp>
 #include <QBitmap>
 #include <QFile>
 #include <QApplication>
 #include <QStyle>
 #include <QStyleOption>
 
+using namespace skybolt;
+
 IconFactory::IconFactory()
 {
-	registerIcon(Icon::Add, "Assets/Core/Icons/google/add_circle.svg");
-	registerIcon(Icon::Build, "Assets/Core/Icons/google/build.svg");
-	registerIcon(Icon::Code, "Assets/Core/Icons/google/code.svg");
-	registerIcon(Icon::FastForward, "Assets/Core/Icons/google/round-fast_forward.svg");
-	registerIcon(Icon::FastRewind, "Assets/Core/Icons/google/round-fast_rewind.svg");
-	registerIcon(Icon::Folder, "Assets/Core/Icons/google/folder.svg");	
-	registerIcon(Icon::Node, "Assets/Core/Icons/google/brightness_1.svg");
-	registerIcon(Icon::NodeGraph, "Assets/Core/Icons/google/view_agenda.svg");
-	registerIcon(Icon::Pause, "Assets/Core/Icons/google/round-pause.svg");
-	registerIcon(Icon::Play, "Assets/Core/Icons/google/round-play_arrow.svg");
-	registerIcon(Icon::Remove, "Assets/Core/Icons/google/remove_circle.svg");
-	registerIcon(Icon::Save, "Assets/Core/Icons/google/save.svg");
-	registerIcon(Icon::Sequence, "Assets/Core/Icons/google/playlist_play.svg");
-	registerIcon(Icon::Settings, "Assets/Core/Icons/google/settings.svg");
+	registerIcon(Icon::Add, "Icons/google/add_circle.svg");
+	registerIcon(Icon::Build, "Icons/google/build.svg");
+	registerIcon(Icon::Code, "Icons/google/code.svg");
+	registerIcon(Icon::FastForward, "Icons/google/round-fast_forward.svg");
+	registerIcon(Icon::FastRewind, "Icons/google/round-fast_rewind.svg");
+	registerIcon(Icon::Folder, "Icons/google/folder.svg");	
+	registerIcon(Icon::Node, "Icons/google/brightness_1.svg");
+	registerIcon(Icon::NodeGraph, "Icons/google/view_agenda.svg");
+	registerIcon(Icon::Pause, "Icons/google/round-pause.svg");
+	registerIcon(Icon::Play, "Icons/google/round-play_arrow.svg");
+	registerIcon(Icon::Remove, "Icons/google/remove_circle.svg");
+	registerIcon(Icon::Save, "Icons/google/save.svg");
+	registerIcon(Icon::Sequence, "Icons/google/playlist_play.svg");
+	registerIcon(Icon::Settings, "Icons/google/settings.svg");
 }
 
 QIcon IconFactory::createIcon(const Icon& icon) const
@@ -51,10 +56,20 @@ void colourizeImage(QImage& image, QColor color)
 	}
 }
 
-void IconFactory::registerIcon(const Icon& icon, const QString& filename)
+void IconFactory::registerIcon(const Icon& icon, const std::string& filename)
 {
-	QFile file(filename);
-	file.open(QIODevice::ReadOnly);
+	file::Path locatedFile = locateFile(filename, file::FileLocatorMode::Required);
+	if (locatedFile.empty())
+	{
+		return;
+	}
+
+	QFile file(QString::fromStdString(locatedFile.string()));
+	if (!file.open(QIODevice::ReadOnly))
+	{
+		BOOST_LOG_TRIVIAL(error) << "Could not open file: " << locatedFile;
+		return;
+	}
 
 	QColor color = Qt::lightGray;
 	QColor disabledColor = Qt::darkGray;
@@ -72,6 +87,7 @@ void IconFactory::registerIcon(const Icon& icon, const QString& filename)
 
 		m_icons[icon] = qicon;
 	}
+	file.close();
 }
 
 const IconFactory& getDefaultIconFactory()

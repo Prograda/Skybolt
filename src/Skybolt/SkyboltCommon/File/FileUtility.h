@@ -28,5 +28,8 @@ Paths findFilenamesInDirectoryRecursive(const std::string &dir, const std::strin
 //! @returns paths of folders in a directory
 Paths findFoldersInDirectory(const std::string &dir);
 
+//! Splits path list, e.g PATH environment variable, by platform specific separator, ';' on windows and ':' on unix.
+std::vector<std::string> splitByPathListSeparator(const std::string& pathList);
+
 } // namespace file
 } // namespace skybolt
