@@ -6,16 +6,12 @@
 
 #pragma once
 
-#include "EngineRoot.h"
 #include <boost/program_options/variables_map.hpp>
+#include <nlohmann/json.hpp>
 
 namespace skybolt {
 
-class EngineRootFactory
-{
-public:
-	static std::unique_ptr<EngineRoot> create(const boost::program_options::variables_map& params);
-	static std::unique_ptr<EngineRoot> create(const std::vector<PluginFactory>& pluginFactories, const nlohmann::json& settings);
-};
+nlohmann::json createDefaultEngineSettings();
+nlohmann::json readEngineSettings(const boost::program_options::variables_map& params);
 
 } // namespace skybolt

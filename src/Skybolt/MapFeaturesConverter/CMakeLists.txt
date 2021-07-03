@@ -10,4 +10,4 @@ find_package(ZLIB REQUIRED)
 
 add_executable(MapFeaturesConverter ${SOURCE})
 
-target_link_libraries (MapFeaturesConverter ${READOSM_LIBRARIES} ${ZLIB_LIBRARIES} SkyboltVis)
+target_link_libraries (MapFeaturesConverter ${READOSM_LIBRARIES} ${ZLIB_LIBRARIES} SkyboltEngine SkyboltVis)

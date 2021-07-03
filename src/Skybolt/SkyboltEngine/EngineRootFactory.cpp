@@ -5,10 +5,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "EngineRootFactory.h"
-#include "EngineCommandLineParser.h"
+#include "EngineSettings.h"
 #include "GetExecutablePath.h"
 #include "Plugin/PluginHelpers.h"
-#include <SkyboltCommon/OptionalUtility.h>
 #include <SkyboltCommon/Json/JsonHelpers.h>
 
 #include <boost/log/trivial.hpp>
@@ -31,10 +30,7 @@ T getOptionalNodeOrDefaultWithWarning(const json& j, const std::string& name, co
 
 std::unique_ptr<EngineRoot> EngineRootFactory::create(const boost::program_options::variables_map& params)
 {
-	nlohmann::json settings = createDefaultSettings();
-	skybolt::optionalIfPresent<nlohmann::json>(EngineCommandLineParser::readSettings(params), [&] (const nlohmann::json& newSettings) {
-		settings.update(newSettings);
-	});
+	nlohmann::json settings = readEngineSettings(params);
 
 	std::string pluginsDir = getExecutablePath().append("plugins").string();
 	std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(pluginsDir);
@@ -49,16 +45,6 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFa
 	config.tileSourceFactoryConfig.apiKeys = readNameMap<std::string>(settings, "tileApiKeys");
 	config.tileSourceFactoryConfig.cacheDirectory = "Cache";
 	return std::make_unique<EngineRoot>(config);
-}
-
-nlohmann::json EngineRootFactory::createDefaultSettings()
-{
-	return R"({
-	"tileApiKeys": {
-		"bing": "",
-		"mapbox": ""
-	}
-})"_json;
 }
 
 } // namespace skybolt

@@ -32,6 +32,7 @@
 #include "Scenario/ScenarioSerialization.h"
 
 #include <SkyboltEngine/EngineRootFactory.h>
+#include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/EngineStats.h>
 #include <SkyboltEngine/Scenario.h>
 #include <SkyboltEngine/TemplateNameComponent.h>
@@ -261,7 +262,7 @@ QString settingsFilenameKey = "settingsFilename";
 // while the latter configures UI defaults.
 static nlohmann::json readOrCreateEngineSettingsFile(QWidget* parent, QSettings& settings)
 {
-	nlohmann::json result = EngineRootFactory::createDefaultSettings();
+	nlohmann::json result = createDefaultEngineSettings();
 	QString settingsFilename = settings.value(settingsFilenameKey).toString();
 
 	while (settingsFilename.isEmpty() || !QFile(settingsFilename).exists())

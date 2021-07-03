@@ -604,13 +604,14 @@ const ParserData::ParserAirport* findClosestAirport(const ParserData& data, cons
 	return result;
 }
 
-std::map<std::string, AirportPtr> createAirports(const ParserData& data)
+std::map<std::string, AirportPtr> createAirports(const ParserData& data, const sim::PlanetAltitudeProvider& provider)
 {
 	std::map<const ParserData::ParserAirport*, AirportPtr> airports;
 	for (const auto& v : data.airports)
 	{
 		auto airport = std::make_shared<Airport>();
 		airport->areaPolygons = v.areaPolygons;
+		airport->altitude = provider.getAltitude(v.bounds.center());
 		airports[&v] = airport;
 	}
 
@@ -670,7 +671,7 @@ ReadPbfResult readPbf(const std::string& filename, const sim::PlanetAltitudeProv
 	ReadPbfResult result;
 	printf("Matching %zu runways with %zu airports\n", data.runways.size(), data.airports.size());
 	std::swap(result.features, data.features);
-	result.airports = createAirports(data);
+	result.airports = createAirports(data, provider);
 	for (const auto& v : result.airports)
 	{
 		result.features.push_back(v.second);
