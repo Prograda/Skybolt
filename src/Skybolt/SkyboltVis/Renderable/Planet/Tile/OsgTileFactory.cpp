@@ -94,7 +94,7 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 		result.highResTerrain.reset(new Terrain(config));
 		result.transform->addChild(result.highResTerrain->getTerrainNode());
 	}
-	else if (textures.attribute)
+	else if (textures.albedo.texture)
 	{
 		// Low LOD terrain
 		osg::Geode* geode = createPlanetTileGeode(tilePosition, latLonBounds, mPlanetRadius, Triangles);
@@ -108,13 +108,11 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 		ss->addUniform(new osg::Uniform("albedoImageScale", albedoImageScale));
 		ss->addUniform(new osg::Uniform("albedoImageOffset", albedoImageOffset));
 
-		osg::ref_ptr<osg::Texture2D> texture;
-
-		ss->setTextureAttributeAndModes(unit, texture);
+		ss->setTextureAttributeAndModes(unit, textures.albedo.texture);
 		ss->addUniform(createUniformSampler2d("albedoSampler", unit++));
 
 
-		ss->setTextureAttributeAndModes(unit, texture);
+		ss->setTextureAttributeAndModes(unit, textures.landMask);
 		ss->addUniform(createUniformSampler2d("landMaskSampler", unit++));
 		// TODO: set clamping mode. Height points should be on edges of terrain
 	}
