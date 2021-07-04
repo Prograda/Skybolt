@@ -186,8 +186,11 @@ To checkout the SktboltAssets repository:
 2. Clone [SkyboltAssets](https://github.com/Piraxus/SkyboltAssets) and checkout desired git branch/tag
 3. Run `dvc checkout` command in the SkyboltAssets root directory to fetch the remote files
 
+### NLCD Land Cover (Optional)
+Land cover tiles for USA. Used by Skybolt to place trees on terrain in forest areas. This package can be downloaded [here](https://f000.backblazeb2.com/file/skybolt/NLCDLandCover_1_0_0.zip).
+
 ### Seattle Map Features (Optional)
-The Seattle package provides map features (buildings, roads, lakes etc) for the city of Seattle. These features were generated from OpenStreetMap data using the MapFeaturesConverter tool. This package can be downloaded [here](https://f000.backblazeb2.com/file/skybolt/Seattle_1_1_0.zip).
+Map features (buildings, roads, lakes etc) for the city of Seattle. These features were generated from OpenStreetMap data using the MapFeaturesConverter tool. This package can be downloaded [here](https://f000.backblazeb2.com/file/skybolt/Seattle_1_1_0.zip).
 
 ## Running
 ### Settings
