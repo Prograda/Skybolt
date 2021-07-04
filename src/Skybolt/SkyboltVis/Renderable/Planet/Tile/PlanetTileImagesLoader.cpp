@@ -161,6 +161,8 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 	{
 		if (attributeLayer)
 		{
+			QuadTreeTileKey attributeKey = createAncestorKey(key, std::min(maxAttributeLod, key.level));
+
 			images->attributeMapImage = getOrCreateImage(key, size_t(CacheIndex::Attribute), [this, cancelSupplier](const QuadTreeTileKey& key) {
 				osg::ref_ptr<osg::Image> image = attributeLayer->createImage(key, cancelSupplier);
 				if (image)
@@ -168,7 +170,11 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 					image = convertAttributeMap(*image, getNlcdAttributeColors());
 				}
 				return image;
-			});
+			}, minAttributeLod);
+			if (!images->attributeMapImage->image)
+			{
+				images->attributeMapImage = std::nullopt;
+			}
 		}
 		else if (false) // Experimental. If enabled, attribute map will be generated from the albedo map, otherwise no attributes will be used.
 		{

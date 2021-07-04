@@ -110,6 +110,7 @@ PlanetSurface::PlanetSurface(const PlanetSurfaceConfig& config) :
 	imageLoader->albedoLayer = mPlanetTileSources.albedo;
 	imageLoader->maxElevationLod = config.elevationMaxLodLevel;
 	imageLoader->minAttributeLod = config.attributeMinLodLevel;
+	imageLoader->maxAttributeLod = config.attributeMaxLodLevel;
 
 	AsyncTileLoaderPtr loader(new AsyncTileLoader(imageLoader, config.scheduler));
 
