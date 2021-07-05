@@ -115,11 +115,11 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 		osg::ref_ptr<osg::Image> heightImage = images->heightMapImage.image;
 		if (heightImage)
 		{
-			auto bounds = getKeyLonLatBounds<osg::Vec2>(key);
+			auto bounds = getKeyLonLatBounds<osg::Vec2>(images->heightMapImage.key);
 			osg::Vec2 heightImageLonLatDelta = bounds.size();
 			osg::Vec2 texelWorldSize = osg::Vec2f(
-				heightImageLonLatDelta.y() * mPlanetRadius * std::cos(bounds.center().x()) / heightImage->s(),
-				heightImageLonLatDelta.x() * mPlanetRadius / heightImage->t()
+				heightImageLonLatDelta.x() * mPlanetRadius * std::cos(bounds.center().y()) / heightImage->s(),
+				heightImageLonLatDelta.y() * mPlanetRadius / heightImage->t()
 			);
 			images->normalMapImage = createNormalmapFromHeightmap(*heightImage, texelWorldSize);
 
