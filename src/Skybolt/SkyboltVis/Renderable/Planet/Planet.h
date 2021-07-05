@@ -29,6 +29,10 @@
 namespace skybolt {
 namespace vis {
 
+struct ShadowParams
+{
+};
+
 struct PlanetConfig
 {
 	px_sched::Scheduler* scheduler;
@@ -43,6 +47,7 @@ struct PlanetConfig
 	int attributeMinLodLevel = 9;
 	int attributeMaxLodLevel = 9;
 	bool waterEnabled = true;
+	std::optional<ShadowParams> shadowParams;
 	osg::ref_ptr<osg::Texture2D> cloudsTexture; //!< Set to null to disable clouds
 	boost::optional<BruentonAtmosphereConfig> atmosphereConfig;
 	file::FileLocator fileLocator;
@@ -121,7 +126,7 @@ private:
 	std::unique_ptr<PlanetFeatures> mPlanetFeatures;
 	std::unique_ptr<VolumeClouds> mVolumeClouds;
 	std::unique_ptr<class WaveFoamMaskGenerator> mWaveFoamMaskGenerator[WaterStateSetConfig::waveTextureCount];
-	std::unique_ptr<class ShadowMapGenerator> mShadowMapGenerator;
+	std::unique_ptr<class CascadedShadowMapGenerator> mShadowMapGenerator;
 	std::unique_ptr<class BruentonAtmosphere> mAtmosphere;
 
 	osg::Uniform* mPlanetCenterUniform;
@@ -130,14 +135,15 @@ private:
 	double mInnerRadius;
 	boost::optional<float> mAtmosphereScaleHeight;
 	osg::ref_ptr<osg::MatrixTransform> mTransform;
-	osg::ref_ptr<osg::MatrixTransform> mShadowSceneTransform;
+	osg::ref_ptr<osg::MatrixTransform> mShadowScenePlanetTransform;
+	osg::ref_ptr<osg::Group> mShadowSceneGroup;
+	osg::ref_ptr<osg::Group> mForestGroup; //!< Null if no forests
 	std::unique_ptr<MyPlanetSurfaceListener> mPlanetSurfaceListener;
 	double mJulianDate = 0;
 	osg::Uniform* mCloudDisplacementMetersUniform;
 	osg::Uniform* mCloudCoverageFractionUniform;
 
 	bool mCloudsVisible = false;
-	bool mShadowsEnabled = false; // disabled because shadows are experimental
 };
 
 } // namespace vis

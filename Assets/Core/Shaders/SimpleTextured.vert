@@ -12,6 +12,7 @@
 #include "DepthPrecision.h"
 #include "AtmosphericScattering.h"
 #include "CloudShadows.h"
+#include "Shadows/Shadows.h"
 
 in vec4 osg_Vertex;
 in vec4 osg_Normal;
@@ -22,6 +23,7 @@ out vec3 normalWS;
 out vec3 positionRelCamera;
 out float logZ;
 out vec3 sunIrradiance;
+out vec3 shadowTexCoord;
 
 #ifdef ENABLE_ATMOSPHERE
 	out vec3 skyIrradiance;
@@ -60,4 +62,5 @@ void main()
 #ifdef ENABLE_CLOUDS
 	sunIrradiance *= sampleCloudShadowMaskAtPositionRelPlanet(cloudSampler, positionRelPlanet, lightDirection);
 #endif
+	shadowTexCoord = (shadowProjectionMatrix0 * positionWS).xyz;
 }

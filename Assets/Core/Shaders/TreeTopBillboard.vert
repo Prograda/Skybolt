@@ -24,7 +24,8 @@ out vec2 texCoord;
 out float perTreeUnitRandom;
 out vec3 normal;
 out float logZ;
-out vec3 irradiance;
+out vec3 sunIrradiance;
+out vec3 skyIrradiance;
 out vec3 transmittance;
 out vec3 skyRadianceToPoint;
 
@@ -94,7 +95,7 @@ void main()
 	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
 	
 	texCoord = vec2(x, y);
-	texCoord.y = (texCoord.y + type) / 4.0f;
+	texCoord.y = (texCoord.y + (3-type)) / 4.0f;
 	
 	perTreeUnitRandom = randomFast1d(float(id));
 
@@ -106,12 +107,12 @@ void main()
 	vec3 positionRelPlanet = worldPos.xyz - planetCenter;
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
 	skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, positionRelPlanet, 0, lightDirection, transmittance);
-	vec3 skyIrradiance;
-	vec3 sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet, lightDirection, skyIrradiance);
+	sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet, lightDirection, skyIrradiance);
 	
 #ifdef ENABLE_CLOUDS
 	sunIrradiance *= sampleCloudShadowMaskAtPositionRelPlanet(cloudSampler, positionRelPlanet, lightDirection);
 #endif
 	float occlusion = y;
-	irradiance = (sunIrradiance + skyIrradiance) * occlusion;
+	sunIrradiance *= occlusion;
+	skyIrradiance *= occlusion;
 }

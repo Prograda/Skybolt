@@ -7,7 +7,7 @@
 #pragma once
 
 #include "DefaultRootNode.h"
-#include "ShadowHelpers.h"
+#include "Shadow/ShadowHelpers.h"
 
 namespace skybolt {
 namespace vis {
@@ -29,7 +29,7 @@ public:
 		osg::Uniform* modelMatrix;
 	};
 
-	BuildingsBatch(const Buildings& buildings, const osg::ref_ptr<osg::Program>& program, const ShadowMaps& shadowMaps);
+	BuildingsBatch(const Buildings& buildings, const osg::ref_ptr<osg::Program>& program);
 
 protected:
 	void updatePreRender(const RenderContext& context);

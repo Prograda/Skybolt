@@ -8,7 +8,6 @@
 
 #include "OsgTile.h"
 #include "TileTexture.h"
-#include "SkyboltVis/ShadowHelpers.h"
 #include "SkyboltVis/SkyboltVisFwd.h"
 #include "SkyboltVis/Renderable/Planet/Terrain.h"
 #include <SkyboltCommon/Math/QuadTree.h>
@@ -22,7 +21,6 @@ namespace vis {
 struct OsgTileFactoryConfig
 {
 	const ShaderPrograms* programs;
-	ShadowMaps shadowMaps;
 	std::vector<osg::ref_ptr<osg::Texture2D>> albedoDetailMaps;
 
 	double planetRadius;
@@ -49,7 +47,6 @@ public:
 private:
 	double mPlanetRadius;
 	const ShaderPrograms* mPrograms;
-	ShadowMaps mShadowMaps;
 	std::vector<osg::ref_ptr<osg::Texture2D>> mAlbedoDetailMaps;
 	bool mHasCloudShadows;
 };

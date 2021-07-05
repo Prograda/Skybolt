@@ -23,7 +23,6 @@ namespace vis {
 
 OsgTileFactory::OsgTileFactory(const OsgTileFactoryConfig& config) :
 	mPrograms(config.programs),
-	mShadowMaps(config.shadowMaps),
 	mAlbedoDetailMaps(config.albedoDetailMaps),
 	mPlanetRadius(config.planetRadius),
 	mHasCloudShadows(config.hasCloudShadows)
@@ -82,7 +81,6 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 		config.overallAlbedoMapUvOffset = albedoImageOffset;
 		config.attributeMapUvScale = attributeImageScale;
 		config.attributeMapUvOffset = attributeImageOffset;
-		config.shadowMaps = mShadowMaps;
 
 		if (!mAlbedoDetailMaps.empty() && textures.attribute)
 		{

@@ -27,6 +27,7 @@ struct EngineRootConfig
 {
 	std::vector<PluginFactory> pluginFactories;
 	vis::JsonTileSourceFactoryConfig tileSourceFactoryConfig;
+	nlohmann::json engineSettings;
 };
 
 class EngineRoot

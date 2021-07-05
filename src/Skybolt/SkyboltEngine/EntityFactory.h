@@ -40,6 +40,7 @@ public:
 		EngineStats* stats;
 		file::FileLocator fileLocator;
 		std::vector<std::string> assetPackagePaths;
+		nlohmann::json engineSettings;
 	};
 
 	EntityFactory(const Context& context, const std::vector<std::filesystem::path>& entityFilenames);

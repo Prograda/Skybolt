@@ -148,6 +148,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	context.modelFactory = createModelFactory(programs);
 	context.fileLocator = locateFile;
 	context.assetPackagePaths = mAssetPackagePaths;
+	context.engineSettings = config.engineSettings;
 
 	file::Paths paths = getFilesWithExtensionInDirectoryInAssetPackages(mAssetPackagePaths, "Entities", ".json");
 	entityFactory.reset(new EntityFactory(context, paths));

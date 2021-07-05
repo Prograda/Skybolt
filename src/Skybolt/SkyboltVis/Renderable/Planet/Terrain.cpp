@@ -160,9 +160,6 @@ static void setupTerrainStateSet(osg::StateSet& ss, const TerrainConfig& config)
 		//ss.addUniform(createUniformSampler2d("noiseSampler", unit++));
 	}
 
-	addShadowMapsToStateSet(config.shadowMaps, ss, unit);
-	unit += config.shadowMaps.size();
-
     osg::Uniform* heightScaleUniform = new osg::Uniform("heightScale", config.heightScale);
     ss.addUniform(heightScaleUniform);
 	ss.setAttribute(config.program);

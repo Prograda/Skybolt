@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #version 440 core
+#pragma import_defines ( CAST_SHADOWS )
 #pragma import_defines ( ENABLE_CLOUDS )
 
 #include "DepthPrecision.h"
@@ -38,11 +39,16 @@ uniform sampler2D cloudSampler;
 void main()
 {
 	gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;
-	texCoord = osg_MultiTexCoord0.xyz;
-	normalWS = mat3(modelMatrix) * osg_Normal.xyz;
+	
+#ifdef CAST_SHADOWS
+	return;
+#endif
 	
 	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
 	
+	texCoord = osg_MultiTexCoord0.xyz;
+	normalWS = mat3(modelMatrix) * osg_Normal.xyz;	
+
 	vec4 positionWS = modelMatrix * osg_Vertex;
 	positionRelCamera = positionWS.xyz - cameraPosition;
 	
@@ -55,6 +61,6 @@ void main()
 #ifdef ENABLE_CLOUDS
 	sunIrradiance *= sampleCloudShadowMaskAtPositionRelPlanet(cloudSampler, positionRelPlanet, lightDirection);
 #endif
-	shadowTexCoord = (shadowProjectionMatrix * positionWS).xyz;
+	shadowTexCoord = (shadowProjectionMatrix0 * positionWS).xyz;
 	colorMultiplier = vec3(0.6 + 0.5 * randomFast1d(osg_MultiTexCoord0.w));
 }

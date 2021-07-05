@@ -8,16 +8,19 @@
 
 #pragma import_defines ( ENABLE_ATMOSPHERE )
 #pragma import_defines ( ENABLE_DEPTH_OFFSET )
+#pragma import_defines ( ENABLE_SHADOWS )
 
 #include "DepthPrecision.h"
 #include "Brdfs/BlinnPhong.h"
 #include "Brdfs/Lambert.h"
+#include "Shadows/Shadows.h"
 
 in vec3 texCoord;
 in vec3 normalWS;
 in float logZ;
 in vec3 sunIrradiance;
 in vec3 positionRelCamera;
+in vec3 shadowTexCoord;
 
 #ifdef ENABLE_ATMOSPHERE
 	in vec3 skyIrradiance;
@@ -39,14 +42,23 @@ void main()
 {
 	color = texture(albedoSampler, texCoord.xy);
 	
-	color.rgb *= calcLambertDirectionalLight(lightDirection, normalWS) * sunIrradiance
+	float fragmentViewDistance = length(positionRelCamera);
+	
+#ifdef ENABLE_SHADOWS
+	float dotLN = dot(lightDirection, normalWS);
+	float lightVisibility = sampleShadowsAtTexCoord(shadowTexCoord.xy, shadowTexCoord.z, dotLN, fragmentViewDistance);
+#else
+	float lightVisibility = 1.0;
+#endif
+	
+	color.rgb *= calcLambertDirectionalLight(lightDirection, normalWS) * sunIrradiance * lightVisibility
 #ifdef ENABLE_ATMOSPHERE
 		+ calcLambertAmbientLight(normalWS, sunIrradiance, skyIrradiance)
 #endif
 		+ ambientLightColor;
 
 #ifdef ENABLE_SPECULAR
-	vec3 viewDirection = -normalize(positionRelCamera);
+	vec3 viewDirection = -positionRelCamera/fragmentViewDistance;
 	color.rgb += 0.25 * calcBlinnPhongSpecular(lightDirection, viewDirection, normalWS, 20) * sunIrradiance;
 #endif
 

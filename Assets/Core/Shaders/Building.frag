@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #version 440 core
+#pragma import_defines ( CAST_SHADOWS )
 #pragma import_defines ( ENABLE_SHADOWS )
 
 #include "DepthPrecision.h"
@@ -34,11 +35,18 @@ const float specularity = 0.3;
 
 void main()
 {
+#ifdef CAST_SHADOWS
+	return;
+#endif
+
 	color = texture(albedoSampler, texCoord.xyz);
 	color.rgb *= colorMultiplier;
+
+	float fragmentViewDistance = length(positionRelCamera);
 	
 #ifdef ENABLE_SHADOWS
-	float lightVisibility = sampleShadowsAtTexCoord(shadowTexCoord.xy, shadowTexCoord.z - 0.01);
+	float dotLN = dot(lightDirection, normalWS);
+	float lightVisibility = sampleShadowsAtTexCoord(shadowTexCoord.xy, shadowTexCoord.z, dotLN, fragmentViewDistance);
 #else
 	float lightVisibility = 1.0;
 #endif
@@ -49,7 +57,7 @@ void main()
 		+ calcLambertSkyLight(lightDirection, normalWS) * skyIrradiance
 		+ ambientLightColor;
 	
-	vec3 viewDirection = normalize(-positionRelCamera);
+	vec3 viewDirection = -positionRelCamera / fragmentViewDistance;
 	color.rgb += visibleSunIrradiance * specularity * vec3(calcBlinnPhongSpecular(lightDirection, viewDirection, normalWS, shininess));
 	
 	color.rgb = color.rgb * transmittance + skyRadianceToPoint;

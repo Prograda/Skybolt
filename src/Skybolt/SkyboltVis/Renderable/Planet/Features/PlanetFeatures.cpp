@@ -37,10 +37,9 @@ struct LoadedVisObjects
 class VisObjectsLoadTask
 {
 public:
-	VisObjectsLoadTask(const ShaderPrograms* programs, const osg::ref_ptr<osg::StateSet>& waterStateSet, const ShadowMaps& shadowMaps) :
+	VisObjectsLoadTask(const ShaderPrograms* programs, const osg::ref_ptr<osg::StateSet>& waterStateSet) :
 		mPrograms(programs),
-		mWaterStateSet(waterStateSet),
-		mShadowMaps(shadowMaps)
+		mWaterStateSet(waterStateSet)
 	{
 		assert(mPrograms);
 	}
@@ -171,7 +170,7 @@ public:
 		// Create batches for rendering
 		if (!buildings.empty())
 		{
-			BuildingsBatchPtr visBuildings(new BuildingsBatch(buildings, mPrograms->getRequiredProgram("building"), mShadowMaps));
+			BuildingsBatchPtr visBuildings(new BuildingsBatch(buildings, mPrograms->getRequiredProgram("building")));
 			objects.nodes[PlanetFeaturesParams::groupsBuildingsIndex].push_back(visBuildings);
 		}
 
@@ -194,7 +193,6 @@ private:
 	std::shared_mutex* mElevationProviderMutex;
 	const ShaderPrograms* mPrograms;
 	osg::ref_ptr<osg::StateSet> mWaterStateSet;
-	ShadowMaps mShadowMaps;
 };
 
 std::unique_ptr<FeatureTile> createTile(const QuadTreeTileKey& key, const LatLonBounds& bounds)
@@ -207,7 +205,7 @@ std::unique_ptr<FeatureTile> createTile(const QuadTreeTileKey& key, const LatLon
 
 PlanetFeatures::PlanetFeatures(const PlanetFeaturesParams& params) :
 	mScheduler(params.scheduler),
-	mVisObjectsLoadTask(new VisObjectsLoadTask(params.programs, params.waterStateSet, params.shadowMaps)),
+	mVisObjectsLoadTask(new VisObjectsLoadTask(params.programs, params.waterStateSet)),
 	mPlanetRadius(params.planetRadius),
 	mFileLocator(params.fileLocator),
 	mTilesDirectoryRelAssetPackage(params.tilesDirectoryRelAssetPackage),

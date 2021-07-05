@@ -272,6 +272,19 @@ static osg::Texture2D* createCloudTexture(const std::string& filepath)
 	return texture;
 }
 
+static std::optional<vis::ShadowParams> toShadowParams(const nlohmann::json& json)
+{
+	auto i = json.find("shadows");
+	if (i != json.end())
+	{
+		if (readOptionalOrDefault<bool>(i.value(), "enabled", true))
+		{
+			return vis::ShadowParams();
+		}
+	}
+	return {};
+}
+
 static void loadPlanet(Entity* entity, const EntityFactory::Context& context, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	double planetRadius = json.at("radius").get<double>();
@@ -285,6 +298,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 	config.visFactoryRegistry = context.visFactoryRegistry.get();
 	config.waterEnabled = hasOcean;
 	config.fileLocator = context.fileLocator;
+	config.shadowParams = toShadowParams(context.engineSettings);
 	
 	{
 		auto it = json.find("clouds");
@@ -347,7 +361,6 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 		nlohmann::json albedo = layers.at("albedo");
 		config.albedoMaxLodLevel = albedo.at("maxLevel");
 		config.planetTileSources.albedo = context.tileSourceFactory->createTileSourceFromJson(albedo);
-
 	}
 	auto it = layers.find("attribute");
 	if (it != layers.end())

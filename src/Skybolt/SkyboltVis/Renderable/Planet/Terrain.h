@@ -8,7 +8,7 @@
 
 #include "SkyboltVis/DefaultRootNode.h"
 #include "SkyboltVis/OsgBox2.h"
-#include "SkyboltVis/ShadowHelpers.h"
+#include "SkyboltVis/Shadow/ShadowHelpers.h"
 #include <osg/Texture2D>
 
 #include <boost/optional.hpp>
@@ -50,7 +50,6 @@ struct TerrainConfig
 
 	boost::optional<DetailMaps> detailMaps;
 
-	ShadowMaps shadowMaps;
 	osg::ref_ptr<osg::Program> program;
 	float heightScale = 65536;
 	osg::Vec2f heightMapUvScale = osg::Vec2f(1, 1);

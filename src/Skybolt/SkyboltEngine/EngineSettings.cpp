@@ -10,6 +10,9 @@ nlohmann::json createDefaultEngineSettings()
 	"tileApiKeys": {
 		"bing": "",
 		"mapbox": ""
+	},
+	"shadows": {
+		"enabled": true
 	}
 })"_json;
 }

@@ -241,7 +241,7 @@ static osg::ref_ptr<osg::Texture2DArray> getTextureArray()
 	return texture;
 }
 
-static osg::ref_ptr<osg::StateSet> createStateSet(const osg::ref_ptr<osg::Program>& program, osg::ref_ptr<osg::Texture2DArray> texture, const BuildingsBatch::Uniforms& uniforms, const ShadowMaps& shadowMaps)
+static osg::ref_ptr<osg::StateSet> createStateSet(const osg::ref_ptr<osg::Program>& program, osg::ref_ptr<osg::Texture2DArray> texture, const BuildingsBatch::Uniforms& uniforms)
 {
 	osg::ref_ptr<osg::StateSet> ss(new osg::StateSet);
 	ss->setTextureAttributeAndModes(0, texture);
@@ -250,16 +250,14 @@ static osg::ref_ptr<osg::StateSet> createStateSet(const osg::ref_ptr<osg::Progra
 	ss->setAttribute(program);
 	ss->addUniform(uniforms.modelMatrix);
 
-	addShadowMapsToStateSet(shadowMaps, *ss, 1);
-
 	return ss;
 }
 
-BuildingsBatch::BuildingsBatch(const Buildings& buildings, const osg::ref_ptr<osg::Program>& program, const ShadowMaps& shadowMaps)
+BuildingsBatch::BuildingsBatch(const Buildings& buildings, const osg::ref_ptr<osg::Program>& program)
 {
 	osg::Geode* geode = createBuildings(buildings);
 	mUniforms.modelMatrix = new osg::Uniform("modelMatrix", osg::Matrixf());
-	geode->setStateSet(createStateSet(program, getTextureArray(), mUniforms, shadowMaps));
+	geode->setStateSet(createStateSet(program, getTextureArray(), mUniforms));
 	mTransform->addChild(geode);
 }
 

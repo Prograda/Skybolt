@@ -10,7 +10,6 @@
 #include "SkyboltVis/SkyboltVisFwd.h"
 #include "SkyboltVis/OsgBox2.h"
 #include "SkyboltVis/VisObject.h"
-#include "SkyboltVis/ShadowHelpers.h"
 #include "SkyboltVis/Renderable/Forest/GpuForest.h"
 #include "SkyboltVis/Renderable/Planet/Tile/OsgTileFactory.h"
 #include "SkyboltVis/Renderable/Planet/Tile/QuadTreeTileLoader.h"
@@ -75,6 +74,8 @@ public:
 	void updatePreRender(const RenderContext& context);
 
 	skybolt::Listenable<QuadTreeTileLoaderListener>* getTileLoaderListenable() const { return mTileSource.get(); }
+
+	const osg::ref_ptr<osg::Group>& getGroup() const { return mGroup; }
 
 private:
 	void updateGeometry();

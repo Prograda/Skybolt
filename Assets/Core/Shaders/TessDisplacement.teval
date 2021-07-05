@@ -5,6 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #version 410 core
+#pragma import_defines ( CAST_SHADOWS )
+
 #include "AtmosphericScattering.h"
 #include "CloudShadows.h"
 #include "DepthPrecision.h"
@@ -108,8 +110,11 @@ void main()
 	gl_ClipDistance[0] = (dot(osg_ClipPlane.xyz, position_worldSpace) + osg_ClipPlane.w) / length(osg_ClipPlane.xyz);
 	
 	gl_Position = viewProjectionMatrix * vec4(position_worldSpace, 1);
+#ifdef CAST_SHADOWS
+	return;
+#endif
 	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
-	
+
 	wrappedNoiseCoord = calcWrappedNoiseCoord(position_worldSpace);
 	
 	float shadowCasterDistance;
