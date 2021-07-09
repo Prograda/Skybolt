@@ -44,7 +44,9 @@ struct MainRotorComponentConfig
 	Vector3 positionRelBody;
 	Quaternion orientationRelBody;
 
-	ControlInputVec2Ptr cyclicInput; //!< range is [-1, 1]. Positive backward and right.
+	//! First component is positive right stick deflection, second component is positive backward stick deflection. Range is [-1, 1].
+	ControlInputVec2Ptr cyclicInput;
+
 	ControlInputFloatPtr collectiveInput; //!< range [0, 1]
 };
 

@@ -299,7 +299,7 @@ public:
 			{
 				if (axisCount >= 2)
 				{
-					component->setIfPresent("stick", glm::vec2(joystick->getAxisState(1), joystick->getAxisState(0)) * 2.0f - 1.0f);
+					component->setIfPresent("stick", glm::vec2(joystick->getAxisState(0), joystick->getAxisState(1)) * 2.0f - 1.0f);
 
 					if (axisCount >= 3)
 					{
