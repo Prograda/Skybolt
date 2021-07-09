@@ -7,12 +7,14 @@
 #include "ModelPreparer.h"
 #include <osg/Geode>
 #include <osg/Geometry>
+#include <osgUtil/TangentSpaceGenerator>
 
 namespace skybolt {
 namespace vis {
 
-ModelPreparer::ModelPreparer() :
-	NodeVisitor(NodeVisitor::TRAVERSE_ALL_CHILDREN)
+ModelPreparer::ModelPreparer(const ModelPreparerConfig& config) :
+	NodeVisitor(NodeVisitor::TRAVERSE_ALL_CHILDREN),
+	mGenerateTangents(config.generateTangents)
 {
 }
  
@@ -32,6 +34,13 @@ void ModelPreparer::apply(osg::Geode &geode)
 			geom->setUseDisplayList(false); 
 			geom->setUseVertexBufferObjects(true); 
 			geom->setUseVertexArrayObject(true);
+
+			if (mGenerateTangents)
+			{
+				osg::ref_ptr<osgUtil::TangentSpaceGenerator> tsg = new osgUtil::TangentSpaceGenerator();
+				tsg->generate(geom, 0);
+				geom->setTexCoordArray(1, tsg->getTangentArray());
+			}
 		} 
 	}
 }    

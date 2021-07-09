@@ -8,7 +8,9 @@
 #include "ModelFactory.h"
 #include "ModelPreparer.h"
 #include "OsgImageHelpers.h"
+#include "OsgStateSetHelpers.h"
 #include <SkyboltCommon/MapUtility.h>
+#include <osg/Image>
 #include <osgDB/ReadFile>
 
 using namespace skybolt::vis;
@@ -47,27 +49,49 @@ public:
 	virtual void apply(osg::StateSet& stateSet) = 0;
 };
 
+enum class TextureUnitIndexTypes
+{
+	Albedo,
+	Normal
+};
+
+static osg::Texture* getTextureOfType(osg::StateSet& stateSet, TextureUnitIndexTypes type)
+{
+	int typeInt = int(type);
+	if (typeInt < stateSet.getTextureAttributeList().size())
+	{
+		osg::StateAttribute* sa = stateSet.getTextureAttribute(typeInt, osg::StateAttribute::TEXTURE);
+		osg::Texture* texture = dynamic_cast<osg::Texture*>(sa);
+		if (texture)
+		{
+			return texture;
+		}
+	}
+	return nullptr;
+}
+
 // Traverses node hierarchy and sets internal format of textures to an equivalent sRGB format
-class TextureSrgbModifier : public StateSetVisitor
+class TexturePreparer : public StateSetVisitor
 {
 public:
 	void apply(osg::StateSet& stateSet) override
 	{
-		for (unsigned int i = 0; i < stateSet.getTextureAttributeList().size(); ++i)
+		osg::Texture* texture = getTextureOfType(stateSet, TextureUnitIndexTypes::Albedo);
+		if (texture)
 		{
-			osg::StateAttribute* sa = stateSet.getTextureAttribute(i, osg::StateAttribute::TEXTURE);
-			osg::Texture* texture = dynamic_cast<osg::Texture*>(sa);
-			if (texture)
-			{
-				apply(*texture);
-			}
+			texture->setInternalFormat(toSrgbInternalFormat(texture->getInternalFormat()));
+		}
+
+		texture = getTextureOfType(stateSet, TextureUnitIndexTypes::Normal);
+		if (texture)
+		{
+			stateSet.setDefine("ENABLE_NORMAL_MAP");
+			stateSet.addUniform(createUniformSampler2d("normalSampler", 1));
+			hasNormalMap = true;
 		}
 	}
 
-	void apply(osg::Texture& texture)
-	{
-		texture.setInternalFormat(toSrgbInternalFormat(texture.getInternalFormat()));
-	}
+	bool hasNormalMap = false;
 };
 
 class MaterialShaderAssignmentsModifier : public StateSetVisitor
@@ -120,13 +144,16 @@ osg::ref_ptr<osg::Node> ModelFactory::createModel(const std::string& filename)
 			throw skybolt::Exception("Could not load OSG model: " + filename);
 		}
 
-		ModelPreparer preparer;
-		model->accept(preparer);
+		TexturePreparer modifier;
+		model->accept(modifier);
 
 		{
-			TextureSrgbModifier modifier;
-			model->accept(modifier);
+			ModelPreparerConfig config;
+			config.generateTangents = modifier.hasNormalMap;
+			ModelPreparer preparer(config);
+			model->accept(preparer);
 		}
+
 		{
 			MaterialShaderAssignmentsModifier modifier(mStateSetModifiers);
 			model->accept(modifier);

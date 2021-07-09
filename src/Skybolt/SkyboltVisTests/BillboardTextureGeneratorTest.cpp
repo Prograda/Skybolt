@@ -36,7 +36,8 @@ public:
 		mTransform = new osg::MatrixTransform;
 		mTransform->addChild(model);
 
-		ModelPreparer preparer;
+		ModelPreparerConfig config;
+		ModelPreparer preparer(config);
 		preparer.apply(*model);
 	}
 

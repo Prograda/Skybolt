@@ -18,7 +18,8 @@ enum class GlobalSamplerUnit
 	ShadowCascade1,
 	ShadowCascade2,
 	ShadowCascade3,
-	CloudDetail2d
+	CloudDetail2d,
+	EnvironmentProbe
 };
 
 } // namespace skybolt

@@ -18,8 +18,6 @@ struct Wake
 
 struct WaterStateSetConfig
 {
-	osg::ref_ptr<osg::Texture2D> environmentTexture;
-
 	static const int waveTextureCount = 1;
 	osg::ref_ptr<osg::Texture2D> waveHeightTexture[waveTextureCount];
 	osg::ref_ptr<osg::Texture2D> waveNormalTexture[waveTextureCount];

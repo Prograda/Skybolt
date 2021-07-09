@@ -8,15 +8,19 @@
 
 #pragma import_defines ( ENABLE_ATMOSPHERE )
 #pragma import_defines ( ENABLE_DEPTH_OFFSET )
+#pragma import_defines ( ENABLE_NORMAL_MAP )
 #pragma import_defines ( ENABLE_SHADOWS )
 
 #include "DepthPrecision.h"
+#include "NormalMapping.h"
 #include "Brdfs/BlinnPhong.h"
 #include "Brdfs/Lambert.h"
+#include "Brdfs/OrenNayer.h"
 #include "Shadows/Shadows.h"
 
 in vec3 texCoord;
 in vec3 normalWS;
+in vec3 tangentWS;
 in float logZ;
 in vec3 sunIrradiance;
 in vec3 positionRelCamera;
@@ -31,6 +35,8 @@ in vec3 shadowTexCoord;
 out vec4 color;
 
 uniform sampler2D albedoSampler;
+uniform sampler2D normalSampler;
+
 uniform vec3 lightDirection;
 uniform vec3 ambientLightColor;
 
@@ -43,23 +49,34 @@ void main()
 	color = texture(albedoSampler, texCoord.xy);
 	
 	float fragmentViewDistance = length(positionRelCamera);
+
+#ifdef ENABLE_NORMAL_MAP
+	vec3 normal = texture(normalSampler, texCoord.xy).rgb;
+	normal = normalize(normal * 2.0 - 1.0);
+	mat3 tbn = getTbn(tangentWS, normalWS);
+	normal = normalize(tbn * normal); 
+#else
+	vec3 normal = normalWS;
+#endif
 	
 #ifdef ENABLE_SHADOWS
-	float dotLN = dot(lightDirection, normalWS);
+	float dotLN = dot(lightDirection, normal);
 	float lightVisibility = sampleShadowsAtTexCoord(shadowTexCoord.xy, shadowTexCoord.z, dotLN, fragmentViewDistance);
 #else
 	float lightVisibility = 1.0;
 #endif
+	vec3 viewDirection = -positionRelCamera/fragmentViewDistance;
 	
-	color.rgb *= calcLambertDirectionalLight(lightDirection, normalWS) * sunIrradiance * lightVisibility
+	color.rgb *= calcLambertDirectionalLight(lightDirection, normal) * sunIrradiance * lightVisibility
+	//color.rgb *= calcOrenNayerDirectionalLight(lightDirection, viewDirection, normal, 0.8) * sunIrradiance * lightVisibility
 #ifdef ENABLE_ATMOSPHERE
-		+ calcLambertAmbientLight(normalWS, sunIrradiance, skyIrradiance)
+		+ calcLambertAmbientLight(normal, sunIrradiance, skyIrradiance)
 #endif
 		+ ambientLightColor;
 
+//#define ENABLE_SPECULAR
 #ifdef ENABLE_SPECULAR
-	vec3 viewDirection = -positionRelCamera/fragmentViewDistance;
-	color.rgb += 0.25 * calcBlinnPhongSpecular(lightDirection, viewDirection, normalWS, 20) * sunIrradiance;
+	color.rgb += 0.03 * calcBlinnPhongSpecular(lightDirection, viewDirection, normal, 10) * sunIrradiance;
 #endif
 
 #ifdef ENABLE_ATMOSPHERE

@@ -11,14 +11,22 @@
 namespace skybolt {
 namespace vis {
 
+struct ModelPreparerConfig
+{
+	bool generateTangents = false;
+};
+
 class ModelPreparer : public osg::NodeVisitor
 {
 public:
-	ModelPreparer();
+	ModelPreparer(const ModelPreparerConfig& config);
 	virtual void apply(osg::Node &node);
 
 private:
     virtual void apply(osg::Geode &geode); 
+
+private:
+	bool mGenerateTangents;
 };
 
 } // namespace vis

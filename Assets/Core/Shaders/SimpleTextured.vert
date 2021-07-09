@@ -8,6 +8,7 @@
 
 #pragma import_defines ( ENABLE_ATMOSPHERE )
 #pragma import_defines ( ENABLE_CLOUDS )
+#pragma import_defines ( ENABLE_NORMAL_MAP )
 
 #include "DepthPrecision.h"
 #include "AtmosphericScattering.h"
@@ -17,9 +18,11 @@
 in vec4 osg_Vertex;
 in vec4 osg_Normal;
 in vec4 osg_MultiTexCoord0;
+in vec4 osg_MultiTexCoord1;
 
 out vec3 texCoord;
 out vec3 normalWS;
+out vec3 tangentWS;
 out vec3 positionRelCamera;
 out float logZ;
 out vec3 sunIrradiance;
@@ -45,6 +48,10 @@ void main()
 	
 	texCoord = osg_MultiTexCoord0.xyz;
 	normalWS = mat3(modelMatrix) * osg_Normal.xyz;
+	
+#ifdef ENABLE_NORMAL_MAP
+	tangentWS = mat3(modelMatrix) * osg_MultiTexCoord1.xyz;
+#endif
 	
 	vec4 positionWS = modelMatrix * osg_Vertex;
 	positionRelCamera = positionWS.xyz - cameraPosition;

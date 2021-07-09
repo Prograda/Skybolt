@@ -395,6 +395,12 @@ Planet::Planet(const PlanetConfig& config) :
 	mEnvironmentMapGpuTextureGenerator = new GpuTextureGenerator(environmentTexture, createSkyToEnvironmentMapStateSet(config.programs->getRequiredProgram("skyToEnvironmentMap")), /* generateMipMaps */ true);
 	addTextureGeneratorToSceneGraph(mEnvironmentMapGpuTextureGenerator);
 
+	{
+		osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
+		ss->setTextureAttributeAndModes((int)GlobalSamplerUnit::EnvironmentProbe, environmentTexture, osg::StateAttribute::ON);
+		ss->addUniform(createUniformSampler2d("environmentSampler", (int)GlobalSamplerUnit::EnvironmentProbe));
+	}
+
 	// Create terrain
 	{
 		std::shared_ptr<OsgTileFactory> osgTileFactory;
@@ -446,7 +452,6 @@ Planet::Planet(const PlanetConfig& config) :
 		if (it != config.visFactoryRegistry->end())
 		{
 			WaterStateSetConfig stateSetConfig;
-			stateSetConfig.environmentTexture = environmentTexture;
 
 			float smallestWaveHeightMapWorldSize = 500.0f; // FIXME: To avoid texture wrapping issues, Scene::mWrappedNoisePeriod divided by this should have no remainder
 			mWaveHeightTextureGenerator.reset(new CascadedWaveHeightTextureGenerator(static_cast<const WaveHeightTextureGeneratorFactory&>(*it->second), smallestWaveHeightMapWorldSize));

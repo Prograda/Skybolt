@@ -6,6 +6,7 @@
 
 #version 440 core
 #include "DepthPrecision.h"
+#include "EnvironmentMap.h"
 #include "Brdfs/BlinnPhong.h"
 
 in vec3 positionRelCamera;
@@ -17,13 +18,20 @@ out vec4 color;
 
 uniform vec3 ambientLightColor;
 uniform vec3 lightDirection;
+uniform sampler2D environmentSampler;
 
 void main()
 {
 	vec3 viewDirection = -normalize(positionRelCamera);
-	vec3 reflection = calcBlinnPhongSpecular(lightDirection, viewDirection, normalWS, 50) * sunIrradiance;
+	vec3 reflection = calcBlinnPhongSpecular(lightDirection, viewDirection, normalWS, 100) * sunIrradiance;
 	
-	color.rgb = ambientLightColor + reflection;
-	color.a = 0.2;
+	vec3 reflectionDir = reflect(-viewDirection, normalWS);
+	
+	vec2 environmentUv = getSphericalEnvironmentMapTexCoord(reflectionDir);
+	reflection += textureLod(environmentSampler, environmentUv, 3).rgb;
+	
+	float reflectionMultiplier = 0.1;
+	color.rgb = (ambientLightColor + reflection) * reflectionMultiplier;
+	color.a = 0.7;
 	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }
