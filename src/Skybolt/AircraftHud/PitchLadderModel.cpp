@@ -38,10 +38,10 @@ void PitchLadderModel::drawHalfRung(float relY, float rungPitch, float roll, flo
 		mDrawer->drawLine(p1, p2);
 
 	glm::vec2 textPos(halfSignedWidth + glm::sign(halfSignedWidth) * mParam.textOffset, relY);
-	float angleTextValue = skybolt::math::radToDegF() * rungPitch;
+	int angleTextValue = int(round(skybolt::math::radToDegF() * rungPitch));
 	if (angleTextValue > 90)
 		angleTextValue = 180 - angleTextValue;
-	mDrawer->drawText(math::vec2Rotate(textPos, roll), std::to_string(round(angleTextValue)), roll, -1.0, HudDrawer::Alignment::Center);
+	mDrawer->drawText(math::vec2Rotate(textPos, roll), std::to_string(angleTextValue), roll, -1.0, HudDrawer::Alignment::Center);
 }
 
 void PitchLadderModel::drawRung(float rungPitch, float pitch, float roll, float width, const HudDrawer::DashedLineParams* params)

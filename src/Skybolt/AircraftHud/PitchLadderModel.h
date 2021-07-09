@@ -37,7 +37,7 @@ public:
 	PitchLadderModel(HudDrawer* drawer, const Parameters& param);
 	void draw(float pitch, float roll);
 
-	void setPitchGapHeight(double height) { mParam.pitchGapHeight = height; }
+	void setPitchGapHeight(float height) { mParam.pitchGapHeight = height; }
 
 protected:
 	void drawRung(float rungPitch, float pitch, float roll, float width, const HudDrawer::DashedLineParams* params = 0);
