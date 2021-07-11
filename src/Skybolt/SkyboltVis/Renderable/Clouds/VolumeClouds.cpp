@@ -104,14 +104,6 @@ static osg::StateSet* createStateSet(const osg::ref_ptr<osg::Program>& program, 
 	return stateSet;
 }
 
-class BoundingBoxCallback : public osg::Drawable::ComputeBoundingBoxCallback
-{
-	osg::BoundingBox computeBound(const osg::Drawable & drawable)
-	{
-		return osg::BoundingBox(osg::Vec3f(-FLT_MAX, -FLT_MAX, -FLT_MAX), osg::Vec3f(FLT_MAX, FLT_MAX, FLT_MAX));
-	}
-};
-
 static osg::ref_ptr<osg::Texture2D> createCloudColorTexture(int width, int height)
 {
 	osg::ref_ptr<osg::Texture2D> texture = createRenderTexture(width, height);
@@ -169,7 +161,7 @@ VolumeClouds::VolumeClouds(const VolumeCloudsConfig& config)
 	osg::Vec2f size(1,1);
 
 	static osg::ref_ptr<osg::Geometry> quad = createQuadWithUvs(BoundingBox2f(pos, size), QuadUpDirectionY);
-	quad->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+	quad->setCullingActive(false);
 
 #define COMPOSITE_CLOUDS
 #ifdef COMPOSITE_CLOUDS

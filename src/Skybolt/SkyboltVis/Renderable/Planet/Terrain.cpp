@@ -182,15 +182,6 @@ static void setupTerrainStateSet(osg::StateSet& ss, const TerrainConfig& config)
 #endif
 }
 
-class BoundingBoxCallback : public osg::Drawable::ComputeBoundingBoxCallback
-{
-	osg::BoundingBox computeBound(const osg::Drawable & drawable)
-	{
-		// TODO: use actual bounds
-		return osg::BoundingBox(osg::Vec3f(-FLT_MAX, -FLT_MAX, 0), osg::Vec3f(FLT_MAX, FLT_MAX, 0));
-	}
-};
-
 Terrain::Terrain(const TerrainConfig& config)
 {
 	TerrainConfig::FlatTile* flatTile = dynamic_cast<TerrainConfig::FlatTile*>(config.tile.get());

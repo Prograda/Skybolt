@@ -195,5 +195,44 @@ osg::Geometry* createQuadWithUvs(const BoundingBox2f& box, QuadUpDirection upDir
 	return quad;
 }
 
+osg::Geometry* createLineBox(const osg::BoundingBox& box)
+{
+	osg::Geometry* geometry = new osg::Geometry();
+
+	osg::Vec3Array* vertices = new osg::Vec3Array(8);
+	for (int i = 0; i < 8; ++i)
+	{
+		(*vertices)[i] = box.corner(i);
+	}
+
+	geometry->setVertexArray(vertices);
+
+	static GLushort indices[] = {
+		0,1,
+		0,4,
+		0,5,
+		1,5,
+
+		1,3,
+		3,7,
+		3,2,
+		2,6,
+
+		6,7,
+		4,5,
+		4,6,
+		5,7
+	};
+
+	// This time we simply use primitive, and hardwire the number 
+	// of coords to use since we know up front,
+	geometry->addPrimitiveSet(new osg::DrawElementsUShort(osg::PrimitiveSet::LINES, 24, indices));
+	geometry->setUseDisplayList(false);
+	geometry->setUseVertexBufferObjects(true);
+	geometry->setUseVertexArrayObject(true);
+
+	return geometry;
+}
+
 } // namespace vis
 } // namespace skybolt

@@ -33,5 +33,7 @@ osg::Geometry* createQuad(const BoundingBox2f& box, QuadUpDirection upDir);
 
 osg::Geometry* createQuadWithUvs(const BoundingBox2f& box, QuadUpDirection upDir);
 
+osg::Geometry* createLineBox(const osg::BoundingBox& box);
+
 } // namespace vis
 } // namespace skybolt

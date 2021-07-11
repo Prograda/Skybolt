@@ -25,15 +25,6 @@ float lakeHeightAboveTerrain = 10.0f;
 namespace skybolt {
 namespace vis {
 
-class BoundingBoxCallback : public osg::Drawable::ComputeBoundingBoxCallback
-{
-	osg::BoundingBox computeBound(const osg::Drawable & drawable)
-	{
-		// TODO: Use actual bounds
-		return osg::BoundingBox(osg::Vec3f(-FLT_MAX, -FLT_MAX, 0), osg::Vec3f(FLT_MAX, FLT_MAX, 0));
-	}
-};
-
 void createLake(const Lake& lake, osg::Vec3Array* posBuffer, osg::Vec3Array* normalBuffer, osg::Vec2Array* uvBuffer, osg::UIntArray* indexBuffer)
 {
 	assert(lake.points.size() >= 3);
@@ -109,7 +100,7 @@ osg::Geode* createLakes(const Lakes& lakes)
 
 	geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
 
-	geometry->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+	geometry->setCullingActive(false); // TODO: set bounds and enable culling
 	geode->addDrawable(geometry);
 	return geode;
 }

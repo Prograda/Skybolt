@@ -73,7 +73,7 @@ public:
 		}
 
 		osg::Group* group = new osg::Group;
-		BillboardForest::addGeodes(*group, trees, mPrograms->getRequiredProgram("treeSideBillboard"), mPrograms->getRequiredProgram("treeTopBillboard"), mVisRangeWorldUnits);
+		BillboardForest::addGeodes(*group, trees, mPrograms->getRequiredProgram("treeSideBillboard"), mPrograms->getRequiredProgram("treeTopBillboard"), mVisRangeWorldUnits, worldBounds.size());
 		return group;
 	}
 

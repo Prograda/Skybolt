@@ -6,6 +6,7 @@
 
 #include "BuildingsBatch.h"
 #include "earcutOsg.h"
+#include "OsgGeometryHelpers.h"
 #include "OsgImageHelpers.h"
 #include "OsgStateSetHelpers.h"
 
@@ -47,14 +48,6 @@ std::vector<RoofTexture> roofTextures = {
 	{ "Environment/Concrete/Concrete017_2K_Color.jpg" }
 };
 
-class BoundingBoxCallback : public osg::Drawable::ComputeBoundingBoxCallback // TODO
-{
-	osg::BoundingBox computeBound(const osg::Drawable & drawable)
-	{
-		return osg::BoundingBox(osg::Vec3f(-FLT_MAX, -FLT_MAX, 0), osg::Vec3f(FLT_MAX, FLT_MAX, 0));
-	}
-};
-
 inline osg::Vec2f toVec2f(const osg::Vec3f& v)
 {
 	return osg::Vec2f(v.x(), v.y());
@@ -70,9 +63,11 @@ static osg::Vec2f getNormal(const std::vector<osg::Vec3f>& points, int i)
 	return osg::Vec2f(dir.y(), -dir.x());
 }
 
-static void createBuilding(const Building& building, const FacadeTexture& facade, int facadeIndex, osg::Vec3Array* posBuffer, osg::Vec3Array* normalBuffer, osg::Vec4Array* uvBuffer, osg::UIntArray* indexBuffer, int buildingIndex)
+static osg::BoundingBoxf createBuilding(const Building& building, const FacadeTexture& facade, int facadeIndex, osg::Vec3Array* posBuffer, osg::Vec3Array* normalBuffer, osg::Vec4Array* uvBuffer, osg::UIntArray* indexBuffer, int buildingIndex)
 {
 	assert(building.points.size() > 1);
+
+	osg::BoundingBoxf bounds;
 
 	size_t index = posBuffer->size();
 	int pointCount = (int)building.points.size();
@@ -87,10 +82,16 @@ static void createBuilding(const Building& building, const FacadeTexture& facade
 		posBuffer->push_back(v0);
 		posBuffer->push_back(v1);
 
+		bounds.expandBy(v0);
+		bounds.expandBy(v1);
+
 		v0.z() -= building.height;
 		v1.z() -= building.height;
 		posBuffer->push_back(v1);
 		posBuffer->push_back(v0);
+
+		bounds.expandBy(v0);
+		bounds.expandBy(v1);
 
 		// Normals
 		osg::Vec2f normal = getNormal(building.points, i);
@@ -126,11 +127,15 @@ static void createBuilding(const Building& building, const FacadeTexture& facade
 		indexBuffer->push_back(index + 1);
 		index += 4;
 	}
+
+	return bounds;
 }
 
-static void createBuildingRoof(const Building& building, int textureIndex, osg::Vec3Array* posBuffer, osg::Vec3Array* normalBuffer, osg::Vec4Array* uvBuffer, osg::UIntArray* indexBuffer, int buildingIndex)
+static osg::BoundingBoxf createBuildingRoof(const Building& building, int textureIndex, osg::Vec3Array* posBuffer, osg::Vec3Array* normalBuffer, osg::Vec4Array* uvBuffer, osg::UIntArray* indexBuffer, int buildingIndex)
 {
 	assert(building.points.size() > 1);
+
+	osg::BoundingBoxf bounds;
 
 	std::vector<std::vector<osg::Vec3f>> polygon;
 	polygon.push_back(building.points);
@@ -148,8 +153,11 @@ static void createBuildingRoof(const Building& building, int textureIndex, osg::
 	{
 		// Quad vertices
 		osg::Vec3f v0 = building.points[i];
+		bounds.expandBy(v0);
+
 		v0.z() -= building.height;
 		posBuffer->push_back(v0);
+		bounds.expandBy(v0);
 
 		// Normals
 		osg::Vec2f normal = getNormal(building.points, i);
@@ -163,6 +171,7 @@ static void createBuildingRoof(const Building& building, int textureIndex, osg::
 	{
 		indexBuffer->push_back(index + indices[i]);
 	}
+	return bounds;
 }
 
 static osg::Geode* createBuildings(const Buildings& buildings)
@@ -174,6 +183,7 @@ static osg::Geode* createBuildings(const Buildings& buildings)
 
 	skybolt::Random random(0);
 
+	osg::BoundingBoxf bounds;
 	for (size_t i = 0; i < buildings.size(); ++i)
 	{
 		const Building& building = buildings[i];
@@ -182,10 +192,10 @@ static osg::Geode* createBuildings(const Buildings& buildings)
 
 		int facadeIndex = i % facadeTextures.size();
 
-		createBuilding(building, facadeTextures[facadeIndex], facadeIndex, posBuffer, normalBuffer, uvBuffer, indexBuffer, i);
+		bounds.expandBy(createBuilding(building, facadeTextures[facadeIndex], facadeIndex, posBuffer, normalBuffer, uvBuffer, indexBuffer, i));
 
 		int roofTextureIndex = random.getInt(facadeTextures.size(), facadeTextures.size() + roofTextures.size() - 1);
-		createBuildingRoof(building, roofTextureIndex, posBuffer, normalBuffer, uvBuffer, indexBuffer, i);
+		bounds.expandBy(createBuildingRoof(building, roofTextureIndex, posBuffer, normalBuffer, uvBuffer, indexBuffer, i));
 	}
 
     osg::Geode *geode = new osg::Geode();
@@ -201,7 +211,7 @@ static osg::Geode* createBuildings(const Buildings& buildings)
 	geometry->setUseVertexArrayObject(true);
 
     geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
-	geometry->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+	geometry->setComputeBoundingBoxCallback(createFixedBoundingBoxCallback(bounds));
     geode->addDrawable(geometry);
     return geode;
 }

@@ -16,6 +16,7 @@ Viewport::Viewport() :
 {
 	mOsgCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 	mOsgCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+	mOsgCamera->setCullingMode(osg::CullSettings::VIEW_FRUSTUM_SIDES_CULLING);
 	mOsgCamera->setClearColor(osg::Vec4(0, 0, 0, 0));
 
 	addChild(mOsgCamera);

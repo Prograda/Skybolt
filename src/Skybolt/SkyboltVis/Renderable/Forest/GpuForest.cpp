@@ -1,12 +1,15 @@
 #include "GpuForest.h"
 
 #include "SkyboltVis/OsgGeocentric.h"
+#include "SkyboltVis/OsgGeometryFactory.h"
 #include "SkyboltVis/Renderable/Forest/BillboardForest.h"
 #include "SkyboltVis/Renderable/Forest/GpuForestTile.h"
 #include "SkyboltVis/Renderable/Forest/PagedForest.h"
 #include "SkyboltVis/Renderable/Planet/Tile/TileKeyHelpers.h"
 #include "SkyboltVis/Shader/ShaderProgramRegistry.h"
 #include <SkyboltCommon/Random.h>
+
+#include <osg/Geode>
 
 namespace skybolt {
 namespace vis {
@@ -46,13 +49,27 @@ GpuForest::GpuForest(const GpuForestConfig& config) :
 	int lodCount = mForestParams.maxTileLodLevelToDisplayForest - mForestParams.minTileLodLevelToDisplayForest + 1;
 
 	auto lonLatBounds = getKeyLonLatBounds<osg::Vec2>(QuadTreeTileKey(mForestParams.maxTileLodLevelToDisplayForest, 0, 0));
-	double tileWidthMeters = lonLatBounds.size().x() * mPlanetRadius;
-	int treeCountPerDimAtMaxLod = std::max(1, int(tileWidthMeters * mForestParams.treesPerLinearMeter));
+	double maxLodTileWidthMeters = lonLatBounds.size().x() * mPlanetRadius;
+	int treeCountPerDimAtMaxLod = std::max(1, int(maxLodTileWidthMeters * mForestParams.treesPerLinearMeter));
 
 	for (int i = 0; i < lodCount; ++i)
 	{
 		int repetitions = 1 << (lodCount - i);
-		mForestGeometries.push_back(createBillboardForest(treeCountPerDimAtMaxLod, repetitions));
+
+		double tileWidthMeters = maxLodTileWidthMeters * (1 << i);
+
+		auto forest = createBillboardForest(treeCountPerDimAtMaxLod, repetitions, osg::Vec2(tileWidthMeters, tileWidthMeters));
+		mForestGeometries.push_back(forest);
+
+#ifdef DRAW_BOUNDING_BOXES
+		auto group = forest->_getNode()->asGroup();
+		auto geode = group->getChild(1)->asGeode();
+		auto drawable = createLineBox(geode->getBoundingBox());
+		osg::StateSet* stateSet = drawable->getOrCreateStateSet();
+		stateSet->setAttributeAndModes(mPrograms->getRequiredProgram("unlitColored"), osg::StateAttribute::ON);
+
+		geode->addDrawable(drawable);
+#endif
 	}
 }
 
@@ -178,7 +195,7 @@ void GpuForest::updatePreRender(const RenderContext& context)
 	}
 }
 
-std::shared_ptr<BillboardForest> GpuForest::createBillboardForest(int treeCountPerDimension, int repetitions) const
+std::shared_ptr<BillboardForest> GpuForest::createBillboardForest(int treeCountPerDimension, int repetitions, const osg::Vec2& tileBoundsMeters) const
 {
 	assert(repetitions >= 1);
 
@@ -195,7 +212,7 @@ std::shared_ptr<BillboardForest> GpuForest::createBillboardForest(int treeCountP
 	}
 
 	int subTileCount = repetitions * repetitions;
-	return std::make_shared<BillboardForest>(trees, mPrograms->getRequiredProgram("treeSideBillboard"), mPrograms->getRequiredProgram("treeTopBillboard"), mForestParams.forestGeoVisibilityRange, subTileCount);
+	return std::make_shared<BillboardForest>(trees, mPrograms->getRequiredProgram("treeSideBillboard"), mPrograms->getRequiredProgram("treeTopBillboard"), mForestParams.forestGeoVisibilityRange, tileBoundsMeters, subTileCount);
 }
 
 } // namespace vis

@@ -8,19 +8,11 @@
 #include "CameraRelativeBillboard.h"
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/OsgGeometryFactory.h"
+#include "SkyboltVis/OsgGeometryHelpers.h"
 #include "SkyboltVis/MatrixHelpers.h"
 #include "SkyboltVis/RenderContext.h"
 
 using namespace skybolt::vis;
-
-class BoundingBoxCallback : public osg::Drawable::ComputeBoundingBoxCallback
-{
-	osg::BoundingBox computeBound(const osg::Drawable & drawable)
-	{
-		// TODO: use actual bounds
-		return osg::BoundingBox(osg::Vec3f(-FLT_MAX, -FLT_MAX, 0), osg::Vec3f(FLT_MAX, FLT_MAX, 0));
-	}
-};
 
 CameraRelativeBillboard::CameraRelativeBillboard(const osg::ref_ptr<osg::StateSet>& stateSet, float width, float height, float distance) :
 	mDistance(distance)
@@ -29,7 +21,7 @@ CameraRelativeBillboard::CameraRelativeBillboard(const osg::ref_ptr<osg::StateSe
 	float halfHeight = height * 0.5f;
 
 	osg::ref_ptr<osg::Geometry> geometry = createQuadWithUvs(BoundingBox2f(osg::Vec2f(-halfWidth, -halfHeight), osg::Vec2f(halfWidth, halfHeight)), QuadUpDirectionNegZ);
-	geometry->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+	geometry->setComputeBoundingBoxCallback(createFixedBoundingBoxCallback(osg::BoundingBox())); // TODO: set bounds
 	geometry->setStateSet(stateSet);
 
 	mTransform->addChild(geometry);

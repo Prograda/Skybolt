@@ -25,9 +25,9 @@ public:
 	//! @param subTileCount defines the number of tiles that the trees vector is divided into for reusing tree IDs.
 	//!	       For example, if subTileCount = 4, tree IDs within the trees vector will repeat every trees.size()/4 trees.
 	//!        This is used by GpuForestTile to repeat tree appearance (defined by ID) so that tiles match across LOD levels.
-	BillboardForest(const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange, int subTileCount = 1);
+	BillboardForest(const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange, const osg::Vec2& tileBoundsMeters, int subTileCount = 1);
 
-	static void addGeodes(osg::Group& node, const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange, int subTileCount = 1);
+	static void addGeodes(osg::Group& node, const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange, const osg::Vec2& tileBoundsMeters, int subTileCount = 1);
 };
 
 } // namespace vis

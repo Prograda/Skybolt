@@ -25,20 +25,12 @@
 
 using namespace skybolt::vis;
 
-class BoundingBoxCallback : public osg::Drawable::ComputeBoundingBoxCallback
-{
-	osg::BoundingBox computeBound(const osg::Drawable & drawable)
-	{
-		return osg::BoundingBox(osg::Vec3f(-FLT_MAX, -FLT_MAX, 0), osg::Vec3f(FLT_MAX, FLT_MAX, 0));
-	}
-};
-
 Starfield::Starfield(const StarfieldConfig& config)
 {
 	// Create geo
 	osg::Geometry* geometry = createQuad(BoundingBox2f(osg::Vec2f(-0.5, -0.5), osg::Vec2f(0.5, 0.5)), QuadUpDirectionY);
 	geometry->getPrimitiveSet(0)->setNumInstances(BrightStarCatelog::stars.size());
-	geometry->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+	geometry->setCullingActive(false);
 
 	mGeode = new osg::Geode();
 	mGeode->setCullingActive(false);

@@ -14,20 +14,12 @@
 namespace skybolt {
 namespace vis {
 
-class BoundingBoxCallback : public osg::Drawable::ComputeBoundingBoxCallback
-{
-	osg::BoundingBox computeBound(const osg::Drawable & drawable)
-	{
-		return osg::BoundingBox(osg::Vec3f(-FLT_MAX, -FLT_MAX, -FLT_MAX), osg::Vec3f(FLT_MAX, FLT_MAX, FLT_MAX));
-	}
-};
-
 ScreenQuad::ScreenQuad(osg::StateSet* stateSet, const BoundingBox2f& bounds)
 {
 	osg::Geometry* quad = createQuadWithUvs(bounds, QuadUpDirectionY);
 
 	quad->setStateSet(stateSet);
-	quad->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+	quad->setCullingActive(false);
 
 	//create the geode 
 	osg::Geode* geode = new osg::Geode(); 

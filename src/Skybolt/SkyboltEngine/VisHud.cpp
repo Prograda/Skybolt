@@ -11,14 +11,6 @@
 
 namespace skybolt {
 
-class BoundingBoxCallback : public osg::Drawable::ComputeBoundingBoxCallback
-{
-	osg::BoundingBox computeBound(const osg::Drawable & drawable)
-	{
-		return osg::BoundingBox(osg::Vec3f(-FLT_MAX, -FLT_MAX, -FLT_MAX), osg::Vec3f(FLT_MAX, FLT_MAX, FLT_MAX));
-	}
-};
-
 class TextPool
 {
 public:
@@ -52,7 +44,7 @@ public:
 			text->setUseDisplayList(false);
 			text->setUseVertexBufferObjects(true);
 			text->setUseVertexArrayObject(true);
-			text->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+			text->setCullingActive(false);
 		}
 
 		if (mUsedTexts.size() < mMaxSize)
@@ -195,7 +187,7 @@ void VisHud::traverse(osg::NodeVisitor& visitor)
 			geom->setUseDisplayList(false);
 			geom->setUseVertexBufferObjects(true);
 			geom->setUseVertexArrayObject(true);
-			geom->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+			geom->setCullingActive(false);
 			mPrimitivesGeode->addDrawable(geom);
 		}
 
@@ -207,7 +199,7 @@ void VisHud::traverse(osg::NodeVisitor& visitor)
 			geom->setUseDisplayList(false);
 			geom->setUseVertexBufferObjects(true);
 			geom->setUseVertexArrayObject(true);
-			geom->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+			geom->setCullingActive(false);
 			mPrimitivesGeode->addDrawable(geom);
 		}
 	}

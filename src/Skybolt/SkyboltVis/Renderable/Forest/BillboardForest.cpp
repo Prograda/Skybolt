@@ -8,6 +8,7 @@
 #include "SkyboltVis/OsgImageHelpers.h"
 #include "SkyboltVis/OsgStateSetHelpers.h"
 #include "SkyboltVis/Camera.h"
+#include "SkyboltVis/OsgGeometryHelpers.h"
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -17,15 +18,7 @@
 namespace skybolt {
 namespace vis {
 
-class BoundingBoxCallback : public osg::Drawable::ComputeBoundingBoxCallback
-{
-	osg::BoundingBox computeBound(const osg::Drawable & drawable)
-	{// TODO: compute actual bound
-		return osg::BoundingBox(osg::Vec3f(-FLT_MAX, -FLT_MAX, 0), osg::Vec3f(FLT_MAX, FLT_MAX, 0));
-	}
-};
-
-osg::Geometry* createGeometry(const std::vector<BillboardForest::Tree>& trees)
+osg::Geometry* createGeometry(const std::vector<BillboardForest::Tree>& trees, const osg::Vec2& tileBoundsMeters)
 {
     osg::Geometry *geometry = new osg::Geometry();
 
@@ -49,7 +42,10 @@ osg::Geometry* createGeometry(const std::vector<BillboardForest::Tree>& trees)
 	geometry->setUseDisplayList(false); 
     geometry->setUseVertexBufferObjects(true); 
 	geometry->setUseVertexArrayObject(true);
-	geometry->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+
+	double maxForestAltitude = 9000;
+	osg::Vec3 halfBoundsWidth(tileBoundsMeters.x() * 0.5, tileBoundsMeters.y() * 0.5, maxForestAltitude);
+	geometry->setComputeBoundingBoxCallback(createFixedBoundingBoxCallback(osg::BoundingBox(-halfBoundsWidth, halfBoundsWidth)));
 
     geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, vertPositions->size()));
 
@@ -104,21 +100,21 @@ osg::Geode* createGeode(osg::Geometry* geometry)
 {
 	osg::Geode* geode = new osg::Geode();
 	geode->addDrawable(geometry);
-	geode->setCullingActive(false);
+	geode->setCullingActive(true);
 	return geode;
 }
 
-BillboardForest::BillboardForest(const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange, int subTileCount)
+BillboardForest::BillboardForest(const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange, const osg::Vec2& tileBoundsMeters, int subTileCount)
 {
-	addGeodes(*mTransform, trees, sideProgram, topProgram, maxVisibilityRange, subTileCount);
+	addGeodes(*mTransform, trees, sideProgram, topProgram, maxVisibilityRange, tileBoundsMeters, subTileCount);
 }
 
-void BillboardForest::addGeodes(osg::Group& node, const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange, int subTileCount)
+void BillboardForest::addGeodes(osg::Group& node, const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange, const osg::Vec2& tileBoundsMeters, int subTileCount)
 {
 	Uniforms uniforms;
 	uniforms.maxVisibilityRange = new osg::Uniform("maxVisibilityRange", maxVisibilityRange);
 
-	osg::Geometry* geometry = createGeometry(trees);
+	osg::Geometry* geometry = createGeometry(trees, tileBoundsMeters);
 
 	osg::Geode* sideGeode = createGeode(geometry);
 	sideGeode->setStateSet(createStateSet(sideProgram, uniforms, trees, subTileCount));

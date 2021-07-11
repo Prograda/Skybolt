@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "RoadsBatch.h"
+#include "OsgGeometryHelpers.h"
 #include "OsgImageHelpers.h"
 #include "OsgStateSetHelpers.h"
 #include "SkyboltVis/earcutOsg.h"
@@ -25,15 +26,6 @@ using namespace skybolt;
 
 namespace skybolt {
 namespace vis {
-
-class BoundingBoxCallback : public osg::Drawable::ComputeBoundingBoxCallback
-{
-	osg::BoundingBox computeBound(const osg::Drawable & drawable)
-	{
-		// TODO: use real bounds
-		return osg::BoundingBox(osg::Vec3f(-FLT_MAX, -FLT_MAX, 0), osg::Vec3f(FLT_MAX, FLT_MAX, 0));
-	}
-};
 
 inline osg::Vec2f toVec2f(const osg::Vec3f& v)
 {
@@ -153,7 +145,7 @@ static osg::Geode* createRoads(const Roads& roads)
 	geometry->setUseVertexArrayObject(true);
 
     geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
-	geometry->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+	geometry->setComputeBoundingBoxCallback(createFixedBoundingBoxCallback(osg::BoundingBox())); // TODO: set bounds
     geode->addDrawable(geometry);
     return geode;
 }
@@ -246,7 +238,7 @@ static osg::Geode* createRegions(const PolyRegions& regions)
 	geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
 
     osg::Geode* geode = new osg::Geode();
-	geometry->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+	geometry->setComputeBoundingBoxCallback(createFixedBoundingBoxCallback(osg::BoundingBox())); // TODO: set bounds
     geode->addDrawable(geometry);
     return geode;
 }

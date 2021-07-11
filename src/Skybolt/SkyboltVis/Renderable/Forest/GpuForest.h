@@ -52,7 +52,7 @@ private:
 
 	ForestTile createForestTile(const TileTextures& tile);
 
-	std::shared_ptr<BillboardForest> createBillboardForest(int treeCountPerDimension, int repetitions) const;
+	std::shared_ptr<BillboardForest> createBillboardForest(int treeCountPerDimension, int repetitions, const osg::Vec2& tileBoundsMeters) const;
 
 private:
 	const ForestParams mForestParams;

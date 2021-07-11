@@ -22,14 +22,6 @@
 
 using namespace skybolt::vis;
 
-class BoundingBoxCallback : public osg::Drawable::ComputeBoundingBoxCallback
-{
-	osg::BoundingBox computeBound(const osg::Drawable & drawable)
-	{
-		return osg::BoundingBox(osg::Vec3f(-FLT_MAX, -FLT_MAX, 0), osg::Vec3f(FLT_MAX, FLT_MAX, 0));
-	}
-};
-
 osg::Node* createPlane(const osg::Vec2f &size)
 {
 	int segmentCountX = 512;
@@ -47,7 +39,7 @@ osg::Node* createPlane(const osg::Vec2f &size)
 	geometry->setUseDisplayList(false); 
     geometry->setUseVertexBufferObjects(true); 
 	geometry->setUseVertexArrayObject(true);
-	geometry->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+	geometry->setCullingActive(false);
 
     geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
     geode->addDrawable(geometry);

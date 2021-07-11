@@ -13,15 +13,6 @@
 
 using namespace skybolt::vis;
 
-class BoundingBoxCallback : public osg::Drawable::ComputeBoundingBoxCallback
-{
-	osg::BoundingBox computeBound(const osg::Drawable & drawable)
-	{
-		// TODO: use actual bounds
-		return osg::BoundingBox(osg::Vec3f(-FLT_MAX, -FLT_MAX, 0), osg::Vec3f(FLT_MAX, FLT_MAX, 0));
-	}
-};
-
 Billboard::Billboard(const osg::ref_ptr<osg::StateSet>& stateSet, float width, float height) :
 	mUpDirection(osg::Vec3f(0, 0, -1))
 {
@@ -29,7 +20,7 @@ Billboard::Billboard(const osg::ref_ptr<osg::StateSet>& stateSet, float width, f
 	float halfHeight = height * 0.5f;
 
 	osg::ref_ptr<osg::Geometry> geometry = createQuadWithUvs(BoundingBox2f(osg::Vec2f(-halfWidth, -halfHeight), osg::Vec2f(halfWidth, halfHeight)), QuadUpDirectionY);
-	geometry->setComputeBoundingBoxCallback(osg::ref_ptr<BoundingBoxCallback>(new BoundingBoxCallback));
+	geometry->setCullingActive(false); // TODO: compute bounds
 	geometry->setStateSet(stateSet);
 
 	mTransform->addChild(geometry);
