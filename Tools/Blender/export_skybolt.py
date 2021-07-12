@@ -100,8 +100,8 @@ objects parented under transforms with recognized names."""
 		invOriginMatrix = originMatrix.copy()
 
 		# Convert to North-East-Down coordinates
-		invOriginMatrix = invOriginMatrix @ mathutils.Matrix.Rotation(math.radians(90), 4, 'Y')
-		invOriginMatrix = invOriginMatrix @ mathutils.Matrix.Rotation(math.radians(-90), 4, 'Z')
+		invOriginMatrix = invOriginMatrix @ mathutils.Matrix.Rotation(math.radians(-90), 4, 'X')
+		invOriginMatrix = invOriginMatrix @ mathutils.Matrix.Rotation(math.radians(-90), 4, 'Y')
 		
 		# Invert matrix to export mesh in the space of the origin
 		invOriginMatrix.invert()
