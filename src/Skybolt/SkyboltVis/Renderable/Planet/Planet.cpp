@@ -29,7 +29,6 @@
 #include "SkyboltVis/Shadow/CascadedShadowMapGenerator.h"
 
 #include "SkyboltVis/MatrixHelpers.h"
-#include "SkyboltVis/OsgImageHelpers.h"
 #include "SkyboltVis/OsgStateSetHelpers.h"
 
 #include <SkyboltSim/Physics/Astronomy.h>
@@ -319,35 +318,6 @@ private:
 	double mPrevTimeSeconds = 0;
 };
 
-// Creates a 'textureizer map' which is a detail map that can be added
-// to a lower detail base map.
-// To produce a texturizer map, we take an original detail map, find the average,
-// subtract the average, and add 0.5 to all channels. The result is a map that contains
-// just the offsets to apply the original texture to a base map while preserving the average
-// color of the base map.
-// TODO: need to test this more to see if it is worth using. Currently unused.
-static void convertSrgbToTexturizerMap(osg::Image& image)
-{
-	float alphaRejectionThreshold = -1.0; // don't reject alpha
-	osg::Vec4f averageLinearSpace = srgbToLinear(averageSrgbColor(image, alphaRejectionThreshold));
-
-	osg::Vec4f color;
-	size_t pixels = 0;
-	for (size_t t = 0; t < image.t(); ++t)
-	{
-		for (size_t s = 0; s < image.s(); ++s)
-		{
-			osg::Vec4f originalColor = image.getColor(s, t);
-			osg::Vec4f c = srgbToLinear(originalColor);
-			c = c - averageLinearSpace + osg::Vec4f(0.5, 0.5, 0.5, 0.5);
-			c = linearToSrgb(c);
-			c.a() = originalColor.a(); // perserve alpha
-			image.setColor(c, s, t);
-		}
-	}
-}
-
-
 Planet::Planet(const PlanetConfig& config) :
 	mScene(config.scene),
 	mInnerRadius(config.innerRadius),
@@ -409,6 +379,7 @@ Planet::Planet(const PlanetConfig& config) :
 			factoryConfig.programs = config.programs;
 			factoryConfig.planetRadius = mInnerRadius;
 			factoryConfig.hasCloudShadows = config.cloudsTexture != nullptr;
+			factoryConfig.albedoDetailMaps = config.albedoDetailMaps;
 			osgTileFactory = std::make_shared<OsgTileFactory>(factoryConfig);
 		}
 
@@ -567,7 +538,7 @@ Planet::Planet(const PlanetConfig& config) :
 		mVolumeClouds.reset(new VolumeClouds(cloudsConfig));
 
 		setCloudsVisible(true);
-		setCloudCoverageFraction(boost::none);
+		setCloudCoverageFraction(std::nullopt);
 
 		osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
 		ss->setTextureAttributeAndModes((int)GlobalSamplerUnit::GlobalCloudAlpha, config.cloudsTexture);
@@ -686,8 +657,9 @@ void Planet::setCloudsVisible(bool visible)
 	mCloudsVisible = visible;
 }
 
-void Planet::setCloudCoverageFraction(boost::optional<float> cloudCoverageFraction)
+void Planet::setCloudCoverageFraction(std::optional<float> cloudCoverageFraction)
 {
+	mCloudCoverageFraction = cloudCoverageFraction;
 	osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
 	if (cloudCoverageFraction)
 	{

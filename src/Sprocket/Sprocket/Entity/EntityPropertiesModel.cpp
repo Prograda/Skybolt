@@ -96,12 +96,25 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 			addProperty(createVariantProperty("cloudsEnabled", true),
 				// Updater
 				[this, planet](QtProperty& property) {
-				static_cast<VariantProperty&>(property).setValue(planet->getCloudsVisible());
-			},
+					static_cast<VariantProperty&>(property).setValue(planet->getCloudsVisible());
+				},
 				// Applier
 				[this, planet](QtProperty& property) {
-				planet->setCloudsVisible(static_cast<VariantProperty&>(property).value.toBool());
-			}
+					planet->setCloudsVisible(static_cast<VariantProperty&>(property).value.toBool());
+				}
+			);
+
+			addProperty(createVariantProperty("cloudCoverageFraction", true),
+				// Updater
+				[this, planet](QtProperty& property) {
+					auto value = planet->getCloudCoverageFraction();
+					static_cast<VariantProperty&>(property).setValue(value ? *value : -1.f);
+				},
+				// Applier
+				[this, planet](QtProperty& property) {
+					float value = static_cast<VariantProperty&>(property).value.toFloat();
+					planet->setCloudCoverageFraction(value >= 0.f ? std::optional<float>(value) : std::nullopt);
+				}
 			);
 
 			addProperty(createVariantProperty("waveHeight", true),

@@ -82,11 +82,19 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 		config.attributeMapUvScale = attributeImageScale;
 		config.attributeMapUvOffset = attributeImageOffset;
 
-		if (!mAlbedoDetailMaps.empty() && textures.attribute)
+		if (mAlbedoDetailMaps.size() == 1)
 		{
-			config.detailMaps = TerrainConfig::DetailMaps();
-			config.detailMaps->attributeMap = textures.attribute->texture;
-			config.detailMaps->albedoDetailMaps = mAlbedoDetailMaps;
+			auto technique = std::make_shared<TerrainConfig::UniformDetailMappingTechnique>();
+			technique->albedoDetailMap = mAlbedoDetailMaps.front();
+
+			config.detailMappingTechnique = technique;
+		}
+		else if (!mAlbedoDetailMaps.empty())
+		{
+			auto technique = std::make_shared<TerrainConfig::AlbedoDerivedDetailMappingTechnique>();
+			technique->albedoDetailMaps = mAlbedoDetailMaps;
+
+			config.detailMappingTechnique = technique;
 		}
 
 		result.highResTerrain.reset(new Terrain(config));

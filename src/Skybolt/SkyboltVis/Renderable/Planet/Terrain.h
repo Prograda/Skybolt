@@ -38,9 +38,27 @@ struct TerrainConfig
 
 	std::shared_ptr<Tile> tile;
 
-	struct DetailMaps
+	struct DetailMappingTechnique
 	{
-		osg::ref_ptr<osg::Texture2D> attributeMap;
+	public:
+		virtual ~DetailMappingTechnique() = default;
+	};
+
+	using DetailMappingTechniquePtr = std::shared_ptr<DetailMappingTechnique>;
+
+	//! One detail map applied uniformly over the terrain
+	struct UniformDetailMappingTechnique : DetailMappingTechnique
+	{
+		~UniformDetailMappingTechnique() override = default;
+
+		osg::ref_ptr<osg::Texture2D> albedoDetailMap;
+	};
+
+	//! Multiple detail maps blended by coverage derived from albedo map
+	struct AlbedoDerivedDetailMappingTechnique : DetailMappingTechnique
+	{
+		~AlbedoDerivedDetailMappingTechnique() override = default;
+
 		std::vector<osg::ref_ptr<osg::Texture2D>> albedoDetailMaps;
 	};
 
@@ -48,7 +66,7 @@ struct TerrainConfig
 	osg::ref_ptr<osg::Texture2D> normalMap;
 	osg::ref_ptr<osg::Texture2D> overallAlbedoMap;
 
-	boost::optional<DetailMaps> detailMaps;
+	DetailMappingTechniquePtr detailMappingTechnique; //!< May be null
 
 	osg::ref_ptr<osg::Program> program;
 	float heightScale = 65536;

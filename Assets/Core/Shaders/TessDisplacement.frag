@@ -8,7 +8,9 @@
 #pragma import_defines ( CAST_SHADOWS )
 #pragma import_defines ( ENABLE_CLOUDS )
 #pragma import_defines ( ENABLE_SHADOWS )
-#pragma import_defines ( ENABLE_DETAIL_ALBEDO_TEXTURES )
+#pragma import_defines ( DETAIL_MAPPING_TECHNIQUE_ALBEDO_DERIVED )
+#pragma import_defines ( DETAIL_MAPPING_TECHNIQUE_UNIFORM )
+#pragma import_defines ( DETAIL_SAMPLER_COUNT )
 
 #include "CloudShadows.h"
 #include "DepthPrecision.h"
@@ -36,8 +38,9 @@ out vec4 color;
 
 uniform sampler2D normalSampler;
 uniform sampler2D attributeSampler;
-uniform sampler2D albedoDetailSamplers[10];
-uniform sampler2D forestAlbedoSampler;
+#ifdef DETAIL_SAMPLER_COUNT
+	uniform sampler2D albedoDetailSamplers[DETAIL_SAMPLER_COUNT];
+#endif
 uniform sampler2D overallAlbedoSampler;
 uniform sampler2D cloudSampler;
 
@@ -102,6 +105,31 @@ ivec4 bilinearFetchIndices(sampler2D tex, vec2 uv, out vec4 weights)
 	return ivec4(c00*255.f + 0.5f, c10*255.f + 0.5f, c01*255.f + 0.5f, c11*255.f + 0.5f);
 }
 
+int attributeIndexFromAlbedo(vec3 albedo)
+{
+	return (albedo.g * 1.5 > albedo.r + albedo.b) ? 1 : 0;
+}
+
+ivec4 bilinearFetchIndicesFromAlbedo(sampler2D tex, vec2 uv, out vec4 weights)
+{// TODO: consider clamping at edges here
+	ivec2 dims = textureSize(tex, 0);
+	vec2 coordFloat = uv * vec2(dims) - 0.5f;
+	ivec2 coordInt = ivec2(floor(coordFloat));
+	vec2 weight = coordFloat - coordInt;
+	coordInt = clamp(coordInt, ivec2(0), dims-ivec2(2));
+	
+	int c00 = attributeIndexFromAlbedo(texelFetch(tex, coordInt, 0).rgb);
+	int c10 = attributeIndexFromAlbedo(texelFetch(tex, coordInt + ivec2(1, 0), 0).rgb);
+	int c01 = attributeIndexFromAlbedo(texelFetch(tex, coordInt + ivec2(0, 1), 0).rgb);
+	int c11 = attributeIndexFromAlbedo(texelFetch(tex, coordInt + ivec2(1, 1), 0).rgb);
+
+	weights.x = (1-weight.x) * (1-weight.y);
+	weights.y = weight.x * (1-weight.y);
+	weights.z = (1-weight.x) * weight.y;
+	weights.w = weight.x * weight.y;
+	return ivec4(c00, c10, c01, c11);
+}
+
 ivec4 bilinearFetchIndicesWithNoise(sampler2D tex, vec2 uv, out vec4 weights, vec2 noise)
 {// TODO: consider clamping at edges here
 	ivec2 dims = textureSize(tex, 0);
@@ -158,79 +186,24 @@ vec4 blend(vec4 texture1, float a1, vec4 texture2, float a2)
     return (texture1 * b1 + texture2 * b2) / (b1 + b2);  
 }
 
+#ifdef DETAIL_SAMPLER_COUNT
 vec4 sampleDetailAlbedo(int i, vec3 normal, vec3 texCoord, vec2 normalUv)
 {
-	return texture(albedoDetailSamplers[i], 10*texCoord.xy);
+	return texture(albedoDetailSamplers[i], texCoord.xy);
 }
 
-vec4 sampleDetailAlbedoAdvanced(int i, vec3 normal, vec3 texCoord, vec2 normalUv)
+vec4 sampleDetailTexture()
 {
-
-	if (i == 0)	// barren
-	{
-		color = textureTriplanar(albedoDetailSamplers[1], texCoord, normal);
-		
-		float slope = 1 + normal.z;
-		float slopeNoise = scaledFbm(wrappedNoiseCoord, 100) * 0.2;
-		float slopeWeight = saturate(rerange(slope + slopeNoise, 0.15, 0.5));
-		
-		vec3 rockTextureNormal = normalize(vec3(normal.x, normal.y, 0));
-		vec4 rockColor = textureTriplanar(albedoDetailSamplers[0], texCoord * 0.2, rockTextureNormal);
-		color = blend(color, 1-slopeWeight, rockColor, slopeWeight);
-		//color = mix(color, rockColor, slopeWeight);
-		
-		float deposition = calcSlopeConvergence(normalUv);
-		float depositionNoise = scaledFbm(wrappedNoiseCoord, 200) * 0.2;
-		float depositionWeight = saturate(rerange(deposition + depositionNoise, 0, 1));
-		
-		vec4 depositionColor = textureTriplanar(albedoDetailSamplers[2], texCoord, normal);
-		color = blend(color, 1-depositionWeight, depositionColor, depositionWeight);
-		//color = mix(color, depositionColor, depositionWeight);
-		color.a = 1;
-		
-	}
-	else if (i < 10)
-	{
-		color = texture(albedoDetailSamplers[i], texCoord.xy);
-		color.r += 0.05 * scaledFbm(wrappedNoiseCoord, 10);
-		color.g += 0.05 * scaledFbm(wrappedNoiseCoord, 80);
-	}
-	else
-	{
-		color = vec4(1); // snow
-	}
-	
-	return color;
-}
-
-vec3 fbmNormal()
-{
-	vec3 period = vec3(10);
-	vec3 p = wrappedNoiseCoord * period;
-	
-	float step = 0.1;
-	float scale = 1 * step;
-	float h00 = fbm(p, period);
-	float h10 = fbm(p + vec3(step,0,0), period);
-	float h01 = fbm(p + vec3(0,step,0), period);
-	vec3 tangent = vec3(step,0,scale*(h10 - h00));
-	vec3 bitangent = vec3(0,step,scale*(h01 - h00));
-	return normalize(cross(bitangent, tangent));
-}
-
-mat3 toTbnMatrix(vec3 normal)
-{
-	vec3 tangent = normalize(cross(-normal, vec3(0,1,0)));
-	vec3 bitangent = cross(tangent, -normal);
-	return transpose(mat3(tangent, bitangent, -normal));
+	vec3 detailTexCoordPerMeter = wrappedNoiseCoord * 10000.0; // repeats [0,1) per meter
+	vec3 texCoord = detailAlbedoUvScale[0] * detailTexCoordPerMeter;
+	return texture(albedoDetailSamplers[0], texCoord.xy);
 }
 
 vec4 sampleAttributeDetailTextures(vec3 normal, vec2 normalUv)
 {
 	vec3 detailTexCoordPerMeter = wrappedNoiseCoord * 10000.0; // repeats [0,1) per meter
-	vec3 defaultAlbedoDetailTexCoord = detailAlbedoUvScale[0] * detailTexCoordPerMeter;
 	vec2 attributeTexCoord = texCoord.xy * attributeMapUvScale + attributeMapUvOffset;
-	
+
 	// Sample and blend attribute albedos
 	vec4 attrWeights;
 //#define TERRAIN_DETAIL_NOISE_BLEND
@@ -239,10 +212,11 @@ vec4 sampleAttributeDetailTextures(vec3 normal, vec2 normalUv)
 	ivec4 attrIndices = bilinearFetchIndicesWithNoise(attributeSampler, attributeTexCoord, attrWeights, noise);
 	//ivec4 attrIndices = fetchIndicesWithNoise(attributeSampler, attributeTexCoord, attrWeights, noise);
 #else
-	ivec4 attrIndices = bilinearFetchIndices(attributeSampler, attributeTexCoord, attrWeights);
+	vec2 albedoTexCoord = texCoord.xy * overallAlbedoMapUvScale + overallAlbedoMapUvOffset;
+	ivec4 attrIndices = bilinearFetchIndicesFromAlbedo(overallAlbedoSampler, albedoTexCoord, attrWeights);
 #endif
 
-#define DETAIL_HEIGHTMAP_BLEND
+//#define DETAIL_HEIGHTMAP_BLEND
 #ifdef DETAIL_HEIGHTMAP_BLEND
 	// Use the detail maps' alpha channel as a heightmap to do height-aware blending between materials.
 	// Texels with a higher height will show on top, e.g grass should appear over dirt.
@@ -284,6 +258,72 @@ vec4 sampleAttributeDetailTextures(vec3 normal, vec2 normalUv)
 	return attributeColor;
 }
 
+#endif
+
+#ifdef EXPERIMENTAL_DETAIL_ALBEDO
+vec4 sampleDetailAlbedoAdvanced(int i, vec3 normal, vec3 texCoord, vec2 normalUv)
+{
+
+	if (i == 0)	// barren
+	{
+		color = textureTriplanar(albedoDetailSamplers[1], texCoord, normal);
+		
+		float slope = 1 + normal.z;
+		float slopeNoise = scaledFbm(wrappedNoiseCoord, 100) * 0.2;
+		float slopeWeight = saturate(rerange(slope + slopeNoise, 0.15, 0.5));
+		
+		vec3 rockTextureNormal = normalize(vec3(normal.x, normal.y, 0));
+		vec4 rockColor = textureTriplanar(albedoDetailSamplers[0], texCoord * 0.2, rockTextureNormal);
+		color = blend(color, 1-slopeWeight, rockColor, slopeWeight);
+		//color = mix(color, rockColor, slopeWeight);
+		
+		float deposition = calcSlopeConvergence(normalUv);
+		float depositionNoise = scaledFbm(wrappedNoiseCoord, 200) * 0.2;
+		float depositionWeight = saturate(rerange(deposition + depositionNoise, 0, 1));
+		
+		vec4 depositionColor = textureTriplanar(albedoDetailSamplers[2], texCoord, normal);
+		color = blend(color, 1-depositionWeight, depositionColor, depositionWeight);
+		//color = mix(color, depositionColor, depositionWeight);
+		color.a = 1;
+		
+	}
+	else if (i < 10)
+	{
+		color = texture(albedoDetailSamplers[i], texCoord.xy);
+		color.r += 0.05 * scaledFbm(wrappedNoiseCoord, 10);
+		color.g += 0.05 * scaledFbm(wrappedNoiseCoord, 80);
+	}
+	else
+	{
+		color = vec4(1); // snow
+	}
+	
+	return color;
+}
+#endif
+
+vec3 fbmNormal()
+{
+	vec3 period = vec3(10);
+	vec3 p = wrappedNoiseCoord * period;
+	
+	float step = 0.1;
+	float scale = 1 * step;
+	float h00 = fbm(p, period);
+	float h10 = fbm(p + vec3(step,0,0), period);
+	float h01 = fbm(p + vec3(0,step,0), period);
+	vec3 tangent = vec3(step,0,scale*(h10 - h00));
+	vec3 bitangent = vec3(0,step,scale*(h01 - h00));
+	return normalize(cross(bitangent, tangent));
+}
+
+mat3 toTbnMatrix(vec3 normal)
+{
+	vec3 tangent = normalize(cross(-normal, vec3(0,1,0)));
+	vec3 bitangent = cross(tangent, -normal);
+	return transpose(mat3(tangent, bitangent, -normal));
+}
+
 void main()
 {
 #ifdef CAST_SHADOWS
@@ -305,12 +345,13 @@ void main()
 	vec3 positionRelCamera = position_worldSpace - cameraPosition;
 	float fragmentViewDistance = length(positionRelCamera);
 	vec3 viewDirection = -positionRelCamera / fragmentViewDistance;
-	
-#ifdef ENABLE_DETAIL_ALBEDO_TEXTURES
-	vec4 attributeColor = sampleAttributeDetailTextures(normal, normalUv);
+
+#if defined(DETAIL_MAPPING_TECHNIQUE_UNIFORM)
+	albedo += (dot(vec3(0.33333), sampleDetailTexture().rgb) - vec3(0.5))*0.6;
+#elif defined(DETAIL_MAPPING_TECHNIQUE_ALBEDO_DERIVED)
+	vec3 attributeColor = sampleAttributeDetailTextures(normal, normalUv).rgb;
 	float albedoBlend = clamp(fragmentViewDistance / 4000, 0.0, 1.0);
-	vec3 filteredAlbedo = texture(attributeSampler, texCoord.xy * attributeMapUvScale + attributeMapUvOffset).rgb;
-	albedo = mix(filteredAlbedo+1.0*(attributeColor.ggg-0.5), albedo, albedoBlend);
+	albedo = mix(attributeColor, albedo, albedoBlend);
 #endif
 
 #ifdef ENABLE_SHADOWS

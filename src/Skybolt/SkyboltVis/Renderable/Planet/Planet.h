@@ -54,6 +54,7 @@ struct PlanetConfig
 	std::vector<file::Path> featureTreeFiles;
 	std::string featureTilesDirectoryRelAssetPackage;
 	std::optional<ForestParams> forestParams;
+	std::vector<osg::ref_ptr<osg::Texture2D>> albedoDetailMaps;
 };
 
 class MyPlanetSurfaceListener;
@@ -77,7 +78,8 @@ public:
 
 	//! If set, clouds will have uniform coverage across planet.
 	//! If not set, coverage will be governed by cloud texture.
-	void setCloudCoverageFraction(boost::optional<float> cloudCoverageFraction);
+	void setCloudCoverageFraction(std::optional<float> cloudCoverageFraction);
+	std::optional<float> getCloudCoverageFraction() const { return mCloudCoverageFraction; }
 
 	float getWaveHeight() const;
 
@@ -142,6 +144,7 @@ private:
 	double mJulianDate = 0;
 	osg::Uniform* mCloudDisplacementMetersUniform;
 	osg::Uniform* mCloudCoverageFractionUniform;
+	std::optional<float> mCloudCoverageFraction;
 
 	bool mCloudsVisible = false;
 };
