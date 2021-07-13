@@ -93,7 +93,7 @@ static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryCon
 	params->pitchRange = 0.12;
 	params->maxTppPitch = 0.1;
 	params->maxTppRoll = 0.05;
-	params->tppPitchOffset = -0.1;
+	params->tppPitchOffset = readOptionalOrDefault(json, "tppPitchOffset", -3.f)  * skybolt::math::degToRadF();
 	params->liftConst = 0.5f * 5.9 * surfaceAreaPerBlade * bladeCount; // 0.5 * liftSlope[1/rad] * bladeSurfaceArea * bladeCount
 	params->diskRadius = readOptionalOrDefault(json, "diskRadius", 7.3f);
 	params->zeroLiftAlpha = 0;
