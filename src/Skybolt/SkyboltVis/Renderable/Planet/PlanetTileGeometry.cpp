@@ -70,12 +70,12 @@ osg::Geometry* createPlanetTileGeometry(const osg::Vec3d& tileCenter, const Box2
 			++i;
 
 			bounds.expandBy(pos);
+
+			// Ensure vertical bounds are large enough to account for height in heightmap
+			pos = llaToGeocentric(latLon, 0, radius + 9000) - tileCenter;
+			bounds.expandBy(pos);
 		}
 	}
-
-	// Ensure vertical bounds are large enough to account for height in heightmap
-	bounds.zMax() = 9000;
-	bounds.zMin() = -9000;
 
 	osg::Geometry *geometry = new osg::Geometry();
 
