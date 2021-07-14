@@ -40,7 +40,7 @@ vec2 cloudUvFromPosRelPlanet(vec3 positionRelPlanetPlanetAxes)
 
 float sampleCoverageDetail(sampler2D coverageDetailSampler, vec2 uv, float lod, out float cloudType)
 {
-	vec4 coverageNoise = textureLod(coverageDetailSampler, uv.xy * vec2(160.0, 80.0), 4 * lod);
+	vec4 coverageNoise = textureLod(coverageDetailSampler, uv.xy * vec2(200.0, 100.0), 4 * lod);
 	float coverageDetail = coverageNoise.r;
 	cloudType = coverageNoise.g;
 	return coverageDetail;
@@ -48,19 +48,22 @@ float sampleCoverageDetail(sampler2D coverageDetailSampler, vec2 uv, float lod, 
 
 float calcCloudDensityLowRes(sampler2D cloudSampler, vec2 uv, float heightMultiplier, float coverageDetail)
 {
+	float coverage = heightMultiplier;
 #ifdef USE_CLOUD_COVERAGE_MAP
-	float coverageToDensityMultiplier = 5; // The is hand tuned to produce correct looking results.
-	float density = max(0.0, remapNormalized(textureLod(cloudSampler, uv, 0).r, 0.05, 1.0)) * coverageToDensityMultiplier;
+	coverage *= max(0.0, remapNormalized(textureLod(cloudSampler, uv, 0).r, 0.05, 1.0));
 #else
-	float coverageToDensityMultiplier = 2.5; // The is hand tuned to produce correct looking results.
-	float density = cloudCoverageFraction * coverageToDensityMultiplier;
+	float coverageFractionMultiplier = 0.8; // scale coverage fraction to give more user friendly results
+	coverage *= cloudCoverageFraction * coverageFractionMultiplier;
 #endif
-	density *= heightMultiplier;
-	float coverageModulatedDensity = clamp(remapNormalized(coverageDetail, 1.0 - density, 1.0), 0.0, 1.0);
-	
-	// Return coverageModulatedDensity unless the unmodulated density is near zero, in which case
-	// blend to unmodulated density to avoid artifacts from extreme remapping.
-	return mix(density, coverageModulatedDensity, min(1.0, density * 10));
+	// Apply coverage detail map by remapping with the following behavior:
+	//   Input coverage of 0 gives an output coverage of 0.
+	//   Input coverage of 1 gives an output coverage of 1.
+	//   Input coverage between 0 and 1 returns a color band with within the detail map,
+	//   where the band contains values of the expected output coverage amount.
+	//   the band is sized using filterWidth to give a enough coverage variation to achieve smooth density changes.
+	float f = 1.0 - coverage;
+	float filterWidth = 0.2;
+	return clamp(remapNormalized(coverageDetail*(1.0-filterWidth)+filterWidth, f, f+filterWidth), 0.0, 1.0);
 }
 
 

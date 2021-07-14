@@ -40,13 +40,19 @@ const vec2 cloudDensityMultiplier = vec2(0.005, 0.005);
 
 const vec3 noiseFrequencyScale = vec3(0.0002);
 
-//! @param cloudTypes goes from 0 (small cloud) to 1 (big cloud)
+// Returns a semicircle over x in range [-1, 1]
+float semicircle(float x)
+{
+	return (1 - x*x);
+}
+
 float calcHeightMultiplier(float height, float cloudType)
 {
-	vec2 m = clamp(remap(vec2(height), cloudBottomZeroDensity, cloudBottomFullDensityHeight, vec2(0.0), vec2(1.0)), vec2(0.0), vec2(1.0))
-		   * clamp(remap(vec2(height), cloudTopFullDensityHeight, cloudTopZeroDensityHeight, vec2(1.0), vec2(0.0)), vec2(0.0), vec2(1.0));
-		   
-	return mix(m.x, m.y, cloudType);
+	float bottom = mix(cloudBottomZeroDensity.x, cloudBottomZeroDensity.y, cloudType);
+	float top = mix(cloudTopZeroDensityHeight.x, cloudTopZeroDensityHeight.y, cloudType);
+	float h = remapNormalized(height, bottom, top);
+	float x = clamp(h * 2.0 - 1.0, -1, 1);
+	return semicircle(x);
 }
 
 const int iterations = 1000;
@@ -62,7 +68,7 @@ float calcDensityLowRes(vec2 uv, float height, out float cloudType, vec2 lod)
 	return calcCloudDensityLowRes(globalAlphaSampler, uv, heightMultiplier, coverageDetail);
 }
 
-const float cloudChaos = 0.9;
+const float cloudChaos = 1.0;
 const float averageNoiseSamplerValue = cloudChaos * 0.7;
 		
 //! @param lod is 0 for zero detail, 1 where frequencies of pos*noiseFrequencyScale should be visible
@@ -86,8 +92,8 @@ float calcDensity(vec3 pos, vec2 uv, vec2 lod, float height, out float cloudType
 			float highDetailStrength = min(lod.y - 4, 0.7);
 			noise.r = mix(noise.r, noise.r * textureLod(baseNoiseSampler, pos * noiseFrequencyScale * 5, 0).g, highDetailStrength);
 		}
-#endif		
-		float filteredNoise = mix(averageNoiseSamplerValue, cloudChaos*noise.r, clampedLod); // filter cloud noise based on lod.
+#endif
+		float filteredNoise = mix(averageNoiseSamplerValue, min(1.0, cloudChaos*noise.r), clampedLod); // filter cloud noise based on lod.
 		
 		density = clamp(remap(density, filteredNoise, 1.0, 0.0, 1.0), 0.0, 1.0);		
 	}
@@ -124,7 +130,7 @@ const int lightSampleCount = 6;
 const vec3 albedo = vec3(1.0);
 
 const float powderStrength = 0.2; // TODO: get this looking right
-const float scatterDistanceMultiplier = initialStepSize * 1;
+const float scatterDistanceMultiplier = initialStepSize * 0.5;
 
 vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradiance, vec2 lod, float height, float cloudType)
 {
@@ -138,7 +144,7 @@ vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradian
 	{
 		float scatterDistance = SAMPLE_SEGMENT_LENGTHS[i] * scatterDistanceMultiplier;
 	
-		vec3 lightSamplePos = pos + (lightDir + RANDOM_VECTORS[i] * 0.8) * SAMPLE_DISTANCES[i] * scatterDistanceMultiplier;
+		vec3 lightSamplePos = pos + (lightDir + RANDOM_VECTORS[i] * 0.3) * SAMPLE_DISTANCES[i] * scatterDistanceMultiplier;
 		float sampleHeight = length(lightSamplePos) - innerRadius;
 		vec2 sampleUv = cloudUvFromPosRelPlanet(lightSamplePos);
 		float sampleOutCloudType;
@@ -178,6 +184,7 @@ vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradian
 }
 
 float effectiveZeroT = 0.01;
+float effectiveZeroDensity = 0.00001;
 
 vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 lightDir, vec3 sunIrradiance, out float meanCloudFrontDistance)
 {
@@ -210,7 +217,7 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 ligh
 		float outCloudType;
         float density = calcDensity(pos + vec3(cloudDisplacementMeters.xy,0), uv, lod, height, outCloudType);
 		
-		if (density > 0.0001)
+		if (density > effectiveZeroDensity)
 		{
 			vec3 radiance = radianceLowRes(pos, uv, lightDir, hg, sunIrradiance, lod, height, outCloudType) * density;
 #define ENERGY_CONSERVING_INTEGRATION
@@ -250,7 +257,7 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 ligh
 				float density = calcDensityLowRes(uv, height, outCloudType, lod);
 				
 				// If no longer in empty space, go back one step and break
-				if (density > 0)
+				if (density > effectiveZeroDensity)
 				{
 					t -= maximumStepSize;
 					break;
