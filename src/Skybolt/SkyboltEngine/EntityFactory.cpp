@@ -42,6 +42,7 @@
 #include <SkyboltVis/Renderable/Forest/GpuForest.h>
 #include <SkyboltVis/Renderable/Polyline.h>
 #include <SkyboltVis/Renderable/Planet/Planet.h>
+#include <SkyboltVis/Renderable/Planet/Features/BuildingTypes.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 #include <SkyboltVis/Renderable/Stars/Starfield.h>
 #include <SkyboltVis/Renderable/Model/Model.h>
@@ -437,6 +438,10 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 			std::string directory = it.value().at("directory");
 			config.featureTreeFiles = getPathsInAssetPackages(context.assetPackagePaths, directory + "/tree.json");
 			config.featureTilesDirectoryRelAssetPackage = directory;
+
+			std::string buildingTypesFilename = it.value().at("buildingTypesFilename");
+			buildingTypesFilename = context.fileLocator(buildingTypesFilename, file::FileLocatorMode::Required).string();
+			config.buildingTypes = vis::createBuildingTypesFromJson(readJsonFile(buildingTypesFilename));
 		}
 	}
 

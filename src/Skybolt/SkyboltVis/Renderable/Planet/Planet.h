@@ -38,6 +38,7 @@ struct PlanetConfig
 	px_sched::Scheduler* scheduler;
 	const ShaderPrograms* programs;
 	Scene* scene;
+	BuildingTypesPtr buildingTypes; //!< optional
 	sim::LatLon latLonOrigin;
 	float innerRadius;
 	PlanetTileSources planetTileSources;

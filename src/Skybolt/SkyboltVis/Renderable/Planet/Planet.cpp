@@ -39,6 +39,7 @@
 #include <osgDB/ReadFile>
 
 #include <future>
+#include <boost/log/trivial.hpp>
 
 using namespace skybolt::sim;
 
@@ -509,20 +510,28 @@ Planet::Planet(const PlanetConfig& config) :
 	{
 		if (!config.featureTreeFiles.empty())
 		{
-			PlanetFeaturesParams params;
-			params.scheduler = config.scheduler;
-			params.treeFiles = config.featureTreeFiles;
-			params.fileLocator = config.fileLocator;
-			params.tilesDirectoryRelAssetPackage = config.featureTilesDirectoryRelAssetPackage;
-			params.programs = config.programs;
-			params.waterStateSet = mWaterStateSet;
-			params.planetRadius = mInnerRadius;
+			if (config.buildingTypes)
+			{
+				PlanetFeaturesParams params;
+				params.scheduler = config.scheduler;
+				params.treeFiles = config.featureTreeFiles;
+				params.fileLocator = config.fileLocator;
+				params.tilesDirectoryRelAssetPackage = config.featureTilesDirectoryRelAssetPackage;
+				params.programs = config.programs;
+				params.waterStateSet = mWaterStateSet;
+				params.buildingTypes = config.buildingTypes;
+				params.planetRadius = mInnerRadius;
 
-			params.groups[PlanetFeaturesParams::groupsBuildingsIndex] = buildingsGroup;
-			params.groups[PlanetFeaturesParams::groupsNonBuildingsIndex] = nonBuildingFeaturesGroup;
-			mPlanetFeatures.reset(new PlanetFeatures(params));
-			
-			mPlanetSurface->Listenable<PlanetSurfaceListener>::addListener(mPlanetSurfaceListener.get());
+				params.groups[PlanetFeaturesParams::groupsBuildingsIndex] = buildingsGroup;
+				params.groups[PlanetFeaturesParams::groupsNonBuildingsIndex] = nonBuildingFeaturesGroup;
+				mPlanetFeatures.reset(new PlanetFeatures(params));
+
+				mPlanetSurface->Listenable<PlanetSurfaceListener>::addListener(mPlanetSurfaceListener.get());
+			}
+			else
+			{
+				BOOST_LOG_TRIVIAL(error) << "Building types not defined";
+			}
 		}
 	}
 

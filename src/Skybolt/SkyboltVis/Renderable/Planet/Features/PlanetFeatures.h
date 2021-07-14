@@ -37,6 +37,7 @@ struct PlanetFeaturesParams
 	std::string tilesDirectoryRelAssetPackage;
 	const ShaderPrograms* programs;
 	osg::ref_ptr<osg::StateSet> waterStateSet;
+	BuildingTypesPtr buildingTypes;
 	double planetRadius;
 	osg::Group* groups[featureGroupsSize];
 };

@@ -15,6 +15,7 @@ namespace vis {
 using std::shared_ptr;
 
 class AsyncTileLoader;
+struct BuildingTypes;
 class ElevationProvider;
 class LlaToNedConverter;
 class GpuForest;
@@ -70,6 +71,7 @@ class Viewport;
 class Window;
 
 typedef shared_ptr<AsyncTileLoader> AsyncTileLoaderPtr;
+typedef std::shared_ptr<BuildingTypes> BuildingTypesPtr;
 typedef shared_ptr<ElevationProvider> ElevationProviderPtr;
 typedef shared_ptr<GpuForest> GpuForestPtr;
 typedef shared_ptr<GpuForestTile> GpuForestTilePtr;
