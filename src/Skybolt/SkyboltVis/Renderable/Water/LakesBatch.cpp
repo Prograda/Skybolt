@@ -15,7 +15,7 @@
 
 #include "SkyboltVis/earcutOsg.h"
 
-float lakeHeightAboveTerrain = 10.0f;
+float lakeHeightAboveTerrain = 0.01f;
 
 //#define WIREFRAME
 #ifdef WIREFRAME
@@ -112,7 +112,7 @@ osg::ref_ptr<osg::StateSet> createStateSet(const osg::ref_ptr<osg::Program>& pro
 	ss->setAttributeAndModes(program, osg::StateAttribute::ON);
 	ss->addUniform(uniforms.modelMatrix);
 
-	ss->addUniform(new osg::Uniform("depthOffset", -0.001f));
+	ss->addUniform(new osg::Uniform("depthOffset", -0.0005f));
 	ss->setDefine("ENABLE_DEPTH_OFFSET");
 	ss->setDefine("ACCURATE_LOG_Z"); // enabled because geometry is sparsely tessellated
 

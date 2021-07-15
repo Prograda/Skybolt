@@ -13,7 +13,6 @@
 in vec4 osg_Vertex;
 out vec3 positionRelCameraWS;
 out vec3 positionWS;
-out vec3 normalWS;
 out float logZ;
 out vec2 wrappedNoiseCoord;
 out vec3 sunIrradiance;
@@ -36,7 +35,8 @@ void main()
 	positionWS = vec3(modelMatrix * osg_Vertex).xyz;
 	
 	wrappedNoiseCoord = calcWrappedNoiseCoord(positionWS).xy;
-	positionWS.z += planetSurfaceDrop(length(vec2(positionWS.x, positionWS.y)));
+	// Surface drop is disabled because it drops lakes too far compared with terrain. TODO: investigate.
+	//positionWS.z += planetSurfaceDrop(length(vec2(positionWS.x, positionWS.y)));
 	
 	float lod = length(positionWS) / 200; // TODO: should be based on texture-space size of projected quad onto ocean
 	
