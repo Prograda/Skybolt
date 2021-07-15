@@ -19,7 +19,7 @@ float calcDensityLowRes2(sampler2D cloudSampler, vec2 uv)
 	float cloudType;
 	float coverageDetail = sampleCoverageDetail(coverageDetailSampler2, uv, /* lod */ 0.0, cloudType);
 	float density = calcCloudDensityLowRes(cloudSampler, uv, /* heightMultiplier */ 1.0, coverageDetail);
-	return clamp(remap(density, 0.5, 0.57, 0.0, 1.0), 0.0, 1.0); // should look the same as smallest mipmap of the baseNoiseSampler texture
+	return clamp(remap(density, 0.45, 0.75, 0.0, 1.0), 0.0, 1.0); // should look the same as smallest mipmap of the baseNoiseSampler texture
 }
 
 float sampleCloudShadowMask(sampler2D cloudSampler, vec2 cloudTexCoord, vec3 lightDirection)
