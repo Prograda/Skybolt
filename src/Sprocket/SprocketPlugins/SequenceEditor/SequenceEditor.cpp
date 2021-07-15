@@ -38,6 +38,7 @@ SequenceEditor::SequenceEditor(const SequenceEditorConfig& config) :
 	QWidget(config.parent),
 	mController(config.controller),
 	mTimeSource(config.timeSource),
+	mSequenceRecorder(config.sequenceRecorder),
 	mTable(new QTableWidget)
 {
 	assert(mController);
@@ -82,21 +83,8 @@ SequenceEditor::SequenceEditor(const SequenceEditorConfig& config) :
 
 	mSetKeyButton = new QPushButton();
 	
-	connect(mSetKeyButton, &QPushButton::pressed, [=]() {
-		auto state = mController->getState();
-		if (state)
-		{
-			double time = mTimeSource->getTime();
-			auto index = sequence->getIndexAtTime(time);
-			if (index)
-			{
-				sequence->setValueAtIndex(*state, *index);
-			}
-			else
-			{
-				sequence->addItemAtTime(*state, time);
-			}
-		}
+	connect(mSetKeyButton, &QPushButton::pressed, [this]() {
+		setKeyAtCurrentTime();
 	});
 
 	QPushButton* deleteKeyButton = new QPushButton("Delete Key");
@@ -114,7 +102,7 @@ SequenceEditor::SequenceEditor(const SequenceEditorConfig& config) :
 		deleteKeyButton->setEnabled(index.isValid());
 	});
 
-	mConnections.push_back(mTimeSource->timeChanged.connect([this](double time) {
+	mConnections.push_back(mTimeSource->timeChanged.connect([this, sequence](double time) {
 		updateSetKeyButton();
 	}));
 	updateSetKeyButton();
@@ -125,6 +113,16 @@ SequenceEditor::SequenceEditor(const SequenceEditorConfig& config) :
 
 	mainLayout->addLayout(buttonLayout);
 	mainLayout->addWidget(mTable);
+
+	QPushButton* recordButton = new QPushButton("Record");
+	recordButton->setCheckable(true);
+	recordButton->setChecked(config.isRecording);
+	mainLayout->addWidget(recordButton);
+
+	connect(recordButton, &QPushButton::toggled, this, [this] (bool checked) {
+		mSequenceRecorder(checked);
+	});
+
 	setLayout(mainLayout);
 }
 
@@ -190,4 +188,23 @@ void SequenceEditor::addEntityControls(QBoxLayout* mainLayout, skybolt::EntitySt
 	layout->addStretch();
 
 	mainLayout->addLayout(layout);
+}
+
+void SequenceEditor::setKeyAtCurrentTime()
+{
+	auto state = mController->getState();
+	auto sequence = mController->getSequence();
+	if (state)
+	{
+		double time = mTimeSource->getTime();
+		auto index = sequence->getIndexAtTime(time);
+		if (index)
+		{
+			sequence->setValueAtIndex(*state, *index);
+		}
+		else
+		{
+			sequence->addItemAtTime(*state, time);
+		}
+	}
 }

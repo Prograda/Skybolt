@@ -19,6 +19,8 @@ struct SequenceEditorConfig
 	skybolt::StateSequenceControllerPtr controller;
 	skybolt::TimeSource* timeSource;
 	EntityChooserDialogFactoryPtr entityChooserDialogFactory;
+	std::function<void(bool)> sequenceRecorder; //! set to true to enable recording
+	bool isRecording = false;
 	QWidget* parent = nullptr;
 };
 
@@ -31,11 +33,14 @@ private:
 	void addItem(size_t index);
 	void updateSetKeyButton();
 	void addEntityControls(QBoxLayout* mainLayout, skybolt::EntityStateSequenceController* controller, const EntityChooserDialogFactoryPtr& entityChooserFactory);
+	void setKeyAtCurrentTime();
 
 private:
 	skybolt::StateSequenceControllerPtr mController;
 	skybolt::TimeSource* mTimeSource;
+	std::function<void(bool)> mSequenceRecorder;
 	QPushButton* mSetKeyButton;
 	std::vector<boost::signals2::scoped_connection> mConnections;
 	QTableWidget* mTable;
+	bool mRecording = false;
 };

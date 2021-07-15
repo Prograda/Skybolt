@@ -26,4 +26,5 @@ private:
 	std::vector<std::shared_ptr<PointMarkers>> mCurvePointMakers;
 
 	std::vector<boost::signals2::connection> mConnections;
+	std::map<class QwtPlotCurve*, std::function<void()>> mDirtyCurveReplotters;
 };

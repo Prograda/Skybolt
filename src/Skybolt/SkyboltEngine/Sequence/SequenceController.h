@@ -57,6 +57,8 @@ struct Sequence
 	virtual const SequenceState& getItemAtIndex(size_t index) = 0;
 
 	virtual void setValueAtIndex(const SequenceState& value, size_t index) = 0;
+
+	virtual void clear() = 0;
 };
 
 template <typename T> // T must derive from SequenceState 
@@ -100,6 +102,14 @@ struct StateSequenceT : public Sequence
 	{
 		values[index] = static_cast<const T&>(value);
 		valueChanged(index);
+	}
+
+	void clear() override
+	{
+		while (!times.empty())
+		{
+			removeItemAtIndex(0);
+		}
 	}
 };
 

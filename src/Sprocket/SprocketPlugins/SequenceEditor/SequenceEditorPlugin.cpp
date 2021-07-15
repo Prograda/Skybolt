@@ -34,10 +34,10 @@ static void addItem(Registry<TreeItem>& registry, const StateSequenceControllerP
 	registry.add(std::make_shared<SequenceTreeItem>(icon, name, controller));
 }
 
-static StateSequenceController& toSequenceController(const TreeItem& item)
+static StateSequenceControllerPtr toSequenceController(const TreeItem& item)
 {
 	auto sequenceItem = static_cast<const SequenceTreeItem*>(&item);
-	return *sequenceItem->data;
+	return sequenceItem->data;
 }
 
 static void readSequences(Registry<TreeItem>& registry, const QJsonValue& value, const sim::World& world, Scenario* scenario)
@@ -58,10 +58,41 @@ static QJsonObject writeSequences(const Registry<TreeItem>& registry)
 	QJsonObject json;
 	for (const auto& item : registry.getItems())
 	{
-		json[QString::fromStdString(item->getName())] = writeSequenceController(toSequenceController(*item));
+		json[QString::fromStdString(item->getName())] = writeSequenceController(*toSequenceController(*item));
 	}
 	return json;
 }
+
+class SequenceRecorder
+{
+public:
+	SequenceRecorder(const StateSequenceControllerPtr& controller) :
+		mController(controller)
+	{
+		// Delete existing sequence
+		mController->getSequence()->clear();
+	}
+
+	void setTime(double time)
+	{
+		double keyFrameInterval = 0.5;
+		bool captureFrame = !mPreviousKeyframeTime || (time - *mPreviousKeyframeTime > keyFrameInterval);
+		if (captureFrame)
+		{
+			auto state = mController->getState();
+			auto sequence = mController->getSequence();
+			if (state)
+			{
+				sequence->addItemAtTime(*state, time);
+			}
+			mPreviousKeyframeTime = time;
+		}
+	}
+
+private:
+	StateSequenceControllerPtr mController;
+	std::optional<double> mPreviousKeyframeTime;
+};
 
 class SequenceEditorPlugin : public EditorPlugin
 {
@@ -116,6 +147,7 @@ public:
 	void clearProject()
 	{
 		mSequenceTreeItemRegistry->clear();
+		mRecordingControllers.clear();
 	}
 
 	void loadProject(const QJsonObject& json)
@@ -137,7 +169,16 @@ public:
 		for (const auto& item : mSequenceTreeItemRegistry->getItems())
 		{
 			auto& sequence = toSequenceController(*item);
-			sequence.setTime(time);
+
+			auto i = mRecordingControllers.find(sequence);
+			if (i == mRecordingControllers.end()) // playing
+			{
+				sequence->setTime(time);
+			}
+			else // recording
+			{
+				i->second->setTime(time);
+			}
 		}
 	}
 	
@@ -155,6 +196,22 @@ public:
 			config.controller = sequence;
 			config.entityChooserDialogFactory = std::make_shared<EntityChooserDialogFactory>(mEngineRoot->simWorld.get());
 			config.timeSource = &mEngineRoot->scenario.timeSource;
+			config.sequenceRecorder = [this, sequence, timeSource = config.timeSource](bool enabled) {
+				if (enabled)
+				{
+					if (mRecordingControllers.find(sequence) == mRecordingControllers.end())
+					{
+						mRecordingControllers[sequence] = std::make_shared<SequenceRecorder>(sequence);
+					}
+					timeSource->setState(TimeSource::StatePlaying);
+				}
+				else
+				{
+					mRecordingControllers.erase(sequence);
+					timeSource->setState(TimeSource::StateStopped);
+				}
+			};
+			config.isRecording = (mRecordingControllers.find(sequence) != mRecordingControllers.end());
 			config.parent = nullptr;
 			return new SequenceEditor(config);
 		};
@@ -183,6 +240,7 @@ private:
 	EngineRoot* mEngineRoot;
 	std::vector<boost::signals2::scoped_connection> mConnections;
 	SequencePlotWidget* mSequencePlotWidget;
+	std::map<StateSequenceControllerPtr, std::shared_ptr<SequenceRecorder>> mRecordingControllers;
 };
 
 namespace plugins {

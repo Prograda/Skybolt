@@ -9,6 +9,7 @@
 #include <SkyboltEngine/TimeSource.h>
 #include <SkyboltEngine/Sequence/EntityStateSequenceController.h>
 #include <QBoxLayout>
+#include <QTimer>
 
 #include <qwt/qwt_legend.h>
 #include <qwt/qwt_plot.h>
@@ -67,6 +68,17 @@ SequencePlotWidget::SequencePlotWidget(TimeSource* timeSource, QWidget* parent) 
 	mConnections.push_back(timeSource->timeChanged.connect([this](double time) {
 		mTimeMarker->setValue(QPointF(time, 0.0));
 	}));
+
+	// Create timer to refresh the plot if data changed
+	QTimer* timer = new QTimer(this);
+	connect(timer, &QTimer::timeout, this, [this] {
+		for (const auto& [curve, replotter] : mDirtyCurveReplotters)
+		{
+			replotter();
+		}
+		mDirtyCurveReplotters.clear();
+	});
+	timer->start(0);
 }
 
 class CurveData : public QwtArraySeriesData<QPointF>
@@ -240,25 +252,25 @@ void SequencePlotWidget::setSequenceController(const skybolt::StateSequenceContr
 		auto pointMarkers = std::make_shared<PointMarkers>();
 		mCurvePointMakers.push_back(pointMarkers);
 
-		auto replotFunction = [=] {
+		auto replotter = [=] {
 			replotCurve(*data, controller, c.valueGetter);
 			replotPoints(mPlot, pointMarkers, sequence, c.valueGetter);
 		};
 
 		// Add existing items
-		replotFunction();
+		mDirtyCurveReplotters[curve] = replotter;
 
 		// Listen to change events
 		mConnections.push_back(sequence->itemAdded.connect([=](size_t index) {
-			replotFunction();
+			mDirtyCurveReplotters[curve] = replotter;
 		}));
 
 		mConnections.push_back(sequence->valueChanged.connect([=](size_t index) {
-			replotFunction();
+			mDirtyCurveReplotters[curve] = replotter;
 		}));
 
 		mConnections.push_back(sequence->itemRemoved.connect([=](size_t index) {
-			replotFunction();
+			mDirtyCurveReplotters[curve] = replotter;
 		}));
 
 		++curveIndex;
