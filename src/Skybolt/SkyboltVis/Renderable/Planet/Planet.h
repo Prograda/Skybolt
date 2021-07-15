@@ -137,6 +137,7 @@ private:
 
 	double mInnerRadius;
 	boost::optional<float> mAtmosphereScaleHeight;
+	osg::ref_ptr<osg::Group> mPlanetGroup;
 	osg::ref_ptr<osg::MatrixTransform> mTransform;
 	osg::ref_ptr<osg::MatrixTransform> mShadowScenePlanetTransform;
 	osg::ref_ptr<osg::Group> mShadowSceneGroup;

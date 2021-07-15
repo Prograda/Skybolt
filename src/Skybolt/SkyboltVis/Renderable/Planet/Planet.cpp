@@ -322,11 +322,14 @@ private:
 Planet::Planet(const PlanetConfig& config) :
 	mScene(config.scene),
 	mInnerRadius(config.innerRadius),
+	mPlanetGroup(new osg::Group),
 	mTransform(new osg::MatrixTransform),
 	mShadowScenePlanetTransform(new osg::MatrixTransform),
 	mShadowSceneGroup(new osg::Group),
 	mPlanetSurfaceListener(new MyPlanetSurfaceListener(this))
 {
+	mPlanetGroup->addChild(mTransform);
+
 	if (config.atmosphereConfig)
 	{
 		mAtmosphereScaleHeight = config.atmosphereConfig->rayleighScaleHeight;
@@ -388,7 +391,6 @@ Planet::Planet(const PlanetConfig& config) :
 		if (config.forestParams)
 		{
 			mForestGroup = new osg::Group();
-			config.scene->_getGroup()->addChild(mForestGroup);
 
 			vis::GpuForestConfig forestConfig;
 			forestConfig.forestParams = *config.forestParams;
@@ -397,6 +399,8 @@ Planet::Planet(const PlanetConfig& config) :
 			forestConfig.planetRadius = mInnerRadius;
 			forestConfig.programs = config.programs;
 			forest = std::make_shared<vis::GpuForest>(forestConfig);
+
+			mPlanetGroup->addChild(mForestGroup);
 		}
 
 		PlanetSurfaceConfig surfaceConfig;
@@ -710,7 +714,7 @@ void Planet::setOrientation(const osg::Quat &orientation)
 
 osg::Node* Planet::_getNode() const
 {
-	return mTransform.get();
+	return mPlanetGroup.get();
 }
 
 void Planet::addTextureGeneratorToSceneGraph(const osg::ref_ptr<GpuTextureGenerator>& generator)

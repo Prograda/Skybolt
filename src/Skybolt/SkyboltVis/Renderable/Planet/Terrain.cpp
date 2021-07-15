@@ -149,6 +149,8 @@ static void setupTerrainStateSet(osg::StateSet& ss, const TerrainConfig& config)
 	ss.addUniform(new osg::Uniform("attributeMapUvScale", config.attributeMapUvScale));
 	ss.addUniform(new osg::Uniform("attributeMapUvOffset", config.attributeMapUvOffset));
 
+	ss.setDefine("ACCURATE_LOG_Z");
+
 #ifdef WIREFRAME
 	osg::PolygonMode * polygonMode = new osg::PolygonMode;
 	polygonMode->setMode( osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE );
