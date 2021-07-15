@@ -74,8 +74,8 @@ static osg::Vec2f getSegmentNormal(const std::vector<osg::Vec3f>& points, int i)
 		normal = osg::Vec2f(n0 + n1);
 		normal.normalize();
 
-		float theta = acos(n0 * n1) * 0.5f;
-		normal *= 1.0f / cos(theta);
+		float theta = std::acos(std::min(1.f, n0 * n1)) * 0.5f;
+		normal *= 1.0f / std::cos(theta);
 	}
 	return normal;
 }
@@ -89,10 +89,19 @@ static void createRoad(const Road& road, osg::Vec3Array* posBuffer, osg::Vec3Arr
 	float t = 0;
 
 	float halfWidth = road.width * 0.5f;
+
+	int addedPoints = 0;
 	for (int i = 0; i < road.points.size(); ++i)
 	{	
 		if (i > 0)
-			t += toVec2f(road.points[i] - road.points[i-1]).length() / road.width;
+		{
+			float length = toVec2f(road.points[i] - road.points[i - 1]).length();
+			if (length < 1e-7f)
+			{
+				continue;
+			}
+			t += length / road.width;
+		}
 
 		osg::Vec3f point = road.points[i];
 		osg::Vec2f normal = getSegmentNormal(road.points, i);
@@ -107,9 +116,11 @@ static void createRoad(const Road& road, osg::Vec3Array* posBuffer, osg::Vec3Arr
 
 		uvBuffer->push_back(osg::Vec2f(0.0f, t) * scale);
 		uvBuffer->push_back(osg::Vec2f(1.0f, t) * scale);
+
+		++addedPoints;
 	}
 
-	for (int i = 0; i < road.points.size()-1; ++i)
+	for (int i = 0; i < addedPoints-1; ++i)
 	{
 		int j = firstVertIndex + i*2;
 		indexBuffer->push_back(j);
@@ -169,7 +180,7 @@ static osg::ref_ptr<osg::StateSet> createStateSet(const osg::ref_ptr<osg::Progra
 	ss->addUniform(uniforms.modelMatrix);
 	ss->setDefine("ENABLE_DEPTH_OFFSET");
 	ss->setDefine("ACCURATE_LOG_Z"); // enabled because geometry is sparsely tessellated
-	ss->addUniform(new osg::Uniform("depthOffset", -0.005f));
+	ss->addUniform(new osg::Uniform("depthOffset", -0.01f));
 
 	osg::Depth* depth = new osg::Depth;
 	depth->setWriteMask(false);
