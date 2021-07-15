@@ -32,7 +32,7 @@ using namespace vis;
 
 int maxFeatureTileLod = 10;
 int maxHeightmapTileLod = 12;
-std::string outputDirectory = "SkyboltAssets/Assets/Seattle/Tiles/Earth/Features";
+std::string outputDirectory = "SkyboltAssetsExtra/SeattleOut/Tiles/Earth/Features";
 std::string tileCacheDirectory = "cache";
 std::string heightmapSourceDirectory = "DEM/CombinedElevation";
 std::string heightmapDestinationDirectory = "SkyboltAssets/Assets/SeattleElevation/Tiles/Earth/Elevation";
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 			}
 #endif
 			mapfeatures::save(worldFeatures.tree, outputDirectory);
-			mapfeatures::saveAirports(result.airports, "SkyboltAssets/Assets/Core/Airports/airports.apt");
+			mapfeatures::saveAirports(result.airports, "SkyboltAssets/Assets/Globe/Airports/airports.apt");
 		}
 	}
 	catch (const std::exception& e)

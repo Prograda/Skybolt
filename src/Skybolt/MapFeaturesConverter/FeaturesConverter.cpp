@@ -357,14 +357,34 @@ static int parseWay(const void* user_data, const readosm_way* way)
 		const readosm_tag* heightTag = getTag(*way, "height");
 		if (heightTag)
 		{
-			height = std::stod(heightTag->value);
+			try
+			{
+				height = std::stod(heightTag->value);
+			}
+			catch (const std::invalid_argument&)
+			{
+#ifdef FEATURES_CONVERTER_STRICT_ERROR_CHECKING
+				throw std::runtime_error("Invalid value for building height: '" + std::string(heightTag->value) + "'");
+#endif
+			}
 		}
 		else
 		{
 			const readosm_tag* levelsTag = getTag(*way, "building:levels");
 			if (levelsTag)
 			{
-				int levels = std::stoi(levelsTag->value);
+				int levels = 1;
+				try
+				{
+					std::stoi(levelsTag->value);
+				}
+				catch (const std::invalid_argument&)
+				{
+#ifdef FEATURES_CONVERTER_STRICT_ERROR_CHECKING
+					throw std::runtime_error("Invalid value for number of building levels: '" + std::string(levelsTag->value) + "'");
+#endif
+				}
+
 				height = calcBuildingHeightFromLevelCount(levels);
 			}
 		}
