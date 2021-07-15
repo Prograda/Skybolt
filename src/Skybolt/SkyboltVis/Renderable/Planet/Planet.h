@@ -55,7 +55,7 @@ struct PlanetConfig
 	std::vector<file::Path> featureTreeFiles;
 	std::string featureTilesDirectoryRelAssetPackage;
 	std::optional<ForestParams> forestParams;
-	std::vector<osg::ref_ptr<osg::Texture2D>> albedoDetailMaps;
+	DetailMappingTechniquePtr detailMappingTechnique;
 };
 
 class MyPlanetSurfaceListener;

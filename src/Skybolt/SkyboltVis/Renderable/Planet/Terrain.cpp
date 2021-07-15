@@ -113,7 +113,7 @@ static void setupTerrainStateSet(osg::StateSet& ss, const TerrainConfig& config)
 	ss.setTextureAttributeAndModes(unit, config.overallAlbedoMap);
 	ss.addUniform(createUniformSampler2d("overallAlbedoSampler", unit++));
 
-	if (auto uniformTechnique = dynamic_cast<TerrainConfig::UniformDetailMappingTechnique*>(config.detailMappingTechnique.get()); uniformTechnique)
+	if (auto uniformTechnique = dynamic_cast<const UniformDetailMappingTechnique*>(config.detailMappingTechnique.get()); uniformTechnique)
 	{
 		ss.setDefine("DETAIL_MAPPING_TECHNIQUE_UNIFORM");
 		ss.setDefine("DETAIL_SAMPLER_COUNT", 1);
@@ -121,10 +121,13 @@ static void setupTerrainStateSet(osg::StateSet& ss, const TerrainConfig& config)
 		ss.setTextureAttributeAndModes(unit, uniformTechnique->albedoDetailMap);
 		ss.addUniform(createUniformSampler2d("albedoDetailSamplers", unit++));
 	}
-	else if (auto attributeTechnique = dynamic_cast<TerrainConfig::AlbedoDerivedDetailMappingTechnique*>(config.detailMappingTechnique.get()); attributeTechnique)
+	else if (auto attributeTechnique = dynamic_cast<const AlbedoDerivedDetailMappingTechnique*>(config.detailMappingTechnique.get()); attributeTechnique)
 	{
 		ss.setDefine("DETAIL_MAPPING_TECHNIQUE_ALBEDO_DERIVED");
 		ss.setDefine("DETAIL_SAMPLER_COUNT", std::to_string(attributeTechnique->albedoDetailMaps.size()));
+
+		ss.setTextureAttributeAndModes(unit, attributeTechnique->noiseMap);
+		ss.addUniform(createUniformSampler2d("noiseSampler", unit++));
 
 		osg::Uniform* uniform = new osg::Uniform(osg::Uniform::SAMPLER_2D, "albedoDetailSamplers", attributeTechnique->albedoDetailMaps.size());
 		for (size_t i = 0; i < attributeTechnique->albedoDetailMaps.size(); ++i)

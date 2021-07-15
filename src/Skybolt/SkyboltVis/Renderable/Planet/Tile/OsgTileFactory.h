@@ -21,7 +21,7 @@ namespace vis {
 struct OsgTileFactoryConfig
 {
 	const ShaderPrograms* programs;
-	std::vector<osg::ref_ptr<osg::Texture2D>> albedoDetailMaps;
+	DetailMappingTechniquePtr detailMappingTechnique;
 
 	double planetRadius;
 	bool hasCloudShadows;
@@ -47,7 +47,7 @@ public:
 private:
 	double mPlanetRadius;
 	const ShaderPrograms* mPrograms;
-	std::vector<osg::ref_ptr<osg::Texture2D>> mAlbedoDetailMaps;
+	DetailMappingTechniquePtr mDetailMappingTechnique;
 	bool mHasCloudShadows;
 };
 

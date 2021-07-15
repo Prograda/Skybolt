@@ -383,7 +383,7 @@ Planet::Planet(const PlanetConfig& config) :
 			factoryConfig.programs = config.programs;
 			factoryConfig.planetRadius = mInnerRadius;
 			factoryConfig.hasCloudShadows = config.cloudsTexture != nullptr;
-			factoryConfig.albedoDetailMaps = config.albedoDetailMaps;
+			factoryConfig.detailMappingTechnique = config.detailMappingTechnique;
 			osgTileFactory = std::make_shared<OsgTileFactory>(factoryConfig);
 		}
 

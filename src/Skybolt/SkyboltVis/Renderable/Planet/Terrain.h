@@ -8,6 +8,7 @@
 
 #include "SkyboltVis/DefaultRootNode.h"
 #include "SkyboltVis/OsgBox2.h"
+#include "SkyboltVis/SkyboltVisFwd.h"
 #include "SkyboltVis/Shadow/ShadowHelpers.h"
 #include <osg/Texture2D>
 
@@ -15,6 +16,29 @@
 
 namespace skybolt {
 namespace vis {
+
+struct DetailMappingTechnique
+{
+public:
+	virtual ~DetailMappingTechnique() = default;
+};
+
+//! One detail map applied uniformly over the terrain
+struct UniformDetailMappingTechnique : DetailMappingTechnique
+{
+	~UniformDetailMappingTechnique() override = default;
+
+	osg::ref_ptr<osg::Texture2D> albedoDetailMap;
+};
+
+//! Multiple detail maps blended by coverage derived from albedo map
+struct AlbedoDerivedDetailMappingTechnique : DetailMappingTechnique
+{
+	~AlbedoDerivedDetailMappingTechnique() override = default;
+
+	osg::ref_ptr<osg::Texture2D> noiseMap;
+	std::vector<osg::ref_ptr<osg::Texture2D>> albedoDetailMaps;
+};
 
 struct TerrainConfig
 {
@@ -37,30 +61,6 @@ struct TerrainConfig
 	};
 
 	std::shared_ptr<Tile> tile;
-
-	struct DetailMappingTechnique
-	{
-	public:
-		virtual ~DetailMappingTechnique() = default;
-	};
-
-	using DetailMappingTechniquePtr = std::shared_ptr<DetailMappingTechnique>;
-
-	//! One detail map applied uniformly over the terrain
-	struct UniformDetailMappingTechnique : DetailMappingTechnique
-	{
-		~UniformDetailMappingTechnique() override = default;
-
-		osg::ref_ptr<osg::Texture2D> albedoDetailMap;
-	};
-
-	//! Multiple detail maps blended by coverage derived from albedo map
-	struct AlbedoDerivedDetailMappingTechnique : DetailMappingTechnique
-	{
-		~AlbedoDerivedDetailMappingTechnique() override = default;
-
-		std::vector<osg::ref_ptr<osg::Texture2D>> albedoDetailMaps;
-	};
 
 	osg::ref_ptr<osg::Texture2D> heightMap;
 	osg::ref_ptr<osg::Texture2D> normalMap;

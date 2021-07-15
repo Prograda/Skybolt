@@ -23,7 +23,7 @@ namespace vis {
 
 OsgTileFactory::OsgTileFactory(const OsgTileFactoryConfig& config) :
 	mPrograms(config.programs),
-	mAlbedoDetailMaps(config.albedoDetailMaps),
+	mDetailMappingTechnique(config.detailMappingTechnique),
 	mPlanetRadius(config.planetRadius),
 	mHasCloudShadows(config.hasCloudShadows)
 {
@@ -81,21 +81,7 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 		config.overallAlbedoMapUvOffset = albedoImageOffset;
 		config.attributeMapUvScale = attributeImageScale;
 		config.attributeMapUvOffset = attributeImageOffset;
-
-		if (mAlbedoDetailMaps.size() == 1)
-		{
-			auto technique = std::make_shared<TerrainConfig::UniformDetailMappingTechnique>();
-			technique->albedoDetailMap = mAlbedoDetailMaps.front();
-
-			config.detailMappingTechnique = technique;
-		}
-		else if (!mAlbedoDetailMaps.empty())
-		{
-			auto technique = std::make_shared<TerrainConfig::AlbedoDerivedDetailMappingTechnique>();
-			technique->albedoDetailMaps = mAlbedoDetailMaps;
-
-			config.detailMappingTechnique = technique;
-		}
+		config.detailMappingTechnique = mDetailMappingTechnique;
 
 		result.highResTerrain.reset(new Terrain(config));
 		result.transform->addChild(result.highResTerrain->getTerrainNode());

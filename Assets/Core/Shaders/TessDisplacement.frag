@@ -17,6 +17,7 @@
 #include "NormalMapping.h"
 #include "Ocean.h"
 #include "Rerange.h"
+#include "Remap.h"
 #include "Saturate.h"
 #include "Brdfs/BlinnPhong.h"
 #include "Brdfs/Lambert.h"
@@ -43,6 +44,7 @@ uniform sampler2D attributeSampler;
 #endif
 uniform sampler2D overallAlbedoSampler;
 uniform sampler2D cloudSampler;
+uniform sampler2D noiseSampler;
 
 uniform vec2 heightMapUvScale;
 uniform vec2 heightMapUvOffset;
@@ -105,63 +107,30 @@ ivec4 bilinearFetchIndices(sampler2D tex, vec2 uv, out vec4 weights)
 	return ivec4(c00*255.f + 0.5f, c10*255.f + 0.5f, c01*255.f + 0.5f, c11*255.f + 0.5f);
 }
 
-int attributeIndexFromAlbedo(vec3 albedo)
+float saturation(vec3 c)
 {
-	return (albedo.g * 1.5 > albedo.r + albedo.b) ? 1 : 0;
+	float minColor = min(min(c.r, c.g), c.b);
+	float maxColor = max(max(c.r, c.g), c.b);
+	return (maxColor - minColor) / (maxColor + minColor);
 }
 
-ivec4 bilinearFetchIndicesFromAlbedo(sampler2D tex, vec2 uv, out vec4 weights)
-{// TODO: consider clamping at edges here
-	ivec2 dims = textureSize(tex, 0);
-	vec2 coordFloat = uv * vec2(dims) - 0.5f;
-	ivec2 coordInt = ivec2(floor(coordFloat));
-	vec2 weight = coordFloat - coordInt;
-	coordInt = clamp(coordInt, ivec2(0), dims-ivec2(2));
-	
-	int c00 = attributeIndexFromAlbedo(texelFetch(tex, coordInt, 0).rgb);
-	int c10 = attributeIndexFromAlbedo(texelFetch(tex, coordInt + ivec2(1, 0), 0).rgb);
-	int c01 = attributeIndexFromAlbedo(texelFetch(tex, coordInt + ivec2(0, 1), 0).rgb);
-	int c11 = attributeIndexFromAlbedo(texelFetch(tex, coordInt + ivec2(1, 1), 0).rgb);
-
-	weights.x = (1-weight.x) * (1-weight.y);
-	weights.y = weight.x * (1-weight.y);
-	weights.z = (1-weight.x) * weight.y;
-	weights.w = weight.x * weight.y;
-	return ivec4(c00, c10, c01, c11);
+float luminance(vec3 c)
+{
+	return dot(c, vec3(0.2126, 0.7152, 0.0722));
 }
 
-ivec4 bilinearFetchIndicesWithNoise(sampler2D tex, vec2 uv, out vec4 weights, vec2 noise)
-{// TODO: consider clamping at edges here
-	ivec2 dims = textureSize(tex, 0);
-	vec2 noiseOffset = 3 * (noise-vec2(0.5));
-	vec2 coordFloat = uv * vec2(dims) - 0.5f + noiseOffset;
-	ivec2 coordInt = ivec2(floor(coordFloat));
-	vec2 weight = coordFloat - coordInt;
-	coordInt = clamp(coordInt, ivec2(0), dims-ivec2(2));
+ivec4 bilinearFetchIndicesFromAlbedo(vec3 albedo, out vec4 weights)
+{
+	ivec4 indices = ivec4(0, 1, 2, 3);
 	
-	float c00 = texelFetch(tex, coordInt, 0).r;
-	float c10 = texelFetch(tex, coordInt + ivec2(1, 0), 0).r;
-	float c01 = texelFetch(tex, coordInt + ivec2(0, 1), 0).r;
-	float c11 = texelFetch(tex, coordInt + ivec2(1, 1), 0).r;
-
-	weights.x = (1-weight.x) * (1-weight.y);
-	weights.y = weight.x * (1-weight.y);
-	weights.z = (1-weight.x) * weight.y;
-	weights.w = weight.x * weight.y;
+	float grass = clamp((albedo.g / (albedo.r + albedo.b) - 0.5) * 3.0, 0, 1);
+	float forestConditionalOnGrass = clamp((albedo.g - 0.1) * 5, 0, 1);
 	
-	return ivec4(c00*255.f + 0.5f, c10*255.f + 0.5f, c01*255.f + 0.5f, c11*255.f + 0.5f);
-}
-
-ivec4 fetchIndicesWithNoise(sampler2D tex, vec2 uv, out vec4 weights, vec2 noise)
-{// TODO: consider clamping at edges here
-	vec2 dims = textureSize(tex, 0);
-	vec2 coord = uv + 3 * (noise-vec2(0.5)) / dims;
-	ivec2 coordInt = ivec2(coord * dims);
-
-	float c = texelFetch(tex, coordInt, 0).r;
-
-	weights = vec4(1,0,0,0);	
-	return ivec4(c*255.f + 0.5f, 0, 0, 0);
+	weights = vec4(0);
+	weights.x = 1.0;
+	weights.y = grass;
+	weights.z = grass * forestConditionalOnGrass;
+	return indices;
 }
 
 float calcSlopeConvergence(vec2 uv)
@@ -177,7 +146,7 @@ float calcSlopeConvergence(vec2 uv)
 
 vec4 blend(vec4 texture1, float a1, vec4 texture2, float a2)  
 {  
-    float depth = 0.2;  
+    float depth = 0.2;
     float ma = max(texture1.a + a1, texture2.a + a2) - depth;  
   
     float b1 = max(texture1.a + a1 - ma, 0);  
@@ -186,10 +155,26 @@ vec4 blend(vec4 texture1, float a1, vec4 texture2, float a2)
     return (texture1 * b1 + texture2 * b2) / (b1 + b2);  
 }
 
+vec3 blendErosion(vec3 base, vec3 blend, vec3 falloff)
+{
+	vec3 invBase = (vec3(1) - base) * (vec3(1.0) + falloff);
+	return clamp(remapNormalized(blend, vec3(invBase-falloff), vec3(invBase)), vec3(0), vec3(1));
+}
+
 #ifdef DETAIL_SAMPLER_COUNT
 vec4 sampleDetailAlbedo(int i, vec3 normal, vec3 texCoord, vec2 normalUv)
 {
 	return texture(albedoDetailSamplers[i], texCoord.xy);
+}
+
+vec4 sampleDetailAlbedoMultiScale(int i, vec3 normal, vec3 texCoord, vec2 normalUv)
+{
+	vec4 c = texture(albedoDetailSamplers[i], texCoord.xy);
+	vec4 d = texture(albedoDetailSamplers[i], texCoord.xy * 4);
+	
+	float lod = textureQueryLod(albedoDetailSamplers[i], texCoord.xy).r;
+	
+	return mix(c, d, clamp(1-lod*0.5, 0, 1));
 }
 
 vec4 sampleDetailTexture()
@@ -199,22 +184,16 @@ vec4 sampleDetailTexture()
 	return texture(albedoDetailSamplers[0], texCoord.xy);
 }
 
-vec4 sampleAttributeDetailTextures(vec3 normal, vec2 normalUv)
+vec4 sampleAttributeDetailTextures(vec3 normal, vec2 normalUv, vec3 albedo)
 {
-	vec3 detailTexCoordPerMeter = wrappedNoiseCoord * 10000.0; // repeats [0,1) per meter
+	vec3 detailTexCoordPerMeter = wrappedNoiseCoord * 5000.0; // repeats [0,1) per meter
 	vec2 attributeTexCoord = texCoord.xy * attributeMapUvScale + attributeMapUvOffset;
 
 	// Sample and blend attribute albedos
 	vec4 attrWeights;
-//#define TERRAIN_DETAIL_NOISE_BLEND
-#ifdef TERRAIN_DETAIL_NOISE_BLEND
-	vec2 noise = texture(noiseSampler, attributeTexCoord * 5).rg;
-	ivec4 attrIndices = bilinearFetchIndicesWithNoise(attributeSampler, attributeTexCoord, attrWeights, noise);
-	//ivec4 attrIndices = fetchIndicesWithNoise(attributeSampler, attributeTexCoord, attrWeights, noise);
-#else
+
 	vec2 albedoTexCoord = texCoord.xy * overallAlbedoMapUvScale + overallAlbedoMapUvOffset;
-	ivec4 attrIndices = bilinearFetchIndicesFromAlbedo(overallAlbedoSampler, albedoTexCoord, attrWeights);
-#endif
+	ivec4 attrIndices = bilinearFetchIndicesFromAlbedo(albedo, attrWeights);
 
 //#define DETAIL_HEIGHTMAP_BLEND
 #ifdef DETAIL_HEIGHTMAP_BLEND
@@ -248,12 +227,36 @@ vec4 sampleAttributeDetailTextures(vec3 normal, vec2 normalUv)
 #else
 	// Do standard bilinear filtering
 	vec4 attributeColor = vec4(0);
+	
+#define OVERLAY_BLEND
+#ifdef OVERLAY_BLEND
+	float noise = texture(albedoDetailSamplers[2], detailTexCoordPerMeter.xy*0.01).r;
+	
+	vec3 albedoDetailTexCoord = detailAlbedoUvScale[0] * detailTexCoordPerMeter;
+	attributeColor = sampleDetailAlbedoMultiScale(0, normal, albedoDetailTexCoord, normalUv);
+	
+	float dirtSaturation = 1.5*saturation(albedo);
+	attributeColor = mix(attributeColor, vec4(luminance(attributeColor.rgb)), max(0.0, 1-dirtSaturation));
+	
+	vec3 mask = attrWeights.xyz;
+	vec3 falloff = vec3(0.3, 0.3, 1);
+	mask = blendErosion(mask, vec3(noise), falloff);
+	
+	vec4 underlayAttributeColor = sampleDetailAlbedoMultiScale(1, normal, albedoDetailTexCoord, normalUv);
+	attributeColor = mix(attributeColor, underlayAttributeColor, mask.g);
+	
+	underlayAttributeColor = sampleDetailAlbedoMultiScale(2, normal, albedoDetailTexCoord, normalUv);
+	attributeColor = mix(attributeColor, underlayAttributeColor, mask.b);
+	
+#else
+	
 	for (int i = 0; i < 4; ++i)
 	{
 		int index = attrIndices[i];
 		vec3 albedoDetailTexCoord = detailAlbedoUvScale[index] * detailTexCoordPerMeter;
 		attributeColor += sampleDetailAlbedo(index, normal, albedoDetailTexCoord, normalUv) * attrWeights[i];
 	}
+#endif
 #endif
 	return attributeColor;
 }
@@ -349,9 +352,11 @@ void main()
 #if defined(DETAIL_MAPPING_TECHNIQUE_UNIFORM)
 	albedo += (dot(vec3(0.33333), sampleDetailTexture().rgb) - vec3(0.5))*0.6;
 #elif defined(DETAIL_MAPPING_TECHNIQUE_ALBEDO_DERIVED)
-	vec3 attributeColor = sampleAttributeDetailTextures(normal, normalUv).rgb;
-	float albedoBlend = clamp(fragmentViewDistance / 4000, 0.0, 1.0);
-	albedo = mix(attributeColor, albedo, albedoBlend);
+	vec3 attributeColor = 0.9*sampleAttributeDetailTextures(normal, normalUv, albedo).rgb;
+	float albedoBlend = clamp(fragmentViewDistance / 8000, 0.0, 1.0);
+	
+	albedo = mix(attributeColor * (vec3(0.5) + albedo), albedo, albedoBlend);
+	//albedo = mix(attributeColor, albedo, albedoBlend);
 #endif
 
 #ifdef ENABLE_SHADOWS
@@ -389,7 +394,7 @@ void main()
 
 	vec3 totalReflectance = albedo * (
 			calcLambertDirectionalLight(lightDirection, normal) * visibleSunIrradiance + 	
-			calcLambertSkyLight(lightDirection, normal) * skyIrradiance * (lightVisibility*0.2+0.8) +
+			calcLambertSkyLight(lightDirection, normal) * skyIrradiance +
 			ambientLightColor
 		)
 		+ specularReflectance;

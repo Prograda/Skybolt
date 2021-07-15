@@ -42,6 +42,7 @@
 #include <SkyboltVis/Renderable/Forest/GpuForest.h>
 #include <SkyboltVis/Renderable/Polyline.h>
 #include <SkyboltVis/Renderable/Planet/Planet.h>
+#include <SkyboltVis/Renderable/Planet/Terrain.h>
 #include <SkyboltVis/Renderable/Planet/Features/BuildingTypes.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 #include <SkyboltVis/Renderable/Stars/Starfield.h>
@@ -314,6 +315,16 @@ static std::optional<vis::ShadowParams> toShadowParams(const nlohmann::json& jso
 	return {};
 }
 
+static osg::ref_ptr<osg::Texture2D> readTilingNonSrgbTexture(const std::string& filename)
+{
+	osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(osgDB::readImageFile(filename));
+	texture->setFilter(osg::Texture::FilterParameter::MIN_FILTER, osg::Texture::FilterMode::LINEAR_MIPMAP_LINEAR);
+	texture->setFilter(osg::Texture::FilterParameter::MAG_FILTER, osg::Texture::FilterMode::LINEAR);
+	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
+	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+	return texture;
+}
+
 static osg::ref_ptr<osg::Texture2D> readTilingAlbedoTexture(const std::string& filename)
 {
 	osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(osgDB::readImageFile(filename));
@@ -415,19 +426,26 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 		std::string filename = it->at("texture");
 		auto texture = readTilingAlbedoTexture(filename);
 		convertSrgbToTexturizerMap(*texture->getImage());
-		config.albedoDetailMaps.push_back(texture);
+		auto technique = std::make_shared<vis::UniformDetailMappingTechnique>();
+		technique->albedoDetailMap = texture;
+		config.detailMappingTechnique = technique;
 	}
 	else
 	{
 		it = layers.find("albedoToDetail");
 		if (it != layers.end())
 		{
+			auto technique = std::make_shared<vis::AlbedoDerivedDetailMappingTechnique>();
+			technique->noiseMap = readTilingNonSrgbTexture("Environment/TerrainDetailNoise.png");
+
 			auto textures = it->at("textures").items();
 			for (const auto filename : textures)
 			{
 				auto texture = readTilingAlbedoTexture(filename.value());
-				config.albedoDetailMaps.push_back(texture);
+				technique->albedoDetailMaps.push_back(texture);
 			}
+
+			config.detailMappingTechnique = technique;
 		}
 	}
 
