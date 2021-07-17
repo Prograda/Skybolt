@@ -17,6 +17,17 @@ struct Road
 	std::vector<osg::Vec3f> points;
 	int laneCount;
 	float width; //!< total width of all lanes
+
+	//! Imaginary points past the ends of the road that the road will join to.
+	//! For example, if the road joints to another road, the control point should be the second vertex in the next road.
+	//! First element is the control point for the start of the road, second element is for the end.
+	//! Undefined if the road doesn't join. Check endLanes for -1 before use.
+	osg::Vec3f endControlPoints[2];
+
+	//! Number of lanes of the road that this road joins to.
+	//! First element is the join at the start of this road, second element is the join at the end of this road.
+	//! Set to -1 if the road doesn't join.
+	int endLaneCounts[2];
 };
 
 typedef std::vector<Road> Roads;

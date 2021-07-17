@@ -78,6 +78,15 @@ public:
 				}
 				road.width = srcRoad.width;
 				road.laneCount = srcRoad.laneCount;
+				
+				for (int i = 0; i < 2; ++i)
+				{
+					road.endLaneCounts[i] = srcRoad.endLaneCounts[i];
+					if (road.endLaneCounts[i] != -1)
+					{
+						road.endControlPoints[i] = converter.latLonAltToCartesianNed(srcRoad.endControlPoints[i]);
+					}
+				}
 				roads.push_back(road);
 			}
 			break;
@@ -150,7 +159,7 @@ public:
 		// Create roads
 		if (!roads.empty())
 		{
-			RoadsBatchPtr visRoads(new RoadsBatch(roads, modelProgram));
+			RoadsBatchPtr visRoads(new RoadsBatch(roads, mPrograms->getRequiredProgram("road")));
 			objects.nodes[PlanetFeaturesParams::groupsNonBuildingsIndex].push_back(visRoads);
 		}
 

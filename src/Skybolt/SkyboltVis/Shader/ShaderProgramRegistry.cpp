@@ -50,6 +50,10 @@ static ShaderProgramSourceFilesRegistry createShaderProgramSourceFilesRegistry()
 			{ osg::Shader::VERTEX, "Shaders/SimpleTextured.vert" },
 			{ osg::Shader::FRAGMENT, "Shaders/SimpleTexturedLambertText.frag" }
 		}},
+		{ "road", {
+			{ osg::Shader::VERTEX, "Shaders/SimpleTextured.vert" },
+			{ osg::Shader::FRAGMENT, "Shaders/Road.frag" }
+		}},
 		{ "heightToNormal", {
 			{ osg::Shader::VERTEX, "Shaders/ScreenQuad.vert" },
 			{ osg::Shader::FRAGMENT, "Shaders/HeightToNormalConverter.frag" }

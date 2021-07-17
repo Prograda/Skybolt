@@ -139,17 +139,47 @@ float negInfinity();
 std::string toString(const glm::dvec3& v);
 std::string toString(const glm::dquat& v);
 
+//! Like c++ fmod except that it doesn't flip behavior for negative numbers, i.e fmod(-5, 6) = 1
+template<typename T>
+T fmodNeg(T a, T b)
+{
+	// From https://stackoverflow.com/questions/1082917/mod-of-negative-number-is-melting-my-brain
+	return a - b * floor(a / b);
+}
+
+template<typename T>
+T normalizeAngleTwoPi(T a)
+{
+	return fmodNeg(a, T(twoPiD()));
+}
+
+template<typename T>
+T calcSmallestAngleFromTo(T a, T b)
+{
+	a = normalizeAngleTwoPi(a);
+	b = normalizeAngleTwoPi(b);
+	if (std::abs(a - b) > piD())
+	{
+		if (a < b)
+			a += T(twoPiD());
+		else
+			b += T(twoPiD());
+	}
+
+	return b - a;
+}
+
 template<typename T>
 T lerpShortestRotation(T a, T b, T weight)
 {
 	if (std::abs(a - b) > piD())
 	{
 		if (a < b)
-			a += twoPiD();
+			a += T(twoPiD());
 		else
-			b += twoPiD();
+			b += T(twoPiD());
 	}
-	return a + weight * (b - a);
+	return a + weight * calcSmallestAngleFromTo(a, b);
 }
 
 } // namespace math

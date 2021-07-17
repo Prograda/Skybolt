@@ -5,6 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "FeaturesConverter.h"
+#include <SkyboltSim/Spatial/GreatCircle.h>
+#include <SkyboltVis/Renderable/Planet/Features/PlanetFeaturesHelpers.h>
 #include <SkyboltCommon/Exception.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <readosm/readosm.h>
@@ -81,6 +83,7 @@ struct ParserData
 	std::vector<Airport::Runway> runways;
 
 	std::vector<FeaturePtr> features;
+	std::map<long long, RoadJunction> nodeRoadJunctions;
 
 	const sim::PlanetAltitudeProvider* altitudeProvider;
 };
@@ -319,6 +322,11 @@ static int parseWay(const void* user_data, const readosm_way* way)
 			|| strcmp(tag->value, "residential") == 0
 			)
 		{
+			if (getTag(*way, "tunnel")) // ignore tunnels
+			{
+				return READOSM_OK;
+			}
+
 			std::shared_ptr<Road> roadPtr = std::make_shared<Road>();
 			Road& road = *roadPtr;
 			road.laneCount = 2; // by default, assume road has one lane going one way, and another going the opposite way, e.g typical residential street.
@@ -341,6 +349,11 @@ static int parseWay(const void* user_data, const readosm_way* way)
 				{
 					road.points = toLatLonAlt(latLonPoints, *data.altitudeProvider);
 					features.push_back(roadPtr);
+
+					long long startNode = way->node_refs[0];
+					long long endNode = way->node_refs[way->node_ref_count - 1];
+					data.nodeRoadJunctions[startNode].roads.push_back({roadPtr, RoadJunction::StartOrEnd::Start});
+					data.nodeRoadJunctions[endNode].roads.push_back({roadPtr, RoadJunction::StartOrEnd::End});
 				}
 			}
 		}
@@ -658,6 +671,14 @@ std::map<std::string, AirportPtr> createAirports(const ParserData& data, const s
 	return result;
 }
 
+static void joinRoadsAtJunctions(const ParserData& data)
+{
+	for (const auto& [node, junction] : data.nodeRoadJunctions)
+	{
+		joinRoadsAtJunction(junction);
+	}
+}
+
 ReadPbfResult readPbf(const std::string& filename, const sim::PlanetAltitudeProvider& provider)
 {
 	ParserData data;
@@ -687,6 +708,9 @@ ReadPbfResult readPbf(const std::string& filename, const sim::PlanetAltitudeProv
 		throw skybolt::Exception("Error converting " + filename + ". Reason: " + e.what());
 	}
 	readosm_close(osm_handle);
+
+	printf("Connecting roads at %zu connection points\n", data.nodeRoadJunctions.size());
+	joinRoadsAtJunctions(data);
 
 	ReadPbfResult result;
 	printf("Matching %zu runways with %zu airports\n", data.runways.size(), data.airports.size());

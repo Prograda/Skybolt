@@ -28,7 +28,7 @@ double calcBearing(const LatLon& p1, const LatLon& p2)
 {
 	double y = sin(p2.lon-p1.lon) * cos(p2.lat);
 	double x = cos(p1.lat)*sin(p2.lat) - sin(p1.lat)*cos(p2.lat)*cos(p2.lat-p1.lat);
-	return -atan2(y, x);
+	return atan2(y, x);
 }
 
 glm::dvec2 latLonToCartesianNe(const LatLon& origin, const LatLon& position)
@@ -52,7 +52,7 @@ LatLon cartesianNeToLatLon(const LatLon& origin, const glm::dvec2& position)
 	return result;
 }
 
-sim::LatLon moveDistanceAndBearing(const sim::LatLon& origin, float distance, float bearing)
+sim::LatLon moveDistanceAndBearing(const sim::LatLon& origin, double distance, double bearing)
 {
 	sim::LatLon result;
 

@@ -61,3 +61,28 @@ TEST_CASE("getOrthonormalBasis")
 	CHECK(glm::distance(tangent, glm::vec3(0, 1, 0)) < 1e-6f);
 	CHECK(glm::distance(bitangent, glm::vec3(0, 0, 1)) < 1e-6f);
 }
+
+TEST_CASE("fmodNeg")
+{
+	CHECK(fmodNeg(-5.0, 6.5) == Approx(1.5).epsilon(1e-8));
+	CHECK(fmodNeg(2.0, 6.5) == Approx(2).epsilon(1e-8));
+	CHECK(fmodNeg(7.0, 6.5) == Approx(0.5).epsilon(1e-8));
+}
+
+TEST_CASE("normalizeAngleTwoPi")
+{
+	CHECK(normalizeAngleTwoPi(0.123) == Approx(0.123).epsilon(1e-8));
+	CHECK(normalizeAngleTwoPi(-0.123) == Approx(twoPiD() - 0.123).epsilon(1e-8));
+	CHECK(normalizeAngleTwoPi(twoPiD() + 0.123) == Approx(0.123).epsilon(1e-8));
+}
+
+TEST_CASE("calcSmallestAngleFromTo")
+{
+	CHECK(calcSmallestAngleFromTo(1, 2) == Approx(1).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo(2, 1) == Approx(-1).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo(2, -1) == Approx(-3).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo(-1, 2) == Approx(3).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo(3, 5) == Approx(2).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo(-piD(), piD()) == Approx(0).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo(5 * piD(), piD()) == Approx(0).epsilon(1e-8f));
+}

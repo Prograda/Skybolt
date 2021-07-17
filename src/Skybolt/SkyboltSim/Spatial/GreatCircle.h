@@ -16,14 +16,14 @@ inline double earthRadius() {return 6371000.0;}
 
 double calcDistance(const sim::LatLon& p1, const sim::LatLon& p2);
 
-//! clockwise from north in radians
+//! @return bearing from p1 to p2. Result is clockwise from north in radians.
 double calcBearing(const sim::LatLon& p1, const sim::LatLon& p2);
 
 glm::dvec2 latLonToCartesianNe(const sim::LatLon& origin, const sim::LatLon& position);
 
 sim::LatLon cartesianNeToLatLon(const sim::LatLon& origin, const glm::dvec2& position);
 
-sim::LatLon moveDistanceAndBearing(const sim::LatLon& origin, float distance, float bearing);
+sim::LatLon moveDistanceAndBearing(const sim::LatLon& origin, double distance, double bearing);
 
 } // namespace skybolt
 } // namespace sim

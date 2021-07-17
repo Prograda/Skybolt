@@ -18,7 +18,11 @@
 #include <osg/Texture2D>
 #include <osgUtil/Tessellator>
 
+#include <optional>
 
+
+float roadTextureLengthMeters = 10.f;
+float roadBorderSizeMeters = 0.5;
 float roadHeightAboveTerrain = 0.0f;
 int numLanesInTexture = 2;
 
@@ -33,22 +37,24 @@ inline osg::Vec2f toVec2f(const osg::Vec3f& v)
 }
 
 //! @return normal which is scaled to give segments of unit half-width
-static osg::Vec2f getSegmentNormal(const std::vector<osg::Vec3f>& points, int i)
+static osg::Vec2f getSegmentNormal(const std::optional<osg::Vec3f>& prevPoint, const osg::Vec3f& currentPoint, const std::optional<osg::Vec3f>& nextPoint)
 {
+	assert(prevPoint.has_value() || nextPoint.has_value());
+
 	osg::Vec2f normal, p0, p1;
-	if (i == 0)
+	if (!prevPoint.has_value())
 	{
-		p0 = toVec2f(points[i]);
-		p1 = toVec2f(points[i+1]);
+		p0 = toVec2f(currentPoint);
+		p1 = toVec2f(*nextPoint);
 
 		osg::Vec2f dir = p1 - p0;
 		dir.normalize();
 		normal = osg::Vec2f(dir.y(), -dir.x());
 	}
-	else if (i == points.size()-1)
+	else if (!nextPoint.has_value())
 	{
-		p0 = toVec2f(points[i-1]);
-		p1 = toVec2f(points[i]);
+		p0 = toVec2f(*prevPoint);
+		p1 = toVec2f(currentPoint);
 
 		osg::Vec2f dir = p1 - p0;
 		dir.normalize();
@@ -58,9 +64,9 @@ static osg::Vec2f getSegmentNormal(const std::vector<osg::Vec3f>& points, int i)
 	{
 		osg::Vec2f p2;
 
-		p0 = toVec2f(points[i-1]);
-		p1 = toVec2f(points[i]);
-		p2 = toVec2f(points[i+1]);
+		p0 = toVec2f(*prevPoint);
+		p1 = toVec2f(currentPoint);
+		p2 = toVec2f(*nextPoint);
 
 		osg::Vec2f dir0 = p1 - p0;
 		dir0.normalize();
@@ -75,12 +81,12 @@ static osg::Vec2f getSegmentNormal(const std::vector<osg::Vec3f>& points, int i)
 		normal.normalize();
 
 		float theta = std::acos(std::min(1.f, n0 * n1)) * 0.5f;
-		normal *= 1.0f / std::cos(theta);
+		normal *= 1.0f / std::max(0.5f, std::cos(theta));
 	}
 	return normal;
 }
 
-static void createRoad(const Road& road, osg::Vec3Array* posBuffer, osg::Vec3Array* normalBuffer, osg::Vec2Array* uvBuffer, osg::UIntArray* indexBuffer)
+static void createRoad(const Road& road, osg::Vec3Array* posBuffer, osg::Vec3Array* normalBuffer, osg::Vec3Array* uvBuffer, osg::UIntArray* indexBuffer)
 {
 	assert(road.points.size() > 1);
 
@@ -88,34 +94,71 @@ static void createRoad(const Road& road, osg::Vec3Array* posBuffer, osg::Vec3Arr
 
 	float t = 0;
 
-	float halfWidth = road.width * 0.5f;
+	float width = road.width + roadBorderSizeMeters * 2.0f;
+	float halfWidth = width * 0.5f;
 
 	int addedPoints = 0;
 	for (int i = 0; i < road.points.size(); ++i)
-	{	
+	{
+		// Get previous point
+		std::optional<osg::Vec3f> prevPoint;
 		if (i > 0)
 		{
-			float length = toVec2f(road.points[i] - road.points[i - 1]).length();
-			if (length < 1e-7f)
-			{
-				continue;
-			}
-			t += length / road.width;
+			prevPoint = road.points[i - 1];
+
+			// Increase road length
+			float segmentLength = toVec2f(road.points[i] - *prevPoint).length();
+			t += segmentLength;
+		}
+		else if (road.endLaneCounts[0] > 0)
+		{
+			prevPoint = road.endControlPoints[0];
 		}
 
-		osg::Vec3f point = road.points[i];
-		osg::Vec2f normal = getSegmentNormal(road.points, i);
+		// Get next point
+		std::optional<osg::Vec3f> nextPoint;
+		if (i < road.points.size() - 1)
+		{
+			nextPoint = road.points[i + 1];
+		}
+		else if (road.endLaneCounts[1] > 0)
+		{
+			nextPoint = road.endControlPoints[1];
+		}
 
-		posBuffer->push_back(point + osg::Vec3(normal * halfWidth, -roadHeightAboveTerrain));
-		posBuffer->push_back(point - osg::Vec3(normal * halfWidth, -roadHeightAboveTerrain));
+		// Add geometry to buffers
+		osg::Vec3f point = road.points[i];
+		osg::Vec2f normal = getSegmentNormal(prevPoint, point, nextPoint);
+
+		float effectiveHalfWidth;
+		int effectiveLaneCount;
+		if (i == 0 && road.endLaneCounts[0] > 0)
+		{
+			effectiveLaneCount = road.endLaneCounts[0];
+			effectiveHalfWidth = float(effectiveLaneCount) / float(road.laneCount) * halfWidth;
+		}
+		else if ((i == road.points.size() - 1) && road.endLaneCounts[1] > 0)
+		{
+			effectiveLaneCount = road.endLaneCounts[1];
+			effectiveHalfWidth = float(effectiveLaneCount) / float(road.laneCount) * halfWidth;
+		}
+		else
+		{
+			effectiveLaneCount = road.laneCount;
+			effectiveHalfWidth = halfWidth;
+		}
+
+		posBuffer->push_back(point + osg::Vec3(normal * effectiveHalfWidth, -roadHeightAboveTerrain));
+		posBuffer->push_back(point - osg::Vec3(normal * effectiveHalfWidth, -roadHeightAboveTerrain));
 		
 		normalBuffer->push_back(osg::Vec3(0, 0, -1)); // TODO: get terrain normal
 		normalBuffer->push_back(osg::Vec3(0, 0, -1));
 
-		float scale = (float)road.laneCount / (float)numLanesInTexture;
+		float scaleX = (float)effectiveLaneCount / (float)numLanesInTexture;
+		float scaleY = t / roadTextureLengthMeters;
 
-		uvBuffer->push_back(osg::Vec2f(0.0f, t) * scale);
-		uvBuffer->push_back(osg::Vec2f(1.0f, t) * scale);
+		uvBuffer->push_back(osg::Vec3f(-roadBorderSizeMeters / road.width * scaleX, scaleY, 0.0));
+		uvBuffer->push_back(osg::Vec3f((1.0 + roadBorderSizeMeters / road.width) * scaleX, scaleY, 1.0));
 
 		++addedPoints;
 	}
@@ -136,7 +179,7 @@ static osg::Geode* createRoads(const Roads& roads)
 {
 	osg::Vec3Array* posBuffer = new osg::Vec3Array();
 	osg::Vec3Array* normalBuffer = new osg::Vec3Array();
-	osg::Vec2Array* uvBuffer = new osg::Vec2Array();
+	osg::Vec3Array* uvBuffer = new osg::Vec3Array();
 	osg::UIntArray* indexBuffer = new osg::UIntArray();
 
 	for (size_t i = 0; i < roads.size(); ++i)
@@ -161,20 +204,19 @@ static osg::Geode* createRoads(const Roads& roads)
     return geode;
 }
 
+static osg::ref_ptr<osg::Texture2D> createRoadTexture(const std::string& filename)
+{
+	osg::Texture2D* texture = new osg::Texture2D(readImageWithCorrectOrientation(filename));
+	texture->setInternalFormat(toSrgbInternalFormat(texture->getInternalFormat()));
+	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
+	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+	texture->setMaxAnisotropy(8.f);
+	return texture;
+}
 
-static osg::ref_ptr<osg::StateSet> createStateSet(const osg::ref_ptr<osg::Program>& program, const std::string& albedoTexture, const RoadsBatch::Uniforms& uniforms)
+static osg::ref_ptr<osg::StateSet> createStateSet(const osg::ref_ptr<osg::Program>& program,  const RoadsBatch::Uniforms& uniforms)
 {
 	osg::ref_ptr<osg::StateSet> ss(new osg::StateSet);
-	{
-		osg::Texture2D* texture = new osg::Texture2D(readImageWithCorrectOrientation(albedoTexture));
-		texture->setInternalFormat(toSrgbInternalFormat(texture->getInternalFormat()));
-		texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
-		texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
-
-		ss->setTextureAttributeAndModes(0, texture);
-		ss->addUniform(createUniformSampler2d("albedoSampler", 0));
-		// TODO: set clamping mode. Height points should be on edges of terrain
-	}
 
 	ss->setAttribute(program);
 	ss->addUniform(uniforms.modelMatrix);
@@ -193,7 +235,17 @@ RoadsBatch::RoadsBatch(const Roads& roads, const osg::ref_ptr<osg::Program>& pro
 {
 	osg::Geode* geode = createRoads(roads);
 	mUniforms.modelMatrix = new osg::Uniform("modelMatrix", osg::Matrixf());
-	geode->setStateSet(createStateSet(program, "Environment/Road/Road006_2K_Color.jpg", mUniforms));
+
+	auto stateSet = createStateSet(program, mUniforms);
+	{
+		int unit = 0;
+		stateSet->setTextureAttributeAndModes(unit, createRoadTexture("Environment/Road/Asphalt010_2K_Road_Color.jpg"));
+		stateSet->addUniform(createUniformSampler2d("albedoSampler", unit++));
+		stateSet->setTextureAttributeAndModes(unit, createRoadTexture("Environment/Road/RoadMarkings.png"));
+		stateSet->addUniform(createUniformSampler2d("markingsSampler", unit++));
+	}
+
+	geode->setStateSet(stateSet);
 	mTransform->addChild(geode);
 }
 
@@ -258,7 +310,15 @@ RoadsBatch::RoadsBatch(const PolyRegions& regions, const osg::ref_ptr<osg::Progr
 {
 	osg::Geode* geode = createRegions(regions);
 	mUniforms.modelMatrix = new osg::Uniform("modelMatrix", osg::Matrixf());
-	geode->setStateSet(createStateSet(program, "Environment/Concrete/Concrete010_2K_Color.jpg", mUniforms));
+
+	auto stateSet = createStateSet(program, mUniforms);
+	{
+		int unit = 0;
+		stateSet->setTextureAttributeAndModes(unit, createRoadTexture("Environment/Concrete/Concrete010_2K_Color.jpg"));
+		stateSet->addUniform(createUniformSampler2d("albedoSampler", ++unit));
+	}
+
+	geode->setStateSet(stateSet);
 	mTransform->addChild(geode);
 }
 
