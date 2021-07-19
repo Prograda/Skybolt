@@ -8,6 +8,7 @@
 #pragma import_defines ( CAST_SHADOWS )
 #pragma import_defines ( ENABLE_SHADOWS )
 
+#include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
 #include "Trees.h"
 #include "Brdfs/Lambert.h"
@@ -17,10 +18,7 @@ in vec2 texCoord;
 in float perTreeUnitRandom;
 in vec3 normal;
 in float logZ;
-in vec3 sunIrradiance;
-in vec3 skyIrradiance;
-in vec3 transmittance;
-in vec3 skyRadianceToPoint;
+in AtmosphericScattering scattering;
 in vec3 shadowTexCoord;
 in float fragmentViewDistance;
 out vec4 color;
@@ -49,8 +47,8 @@ void main()
 	
 	color.rgb = randomizeColor(color.rgb, perTreeUnitRandom);
 	color.rgb *= calcLambertSkyLight(lightDirection, normal)
-	* (sunIrradiance * lightVisibility + skyIrradiance) + ambientLightColor;	
-	color.rgb = color.rgb * transmittance + skyRadianceToPoint;
+	* (scattering.sunIrradiance * lightVisibility + scattering.skyIrradiance) + ambientLightColor;	
+	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;
 	
 	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }

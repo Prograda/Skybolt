@@ -11,6 +11,7 @@
 #pragma import_defines ( ENABLE_NORMAL_MAP )
 #pragma import_defines ( ENABLE_SHADOWS )
 
+#include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
 #include "NormalMapping.h"
 #include "Brdfs/BlinnPhong.h"
@@ -25,12 +26,7 @@ in float logZ;
 in vec3 sunIrradiance;
 in vec3 positionRelCamera;
 in vec3 shadowTexCoord;
-
-#ifdef ENABLE_ATMOSPHERE
-	in vec3 skyIrradiance;
-	in vec3 transmittance;
-	in vec3 skyRadianceToPoint;
-#endif
+in AtmosphericScattering scattering;
 
 out vec4 color;
 
@@ -47,7 +43,7 @@ uniform vec3 ambientLightColor;
 void main()
 {
 	color = texture(albedoSampler, texCoord.xy);
-	
+
 	float fragmentViewDistance = length(positionRelCamera);
 
 #ifdef ENABLE_NORMAL_MAP
@@ -67,20 +63,20 @@ void main()
 #endif
 	vec3 viewDirection = -positionRelCamera/fragmentViewDistance;
 	
-	color.rgb *= calcLambertDirectionalLight(lightDirection, normal) * sunIrradiance * lightVisibility
-	//color.rgb *= calcOrenNayerDirectionalLight(lightDirection, viewDirection, normal, 0.8) * sunIrradiance * lightVisibility
+	color.rgb *= calcLambertDirectionalLight(lightDirection, normal) * scattering.sunIrradiance * lightVisibility
+	//color.rgb *= calcOrenNayerDirectionalLight(lightDirection, viewDirection, normal, 0.8) * scattering.sunIrradiance * lightVisibility
 #ifdef ENABLE_ATMOSPHERE
-		+ calcLambertAmbientLight(normal, sunIrradiance, skyIrradiance)
+		+ calcLambertAmbientLight(normal, scattering.sunIrradiance, scattering.skyIrradiance)
 #endif
 		+ ambientLightColor;
 
 //#define ENABLE_SPECULAR
 #ifdef ENABLE_SPECULAR
-	color.rgb += 0.03 * calcBlinnPhongSpecular(lightDirection, viewDirection, normal, 10) * sunIrradiance;
+	color.rgb += 0.03 * calcBlinnPhongSpecular(lightDirection, viewDirection, normal, 10) * scattering.sunIrradiance;
 #endif
 
 #ifdef ENABLE_ATMOSPHERE
-	color.rgb = color.rgb * transmittance + skyRadianceToPoint;
+	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;
 #endif
 	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 

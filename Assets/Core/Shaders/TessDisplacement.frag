@@ -6,13 +6,12 @@
 
 #version 440 core
 #pragma import_defines ( CAST_SHADOWS )
-#pragma import_defines ( ENABLE_CLOUDS )
 #pragma import_defines ( ENABLE_SHADOWS )
 #pragma import_defines ( DETAIL_MAPPING_TECHNIQUE_ALBEDO_DERIVED )
 #pragma import_defines ( DETAIL_MAPPING_TECHNIQUE_UNIFORM )
 #pragma import_defines ( DETAIL_SAMPLER_COUNT )
 
-#include "CloudShadows.h"
+#include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
 #include "NormalMapping.h"
 #include "Ocean.h"
@@ -29,10 +28,7 @@ in vec3 position_worldSpace;
 in vec3 wrappedNoiseCoord;
 in float cameraDistance;
 in float elevation;
-in vec3 sunIrradiance;
-in vec3 skyIrradiance;
-in vec3 transmittance;
-in vec3 skyRadianceToPoint;
+in AtmosphericScattering scattering;
 in float logZ;
 
 out vec4 color;
@@ -365,11 +361,7 @@ void main()
 	float lightVisibility = 1.0;
 #endif
 
-#ifdef ENABLE_CLOUDS
-	float cloudShadow = sampleCloudShadowMaskAtTerrainUv(cloudSampler, texCoord.xy, lightDirection);
-	lightVisibility *= cloudShadow;
-#endif
-	vec3 visibleSunIrradiance = sunIrradiance * lightVisibility;
+	vec3 visibleSunIrradiance = scattering.sunIrradiance * lightVisibility;
 	
 	vec3 specularReflectance;
 	
@@ -383,7 +375,7 @@ void main()
 	bool isWater = (elevation < 0);
 	if (isWater)
 	{
-		normal = vec3(0,0,-1);
+		normal = normalize(position_worldSpace - planetCenter);
 		specularReflectance = oceanSpecularColor * calcBlinnPhongSpecular(lightDirection, viewDirection, normal, oceanShininess) * visibleSunIrradiance;
 		albedo = deepScatterColor;
 	}
@@ -394,7 +386,7 @@ void main()
 
 	vec3 totalReflectance = albedo * (
 			calcLambertDirectionalLight(lightDirection, normal) * visibleSunIrradiance + 	
-			calcLambertSkyLight(lightDirection, normal) * skyIrradiance +
+			calcLambertSkyLight(lightDirection, normal) * scattering.skyIrradiance +
 			ambientLightColor
 		)
 		+ specularReflectance;
@@ -403,10 +395,10 @@ void main()
 	{
 		vec3 upDir = vec3(0,0,-1);
 		float fresnel = calcSchlickFresnel(dot(viewDirection, upDir));
-		totalReflectance = mix(totalReflectance, skyIrradiance, fresnel);
+		totalReflectance = mix(totalReflectance, scattering.skyIrradiance, fresnel);
 	}
 
-	color.rgb = totalReflectance * transmittance + skyRadianceToPoint;
+	color.rgb = totalReflectance * scattering.transmittance + scattering.skyRadianceToPoint;
 
 //#define DEBUG_EDGES
 #ifdef DEBUG_EDGES

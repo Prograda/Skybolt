@@ -10,6 +10,7 @@
 #pragma import_defines ( ENABLE_DEPTH_OFFSET )
 #pragma import_defines ( ENABLE_SHADOWS )
 
+#include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
 #include "NormalMapping.h"
 #include "Brdfs/BlinnPhong.h"
@@ -19,15 +20,9 @@
 in vec3 texCoord;
 in vec3 normalWS;
 in float logZ;
-in vec3 sunIrradiance;
 in vec3 positionRelCamera;
 in vec3 shadowTexCoord;
-
-#ifdef ENABLE_ATMOSPHERE
-	in vec3 skyIrradiance;
-	in vec3 transmittance;
-	in vec3 skyRadianceToPoint;
-#endif
+in AtmosphericScattering scattering;
 
 out vec4 color;
 
@@ -60,19 +55,19 @@ void main()
 #endif
 	vec3 viewDirection = -positionRelCamera/fragmentViewDistance;
 	
-	color.rgb *= calcLambertDirectionalLight(lightDirection, normalWS) * sunIrradiance * lightVisibility
+	color.rgb *= calcLambertDirectionalLight(lightDirection, normalWS) * scattering.sunIrradiance * lightVisibility
 #ifdef ENABLE_ATMOSPHERE
-		+ calcLambertAmbientLight(normalWS, sunIrradiance, skyIrradiance)
+		+ calcLambertAmbientLight(normalWS, scattering.sunIrradiance, scattering.skyIrradiance)
 #endif
 		+ ambientLightColor;
 
 //#define ENABLE_SPECULAR
 #ifdef ENABLE_SPECULAR
-	color.rgb += 0.03 * calcBlinnPhongSpecular(lightDirection, viewDirection, normalWS, 10) * sunIrradiance;
+	color.rgb += 0.03 * calcBlinnPhongSpecular(lightDirection, viewDirection, normalWS, 10) * scattering.sunIrradiance;
 #endif
 
 #ifdef ENABLE_ATMOSPHERE
-	color.rgb = color.rgb * transmittance + skyRadianceToPoint;
+	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;
 #endif
 	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 

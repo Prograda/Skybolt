@@ -6,10 +6,9 @@
 
 #version 420 core
 #pragma import_defines ( CAST_SHADOWS )
-#pragma import_defines ( ENABLE_CLOUDS )
 #pragma import_defines ( GPU_PLACEMENT )
 
-#include "AtmosphericScattering.h"
+#include "AtmosphericScatteringWithClouds.h"
 #include "CloudShadows.h"
 #include "DepthPrecision.h"
 #include "GlobalDefines.h"
@@ -26,10 +25,7 @@ out vec2 texCoord;
 out float perTreeUnitRandom;
 out vec3 normal;
 out float logZ;
-out vec3 sunIrradiance;
-out vec3 skyIrradiance;
-out vec3 transmittance;
-out vec3 skyRadianceToPoint;
+out AtmosphericScattering scattering;
 out vec3 shadowTexCoord;
 out float fragmentViewDistance;
 
@@ -116,15 +112,7 @@ void main()
 	// Atmospheric scattering
 	vec3 positionRelPlanet = worldPos.xyz - planetCenter;
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
-	skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, positionRelPlanet, 0, lightDirection, transmittance);
-	sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet, lightDirection, skyIrradiance);
-	
-#ifdef ENABLE_CLOUDS
-	sunIrradiance *= sampleCloudShadowMaskAtPositionRelPlanet(cloudSampler, positionRelPlanet, lightDirection);
-#endif
-	
+	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
+
 	shadowTexCoord = (shadowProjectionMatrix0 * worldPos).xyz;
-	
-	sunIrradiance *= occlusion;
-	skyIrradiance *= occlusion;
 }

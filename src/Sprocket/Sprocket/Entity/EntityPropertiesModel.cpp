@@ -104,7 +104,7 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 				}
 			);
 
-			addProperty(createVariantProperty("cloudCoverageFraction", true),
+			addProperty(createVariantProperty("cloudCoverageFraction", 0.0),
 				// Updater
 				[this, planet](QtProperty& property) {
 					auto value = planet->getCloudCoverageFraction();
@@ -117,7 +117,7 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 				}
 			);
 
-			addProperty(createVariantProperty("waveHeight", true),
+			addProperty(createVariantProperty("waveHeight", 0.0),
 				// Updater
 				[this, planet](QtProperty& property) {
 					static_cast<VariantProperty&>(property).setValue(planet->getWaveHeight());

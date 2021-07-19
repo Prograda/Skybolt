@@ -7,12 +7,11 @@
 #version 440 core
 
 #pragma import_defines ( ENABLE_ATMOSPHERE )
-#pragma import_defines ( ENABLE_CLOUDS )
 #pragma import_defines ( ENABLE_NORMAL_MAP )
 
-#include "DepthPrecision.h"
-#include "AtmosphericScattering.h"
+#include "AtmosphericScatteringWithClouds.h"
 #include "CloudShadows.h"
+#include "DepthPrecision.h"
 #include "Shadows/Shadows.h"
 
 in vec4 osg_Vertex;
@@ -27,12 +26,7 @@ out vec3 positionRelCamera;
 out float logZ;
 out vec3 sunIrradiance;
 out vec3 shadowTexCoord;
-
-#ifdef ENABLE_ATMOSPHERE
-	out vec3 skyIrradiance;
-	out vec3 transmittance;
-	out vec3 skyRadianceToPoint;
-#endif
+out AtmosphericScattering scattering;
 
 uniform mat4 osg_ModelViewProjectionMatrix;
 uniform mat4 modelMatrix;
@@ -54,20 +48,14 @@ void main()
 #endif
 	
 	vec4 positionWS = modelMatrix * osg_Vertex;
-	positionRelCamera = positionWS.xyz - cameraPosition;
-
-	vec3 positionRelPlanet = positionWS.xyz - planetCenter;
-	// Atmospheric scattering
+	
 #ifdef ENABLE_ATMOSPHERE
+	// Atmospheric scattering
+	vec3 positionRelPlanet = positionWS.xyz - planetCenter;
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
-	skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, positionRelPlanet, 0, lightDirection, transmittance);
-	sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet, lightDirection, skyIrradiance);
+	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
 #else
 	sunIrradiance = GetSunIrradianceInSpace();
-#endif
-
-#ifdef ENABLE_CLOUDS
-	sunIrradiance *= sampleCloudShadowMaskAtPositionRelPlanet(cloudSampler, positionRelPlanet, lightDirection);
 #endif
 	shadowTexCoord = (shadowProjectionMatrix0 * positionWS).xyz;
 }

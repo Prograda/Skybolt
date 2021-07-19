@@ -6,7 +6,7 @@
 
 #version 420 core
 #include "DepthPrecision.h"
-#include "AtmosphericScattering.h"
+#include "AtmosphericScatteringWithClouds.h"
 #include "Ocean.h"
 #include "Planet.h"
 
@@ -15,12 +15,10 @@ out vec3 positionRelCameraWS;
 out vec3 positionWS;
 out float logZ;
 out vec2 wrappedNoiseCoord;
-out vec3 sunIrradiance;
-out vec3 skyIrradiance;
-out vec3 transmittance;
-out vec3 skyRadianceToPoint;
+out AtmosphericScattering scattering;
 
 uniform sampler2D heightSamplers[NUM_OCEAN_CASCADES];
+uniform sampler2D cloudSampler;
 uniform mat4 viewProjectionMatrix;
 uniform vec3 cameraPosition;
 uniform vec3 lightDirection;
@@ -85,6 +83,5 @@ void main()
 	// Atmospheric scattering
 	vec3 positionRelPlanet = positionWS.xyz - planetCenter;
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
-	skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, positionRelPlanet, 0, lightDirection, transmittance);
-	sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet, lightDirection, skyIrradiance);
+	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
 }

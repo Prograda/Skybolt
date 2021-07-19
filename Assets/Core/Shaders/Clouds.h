@@ -40,7 +40,7 @@ vec2 cloudUvFromPosRelPlanet(vec3 positionRelPlanetPlanetAxes)
 
 float sampleCoverageDetail(sampler2D coverageDetailSampler, vec2 uv, float lod, out float cloudType)
 {
-	vec4 coverageNoise = textureLod(coverageDetailSampler, uv.xy * vec2(200.0, 100.0), 4 * lod);
+	vec4 coverageNoise = textureLod(coverageDetailSampler, uv.xy * vec2(300.0, 150.0), 4 * lod);
 	float coverageDetail = coverageNoise.r;
 	cloudType = coverageNoise.g;
 	return coverageDetail;
@@ -50,9 +50,9 @@ float calcCloudDensityLowRes(sampler2D cloudSampler, vec2 uv, float heightMultip
 {
 	float coverage = heightMultiplier;
 #ifdef USE_CLOUD_COVERAGE_MAP
-	coverage *= max(0.0, remapNormalized(textureLod(cloudSampler, uv, 0).r, 0.05, 1.0));
+	coverage *= max(0.0, remapNormalized(textureLod(cloudSampler, uv, 0).r, 0.0, 0.8));
 #else
-	float coverageFractionMultiplier = 0.8; // scale coverage fraction to give more user friendly results
+	float coverageFractionMultiplier = 1.3; // scale coverage fraction to give more user friendly results
 	coverage *= cloudCoverageFraction * coverageFractionMultiplier;
 #endif
 	// Apply coverage detail map by remapping with the following behavior:
@@ -62,7 +62,7 @@ float calcCloudDensityLowRes(sampler2D cloudSampler, vec2 uv, float heightMultip
 	//   where the band contains values of the expected output coverage amount.
 	//   the band is sized using filterWidth to give a enough coverage variation to achieve smooth density changes.
 	float f = 1.0 - coverage;
-	float filterWidth = 0.2;
+	float filterWidth = 0.4;
 	return clamp(remapNormalized(coverageDetail*(1.0-filterWidth)+filterWidth, f, f+filterWidth), 0.0, 1.0);
 }
 

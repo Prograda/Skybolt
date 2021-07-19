@@ -8,6 +8,7 @@
 
 #include "AtmosphericScattering.h"
 #include "Clouds.h"
+#include "CloudShadows.h"
 #include "DepthPrecision.h"
 #include "GlobalDefines.h"
 #include "Planet.h"
@@ -31,11 +32,9 @@ uniform vec3 ambientLightColor;
 // Cloud geometry heights for each cloud type
 const float cloudLayerMaxHeight = 5000;
 const float cloudLayerMinHeight = 2000;
-const vec2 cloudTopZeroDensityHeight = vec2(3500, 5000);
-const vec2 cloudTopFullDensityHeight = vec2(3000, 3850);
-const vec2 cloudBottomFullDensityHeight = vec2(2800, 2800);
+const vec2 cloudTopZeroDensityHeight = vec2(3000, 5000);
 const vec2 cloudBottomZeroDensity = vec2(2400, 2000);
-const vec2 cloudOcclusionStrength = vec2(0.4, 0.8);
+const vec2 cloudOcclusionStrength = vec2(0.25, 0.5);
 const vec2 cloudDensityMultiplier = vec2(0.005, 0.005);
 
 const vec3 noiseFrequencyScale = vec3(0.0002);
@@ -69,7 +68,7 @@ float calcDensityLowRes(vec2 uv, float height, out float cloudType, vec2 lod)
 }
 
 const float cloudChaos = 1.0;
-const float averageNoiseSamplerValue = cloudChaos * 0.7;
+const float averageNoiseSamplerValue = cloudChaos * 0.5;
 		
 //! @param lod is 0 for zero detail, 1 where frequencies of pos*noiseFrequencyScale should be visible
 float calcDensity(vec3 pos, vec2 uv, vec2 lod, float height, out float cloudType)
@@ -84,18 +83,20 @@ float calcDensity(vec3 pos, vec2 uv, vec2 lod, float height, out float cloudType
 		// MTODO: 3D noise texture has visible tiling artifacts when viewed along an axis, e.g at the equator. Need to fix this.
 		vec4 noise = textureLod(baseNoiseSampler, pos*noiseFrequencyScale, 0); // MTODO: tweak
 		
+		float filteredNoise = mix(averageNoiseSamplerValue, min(0.9, cloudChaos*noise.r), clampedLod); // filter cloud noise based on lod.
+		density = clamp(remap(density, filteredNoise, 1.0, 0.0, 1.0), 0.0, 1.0);		
+		
 		// Apply high detail
+		
 //#define ENABLE_HIGH_DETAIL_CLOUDS
 #ifdef ENABLE_HIGH_DETAIL_CLOUDS
 		if (lod.y > 4)
 		{
-			float highDetailStrength = min(lod.y - 4, 0.7);
-			noise.r = mix(noise.r, noise.r * textureLod(baseNoiseSampler, pos * noiseFrequencyScale * 5, 0).g, highDetailStrength);
+			//float highDetailStrength = min(lod.y - 4, 0.7);
+			float filteredNoise2 = textureLod(baseNoiseSampler, pos * noiseFrequencyScale * 3, 0).r;
+			density = clamp(remap(density, 0.6*filteredNoise2, 1.0, 0.0, 1.0), 0.0, 1.0);
 		}
 #endif
-		float filteredNoise = mix(averageNoiseSamplerValue, min(1.0, cloudChaos*noise.r), clampedLod); // filter cloud noise based on lod.
-		
-		density = clamp(remap(density, filteredNoise, 1.0, 0.0, 1.0), 0.0, 1.0);		
 	}
 	else
 	{
@@ -129,7 +130,7 @@ const float SAMPLE_SEGMENT_LENGTHS[6] = float[6](1, 1, 2, 4, 8, 16);
 const int lightSampleCount = 6;
 const vec3 albedo = vec3(1.0);
 
-const float powderStrength = 0.2; // TODO: get this looking right
+const float powderStrength = 0.1; // TODO: get this looking right
 const float scatterDistanceMultiplier = initialStepSize * 0.5;
 
 vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradiance, vec2 lod, float height, float cloudType)
@@ -294,19 +295,19 @@ float antiAliasSmoothStep(float value, float pixelCount)
 	return smoothstep(0, width, value);
 }
 
-const float lowResBrightnessMultiplier = 4.5; // fudge factor to make low res clouds match brightness of high res clouds, needed because low res does not simulate any scattering
+const float lowResBrightnessMultiplier = 1.5; // fudge factor to make low res clouds match brightness of high res clouds, needed because low res does not simulate any scattering
 
 // Simulates colour change due to scattering
-vec3 desaturateAndBlueShift(vec3 c)
+vec3 desaturate(vec3 c)
 {
-	return dot(c, vec3(0.1 / 3.0)) * vec3(0.6, 0.9, 1.4);
+	return vec3(length(c));
 }
 
-vec4 evaluateGlobalLowResColor(vec3 positionRelPlanetPlanetAxes, vec3 irradiance)
+vec4 evaluateGlobalLowResColor(vec2 cloudsUv, vec3 irradiance)
 {
-	float alpha = textureLod(globalAlphaSampler, cloudUvFromPosRelPlanet(positionRelPlanetPlanetAxes), 0).r; // MTODO: auto lod
+	float alpha = textureLod(globalAlphaSampler, cloudsUv, 0).r; // MTODO: auto lod
 	vec3 color = irradiance * alpha * oneOnFourPi;
-	color = mix(color, desaturateAndBlueShift(color), 0.8); // desaturate color to simulate scattering. This makes sunsets less extreme.
+	color = mix(color, desaturate(color), 0.15); // desaturate color to simulate scattering. This makes sunsets less extreme.
 	return vec4(color, alpha);
 }
 
@@ -422,8 +423,8 @@ void main()
 		logZ = calcLogZNdc(precisionBias*dot(rayDir * rayFar, cameraCenterDirection));
 	}
 
-	float lowResColorMultiScatterMultiplier = 1.5;
-	vec4 lowResColor = evaluateGlobalLowResColor(positionRelPlanetPlanetAxes, directIrradiance) * lowResBrightnessMultiplier;
+	vec2 cloudsUv = cloudUvFromPosRelPlanet(positionRelPlanetPlanetAxes);
+	vec4 lowResColor = evaluateGlobalLowResColor(cloudsUv, directIrradiance) * lowResBrightnessMultiplier;
 	colorOut = mix(colorOut, vec4(lowResColor), lod.x);
 
 	if (hasSample)
@@ -432,8 +433,16 @@ void main()
 		vec3 transmittance;
 		vec3 cloudFrontPositionRelPlanet = cameraPositionRelPlanet + meanCloudFrontDistance * rayDir;
 		vec3 skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, cloudFrontPositionRelPlanet, 0, lightDirection, transmittance);
+
+		// Decrease inscattering as a function of sky occlusion due to clouds.
+		// This curve is a fudge, but gives plausible looking results.
+		float cloudSkyOcclusion = sampleCloudSkyOcclusionMaskAtCloudsUv(globalAlphaSampler, cloudsUv);
+		float heightFraction = clamp((cameraAltitude - cloudLayerMinHeight) / (cloudLayerMaxHeight - cloudLayerMinHeight), 0, 1);
+		skyRadianceToPoint *= mix(min(1.0, cloudSkyOcclusion*2), 1.0, heightFraction);
 		
-		float weight = min(1.0, colorOut.a * colorOut.a * colorOut.a); // Blend between no aerial perspective for 0 density and full aerial for 1 density. This curve is a fudge, but looks about right.
+		// Blend between no aerial perspective for 0 density and full aerial for 1 density.
+		// This curve is a fudge, but gives plausible looking results.
+		float weight = min(1.0, colorOut.a * colorOut.a * colorOut.a);
 		colorOut.rgb = mix(colorOut.rgb, colorOut.rgb * transmittance + skyRadianceToPoint, weight);
 	}
 

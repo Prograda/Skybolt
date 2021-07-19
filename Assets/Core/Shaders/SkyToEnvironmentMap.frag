@@ -46,7 +46,7 @@ void main()
 
 #ifdef ENABLE_CLOUDS
 		float cloudAlpha = sampleCloudAlphaAtPositionRelPlanet(cloudSampler, cameraPositionRelPlanetCenter, -rayDir);
-		color.rgb = mix(color.rgb, vec3(0.7), cloudAlpha);
+		color.rgb = mix(color.rgb, vec3(0.7), cloudAlpha) * sampleCloudSkyOcclusionMaskAtPositionRelPlanet(cloudSampler, cameraPositionRelPlanetCenter);
 #endif
     }
 	else

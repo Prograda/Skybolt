@@ -6,26 +6,21 @@
 
 #version 440 core
 #pragma import_defines ( CAST_SHADOWS )
-#pragma import_defines ( ENABLE_CLOUDS )
 
-#include "DepthPrecision.h"
-#include "AtmosphericScattering.h"
+#include "AtmosphericScatteringWithClouds.h"
 #include "CloudShadows.h"
+#include "DepthPrecision.h"
 #include "Noise/FastRandom.h"
 #include "Shadows/Shadows.h"
 
 in vec4 osg_Vertex;
 in vec4 osg_Normal;
 in vec4 osg_MultiTexCoord0;
-
 out vec3 texCoord;
 out vec3 normalWS;
 out vec3 positionRelCamera;
+out AtmosphericScattering scattering;
 out float logZ;
-out vec3 sunIrradiance;
-out vec3 skyIrradiance;
-out vec3 transmittance;
-out vec3 skyRadianceToPoint;
 out vec3 colorMultiplier;
 out vec3 shadowTexCoord;
 
@@ -55,12 +50,8 @@ void main()
 	// Atmospheric scattering
 	vec3 positionRelPlanet = positionWS.xyz - planetCenter;
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
-	skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, positionRelPlanet, 0, lightDirection, transmittance);
-	sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet, lightDirection, skyIrradiance);
-	
-#ifdef ENABLE_CLOUDS
-	sunIrradiance *= sampleCloudShadowMaskAtPositionRelPlanet(cloudSampler, positionRelPlanet, lightDirection);
-#endif
+	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
+
 	shadowTexCoord = (shadowProjectionMatrix0 * positionWS).xyz;
 	colorMultiplier = vec3(0.6 + 0.5 * randomFast1d(osg_MultiTexCoord0.w));
 }

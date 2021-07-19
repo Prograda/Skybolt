@@ -7,7 +7,7 @@
 #version 410 core
 #pragma import_defines ( CAST_SHADOWS )
 
-#include "AtmosphericScattering.h"
+#include "AtmosphericScatteringWithClouds.h"
 #include "CloudShadows.h"
 #include "DepthPrecision.h"
 layout(quads, fractional_odd_spacing, cw) in;
@@ -19,11 +19,7 @@ out vec3 position_worldSpace;
 out vec3 wrappedNoiseCoord;
 out float cameraDistance;
 out float elevation;
-
-out vec3 sunIrradiance;
-out vec3 skyIrradiance;
-out vec3 transmittance;
-out vec3 skyRadianceToPoint;
+out AtmosphericScattering scattering;
 out float logZ;
 
 uniform sampler2D heightSampler;
@@ -116,23 +112,13 @@ void main()
 	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
 
 	wrappedNoiseCoord = calcWrappedNoiseCoord(position_worldSpace);
-	
-	float shadowCasterDistance;
-	if (false) // TODO: Re-enable. Currently disabled because it makes the high-res terrain not match the low res-planet tiles.
-	{
-		float cloudShadow = sampleCloudShadowMaskAtTerrainUv(cloudSampler, texCoord.xy, lightDirection);
-		shadowCasterDistance = mix(0, 0, cloudShadow);
-	}
-	else
-	{
-		shadowCasterDistance = 0;
-	}
+
+	float shadowLength = 0.0; // length of shadowed part of view ray
 	
 	// Atmospheric scattering
 	//position_worldSpace.z = min(position_worldSpace.z, 0); // TODO: prevent points going underground which causes artifacts
 	vec3 positionRelPlanet = position_worldSpace - planetCenter;
-	//positionRelPlanet.z = min(positionRelPlanet.z, innerRadius);
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
-	skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, positionRelPlanet, shadowCasterDistance, lightDirection, transmittance);
-	sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet, lightDirection, skyIrradiance);
+
+	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
 }

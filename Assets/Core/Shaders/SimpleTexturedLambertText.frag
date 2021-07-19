@@ -8,16 +8,14 @@
 
 #pragma import_defines ( ENABLE_DEPTH_OFFSET )
 
+#include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
 #include "Brdfs/Lambert.h"
 
 in vec3 texCoord;
 in vec3 normalWS;
 in float logZ;
-in vec3 sunIrradiance;
-in vec3 skyIrradiance;
-in vec3 transmittance;
-in vec3 skyRadianceToPoint;
+in AtmosphericScattering scattering;
 
 out vec4 color;
 
@@ -36,11 +34,11 @@ void main()
 	if (color.a < 0.5)
 		discard;
 	
-	color.rgb *= calcLambertDirectionalLight(lightDirection, normalWS) * sunIrradiance
-		+ calcLambertSkyLight(lightDirection, normalWS) * skyIrradiance
+	color.rgb *= calcLambertDirectionalLight(lightDirection, normalWS) * scattering.sunIrradiance
+		+ calcLambertSkyLight(lightDirection, normalWS) * scattering.skyIrradiance
 		+ ambientLightColor;
 
-	color.rgb = color.rgb * transmittance + skyRadianceToPoint;
+	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;
 	
 	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 

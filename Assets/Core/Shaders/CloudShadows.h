@@ -19,7 +19,7 @@ float calcDensityLowRes2(sampler2D cloudSampler, vec2 uv)
 	float cloudType;
 	float coverageDetail = sampleCoverageDetail(coverageDetailSampler2, uv, /* lod */ 0.0, cloudType);
 	float density = calcCloudDensityLowRes(cloudSampler, uv, /* heightMultiplier */ 1.0, coverageDetail);
-	return clamp(remap(density, 0.45, 0.75, 0.0, 1.0), 0.0, 1.0); // should look the same as smallest mipmap of the baseNoiseSampler texture
+	return clamp(remap(density, 0.4, 0.6, 0.0, 1.0), 0.0, 1.0); // should look the same as smallest mipmap of the baseNoiseSampler texture
 }
 
 float sampleCloudShadowMask(sampler2D cloudSampler, vec2 cloudTexCoord, vec3 lightDirection)
@@ -41,17 +41,50 @@ float sampleCloudAlphaAtPositionRelPlanet(sampler2D cloudSampler, vec3 positionR
 	vec3 positionRelPlanetPlanetAxes = mat3(planetMatrixInv) * positionRelPlanet;
 	vec2 uv = cloudUvFromPosRelPlanet(positionRelPlanetPlanetAxes);
 	vec2 cloudProjectionWorldDistance = vec2(rayDirection.xy) * cloudAltitude / -rayDirection.z;
-	//return texture(cloudSampler, offsetCloudUvByWorldDistance(uv, cloudProjectionWorldDistance)).r;
 	return 0.1 * calcDensityLowRes2(cloudSampler, offsetCloudUvByWorldDistance(uv, cloudProjectionWorldDistance));
+}
+
+float sampleCloudShadowMaskAtCloudsUv(sampler2D cloudSampler, vec2 uv, float altitude, vec3 lightDirection)
+{
+	float mask = sampleCloudShadowMask(cloudSampler, uv, lightDirection);
+	return mix(mask, 1.0, clamp(remapNormalized(altitude, 2000, 5000), 0.0, 1.0)); // TODO: use actual cloud heights
 }
 
 float sampleCloudShadowMaskAtPositionRelPlanet(sampler2D cloudSampler, vec3 positionRelPlanet, vec3 lightDirection)
 {
 	vec3 positionRelPlanetPlanetAxes = mat3(planetMatrixInv) * positionRelPlanet;
 	vec2 uv = cloudUvFromPosRelPlanet(positionRelPlanetPlanetAxes);
-	float mask = sampleCloudShadowMask(cloudSampler, uv, lightDirection);
-	float altitude = -positionRelPlanet.z - innerRadius;
-	return mix(mask, 1.0, clamp(remapNormalized(altitude, 2000, 5000), 0.0, 1.0)); // TODO: use actual cloud heights
+	float altitude = length(positionRelPlanet) - innerRadius;
+	return sampleCloudShadowMaskAtCloudsUv(cloudSampler, uv, altitude, lightDirection);
+}
+
+float sampleCloudSkyOcclusionMaskAtCloudsUv(sampler2D cloudSampler, vec2 uv)
+{
+#ifdef USE_CLOUD_COVERAGE_MAP
+	const int lod = 1; // use a lower res lod to get an average of occlusion in the area
+	float coverage = clamp(1.5 * (textureLod(cloudSampler, uv, lod).r) - 0.2, 0.0, 1.0);
+#else
+	float coverage = cloudCoverageFraction;
+#endif
+	return mix(1.0, 0.1, coverage);
+}
+
+float sampleCloudSkyOcclusionMaskAtPositionRelPlanet(sampler2D cloudSampler, vec3 positionRelPlanet)
+{
+	vec3 positionRelPlanetPlanetAxes = mat3(planetMatrixInv) * positionRelPlanet;
+	vec2 uv = cloudUvFromPosRelPlanet(positionRelPlanetPlanetAxes);
+	return sampleCloudSkyOcclusionMaskAtCloudsUv(cloudSampler, uv);
+}
+
+vec2 sampleCloudShadowAndSkyOcclusionMaskAtPositionRelPlanet(sampler2D cloudSampler, vec3 positionRelPlanet, vec3 lightDirection)
+{
+	vec3 positionRelPlanetPlanetAxes = mat3(planetMatrixInv) * positionRelPlanet;
+	vec2 uv = cloudUvFromPosRelPlanet(positionRelPlanetPlanetAxes);
+	float altitude = length(positionRelPlanet) - innerRadius;
+	vec2 result;
+	result.x = sampleCloudShadowMaskAtCloudsUv(cloudSampler, uv, altitude, lightDirection);
+	result.y = sampleCloudSkyOcclusionMaskAtCloudsUv(cloudSampler, uv);
+	return result;
 }
 
 #endif // CLOUD_SHADOWS_H

@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#version 330 core
+#version 440 core
 #pragma import_defines ( ENABLE_ATMOSPHERE )
 
-#include "AtmosphericScattering.h"
+#include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
 #include "Planet.h"
 #include "Brdfs/Lambert.h"
@@ -19,12 +19,10 @@ out vec2 geoTexCoord;
 out vec2 albedoTexCoord;
 out vec3 normal;
 out float logZ;
-out vec3 sunIrradiance;
-out vec3 skyIrradiance;
-out vec3 transmittance;
-out vec3 skyRadianceToPoint;
 out vec3 positionRelCamera;
+out AtmosphericScattering scattering;
 
+uniform sampler2D cloudSampler;
 uniform mat4 viewProjectionMatrix;
 uniform mat4 modelMatrix;
 uniform vec3 cameraPosition;
@@ -45,16 +43,15 @@ void main()
 
 	gl_Position = viewProjectionMatrix * vec4(positionWorldSpace, 1);
 	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
-	
+
 	// Calculate lighting
 #ifdef ENABLE_ATMOSPHERE
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
-	skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, positionRelPlanet, 0, lightDirection, transmittance);
-	sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet, lightDirection, skyIrradiance);
+	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
 #else
-	skyRadianceToPoint = vec3(0);
-	transmittance = vec3(1);
-	sunIrradiance = GetSunIrradianceInSpace();
-	skyIrradiance = vec3(0);
+	scattering.skyRadianceToPoint = vec3(0);
+	scattering.transmittance = vec3(1);
+	scattering.sunIrradiance = GetSunIrradianceInSpace();
+	scattering.skyIrradiance = vec3(0);
 #endif
 }

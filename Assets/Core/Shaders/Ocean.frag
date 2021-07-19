@@ -8,6 +8,7 @@
 #pragma import_defines ( DISTANCE_CULL )
 #pragma import_defines ( ENABLE_DEPTH_OFFSET )
 
+#include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
 #include "Ocean.h"
 #include "Brdfs/BlinnPhong.h"
@@ -18,10 +19,7 @@ in vec3 positionRelCameraWS;
 in vec3 positionWS;
 in float logZ;
 in vec2 wrappedNoiseCoord;
-in vec3 sunIrradiance;
-in vec3 skyIrradiance;
-in vec3 transmittance;
-in vec3 skyRadianceToPoint;
+in AtmosphericScattering scattering;
 
 out vec4 color;
 
@@ -289,17 +287,17 @@ void main(void)
     float fresnel = 0.02 + 0.98 * meanFresnel(V, N, sigmaSq);
 
 	color.rgb = vec3(0);
-    color.rgb += reflectedSunRadiance(L, V, N, Tx, Ty, sigmaSq) * sunIrradiance;
+    color.rgb += reflectedSunRadiance(L, V, N, Tx, Ty, sigmaSq) * scattering.sunIrradiance;
 
     color.rgb += fresnel * meanSkyRadiance(V, N, Tx, Ty, sigmaSq);
 
-    vec3 Lsea = deepScatterColor * skyIrradiance / M_PI;
+    vec3 Lsea = deepScatterColor * scattering.skyIrradiance / M_PI;
     color.rgb += (1.0 - fresnel) * Lsea;
 	
 	color.rgb += ambientLightColor;
 	
 	float foamEnergyNormalizationTerm = 1.5 * M_PI; // This is a guess. Presumably the real value is somewhere between pi and 2 * pi.
-	vec3 foamReflectance = (sunIrradiance + skyIrradiance) / foamEnergyNormalizationTerm;
+	vec3 foamReflectance = (scattering.sunIrradiance + scattering.skyIrradiance) / foamEnergyNormalizationTerm;
 
 	foamMask = max(foamMask, calcWakeMask());
 
@@ -311,7 +309,7 @@ void main(void)
 	
 	color.rgb = mix(color.rgb, foamColor * foamReflectance, foamFraction);
 	
-	color.rgb = color.rgb * transmittance + skyRadianceToPoint;
+	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;
 
 #ifdef DISTANCE_CULL
 	color.a = min(1.0, 1.5 - 1.5 * fadeFactor);

@@ -8,6 +8,7 @@
 #pragma import_defines ( CAST_SHADOWS )
 #pragma import_defines ( ENABLE_SHADOWS )
 
+#include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
 #include "Brdfs/BlinnPhong.h"
 #include "Brdfs/Lambert.h"
@@ -17,10 +18,7 @@ in vec3 texCoord;
 in vec3 normalWS;
 in vec3 positionRelCamera;
 in float logZ;
-in vec3 sunIrradiance;
-in vec3 skyIrradiance;
-in vec3 transmittance;
-in vec3 skyRadianceToPoint;
+in AtmosphericScattering scattering;
 in vec3 colorMultiplier;
 in vec3 shadowTexCoord;
 
@@ -51,16 +49,16 @@ void main()
 	float lightVisibility = 1.0;
 #endif
 	
-	vec3 visibleSunIrradiance = sunIrradiance * lightVisibility;
+	vec3 visibleSunIrradiance = scattering.sunIrradiance * lightVisibility;
 	
 	color.rgb *= calcLambertDirectionalLight(lightDirection, normalWS) * visibleSunIrradiance
-		+ calcLambertSkyLight(lightDirection, normalWS) * skyIrradiance
+		+ calcLambertSkyLight(lightDirection, normalWS) * scattering.skyIrradiance
 		+ ambientLightColor;
 	
 	vec3 viewDirection = -positionRelCamera / fragmentViewDistance;
 	color.rgb += visibleSunIrradiance * specularity * vec3(calcBlinnPhongSpecular(lightDirection, viewDirection, normalWS, shininess));
-	
-	color.rgb = color.rgb * transmittance + skyRadianceToPoint;
+
+	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;
 	
 	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }

@@ -6,9 +6,9 @@
 
 #version 440 core
 #pragma import_defines ( ENABLE_OCEAN )
-#pragma import_defines ( ENABLE_CLOUDS )
 #pragma import_defines ( ENABLE_ATMOSPHERE )
 
+#include "AtmosphericScatteringWithClouds.h"
 #include "CloudShadows.h"
 #include "DepthPrecision.h"
 #include "Ocean.h"
@@ -19,11 +19,8 @@ in vec2 geoTexCoord;
 in vec2 albedoTexCoord;
 in vec3 normal;
 in float logZ;
-in vec3 sunIrradiance;
-in vec3 skyIrradiance;
-in vec3 transmittance;
-in vec3 skyRadianceToPoint;
 in vec3 positionRelCamera;
+in AtmosphericScattering scattering;
 
 out vec4 color;
 
@@ -44,12 +41,8 @@ void main()
 	vec3 viewDirection = normalize(-positionRelCamera);
 	vec3 waterColor = deepScatterColor;
 
-#ifdef ENABLE_CLOUDS
-	float lightVisibility = sampleCloudShadowMaskAtTerrainUv(cloudSampler, geoTexCoord.xy, lightDirection);
-#else
-	float lightVisibility = 1.0;
-#endif
-	vec3 visibleSunIrradiance = sunIrradiance * lightVisibility;
+
+	vec3 visibleSunIrradiance = scattering.sunIrradiance;
 	
 #ifdef ENABLE_OCEAN
 	float landMask = texture(landMaskSampler, geoTexCoord.xy * heightScale + heightOffset).r;
@@ -62,13 +55,13 @@ void main()
 
 	vec3 totalReflectance = albedo * (
 			calcLambertDirectionalLight(lightDirection, normal) * visibleSunIrradiance + 	
-			calcLambertSkyLight(lightDirection, normal) * skyIrradiance +
+			calcLambertSkyLight(lightDirection, normal) * scattering.skyIrradiance +
 			ambientLightColor
 		)
 		+ specularReflectance;
 		
 #ifdef ENABLE_ATMOSPHERE
-	color.rgb = totalReflectance * transmittance + skyRadianceToPoint;
+	color.rgb = totalReflectance * scattering.transmittance + scattering.skyRadianceToPoint;
 
 #else
 	color.rgb = totalReflectance;
