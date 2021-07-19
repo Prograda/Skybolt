@@ -42,7 +42,7 @@ OsgWidget::OsgWidget(QWidget* parent):
 
 	auto camera = mWindow->getViewer().getCamera();
 	camera->setPreDrawCallback(new DrawCallback(this));
-	camera->getOrCreateStateSet()->addUniform(new osg::Uniform("convertOutputToSrgb", true));
+	camera->getOrCreateStateSet()->setDefine("CONVERT_OUTPUT_TO_SRGB");
 }
 
 OsgWidget::~OsgWidget()
