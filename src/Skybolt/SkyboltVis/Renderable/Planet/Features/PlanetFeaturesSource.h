@@ -56,7 +56,7 @@ struct PolyFeature : public Feature
 
 struct Road : public PolyFeature
 {
-	static const int noJunction = -1;
+	static constexpr int noJunction = -1;
 
 	Road()
 	{

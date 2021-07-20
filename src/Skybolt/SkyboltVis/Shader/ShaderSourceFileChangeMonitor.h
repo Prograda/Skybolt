@@ -8,6 +8,7 @@
 
 #include "ShaderProgramRegistry.h"
 #include <osg/Program>
+#include <memory>
 #include <mutex>
 #include <set>
 #include <vector>

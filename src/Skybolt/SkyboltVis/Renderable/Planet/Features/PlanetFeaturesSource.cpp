@@ -420,7 +420,7 @@ static void addJsonTilesToTreeRecursive(FeatureTile& tile, WorldFeatures::QuadTr
 	tile.key.level = j["level"];
 	tile.key.x = j["x"];
 	tile.key.y = j["y"];
-	tile.featureCountInFile += j["featureCount"];
+	tile.featureCountInFile += size_t(j["featureCount"]);
 	
 	auto it = j.find("children");
 	if (it != j.end())
