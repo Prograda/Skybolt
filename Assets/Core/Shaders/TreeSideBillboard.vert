@@ -13,7 +13,6 @@
 #include "DepthPrecision.h"
 #include "GlobalDefines.h"
 #include "Noise/FastRandom.h"
-#include "Shadows/Shadows.h"
 
 #ifdef GPU_PLACEMENT
 #include "TreeBillboards.h"
@@ -35,6 +34,7 @@ uniform float maxVisibilityRange;
 uniform vec3 cameraPosition;
 uniform vec3 viewCameraPosition;
 uniform vec3 lightDirection;
+uniform mat4 shadowProjectionMatrix0;
 
 uniform samplerBuffer treeParamsSampler;
 uniform sampler2D cloudSampler;

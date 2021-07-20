@@ -12,11 +12,13 @@ namespace vis {
 
 void addShadowMapsToStateSet(const ShadowMaps& shadowMaps, osg::StateSet& stateSet, int firstTextureUnitIndex)
 {
+	osg::Uniform* uniform = new osg::Uniform(osg::Uniform::SAMPLER_2D_SHADOW, "shadowSampler", (int)shadowMaps.size());
 	for (int i = 0; i < (int)shadowMaps.size(); ++i)
 	{
 		stateSet.setTextureAttributeAndModes(firstTextureUnitIndex, shadowMaps[i]);
-		stateSet.addUniform(createUniformSampler2dShadow("shadowSampler" + std::to_string(i), firstTextureUnitIndex++));
+		uniform->setElement(i, firstTextureUnitIndex++);
 	}
+	stateSet.addUniform(uniform);
 }
 
 } // namespace vis

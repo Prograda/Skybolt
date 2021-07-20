@@ -12,7 +12,6 @@
 #include "AtmosphericScatteringWithClouds.h"
 #include "CloudShadows.h"
 #include "DepthPrecision.h"
-#include "Shadows/Shadows.h"
 
 in vec4 osg_Vertex;
 in vec4 osg_Normal;
@@ -32,6 +31,7 @@ uniform mat4 osg_ModelViewProjectionMatrix;
 uniform mat4 modelMatrix;
 uniform vec3 cameraPosition;
 uniform vec3 lightDirection;
+uniform mat4 shadowProjectionMatrix0;
 
 uniform sampler2D cloudSampler;
 

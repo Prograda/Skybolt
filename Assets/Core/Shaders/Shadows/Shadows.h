@@ -7,6 +7,8 @@
 #ifndef SHADOWS_H
 #define SHADOWS_H
 
+#include "Dither.h"
+
 float sampleShadow(sampler2D shadowSampler, vec2 texCoord, float receiverDepth)
 {
 	return texture(shadowSampler, texCoord).r > receiverDepth ? 1.0 : 0.0;
@@ -210,15 +212,11 @@ bool inTextureBounds(vec2 texCoord)
 	return max(v.x, v.y) < 0.5;
 }
 
-uniform sampler2DShadow shadowSampler0;
-uniform sampler2DShadow shadowSampler1;
-uniform sampler2DShadow shadowSampler2;
-uniform sampler2DShadow shadowSampler3;
+#define SHADOW_CASCADE_COUNT 4
+uniform sampler2DShadow shadowSampler[SHADOW_CASCADE_COUNT];
 
 uniform mat4 shadowProjectionMatrix0;
-uniform vec4 cascadeShadowMatrixModifier1;
-uniform vec4 cascadeShadowMatrixModifier2;
-uniform vec4 cascadeShadowMatrixModifier3;
+uniform vec4 cascadeShadowMatrixModifier[SHADOW_CASCADE_COUNT];
 uniform vec4 cascadeTexelDepthSizes;
 uniform float maxShadowViewDistance;
 
@@ -238,56 +236,30 @@ float calcDepthBias(int cascadeIndex, float dotLN)
 
 float sampleShadowCascadesAtTexCoord(vec2 shadowTexcoord, float receiverDepth, float dotLN)
 {
-	vec2 v = abs(shadowTexcoord - vec2(0.5));
-	float d = max(v.x, v.y);
+	for (int i = 0; i < SHADOW_CASCADE_COUNT; ++i)
+	{
+		vec2 cascadeTecoord = shadowTexcoord * cascadeShadowMatrixModifier[i].x + cascadeShadowMatrixModifier[i].yz;
+		vec2 v = abs(cascadeTecoord - vec2(0.5));
+		float d = max(v.x, v.y);
 
-	if (d  < 0.5)
-	{
-		receiverDepth -= calcDepthBias(0, dotLN);
-		return sampleShadowOptimizedPcf(shadowSampler0, shadowTexcoord.xy, receiverDepth);
-	}
-	else
-	{
-		vec2 cascadeTecoord = shadowTexcoord * cascadeShadowMatrixModifier1.x + cascadeShadowMatrixModifier1.yz;
-		
-		v = abs(cascadeTecoord - vec2(0.5));
-		d = max(v.x, v.y);
 		if (d  < 0.5)
 		{
-			receiverDepth -= calcDepthBias(1, dotLN);
-			
-			float cascadeReceiverDepth = receiverDepth + cascadeShadowMatrixModifier1.w;
-			return sampleShadowOptimizedPcf(shadowSampler1, cascadeTecoord.xy, cascadeReceiverDepth);
-		}
-		else
-		{
-			vec2 cascadeTecoord = shadowTexcoord * cascadeShadowMatrixModifier2.x + cascadeShadowMatrixModifier2.yz;
-			
-			v = abs(cascadeTecoord - vec2(0.5));
-			d = max(v.x, v.y);
-			if (d  < 0.5)
+			// Dither-blend to the next cascade at the edges
+			float blend = max((0.5-d) * 20, 0.0);
+			if (dither(blend) < 0.5)
 			{
-				receiverDepth -= calcDepthBias(2, dotLN);
-				
-				float cascadeReceiverDepth = receiverDepth + cascadeShadowMatrixModifier2.w;
-			
-				return sampleShadowOptimizedPcf(shadowSampler2, cascadeTecoord.xy, cascadeReceiverDepth);
-			}
-			else
-			{
-				vec2 cascadeTecoord = shadowTexcoord * cascadeShadowMatrixModifier3.x + cascadeShadowMatrixModifier3.yz;
-				
-				v = abs(cascadeTecoord - vec2(0.5));
-				d = max(v.x, v.y);
-				if (d  < 0.5)
+				// Sample the next cascade
+				++i;
+				cascadeTecoord = shadowTexcoord * cascadeShadowMatrixModifier[i].x + cascadeShadowMatrixModifier[i].yz;
+				if (i == SHADOW_CASCADE_COUNT)
 				{
-					receiverDepth -= calcDepthBias(3, dotLN);
-					
-					float cascadeReceiverDepth = receiverDepth + cascadeShadowMatrixModifier3.w;
-				
-					return sampleShadowOptimizedPcf(shadowSampler3, cascadeTecoord.xy, cascadeReceiverDepth);
+					break;
 				}
 			}
+			
+			float cascadeReceiverDepth = receiverDepth + cascadeShadowMatrixModifier[i].w;
+			cascadeReceiverDepth -= calcDepthBias(i, dotLN);
+			return sampleShadowOptimizedPcf(shadowSampler[i], cascadeTecoord.xy, cascadeReceiverDepth);
 		}
 	}
 	return 1.0;

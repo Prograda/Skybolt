@@ -35,12 +35,14 @@ static std::vector<float> calculateSplitDistances(size_t cascadeCount, float nea
 CascadedShadowMapGenerator::CascadedShadowMapGenerator(osg::ref_ptr<osg::Program> shadowCasterProgram, int cascadeCount)
 {
 	assert(cascadeCount >= 1);
+
+	mCascadeShadowMatrixModifierUniform = new osg::Uniform(osg::Uniform::FLOAT_VEC4, "cascadeShadowMatrixModifier", cascadeCount);
+
 	for (int i = 0; i < cascadeCount; ++i)
 	{
 		mShadowMapGenerators.push_back(std::make_shared<ShadowMapGenerator>(shadowCasterProgram, i));
 		mTextures.push_back(mShadowMapGenerators[i]->getTexture());
 
-		mCascadeShadowMatrixModifierUniform.push_back(new osg::Uniform(std::string("cascadeShadowMatrixModifier" + std::to_string(i)).c_str(), osg::Vec4f(1, 0, 0, 1)));
 	}
 
 	mCascadeTexelDepthSizesUniform = osg::ref_ptr<osg::Uniform>(new osg::Uniform("cascadeTexelDepthSizes", osg::Vec4f(0,0,0,0)));
@@ -75,7 +77,8 @@ void CascadedShadowMapGenerator::update(const vis::Camera& viewCamera, const osg
 		frustum.farPlaneDistance = cascadeBoundingDistances[i + 1];
 		auto result = calculateMinimalEnclosingSphere(frustum);
 
-		generator->setRadiusWorldSpace(result.radius);
+		double radiusPaddingMultiplier = 1.05; // make cascade slightly bigger to ensure enough overlap for blending between cascades. TODO: calculate actual overlap required.
+		generator->setRadiusWorldSpace(result.radius * radiusPaddingMultiplier);
 		generator->setDepthRangeWorldSpace(maxRange * 2);
 
 		osg::Vec3 viewCameraDirection = viewCamera.getOrientation() * osg::Vec3f(1, 0, 0);
@@ -84,9 +87,9 @@ void CascadedShadowMapGenerator::update(const vis::Camera& viewCamera, const osg
 	}
 
 
-	for (size_t i = 0; i < mCascadeShadowMatrixModifierUniform.size(); ++i)
+	for (size_t i = 0; i < mShadowMapGenerators.size(); ++i)
 	{
-		mCascadeShadowMatrixModifierUniform[i]->set(calculateCascadeShadowMatrixModifier(i));
+		mCascadeShadowMatrixModifierUniform->setElement(i, calculateCascadeShadowMatrixModifier(i));
 	}
 
 	assert(mShadowMapGenerators.size() <= 4);
@@ -154,10 +157,7 @@ void CascadedShadowMapGenerator::configureShadowReceiverStateSet(osg::StateSet& 
 		generator->configureShadowReceiverStateSet(ss);
 	}
 
-	for (const auto& uniform : mCascadeShadowMatrixModifierUniform)
-	{
-		ss.addUniform(uniform);
-	}
+	ss.addUniform(mCascadeShadowMatrixModifierUniform);
 	ss.addUniform(mCascadeTexelDepthSizesUniform);
 	ss.addUniform(mMaxShadowViewDistance);
 }
