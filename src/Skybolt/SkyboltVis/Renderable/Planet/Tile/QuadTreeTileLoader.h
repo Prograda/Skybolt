@@ -15,38 +15,10 @@
 
 #include <assert.h>
 #include <set>
+#include <vector>
 
 namespace skybolt {
 namespace vis {
-
-struct AsyncQuadTreeTile : public skybolt::QuadTreeTile<osg::Vec2d, AsyncQuadTreeTile>
-{
-	AsyncQuadTreeTile();
-
-	~AsyncQuadTreeTile();
-
-	//! @returns null if the tile is not visible (for example, if the descendent leaves of this tile are visible instead)
-	const TileImages* getData() const;
-
-	//! The stored as shared_pointer to ensure threadsafe modification from nullptr to a valid object by the producer.
-	std::shared_ptr<TileImagesPtr> dataPtr;
-
-	enum class State
-	{
-		NotLoaded, // not loaded and not in the loading queue
-		Loading, // in the loading queue
-		Loaded // loaded
-	};
-
-	State getState() const;
-
-	void requestCancelLoad();
-
-	ProgressCallbackPtr progressCallback; //!< nullptr if load has not been initiated
-};
-
-typedef skybolt::DiQuadTree<struct AsyncQuadTreeTile> WorldTileTree;
-typedef std::shared_ptr<WorldTileTree> WorldTileTreePtr;
 
 struct QuadTreeTileLoaderListener
 {
@@ -60,10 +32,13 @@ struct QuadTreeSubdivisionPredicate
 {
 	virtual ~QuadTreeSubdivisionPredicate() = default;
 
+	//! Returns true if the level should be subdivded
 	virtual bool operator()(const Box2d& bounds, const QuadTreeTileKey& key) = 0;
 };
 
 using QuadTreeSubdivisionPredicatePtr = std::shared_ptr<QuadTreeSubdivisionPredicate>;
+
+struct AsyncQuadTreeTile;
 
 //! QuadTreeTileLoader loads a quadtree of tiles to satisfy a predicate governing whether a given tile is of sufficient resolution.
 //! While a tile is of sufficient resolution, child tiles will not be loaded.
@@ -78,21 +53,32 @@ public:
 
 	~QuadTreeTileLoader();
 
-	void update(std::vector<AsyncQuadTreeTile*>& addedTiles, std::vector<skybolt::QuadTreeTileKey>& removedTiles);
+	void update();
 
-	WorldTileTreePtr getTree() const { return mWorldTree; }
+	struct LoadedTile : public skybolt::QuadTreeTile<osg::Vec2d, LoadedTile>
+	{
+		TileImagesPtr images;
+	};
+	typedef skybolt::DiQuadTree<struct LoadedTile> LoadedTileTree;
+	typedef std::shared_ptr<LoadedTileTree> LoadedTileTreePtr;
+
+	LoadedTileTreePtr getLoadedTree() const { return mLoadedTree; }
 
 private:
 	void traveseToLoadAndUnload(skybolt::QuadTree<AsyncQuadTreeTile>& tree, AsyncQuadTreeTile& tile, bool parentIsSufficient);
-
-	void traveseToCollectVisibleTiles(skybolt::QuadTree<AsyncQuadTreeTile>& tree, AsyncQuadTreeTile& tile, std::set<skybolt::QuadTreeTileKey>& tiles, std::vector<AsyncQuadTreeTile*>& addedTiles);
+	
+	void populateLoadedTree(AsyncQuadTreeTile& srcTile, skybolt::QuadTree<LoadedTile>& destTree, LoadedTile& destTile) const;
 
 	void loadTile(AsyncQuadTreeTile& tile);
 
 private:
+	typedef skybolt::DiQuadTree<struct AsyncQuadTreeTile> AsyncQuadTree;
+	typedef std::shared_ptr<AsyncQuadTree> AsyncTileTreePtr;
+
 	AsyncTileLoaderPtr mAsyncTileLoader;
 	QuadTreeSubdivisionPredicatePtr mSubdivisionPredicate;
-	WorldTileTreePtr mWorldTree;
+	AsyncTileTreePtr mAsyncTree;
+	LoadedTileTreePtr mLoadedTree;
 
 	struct LoadRequest
 	{
@@ -100,8 +86,15 @@ private:
 	};
 
 	std::vector<LoadRequest> mLoadQueue;
-	std::set<skybolt::QuadTreeTileKey> mVisibleTiles;
 };
+
+using TileKeyImagesMap = std::map<QuadTreeTileKey, TileImagesPtr>;
+
+void findLeafTiles(const QuadTreeTileLoader::LoadedTile& tile, TileKeyImagesMap& result, std::optional<int> maxLevel = std::nullopt);
+void findLeafTiles(const QuadTreeTileLoader::LoadedTileTree& tree, TileKeyImagesMap& result, std::optional<int> maxLevel = std::nullopt);
+
+void findAddedAndRemovedTiles(const TileKeyImagesMap& previousTiles, const TileKeyImagesMap& currentTiles,
+	TileKeyImagesMap& addedTiles, std::set<QuadTreeTileKey>& removedTiles);
 
 } // namespace vis
 } // namespace skybolt

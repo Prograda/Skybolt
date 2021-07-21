@@ -10,7 +10,6 @@
 #include <SkyboltVis/SkyboltVisFwd.h>
 #include <SkyboltCommon/Math/QuadTree.h>
 
-#include <px_sched/px_sched.h>
 #include <atomic>
 
 namespace skybolt {
@@ -37,31 +36,15 @@ private:
 class AsyncTileLoader
 {
 public:
-	AsyncTileLoader(const TileImagesLoaderPtr& tileImageLoader, px_sched::Scheduler* scheduler);
-
-	~AsyncTileLoader();
+	virtual ~AsyncTileLoader() = default;
 
 	typedef std::shared_ptr<TileImagesPtr> TileImagesPtrPtr;
 
-	void load(const skybolt::QuadTreeTileKey& key, const TileImagesPtrPtr& result, const ProgressCallbackPtr& progress);
+	virtual void load(const skybolt::QuadTreeTileKey& key, const TileImagesPtrPtr& result, const ProgressCallbackPtr& progress) = 0;
 
-	void waitForLoads();
+	virtual void waitForLoads() = 0;
 
-	void update();
-
-private:
-	TileImagesLoaderPtr mTileImageLoader;
-	px_sched::Scheduler* mScheduler;
-	px_sched::Sync mLoadingTaskSync;
-
-	struct Request
-	{
-		skybolt::QuadTreeTileKey key;
-		TileImagesPtrPtr result; //!< The outer pointer is used to share the lifetime of the inner pointer between producer and consumer. The inner pointer is changed from nullptr to containing a valid object by producer.
-		ProgressCallbackPtr progressCallback;
-	};
-
-	std::vector<Request> mRequests;
+	virtual void update() = 0;
 };
 
 } // namespace vis

@@ -9,7 +9,6 @@
 #include "TextureCompiler.h"
 #include "SkyboltVis/LlaToNedConverter.h"
 #include "SkyboltVis/OsgGeocentric.h"
-#include "SkyboltVis/OsgImageHelpers.h"
 #include "SkyboltVis/OsgMathHelpers.h"
 #include "SkyboltVis/OsgStateSetHelpers.h"
 #include "SkyboltVis/RenderContext.h"
@@ -17,13 +16,12 @@
 #include "SkyboltVis/Scene.h"
 #include "SkyboltVis/Renderable/Forest/GpuForestTile.h"
 #include "SkyboltVis/Renderable/Forest/PagedForest.h"
-#include "SkyboltVis/Renderable/Planet/Tile/AsyncTileLoader.h"
+#include "SkyboltVis/Renderable/Planet/Tile/ConcurrentAsyncTileLoader.h"
 #include "SkyboltVis/Renderable/Planet/Tile/OsgTile.h"
 #include "SkyboltVis/Renderable/Planet/Tile/OsgTileFactory.h"
 #include "SkyboltVis/Renderable/Planet/Tile/QuadTreeTileLoader.h"
 #include "SkyboltVis/Renderable/Planet/Tile/PlanetSubdivisionPredicate.h"
 #include "SkyboltVis/Renderable/Planet/Tile/PlanetTileImagesLoader.h"
-#include "SkyboltVis/Renderable/Planet/Tile/TileTextureCache.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <cxxtimer/cxxtimer.hpp>
 
@@ -49,38 +47,17 @@ using namespace skybolt;
 namespace skybolt {
 namespace vis {
 
-static osg::ref_ptr<osg::Texture2D> createNonSrgbTextureWithoutMipmaps(const osg::ref_ptr<osg::Image>& image)
-{
-	osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
-	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
-	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
-	texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
-	texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
-	return texture;
-}
-
-static osg::ref_ptr<osg::Texture2D> createSrgbTexture(const osg::ref_ptr<osg::Image>& image)
-{
-	osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
-	texture->setInternalFormat(toSrgbInternalFormat(texture->getInternalFormat()));
-	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
-	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
-	texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR_MIPMAP_LINEAR);
-	texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
-	return texture;
-}
-
 PlanetSurface::PlanetSurface(const PlanetSurfaceConfig& config) :
-	mPlanetTileSources(config.planetTileSources),
 	mRadius(config.radius),
 	mParentTransform(config.parentTransform),
 	mOsgTileFactory(config.osgTileFactory),
+	mTileTexturesProvider(config.tileTexturesProvider),
 	mGpuForest(config.gpuForest),
-	mGroup(new osg::Group),
-	mTextureCache(std::make_unique<TileTextureCache>())
+	mGroup(new osg::Group)
 {
-	assert(mPlanetTileSources.albedo);
-	assert(mPlanetTileSources.elevation);
+	auto planetTileSources = config.planetTileSources;
+	assert(planetTileSources.albedo);
+	assert(planetTileSources.elevation);
 
 	mParentTransform->addChild(mGroup);
 
@@ -105,14 +82,14 @@ PlanetSurface::PlanetSurface(const PlanetSurfaceConfig& config) :
 	mPredicate->planetRadius = mRadius;
 
 	auto imageLoader = std::make_shared<PlanetTileImagesLoader>(config.radius);
-	imageLoader->elevationLayer = mPlanetTileSources.elevation;
-	imageLoader->attributeLayer = mPlanetTileSources.attribute;
-	imageLoader->albedoLayer = mPlanetTileSources.albedo;
+	imageLoader->elevationLayer = planetTileSources.elevation;
+	imageLoader->attributeLayer = planetTileSources.attribute;
+	imageLoader->albedoLayer = planetTileSources.albedo;
 	imageLoader->maxElevationLod = config.elevationMaxLodLevel;
 	imageLoader->minAttributeLod = config.attributeMinLodLevel;
 	imageLoader->maxAttributeLod = config.attributeMaxLodLevel;
 
-	AsyncTileLoaderPtr loader(new AsyncTileLoader(imageLoader, config.scheduler));
+	AsyncTileLoaderPtr loader(new ConcurrentAsyncTileLoader(imageLoader, config.scheduler));
 
 	mTileSource.reset(new QuadTreeTileLoader(loader, mPredicate));
 }
@@ -122,15 +99,23 @@ PlanetSurface::~PlanetSurface()
 	mParentTransform->removeChild(mGroup);
 }
 
-typedef std::map<QuadTreeTileKey, const AsyncQuadTreeTile*> QuadTreeTilesMap;
-
 void PlanetSurface::updateGeometry()
 {
-	std::vector<AsyncQuadTreeTile*> addedTiles;
-	std::vector<QuadTreeTileKey> removedTiles;
+	mTileSource->update();
 
-	mTileSource->update(addedTiles, removedTiles);
+	// Get added and removed tile images
+	TileKeyImagesMap addedTiles;
+	std::set<QuadTreeTileKey> removedTiles;
+	QuadTreeTileLoader::LoadedTileTreePtr tree = mTileSource->getLoadedTree();
 
+	{
+		TileKeyImagesMap currentLeafTileImages;
+		findLeafTiles(*tree, currentLeafTileImages);
+		findAddedAndRemovedTiles(mLeafTileImages, currentLeafTileImages, addedTiles, removedTiles);
+		std::swap(mLeafTileImages, currentLeafTileImages);
+	}
+
+	// Remove OSG nodes for removed tiles
 	for (const QuadTreeTileKey& key : removedTiles)
 	{
 		auto it = mTileNodes.find(key);
@@ -143,59 +128,27 @@ void PlanetSurface::updateGeometry()
 		CALL_LISTENERS(tileRemovedFromSceneGraph(key));
 	}
 
-	std::vector<GpuForest::TileTextures> addedAttributeTiles;
-
-	for (AsyncQuadTreeTile* tile : addedTiles)
+	// Create OSG nodes for added tiles
+	for (const auto& [key, tile] : addedTiles)
 	{
-		assert(tile && tile->getData());
+		assert(tile);
+		const PlanetTileImages& images = static_cast<const PlanetTileImages&>(*tile);
 
-		const PlanetTileImages& images = static_cast<const PlanetTileImages&>(*tile->getData());
-		auto textureTiles = createTileTextures(images);
-		if (textureTiles.attribute)
-		{
-			GpuForest::TileTextures textures;
-			textures.height = textureTiles.height;
-			textures.attribute = *textureTiles.attribute;
-			textures.key = tile->key;
-			addedAttributeTiles.push_back(textures);
-		}
-
-		Box2d latLonBounds(math::vec2SwapComponents(tile->bounds.minimum), math::vec2SwapComponents(tile->bounds.maximum));
-		OsgTile osgTile = mOsgTileFactory->createOsgTile(tile->key, latLonBounds, textureTiles);
+		auto textureTiles = mTileTexturesProvider(images);
+		auto bounds = getKeyLonLatBounds<osg::Vec2d>(key);
+		Box2d latLonBounds(math::vec2SwapComponents(bounds.minimum), math::vec2SwapComponents(bounds.maximum));
+		OsgTile osgTile = mOsgTileFactory->createOsgTile(key, latLonBounds, textureTiles);
 
 		mGroup->addChild(osgTile.transform);
-		mTileNodes[tile->key] = osgTile;
+		mTileNodes[key] = osgTile;
 
-		CALL_LISTENERS(tileAddedToSceneGraph(tile->key));
+		CALL_LISTENERS(tileAddedToSceneGraph(key));
 	}
 
 	if (mGpuForest)
 	{
-		mGpuForest->terrainTilesUpdated(addedAttributeTiles, removedTiles);
+		mGpuForest->updateFromTree(*tree);
 	}
-}
-
-OsgTileFactory::TileTextures PlanetSurface::createTileTextures(const PlanetTileImages& images)
-{
-	// We create some of these textures with mip-mapping disabled when it's not needed.
-	// Generating mipmaps is expensive and we need tile textures to load as quickly as possible.
-
-	OsgTileFactory::TileTextures textures;
-	textures.height.texture = mTextureCache->getOrCreateTexture(TileTextureCache::TextureType::Height, images.heightMapImage.image, createNonSrgbTextureWithoutMipmaps);
-	textures.height.key = images.heightMapImage.key;
-	textures.normal = mTextureCache->getOrCreateTexture(TileTextureCache::TextureType::Normal, images.normalMapImage, createNonSrgbTextureWithoutMipmaps);
-	textures.landMask = mTextureCache->getOrCreateTexture(TileTextureCache::TextureType::LandMask, images.landMaskImage, createNonSrgbTextureWithoutMipmaps);
-	textures.albedo.texture = mTextureCache->getOrCreateTexture(TileTextureCache::TextureType::Albedo, images.albedoMapImage.image, createSrgbTexture);
-	textures.albedo.key = images.albedoMapImage.key;
-
-	if (images.attributeMapImage)
-	{
-		TileTexture attribute;
-		attribute.texture = mTextureCache->getOrCreateTexture(TileTextureCache::TextureType::Attribute, images.attributeMapImage->image, createNonSrgbTextureWithoutMipmaps);
-		attribute.key = images.attributeMapImage->key;
-		textures.attribute = attribute;
-	}
-	return textures;
 }
 
 static sim::LatLon toLatLon(const osg::Vec2d& latLon)

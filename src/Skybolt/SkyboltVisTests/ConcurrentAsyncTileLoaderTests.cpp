@@ -6,6 +6,7 @@
 
 #include <catch2/catch.hpp>
 #include <SkyboltVis/Renderable/Planet/Tile/AsyncTileLoader.h>
+#include <SkyboltVis/Renderable/Planet/Tile/ConcurrentAsyncTileLoader.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileImagesLoader.h>
 
 using namespace skybolt;
@@ -51,7 +52,7 @@ TEST_CASE("Test tile loads on background thread")
 	QuadTreeTileKey key(0, 0, 0);
 	auto result = std::make_shared<TileImagesPtr>();
 
-	AsyncTileLoader loader(imagesLoader, &scheduler);
+	ConcurrentAsyncTileLoader loader(imagesLoader, &scheduler);
 	loader.load(key, result, progressCallback);
 	
 	CHECK(progressCallback->state == TileProgressCallback::State::Loading);
@@ -77,7 +78,7 @@ TEST_CASE("Test background loading tile cancels load when cancelled")
 	QuadTreeTileKey key(0, 0, 0);
 	auto result = std::make_shared<TileImagesPtr>();
 
-	AsyncTileLoader loader(imagesLoader, &scheduler);
+	ConcurrentAsyncTileLoader loader(imagesLoader, &scheduler);
 	loader.load(key, result, progressCallback);
 
 	progressCallback->requestCancel();

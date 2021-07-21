@@ -7,7 +7,7 @@
 #include "PlanetTileImagesLoader.h"
 #include "TileSource/TileSource.h"
 #include "SkyboltVis/Renderable/Planet/AttributeMapHelpers.h"
-#include "SkyboltVis/Renderable/Planet/Tile/NormalMaphelpers.h"
+#include "SkyboltVis/Renderable/Planet/Tile/NormalMapHelpers.h"
 #include "SkyboltVis/OsgImageHelpers.h"
 #include "SkyboltVis/OsgTextureHelpers.h"
 #include <algorithm>

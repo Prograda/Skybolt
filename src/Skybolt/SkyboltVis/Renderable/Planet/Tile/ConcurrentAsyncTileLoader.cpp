@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "AsyncTileLoader.h"
+#include "ConcurrentAsyncTileLoader.h"
 #include "TileImagesLoader.h"
 
 using namespace skybolt;
@@ -12,12 +12,12 @@ using namespace skybolt;
 namespace skybolt {
 namespace vis {
 
-AsyncTileLoader::AsyncTileLoader(const TileImagesLoaderPtr& tileImageLoader, px_sched::Scheduler* scheduler) :
+ConcurrentAsyncTileLoader::ConcurrentAsyncTileLoader(const TileImagesLoaderPtr& tileImageLoader, px_sched::Scheduler* scheduler) :
 	mTileImageLoader(tileImageLoader), mScheduler(scheduler)
 {
 }
 
-AsyncTileLoader::~AsyncTileLoader()
+ConcurrentAsyncTileLoader::~ConcurrentAsyncTileLoader()
 {
 	for (const Request& request : mRequests)
 	{
@@ -26,7 +26,7 @@ AsyncTileLoader::~AsyncTileLoader()
 	waitForLoads();
 }
 
-void AsyncTileLoader::load(const QuadTreeTileKey& key, const TileImagesPtrPtr& result, const ProgressCallbackPtr& progress)
+void ConcurrentAsyncTileLoader::load(const QuadTreeTileKey& key, const TileImagesPtrPtr& result, const ProgressCallbackPtr& progress)
 {
 	Request request;
 	request.key = key;
@@ -44,12 +44,12 @@ void AsyncTileLoader::load(const QuadTreeTileKey& key, const TileImagesPtrPtr& r
 	}, &mLoadingTaskSync);
 }
 
-void AsyncTileLoader::waitForLoads()
+void ConcurrentAsyncTileLoader::waitForLoads()
 {
 	mScheduler->waitFor(mLoadingTaskSync);
 }
 
-void AsyncTileLoader::update()
+void ConcurrentAsyncTileLoader::update()
 {
 	// Update requests
 	static const int maxTileLoadsPerUpdate = 16; // tweek to give best performance. Smaller numbers give less frame stutters but potentially longer load delays.

@@ -25,6 +25,35 @@ std::ostream& operator<<(std::ostream& s, const osg::Vec3f& v)
 
 int maxHeightMapTileLevel = 10;
 
+struct AsyncQuadTreeTile : public skybolt::QuadTreeTile<osg::Vec2d, AsyncQuadTreeTile>
+{
+	AsyncQuadTreeTile();
+
+	~AsyncQuadTreeTile();
+
+	//! @returns null if the tile is not visible (for example, if the descendent leaves of this tile are visible instead)
+	const TileImages* getData() const;
+
+	//! The stored as shared_pointer to ensure threadsafe modification from nullptr to a valid object by the producer.
+	std::shared_ptr<TileImagesPtr> dataPtr;
+
+	enum class State
+	{
+		NotLoaded, // not loaded and not in the loading queue
+		Loading, // in the loading queue
+		Loaded // loaded
+	};
+
+	State getState() const;
+
+	void requestCancelLoad();
+
+	ProgressCallbackPtr progressCallback; //!< nullptr if load has not been initiated
+};
+
+typedef skybolt::DiQuadTree<struct AsyncQuadTreeTile> WorldTileTree;
+typedef std::shared_ptr<WorldTileTree> WorldTileTreePtr;
+
 AsyncQuadTreeTile::AsyncQuadTreeTile() :
 	dataPtr(new TileImagesPtr)
 {
@@ -76,28 +105,21 @@ QuadTreeTileLoader::QuadTreeTileLoader(const AsyncTileLoaderPtr& asyncTileLoader
 	assert(mAsyncTileLoader);
 	assert(mSubdivisionPredicate);
 
-	QuadTree<AsyncQuadTreeTile>::TileCreator tileCreator = [](const QuadTreeTileKey& key, const Box2T<typename AsyncQuadTreeTile::VectorType>& bounds)
-	{
-		AsyncQuadTreeTile* tile = new AsyncQuadTreeTile;
-		tile->key = key;
-		tile->bounds = bounds;
-		return std::unique_ptr<AsyncQuadTreeTile>(tile);
-	};
-
 	Box2d leftBounds(osg::Vec2d(-math::piD(), -math::halfPiD()), osg::Vec2d(0, math::halfPiD()));
 	Box2d rightBounds(osg::Vec2d(0, -math::halfPiD()), osg::Vec2d(math::piD(), math::halfPiD()));
-	mWorldTree.reset(new WorldTileTree(tileCreator, QuadTreeTileKey(0, 0, 0), leftBounds, QuadTreeTileKey(0, 1, 0), rightBounds));
+	mAsyncTree = std::make_shared<AsyncQuadTree>(createTileT<AsyncQuadTreeTile, AsyncQuadTreeTile::VectorType>, QuadTreeTileKey(0, 0, 0), leftBounds, QuadTreeTileKey(0, 1, 0), rightBounds);
+	mLoadedTree = std::make_shared<LoadedTileTree>(createTileT<LoadedTile, LoadedTile::VectorType>, QuadTreeTileKey(0, 0, 0), leftBounds, QuadTreeTileKey(0, 1, 0), rightBounds);
 }
 
 QuadTreeTileLoader::~QuadTreeTileLoader()
 {
 	// Unload all tiles
-	auto& leftRoot = mWorldTree->leftTree.getRoot();
-	mWorldTree->leftTree.merge(leftRoot);
+	auto& leftRoot = mAsyncTree->leftTree.getRoot();
+	mAsyncTree->leftTree.merge(leftRoot);
 	leftRoot.requestCancelLoad();
 
-	auto& rightRoot = mWorldTree->rightTree.getRoot();
-	mWorldTree->rightTree.merge(rightRoot);
+	auto& rightRoot = mAsyncTree->rightTree.getRoot();
+	mAsyncTree->rightTree.merge(rightRoot);
 	rightRoot.requestCancelLoad();
 
 	mAsyncTileLoader.reset();
@@ -106,13 +128,9 @@ QuadTreeTileLoader::~QuadTreeTileLoader()
 		CALL_LISTENERS(tileLoadCanceled());
 }
 
-void QuadTreeTileLoader::update(std::vector<AsyncQuadTreeTile*>& addedTiles, std::vector<QuadTreeTileKey>& removedTiles)
+void QuadTreeTileLoader::update()
 {
-	traveseToLoadAndUnload(mWorldTree->leftTree, mWorldTree->leftTree.getRoot(), false);
-	traveseToLoadAndUnload(mWorldTree->rightTree, mWorldTree->rightTree.getRoot(), false);
-
-	mAsyncTileLoader->update();
-
+	// Process results from previous load requests
 	for (auto it = mLoadQueue.begin(); it != mLoadQueue.end();)
 	{
 		const LoadRequest& request = *it;
@@ -135,19 +153,18 @@ void QuadTreeTileLoader::update(std::vector<AsyncQuadTreeTile*>& addedTiles, std
 		}
 	}
 
-	std::set<QuadTreeTileKey> tiles;
-	traveseToCollectVisibleTiles(mWorldTree->leftTree, mWorldTree->leftTree.getRoot(), tiles, addedTiles);
-	traveseToCollectVisibleTiles(mWorldTree->rightTree, mWorldTree->rightTree.getRoot(), tiles, addedTiles);
+	// Issue new load/unloads
+	traveseToLoadAndUnload(mAsyncTree->leftTree, mAsyncTree->leftTree.getRoot(), false);
+	traveseToLoadAndUnload(mAsyncTree->rightTree, mAsyncTree->rightTree.getRoot(), false);
 
-	for (const QuadTreeTileKey& key : mVisibleTiles)
+	// Tick the async loader
+	mAsyncTileLoader->update();
+
+	// Copy loaded tiles from the async tree to the loaded tree
 	{
-		if (tiles.find(key) == tiles.end())
-		{
-			removedTiles.push_back(key);
-		}
+		populateLoadedTree(mAsyncTree->leftTree.getRoot(), mLoadedTree->leftTree, mLoadedTree->leftTree.getRoot());
+		populateLoadedTree(mAsyncTree->rightTree.getRoot(), mLoadedTree->rightTree, mLoadedTree->rightTree.getRoot());
 	}
-
-	std::swap(tiles, mVisibleTiles);
 }
 
 void QuadTreeTileLoader::traveseToLoadAndUnload(QuadTree<AsyncQuadTreeTile>& tree, AsyncQuadTreeTile& tile, bool parentIsSufficient)
@@ -197,50 +214,45 @@ void QuadTreeTileLoader::traveseToLoadAndUnload(QuadTree<AsyncQuadTreeTile>& tre
 	}
 }
 
-void QuadTreeTileLoader::traveseToCollectVisibleTiles(QuadTree<AsyncQuadTreeTile>& tree, AsyncQuadTreeTile& tile, std::set<QuadTreeTileKey>& tiles, std::vector<AsyncQuadTreeTile*>& addedTiles)
+void QuadTreeTileLoader::populateLoadedTree(AsyncQuadTreeTile& srcTile, skybolt::QuadTree<LoadedTile>& dstTree, LoadedTile& dstTile) const
 {
-	if (tile.getData())
+	if (srcTile.getData())
 	{
-		// Determine if tile is a leaf node.
-		// A tile is a leaf node if it has no children, or one or more children do not have loaded data.
-		bool leaf = true;
-		if (tile.hasChildren())
+		dstTile.images = *srcTile.dataPtr;
+
+		if (srcTile.hasChildren())
 		{
-			bool allChildrenHaveData = true;
+			bool allChildrenLoaded = true;
 			for (int i = 0; i < 4; ++i)
 			{
-				AsyncQuadTreeTile& child = *tile.children[i];
-				if (!child.getData())
+				if (!srcTile.children[i]->getData())
 				{
-					allChildrenHaveData = false;
+					allChildrenLoaded = false;
 					break;
 				}
 			}
-			if (allChildrenHaveData)
+
+			if (allChildrenLoaded)
 			{
-				leaf = false;
+				if (!dstTile.hasChildren())
+				{
+					dstTree.subdivide(dstTile);
+				}
+
+				for (int i = 0; i < 4; ++i)
+				{
+					populateLoadedTree(*srcTile.children[i], dstTree, *dstTile.children[i]);
+				}
 			}
 		}
-		
-		// If tile is a laf node, make sure it's in the visible set
-		if (leaf)
+		else if (dstTile.hasChildren())
 		{
-			auto it = mVisibleTiles.find(tile.key);
-			if (it == mVisibleTiles.end())
-			{
-				addedTiles.push_back(&tile);
-			}
-			tiles.insert(tile.key);
+			dstTree.merge(dstTile);
 		}
-		else if (tile.hasChildren()) // tile is not a leaf-node and has children
-		{
-			// Continue traversal to children
-			for (int i = 0; i < 4; ++i)
-			{
-				AsyncQuadTreeTile& child = *tile.children[i];
-				traveseToCollectVisibleTiles(tree, child, tiles, addedTiles);
-			}
-		}
+	}
+	else
+	{
+		dstTile.images = nullptr;
 	}
 }
 
@@ -255,6 +267,50 @@ void QuadTreeTileLoader::loadTile(AsyncQuadTreeTile& tile)
 	mAsyncTileLoader->load(tile.key, tile.dataPtr, tile.progressCallback);
 	CALL_LISTENERS(tileLoadRequested());
 	mLoadQueue.push_back({ tile.progressCallback });
+}
+
+void findLeafTiles(const QuadTreeTileLoader::LoadedTile& tile, TileKeyImagesMap& result, std::optional<int> maxLevel)
+{
+	if ((maxLevel && tile.key.level == *maxLevel) || !tile.hasChildren())
+	{
+		if (tile.images)
+		{
+			result[tile.key] = tile.images;
+		}
+	}
+	else
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			findLeafTiles(*tile.children[i], result, maxLevel);
+		}
+	}
+}
+
+void findLeafTiles(const QuadTreeTileLoader::LoadedTileTree& tree, TileKeyImagesMap& result, std::optional<int> maxLevel)
+{
+	findLeafTiles(tree.leftTree.getRoot(), result, maxLevel);
+	findLeafTiles(tree.rightTree.getRoot(), result, maxLevel);
+}
+
+void findAddedAndRemovedTiles(const TileKeyImagesMap& previousTiles, const TileKeyImagesMap& currentTiles,
+	TileKeyImagesMap& addedTiles, std::set<QuadTreeTileKey>& removedTiles)
+{
+	for (const auto&[key, value] : currentTiles)
+	{
+		if (previousTiles.find(key) == previousTiles.end())
+		{
+			addedTiles[key] = value;
+		}
+	}
+
+	for (const auto&[key, value] : previousTiles)
+	{
+		if (currentTiles.find(key) == currentTiles.end())
+		{
+			removedTiles.insert(key);
+		}
+	}
 }
 
 } // namespace vis

@@ -6,6 +6,7 @@
 
 #include "Planet.h"
 #include "SkyboltVis/GlobalSamplerUnit.h"
+#include "SkyboltVis/OsgImageHelpers.h"
 #include "SkyboltVis/OsgTextureHelpers.h"
 #include "SkyboltVis/RenderContext.h"
 #include "SkyboltVis/Camera.h"
@@ -20,14 +21,15 @@
 #include "SkyboltVis/Renderable/Planet/PlanetSurface.h"
 #include "SkyboltVis/Renderable/Planet/PlanetSky.h"
 #include "SkyboltVis/Renderable/Planet/Terrain.h"
+#include "SkyboltVis/Renderable/Planet/Tile/PlanetTileImagesLoader.h"
 #include "SkyboltVis/Renderable/Planet/Features/PlanetFeatures.h"
 #include "SkyboltVis/Renderable/Planet/Tile/OsgTileFactory.h"
+#include "SkyboltVis/Renderable/Planet/Tile/TileTextureCache.h"
 #include "SkyboltVis/Renderable/Billboard.h"
 #include "SkyboltVis/Renderable/Water/ReflectionCameraController.h"
 #include "SkyboltVis/Renderable/Water/Ocean.h"
 #include "SkyboltVis/Renderable/Water/WaveHeightTextureGenerator.h"
 #include "SkyboltVis/Shadow/CascadedShadowMapGenerator.h"
-
 #include "SkyboltVis/MatrixHelpers.h"
 #include "SkyboltVis/OsgStateSetHelpers.h"
 
@@ -319,6 +321,74 @@ private:
 	double mPrevTimeSeconds = 0;
 };
 
+static osg::ref_ptr<osg::Texture2D> createNonSrgbTextureWithoutMipmaps(const osg::ref_ptr<osg::Image>& image)
+{
+	osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
+	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
+	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
+	texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
+	texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+	return texture;
+}
+
+static osg::ref_ptr<osg::Texture2D> createSrgbTexture(const osg::ref_ptr<osg::Image>& image)
+{
+	osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
+	texture->setInternalFormat(toSrgbInternalFormat(texture->getInternalFormat()));
+	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
+	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
+	texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR_MIPMAP_LINEAR);
+	texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+	return texture;
+}
+
+static OsgTileFactory::TileTextures createSurfaceTileTextures(TileTextureCache& cache, const PlanetTileImages& images)
+{
+	// We create some of these textures with mip-mapping disabled when it's not needed.
+	// Generating mipmaps is expensive and we need tile textures to load as quickly as possible.
+	OsgTileFactory::TileTextures textures;
+	textures.height.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Height, images.heightMapImage.image, createNonSrgbTextureWithoutMipmaps);
+	textures.height.key = images.heightMapImage.key;
+	textures.normal = cache.getOrCreateTexture(TileTextureCache::TextureType::Normal, images.normalMapImage, createNonSrgbTextureWithoutMipmaps);
+	textures.landMask = cache.getOrCreateTexture(TileTextureCache::TextureType::LandMask, images.landMaskImage, createNonSrgbTextureWithoutMipmaps);
+	textures.albedo.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Albedo, images.albedoMapImage.image, createSrgbTexture);
+	textures.albedo.key = images.albedoMapImage.key;
+
+	if (images.attributeMapImage)
+	{
+		TileTexture attribute;
+		attribute.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Attribute, images.attributeMapImage->image, createNonSrgbTextureWithoutMipmaps);
+		attribute.key = images.attributeMapImage->key;
+		textures.attribute = attribute;
+	}
+	return textures;
+}
+
+static GpuForestTileTextures createGpuForestTileTextures(TileTextureCache& cache, const PlanetTileImages& images)
+{
+	GpuForestTileTextures textures;
+	textures.height.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Height, images.heightMapImage.image, createNonSrgbTextureWithoutMipmaps);
+	textures.height.key = images.heightMapImage.key;
+	textures.attribute.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Attribute, images.attributeMapImage->image, createNonSrgbTextureWithoutMipmaps);
+	textures.attribute.key = images.attributeMapImage->key;
+	return textures;
+}
+
+using TileTextureCachePtr = std::shared_ptr<TileTextureCache>;
+static std::function<OsgTileFactory::TileTextures(const PlanetTileImages&)> createSurfaceTileTexturesProvider(const TileTextureCachePtr& cache)
+{
+	return [cache] (const PlanetTileImages& images) {
+		return createSurfaceTileTextures(*cache, images);
+	};
+}
+
+static std::function<GpuForestTileTextures(const TileImages&)> createGpuForestTileTexturesProvider(const TileTextureCachePtr& cache)
+{
+	return [cache] (const TileImages& images) {
+		return createGpuForestTileTextures(*cache, static_cast<const PlanetTileImages&>(images));
+	};
+}
+
 Planet::Planet(const PlanetConfig& config) :
 	mScene(config.scene),
 	mInnerRadius(config.innerRadius),
@@ -375,6 +445,8 @@ Planet::Planet(const PlanetConfig& config) :
 		ss->addUniform(createUniformSampler2d("environmentSampler", (int)GlobalSamplerUnit::EnvironmentProbe));
 	}
 
+	auto textureCache = std::make_shared<TileTextureCache>();
+
 	// Create terrain
 	{
 		std::shared_ptr<OsgTileFactory> osgTileFactory;
@@ -397,6 +469,7 @@ Planet::Planet(const PlanetConfig& config) :
 			forestConfig.parentGroup = mForestGroup;
 			forestConfig.parentTransform = mTransform;
 			forestConfig.planetRadius = mInnerRadius;
+			forestConfig.tileTexturesProvider = createGpuForestTileTexturesProvider(textureCache);
 			forestConfig.programs = config.programs;
 			forest = std::make_shared<vis::GpuForest>(forestConfig);
 
@@ -417,6 +490,7 @@ Planet::Planet(const PlanetConfig& config) :
 		surfaceConfig.albedoMaxLodLevel = config.albedoMaxLodLevel;
 		surfaceConfig.attributeMinLodLevel = config.attributeMinLodLevel;
 		surfaceConfig.attributeMaxLodLevel = config.attributeMaxLodLevel;
+		surfaceConfig.tileTexturesProvider = createSurfaceTileTexturesProvider(textureCache);
 
 		mPlanetSurface.reset(new PlanetSurface(surfaceConfig));
 	}

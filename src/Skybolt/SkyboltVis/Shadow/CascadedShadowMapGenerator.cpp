@@ -61,7 +61,7 @@ void CascadedShadowMapGenerator::update(const vis::Camera& viewCamera, const osg
 	}
 	else
 	{
-		cascadeBoundingDistances = {0, 1000, 3000, 7000, maxRange};
+		cascadeBoundingDistances = {0, 500, 2000, 6000, maxRange};
 	}
 
 	mMaxShadowViewDistance->set(cascadeBoundingDistances.back());

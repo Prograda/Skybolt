@@ -21,6 +21,7 @@
 #include "DataSeries/DataSeries.h"
 #include "ContextActions/AboutContextAction.h"
 #include "ContextActions/AttachToParentContextAction.h"
+#include "ContextActions/DebugInfoContextAction.h"
 #include "ContextActions/DetatchFromParentContextAction.h"
 #include "ContextActions/MoveToAirportContextAction.h"
 #include "ContextActions/SetOrientationContextAction.h"
@@ -1313,12 +1314,13 @@ std::vector<TreeItemContextActionPtr> MainWindow::createContextActions() const
 	}
 	
 	return {
+		adaptToTreeItem(std::make_shared<AboutContextAction>()),
 		adaptToTreeItem(std::make_shared<AttachToParentContextAction>(mEngineRoot->simWorld.get())),
 		adaptToTreeItem(std::make_shared<DetatchFromParentContextAction>()),
 		adaptToTreeItem(std::make_shared<MoveToAirportContextAction>(airports)),
 		adaptToTreeItem(std::make_shared<SetPositionContextAction>()),
 		adaptToTreeItem(std::make_shared<SetOrientationContextAction>()),
-		adaptToTreeItem(std::make_shared<AboutContextAction>())
+		adaptToTreeItem(std::make_shared<DebugInfoContextAction>())
 	};
 }
 

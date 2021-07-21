@@ -45,6 +45,7 @@ static void generate(std::vector<BillboardForest::Tree>& trees, int treeCountPer
 GpuForest::GpuForest(const GpuForestConfig& config) :
 	mForestParams(config.forestParams),
 	mPrograms(config.programs),
+	mTileTexturesProvider(config.tileTexturesProvider),
 	mParentGroup(config.parentGroup),
 	mParentTransform(config.parentTransform),
 	mPlanetRadius(config.planetRadius)
@@ -88,37 +89,31 @@ GpuForest::~GpuForest()
 	}
 }
 
-void GpuForest::terrainTilesUpdated(const std::vector<TileTextures>& addedTiles, const std::vector<QuadTreeTileKey>& removedTiles)
+void removeTilesBelowLodLevel(TileKeyImagesMap& images, int minLodLevel)
 {
-	// Update set of current terrain tile keys
-	for (const auto& tile : removedTiles)
+	for (auto i = images.begin(); i != images.end(); )
 	{
-		mTerrainTiles.erase(tile);
-	}
-
-	for (const auto& tile : addedTiles)
-	{
-		mTerrainTiles.insert(tile.key);
-	}
-
-	// Get current required forest tile keys
-	std::set<QuadTreeTileKey> requiredForestKeys;
-	for (const auto& tile : mTerrainTiles)
-	{
-		if (tile.level > mForestParams.maxTileLodLevelToDisplayForest)
+		if (i->first.level < minLodLevel)
 		{
-			requiredForestKeys.insert(createAncestorKey(tile, mForestParams.maxTileLodLevelToDisplayForest));
+			i = images.erase(i);
 		}
-		else if (tile.level >= mForestParams.minTileLodLevelToDisplayForest)
-		{
-			requiredForestKeys.insert(tile);
+		else {
+			++i;
 		}
 	}
+}
+
+void GpuForest::updateFromTree(const QuadTreeTileLoader::LoadedTileTree& tree)
+{
+	// Get required tile images
+	TileKeyImagesMap requiredTileImages;
+	findLeafTiles(tree, requiredTileImages, mForestParams.maxTileLodLevelToDisplayForest);
+	removeTilesBelowLodLevel(requiredTileImages, mForestParams.minTileLodLevelToDisplayForest);
 
 	// Removed current unreqiured forest tiles
 	for (auto i = mForestTiles.begin(); i != mForestTiles.end();)
 	{
-		if (requiredForestKeys.find(i->first) == requiredForestKeys.end())
+		if (requiredTileImages.find(i->first) == requiredTileImages.end())
 		{
 			auto itToRemove = i;
 			++i;
@@ -132,30 +127,27 @@ void GpuForest::terrainTilesUpdated(const std::vector<TileTextures>& addedTiles,
 	}
 
 	// Add new required forest tiles
-	for (const auto& tile : addedTiles)
+	for (const auto& [key, images] : requiredTileImages)
 	{
-		if (requiredForestKeys.find(tile.key) != requiredForestKeys.end())
+		if (mForestTiles.find(key) == mForestTiles.end())
 		{
-			if (mForestTiles.find(tile.key) == mForestTiles.end())
-			{
-				mForestTiles[tile.key] = createForestTile(tile);
-			}
+			mForestTiles[key] = createForestTile(key, mTileTexturesProvider(*images));
 		}
 	}
 }
 
-GpuForest::ForestTile GpuForest::createForestTile(const TileTextures& tile)
+GpuForest::ForestTile GpuForest::createForestTile(const QuadTreeTileKey& key, const GpuForestTileTextures& tile)
 {
 	assert(tile.attribute.texture);
 	assert(tile.height.texture);
 
 	osg::Vec2f heightImageScale, heightImageOffset;
-	getTileTransformInParentSpace(tile.key, tile.height.key.level, heightImageScale, heightImageOffset);
+	getTileTransformInParentSpace(key, tile.height.key.level, heightImageScale, heightImageOffset);
 
 	osg::Vec2f attributeImageScale, attributeImageOffset;
-	getTileTransformInParentSpace(tile.key, tile.attribute.key.level, attributeImageScale, attributeImageOffset);
+	getTileTransformInParentSpace(key, tile.attribute.key.level, attributeImageScale, attributeImageOffset);
 
-	auto lonLatBounds = getKeyLonLatBounds<osg::Vec2>(tile.key);
+	auto lonLatBounds = getKeyLonLatBounds<osg::Vec2>(key);
 	osg::Vec2d centerLatLon = math::vec2SwapComponents(lonLatBounds.center());
 	osg::Vec3d tilePosition = llaToGeocentric(centerLatLon, 0, mPlanetRadius);
 
@@ -169,7 +161,7 @@ GpuForest::ForestTile GpuForest::createForestTile(const TileTextures& tile)
 	osg::Vec2f tileWorldSizeMeters = osg::Vec2f(latLonBoundsSize.x() * mPlanetRadius, latLonBoundsSize.y() * mPlanetRadius * cosLat);
 
 	// Select the appropriate forest geometry for the current LOD
-	int forestGeoIndex = std::clamp(tile.key.level - mForestParams.minTileLodLevelToDisplayForest, 0, int(mForestGeometries.size()) - 1);
+	int forestGeoIndex = std::clamp(key.level - mForestParams.minTileLodLevelToDisplayForest, 0, int(mForestGeometries.size()) - 1);
 	BillboardForestPtr forestGeo = mForestGeometries[forestGeoIndex];
 	auto forestTile = std::make_shared<GpuForestTile>(tile.height.texture, tile.attribute.texture, forestGeo, tileWorldSizeMeters);
 
