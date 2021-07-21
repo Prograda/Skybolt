@@ -182,9 +182,9 @@ Skybolt cannot run without the Core package. It is located under /Assets in this
 Additional packages for running the example applications are located in the [SkyboltAssets](https://github.com/Piraxus/SkyboltAssets) repository. SkyboltAssets uses [DVC](https://dvc.org) for remote storage and retrieval of large files which are not stored in the git repository itself.
 
 To checkout the SktboltAssets repository:
-1. If you do not already have DVC installed, run `pip install dvc` to install with [pip](https://pypi.org/project/pip)
+1. If you do not already have DVC installed, run `pip install dvc[s3]` to install with [pip](https://pypi.org/project/pip)
 2. Clone [SkyboltAssets](https://github.com/Piraxus/SkyboltAssets) and checkout desired git branch/tag
-3. Run `dvc checkout` command in the SkyboltAssets root directory to fetch the remote files
+3. Run `dvc pull` command in the SkyboltAssets root directory to fetch the remote files
 
 ### NLCD Land Cover (Optional)
 Land cover tiles for USA. Used by Skybolt to place trees on terrain in forest areas. This package can be downloaded [here](https://f000.backblazeb2.com/file/skybolt/NLCDLandCover_1_0_0.zip).
