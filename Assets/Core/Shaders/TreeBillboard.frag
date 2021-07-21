@@ -46,9 +46,9 @@ void main()
 #endif
 	
 	color.rgb = randomizeColor(color.rgb, perTreeUnitRandom);
-	color.rgb *= calcLambertSkyLight(lightDirection, normal)
-	* (scattering.sunIrradiance * lightVisibility + scattering.skyIrradiance) + ambientLightColor;	
+	color.rgb *= calcLambertDirectionalLight(lightDirection, normal) * scattering.sunIrradiance * lightVisibility
+			   + calcLambertAmbientLight(normal, scattering.sunIrradiance, scattering.skyIrradiance) + ambientLightColor;	
 	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;
-	
+
 	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }

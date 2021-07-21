@@ -113,6 +113,8 @@ void main()
 	vec3 positionRelPlanet = worldPos.xyz - planetCenter;
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
 	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
-
+	scattering.skyIrradiance *= occlusion;
+	scattering.sunIrradiance *= occlusion;
+	
 	shadowTexCoord = (shadowProjectionMatrix0 * worldPos).xyz;
 }
