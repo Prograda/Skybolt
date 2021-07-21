@@ -231,7 +231,7 @@ float calcDepthBias(int cascadeIndex, float dotLN)
 	// Can be approximated as:
 	//float error = worldTexelSize * tan(acos(dotLNSafe));
 	float error = -2 * worldTexelSize * (dotLNSafe-1) / dotLNSafe;
-	return 0.0003 + error;
+	return 0.00005 + error;
 }
 
 float sampleShadowCascadesAtTexCoord(vec2 shadowTexcoord, float receiverDepth, float dotLN)
@@ -259,7 +259,14 @@ float sampleShadowCascadesAtTexCoord(vec2 shadowTexcoord, float receiverDepth, f
 			
 			float cascadeReceiverDepth = receiverDepth + cascadeShadowMatrixModifier[i].w;
 			cascadeReceiverDepth -= calcDepthBias(i, dotLN);
-			return sampleShadowOptimizedPcf(shadowSampler[i], cascadeTecoord.xy, cascadeReceiverDepth);
+			if (i == 0)
+			{
+				return sampleShadowOptimizedPcf(shadowSampler[i], cascadeTecoord.xy, cascadeReceiverDepth);
+			}
+			else
+			{
+				return sampleShadow(shadowSampler[i], cascadeTecoord.xy, cascadeReceiverDepth);
+			}
 		}
 	}
 	return 1.0;

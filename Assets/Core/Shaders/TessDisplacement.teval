@@ -107,6 +107,9 @@ void main()
 	
 	gl_Position = viewProjectionMatrix * vec4(position_worldSpace, 1);
 #ifdef CAST_SHADOWS
+	// Increase terrain caster depth to decrease shadow acne.
+	// The increase is small enough relative to the scale of the terrain not to introduce other artifacts.
+	gl_Position.z += 0.0003;
 	return;
 #endif
 	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
