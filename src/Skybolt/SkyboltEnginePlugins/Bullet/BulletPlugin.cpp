@@ -7,11 +7,14 @@
 #include "AltitudeProvider.h"
 #include "BulletDynamicBodyComponent.h"
 #include "BulletTypeConversion.h"
+#include "BulletWheelsComponent.h"
 #include "BulletWorld.h"
 #include "KinematicBody.h"
+#include "DrivetrainComponent.h"
 #include "TerrainCollisionShape.h"
 #include <SkyboltSim/CollisionGroupMasks.h>
 #include <SkyboltSim/Entity.h>
+#include <SkyboltSim/Components/ControlInputsComponent.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/JsonHelpers.h>
@@ -115,6 +118,8 @@ private:
 
 const std::string dynamicBodyComponentName = "dynamicBody";
 const std::string planetKinematicBodyComponentName = "planetKinematicBody";
+const std::string wheelsComponentName = "wheels";
+const std::string drivetrainComponentName = "drivetrain";
 
 class BulletPlugin : public Plugin
 {
@@ -133,6 +138,53 @@ public:
 			auto planet = entity->getFirstComponentRequired<PlanetComponent>().get();
 			btCollisionShape* shape = loadPlanetCollisionShape(*planet);
 			return std::make_shared<KinematicBody>(mBulletWorld.get(), node, shape, CollisionGroupMasks::terrain);
+		});
+
+		(*mComponentFactoryRegistry)[wheelsComponentName] = std::make_shared<ComponentFactoryFunctionAdapter>([this](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) {
+			auto body = entity->getFirstComponentRequired<BulletDynamicBodyComponent>().get();
+
+			BulletWheelsComponentConfig config;
+			config.body = body->getRigidBody();
+			config.mass = body->getMass();
+			config.world = mBulletWorld->getDynamicsWorld();
+
+			bool enableSteering = false;
+
+			for (const auto& jsonWheel : json.items())
+			{
+				auto j = jsonWheel.value();
+				WheelConfig wheel;
+				wheel.attachmentPoint = readVector3(j.at("attachmentPoint"));
+				wheel.wheelRadius = j.at("wheelRadius");
+				wheel.maxSuspensionTravelLength = j.at("maxSuspensionTravelLength");
+				wheel.stiffness = j.at("stiffness");
+				wheel.dampingCompression = j.at("dampingCompression");
+				wheel.dampingRelaxation = j.at("dampingRelaxation");
+				wheel.maxSteeringAngleRadians = readOptionalOrDefault(j, "steeringAngleDeg", 0.0) * math::degToRadD();
+				wheel.drivenByEngine = readOptionalOrDefault(j, "drivenByEngine", false);
+				config.wheels.push_back(wheel);
+
+				if (wheel.maxSteeringAngleRadians > 0.0)
+				{
+					enableSteering = true;
+				}
+			}
+
+			if (enableSteering)
+			{
+				auto inputsComponent = entity->getFirstComponentRequired<ControlInputsComponent>();
+				config.steering = inputsComponent->createOrGet("steering", 0.0f, posNegUnitRange<float>());
+			}
+
+			return std::make_shared<BulletWheelsComponent>(config);
+		});
+
+		(*mComponentFactoryRegistry)[drivetrainComponentName] = std::make_shared<ComponentFactoryFunctionAdapter>([this](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) {
+			auto inputsComponent = entity->getFirstComponentRequired<ControlInputsComponent>();
+			auto wheelsComponent = entity->getFirstComponentRequired<BulletWheelsComponent>();
+
+			auto throttle = inputsComponent->createOrGet("throttle", 0.0f, unitRange<float>());
+			return std::make_shared<DrivetrainComponent>(wheelsComponent, throttle, json.at("maxForce"));
 		});
 
 		mBulletSystem = std::make_shared<BulletSystem>(mBulletWorld.get());

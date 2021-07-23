@@ -69,7 +69,8 @@ static sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryCont
 	config.body = entity->getFirstComponentRequired<DynamicBodyComponent>().get();
 
 	auto inputs = entity->getFirstComponent<ControlInputsComponent>();
-	if (inputs)
+	bool hasControlSurfaces = readOptionalOrDefault(json, "hasControlSurfaces", false);
+	if (inputs && hasControlSurfaces)
 	{
 		config.stickInput = inputs->createOrGet("stick", glm::vec2(0), posNegUnitRange<glm::vec2>());
 		config.rudderInput = inputs->createOrGet("rudder", 0.0f, posNegUnitRange<float>());

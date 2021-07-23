@@ -41,7 +41,6 @@ BulletDynamicBodyComponent::~BulletDynamicBodyComponent()
 void BulletDynamicBodyComponent::updatePreDynamics(TimeReal dt, TimeReal dtWallClock)
 {
 	mForces.clear();
-
 	// Reset position and orientation if the node was moved by an external source since the last timestep
 	auto newNodePosition = mNode->getPosition();
 	if (mNodePosition != newNodePosition)

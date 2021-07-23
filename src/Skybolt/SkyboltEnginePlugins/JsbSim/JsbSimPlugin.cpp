@@ -52,8 +52,6 @@ public:
 			mExec->SetPropertyValue("position/lat-gc-rad", lla.lat);
 			mExec->SetPropertyValue("position/long-gc-rad", lla.lon);
 			mExec->SetPropertyValue("position/h-sl-meters", lla.alt);
-
-			mExec->SetPropertyValue("velocities/v-north-fps", 1000);
 		}
 
 		// Set flight controls

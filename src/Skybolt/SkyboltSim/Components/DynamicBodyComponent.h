@@ -57,12 +57,6 @@ public:
 
 	virtual void setCollisionsEnabled(bool enabled) = 0;
 
-public:
-	std::vector<std::type_index> getExposedTypes() const override
-	{
-		return { typeid(DynamicBodyComponent), typeid(this) };
-	}
-
 protected:
 	World* mWorld;
 	std::vector<AppliedForce> mForces;

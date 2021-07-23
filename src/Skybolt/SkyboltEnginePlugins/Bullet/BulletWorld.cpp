@@ -6,6 +6,7 @@
 
 #include "BulletWorld.h"
 #include "RigidBody.h"
+#include <SkyboltSim/CollisionGroupMasks.h>
 #include "Bullet/BulletTypeConversion.h"
 
 namespace skybolt {
@@ -61,7 +62,7 @@ RayTestResult BulletWorld::testRay(const Vector3 &start, const Vector3 &end, int
 	btVector3 startBullet = toBtVector3(start);
 	btVector3 endBullet = toBtVector3(end);
 	btCollisionWorld::ClosestRayResultCallback rayCallback(startBullet, endBullet);
-	rayCallback.m_collisionFilterGroup = ~1;
+	rayCallback.m_collisionFilterGroup = ~CollisionGroupMasks::terrain;
 	rayCallback.m_collisionFilterMask = collisionFilterMask;
 
 	if (startBullet.distance2(endBullet) > 1e-7)

@@ -19,7 +19,7 @@ KinematicBody::KinematicBody(BulletWorld* world, Node* node, btCollisionShape* s
 	mNode(node)
 {
 	// TODO: un-hardcode collision filter mask
-	mBody = world->createRigidBody(shape, 0, btVector3(0,0,0), toBtVector3(node->getPosition()), toBtQuaternion(node->getOrientation()), btVector3(0,0,0), collisionGroupMask, ~CollisionGroupMasks::terrain);
+	mBody = world->createRigidBody(shape, 0, btVector3(0, 0, 0), toBtVector3(node->getPosition()), toBtQuaternion(node->getOrientation()), btVector3(0, 0, 0), collisionGroupMask, ~CollisionGroupMasks::terrain);
 	mBody->setFriction(1.0);
 	mBody->setUserPointer(this);
 }

@@ -56,6 +56,14 @@ public:
 
 	void setCollisionsEnabled(bool enabled) override;
 
+	RigidBody* getRigidBody() const { return mBody; }
+
+public:
+	std::vector<std::type_index> getExposedTypes() const override
+	{
+		return {typeid(DynamicBodyComponent), typeid(BulletDynamicBodyComponent)};
+	}
+
 protected:
 	void setPosition(const Vector3& position);
 	void setOrientation(const Quaternion& orientation);

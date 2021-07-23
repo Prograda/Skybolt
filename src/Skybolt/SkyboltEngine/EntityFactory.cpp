@@ -192,18 +192,23 @@ static void registerAssetSearchDirectory(const std::string& filename)
 	}
 }
 
-static void loadVisualModel(Entity* entity, const EntityFactory::Context& context, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+static vis::ModelPtr createVisualModel(const nlohmann::json& json, vis::ModelFactory& factory)
 {
 	std::string filename = json.at("model").get<std::string>();
 	vis::ModelConfig config;
-	config.node = context.modelFactory->createModel(filename);
+	config.node = factory.createModel(filename);
 
 	registerAssetSearchDirectory(getParentDirectory(filename));
 
-	vis::ModelPtr fuselageModel(new vis::Model(config));
-	visObjectsComponent->addObject(fuselageModel);
+	return std::make_shared<vis::Model>(config);
+}
 
-	SimVisBindingPtr simVis(new SimpleSimVisBinding(entity, fuselageModel,
+static void loadVisualModel(Entity* entity, const EntityFactory::Context& context, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+{
+	vis::ModelPtr model = createVisualModel(json, *context.modelFactory);
+	visObjectsComponent->addObject(model);
+
+	SimVisBindingPtr simVis(new SimpleSimVisBinding(entity, model,
 		readOptionalVec3f(json, "positionRelBody", osg::Vec3f()),
 		readOptionalQuat(json, "orientationRelBody", osg::Quat())
 	));
@@ -212,37 +217,25 @@ static void loadVisualModel(Entity* entity, const EntityFactory::Context& contex
 
 static void loadVisualMainRotor(Entity* entity, const EntityFactory::Context& context, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
-	std::string filename = json.at("model").get<std::string>();
-	vis::ModelConfig config;
-	config.node = context.modelFactory->createModel(filename);
-
-	registerAssetSearchDirectory(getParentDirectory(filename));
-
-	vis::ModelPtr mainRotorModel(new vis::Model(config));
-	visObjectsComponent->addObject(mainRotorModel);
+	vis::ModelPtr model = createVisualModel(json, *context.modelFactory);
+	visObjectsComponent->addObject(model);
 
 	auto rotor = entity->getFirstComponentRequired<MainRotorComponent>();
 	auto node = entity->getFirstComponentRequired<Node>();
 
-	SimVisBindingPtr simVis(new MainRotorVisComponent(rotor.get(), node.get(), mainRotorModel));
+	SimVisBindingPtr simVis(new MainRotorVisComponent(rotor.get(), node.get(), model));
 	simVisBindingComponent->bindings.push_back(simVis);
 }
 
 static void loadVisualTailRotor(Entity* entity, const EntityFactory::Context& context, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
-	std::string filename = json.at("model").get<std::string>();
-	vis::ModelConfig config;
-	config.node = context.modelFactory->createModel(filename);
-
-	registerAssetSearchDirectory(getParentDirectory(filename));
-
-	vis::ModelPtr tailRotorModel(new vis::Model(config));
-	visObjectsComponent->addObject(tailRotorModel);
+	vis::ModelPtr model = createVisualModel(json, *context.modelFactory);
+	visObjectsComponent->addObject(model);
 
 	auto rotor = entity->getFirstComponentRequired<PropellerComponent>();
 	auto node = entity->getFirstComponentRequired<Node>();
 
-	SimVisBindingPtr simVis(new PropellerVisComponent(rotor.get(), node.get(), tailRotorModel));
+	SimVisBindingPtr simVis(new PropellerVisComponent(rotor.get(), node.get(), model));
 	simVisBindingComponent->bindings.push_back(simVis);
 }
 
