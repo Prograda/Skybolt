@@ -14,8 +14,11 @@ float calcBlinnPhongSpecular(vec3 lightDirection, vec3 viewDirection, vec3 norma
 	vec3 H = normalize(lightDirection + viewDirection);
     float NdotH = max(dot(normal, H), 0.0);
 	
-	float energyConservationFactor = (shininess + 8.0) * M_INV_8PI;
-	float result = energyConservationFactor * pow(NdotH, shininess);
+	// This is the normalization factor to use for the half-angle version we are using.
+	// See http://www.thetenthplanet.de/archives/255
+	float normalizationFactor = (shininess + 8.0) * M_INV_8PI;
+	
+	float result = normalizationFactor * pow(NdotH, shininess);
     return clamp(result, 0, 1); // clamp result to keep fireflies under control
 }
 

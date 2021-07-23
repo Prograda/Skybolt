@@ -113,6 +113,24 @@ public:
 			{
 				(*modifier)(stateSet, *material);
 			}
+
+			// Disney BSDF, blender, Adobe Substance etc all scale the artist given specularity value by 0.08 to
+			// put the parameter into a more useful range. We do the same here for compatibility with art tools
+			// using the Disney BSDF.
+			// See Section 3.2 https://blog.selfshadow.com/publications/s2015-shading-course/burley/s2015_pbs_disney_bsdf_notes.pdf
+			// Also see 0.08 used in Blender's implementation: https://github.com/blender/blender/blob/master/intern/cycles/kernel/shaders/node_principled_bsdf.osl
+			float disneyBrdfSpecularScaleFactor = 0.08f;
+			osg::Vec4 specularity = material->getSpecular(osg::Material::FRONT) * disneyBrdfSpecularScaleFactor;
+
+			const float specularExponent = material->getShininess(osg::Material::FRONT);
+
+			if (specularity.length2() > 0 && specularExponent > 0)
+			{
+				stateSet.addUniform(new osg::Uniform("specularity", osg::Vec3f(specularity.r(), specularity.g(), specularity.b())));
+				stateSet.addUniform(new osg::Uniform("specularExponent", specularExponent));
+				stateSet.setDefine("ENABLE_SPECULAR");
+				stateSet.setDefine("ENABLE_ENVIRONMENT_MAP");
+			}
 		}
 	}
 

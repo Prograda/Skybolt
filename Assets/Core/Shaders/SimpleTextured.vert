@@ -48,6 +48,7 @@ void main()
 #endif
 	
 	vec4 positionWS = modelMatrix * osg_Vertex;
+	positionRelCamera = positionWS.xyz - cameraPosition;
 	
 #ifdef ENABLE_ATMOSPHERE
 	// Atmospheric scattering

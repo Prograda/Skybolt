@@ -14,5 +14,5 @@ out vec4 color;
 
 void main()
 {
-	color = texture2D(tex, texCoord.xy) / brightnessMultiplier;
+	color = texture2D(tex, texCoord.xy);
 }
