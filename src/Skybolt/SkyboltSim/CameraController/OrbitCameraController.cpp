@@ -9,6 +9,7 @@
 #include "SkyboltSim/Entity.h"
 #include "SkyboltSim/Components/CameraComponent.h"
 #include "SkyboltSim/Components/Node.h"
+#include <SkyboltCommon/Math/FirstOrderLag.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
 #include <assert.h>
@@ -19,7 +20,6 @@ using namespace skybolt;
 const float OrbitCameraController::msYawRate = 0.01f;
 const float OrbitCameraController::msPitchRate = 0.01f;
 const float OrbitCameraController::msZoomRate = 0.001f;
-const float OrbitCameraController::msTargetTransitionRate = 4.0f;
 const float OrbitCameraController::msPlanetAlignTransitionRate = 2.0f;
 
 
@@ -29,22 +29,37 @@ OrbitCameraController::OrbitCameraController(sim::Entity* camera, const Params& 
 	mTargetOffset(0,0,0),
     mFilteredPlanetUp(0,0,0),
 	mTargetPosition(0,0,0),
-	mTargetOrientation(0,0,0,1),
 	mPrevTarget(nullptr)
 {
 	setZoom(0.5f);
-	mCameraComponent->getState().fovY = mParams.fovY;
 }
 
 void OrbitCameraController::resetFiltering()
 {
 	mFilteredPlanetUp = Vector3(0,0,0);
+	mSmoothedTargetOrientation.reset();
 }
 
 void OrbitCameraController::setActive(bool active)
 {
 	CameraController::setActive(active);
 	resetFiltering();
+}
+
+static Quaternion safeSlerp(const Quaternion& a, const Quaternion& b, double t)
+{
+	Quaternion sSafe = (glm::dot(a, b) < 0) ? -a : a;
+	return glm::slerp(sSafe, b, t);
+}
+
+void OrbitCameraController::updatePostDynamicsSubstep(TimeReal dtSubstep)
+{
+	Quaternion orientation = *getOrientation(*mTarget);
+	if (mSmoothedTargetOrientation)
+	{
+		orientation = safeSlerp(*mSmoothedTargetOrientation, orientation, (double)calcFirstOrderLagInterpolationFactor(dtSubstep, mLagTimeConstant));
+	}
+	mSmoothedTargetOrientation = orientation;
 }
 
 void OrbitCameraController::update(float dt)
@@ -54,6 +69,8 @@ void OrbitCameraController::update(float dt)
 		resetFiltering();
 		mPrevTarget = mTarget;
 	}
+
+	mCameraComponent->getState().fovY = mParams.fovY;
 
 	mYaw += msYawRate * mInput.panSpeed * dt;
 	mPitch += msPitchRate * mInput.tiltSpeed * dt;
@@ -121,7 +138,11 @@ void OrbitCameraController::update(float dt)
 			else
 #endif
 			{
-				mNodeComponent->setOrientation(*getOrientation(*mTarget) * glm::angleAxis(mYaw, Vector3(0, 0, 1)) * glm::angleAxis(mPitch, Vector3(0, 1, 0)));
+				if (!mSmoothedTargetOrientation)
+				{
+					mSmoothedTargetOrientation = *getOrientation(*mTarget);
+				}
+				mNodeComponent->setOrientation(*mSmoothedTargetOrientation * glm::angleAxis(mYaw, Vector3(0, 0, 1)) * glm::angleAxis(mPitch, Vector3(0, 1, 0)));
 			}
 		}
 	}
@@ -130,5 +151,5 @@ void OrbitCameraController::update(float dt)
 	float dist = mParams.maxDist + mZoom * (mParams.minDist - mParams.maxDist);
 
 	// Derive camera position
-	mNodeComponent->setPosition(mTargetPosition + mTargetOffset + mNodeComponent->getOrientation() * Vector3(-dist, 0, 0));
+	mNodeComponent->setPosition(mTargetPosition + mNodeComponent->getOrientation() * (Vector3(-dist, 0, 0) + mTargetOffset));
 }

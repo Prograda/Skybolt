@@ -34,7 +34,8 @@ namespace sim {
 		CameraController(Entity* camera);
 		virtual ~CameraController();
 
-		virtual void update(float dt) {};
+		virtual void updatePostDynamicsSubstep(TimeReal dtSubstep) {}
+		virtual void update(float dt) {}
 		virtual void setInput(const Input& input) {}
 
 		virtual Entity* getTarget() const { return mTarget; }

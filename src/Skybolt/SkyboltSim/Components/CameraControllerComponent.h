@@ -25,6 +25,7 @@ class CameraControllerComponent : public Component
 public:
 	CameraControllerComponent(const CameraControllerPtr& cameraController);
 
+	void updatePostDynamicsSubstep(TimeReal dtSubstep) override;
 	void updateAttachments(TimeReal dt, TimeReal dtWallClock) override;
 
 	CameraControllerPtr cameraController;

@@ -12,6 +12,8 @@
 #include "Yawable.h"
 #include "Zoomable.h"
 
+#include <optional>
+
 namespace skybolt {
 namespace sim {
 
@@ -27,13 +29,18 @@ public:
 		Real maxDist;
 		float fovY;
 		float zoomRate;
+		Vector3 orientationLagTimeConstant = Vector3(0);
 	};
 
 	OrbitCameraController(Entity* camera, const Params& params);
 
+	void setTargetOffset(const Vector3& offset) { mTargetOffset = offset; }
+	void setLagTimeConstant(float constant) { mLagTimeConstant = constant; }
+
 public:
 	// CameraController interface
 	void setActive(bool active) override;
+	void updatePostDynamicsSubstep(TimeReal dtSubstep) override;
 	void update(float dt) override;
 	void setInput(const Input& input) override { mInput = input; }
 
@@ -43,15 +50,15 @@ private:
 	Params mParams;
 	Vector3 mTargetOffset;
 	Vector3 mTargetPosition;
-	Quaternion mTargetOrientation;
+	std::optional<Quaternion> mSmoothedTargetOrientation;
 	Vector3 mFilteredPlanetUp;
 	const Entity* mPrevTarget;
 	Input mInput = Input::zero();
+	float mLagTimeConstant = 0;
 
 	static const float msYawRate;
 	static const float msPitchRate;
 	static const float msZoomRate;
-	static const float msTargetTransitionRate;
 	static const float msPlanetAlignTransitionRate;
 };
 

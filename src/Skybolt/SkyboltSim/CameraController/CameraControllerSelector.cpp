@@ -45,6 +45,12 @@ void CameraControllerSelector::selectController(const std::string& name)
 	}
 }
 
+void CameraControllerSelector::updatePostDynamicsSubstep(float dtSubstep)
+{
+	if (mSelectedController)
+		mSelectedController->updatePostDynamicsSubstep(dtSubstep);
+}
+
 void CameraControllerSelector::update(float dt)
 {
 	if (mSelectedController)

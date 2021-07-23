@@ -23,6 +23,11 @@ CameraControllerComponent::CameraControllerComponent(const CameraControllerPtr& 
 	assert(cameraController);
 }
 
+void CameraControllerComponent::updatePostDynamicsSubstep(TimeReal dtSubstep)
+{
+	cameraController->updatePostDynamicsSubstep(dtSubstep);
+}
+
 void CameraControllerComponent::updateAttachments(TimeReal dt, TimeReal dtWallClock)
 {
 	cameraController->update(dtWallClock);

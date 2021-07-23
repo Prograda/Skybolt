@@ -559,7 +559,7 @@ Planet::Planet(const PlanetConfig& config) :
 			osg::Vec2f size(0.3, 0.3);
 			BoundingBox2f box(pos, pos + size);
 			ScreenQuad* quad = new ScreenQuad(createTexturedQuadStateSet(config.programs->getRequiredProgram("hudGeometry"), environmentTexture), box);
-			mScene->addObject(quad);
+			mScene->addObject(quad); // TODO: we should add these debug textures to the hud group instead of the scene so they're rendered after tonemapping
 #endif
 
 //#define ATMOSPHERIC_SCATTERING_DEBUG_VIZ

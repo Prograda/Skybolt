@@ -35,6 +35,7 @@ public:
 
 	void updatePreDynamics(TimeReal dt, TimeReal dtWallClock);
 	void updatePreDynamicsSubstep(TimeReal dtSubstep);
+	void updatePostDynamicsSubstep(TimeReal dtSubstep);
 	void updatePostDynamics();
 	void updateAttachments(TimeReal dt, TimeReal dtWallClock);
 

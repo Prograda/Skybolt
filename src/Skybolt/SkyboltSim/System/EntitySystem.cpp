@@ -49,6 +49,8 @@ void EntitySystem::updatePreDynamicsSubstep(double dtSubstep)
 				Vector3 force = mWorld->calcGravity(*position, body->getMass());
 				body->applyCentralForce(force);
 			}
+
+			entity->updatePostDynamicsSubstep(dtSubstep);
 		}
 	}
 }

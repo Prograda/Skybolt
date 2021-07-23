@@ -36,11 +36,31 @@ public:
 		return mControllers;
 	}
 
+	void addController(const std::string& name, const CameraControllerPtr& controller)
+	{
+		mControllers[name] = controller;
+	}
+
+	template <class T>
+	T* getControllerOfType() const
+	{
+		for (const auto&[name, controller] : mControllers)
+		{
+			T* result = dynamic_cast<T*>(controller.get());
+			if (result)
+			{
+				return result;
+			}
+		}
+		return nullptr;
+	}
+
 	boost::signals2::signal<void(const std::string&)> controllerSelected;
 	boost::signals2::signal<void(Entity*)> targetChanged;
 
 public:
 	// CameraController interface
+	void updatePostDynamicsSubstep(float dtSubstep);
 	void update(float dt) override;
 	void setInput(const Input& input) override;
 	Entity* getTarget() const override;
