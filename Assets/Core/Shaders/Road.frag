@@ -57,7 +57,7 @@ void main()
 	
 	color.rgb *= calcLambertDirectionalLight(lightDirection, normalWS) * scattering.sunIrradiance * lightVisibility
 #ifdef ENABLE_ATMOSPHERE
-		+ calcLambertAmbientLight(normalWS, scattering.sunIrradiance, scattering.skyIrradiance)
+		+ calcLambertAmbientLight(normalWS, calcGroundIrradiance(scattering.sunIrradiance, scattering.skyIrradiance), scattering.skyIrradiance)
 #endif
 		+ ambientLightColor;
 

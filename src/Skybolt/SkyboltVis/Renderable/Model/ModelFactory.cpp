@@ -94,6 +94,13 @@ public:
 	bool hasNormalMap = false;
 };
 
+// Converts from Blinn-Phong 'shininess' (specular exponent) to Beckmann roughness
+// From http://simonstechblog.blogspot.com/2011/12/microfacet-brdf.html
+static float specularExponentToRoughness(float exponent)
+{
+	return sqrt(2 / (exponent + 2));
+}
+
 class MaterialShaderAssignmentsModifier : public StateSetVisitor
 {
 public:
@@ -126,8 +133,10 @@ public:
 
 			if (specularity.length2() > 0 && specularExponent > 0)
 			{
+				const float roughness = specularExponentToRoughness(specularExponent);
+
 				stateSet.addUniform(new osg::Uniform("specularity", osg::Vec3f(specularity.r(), specularity.g(), specularity.b())));
-				stateSet.addUniform(new osg::Uniform("specularExponent", specularExponent));
+				stateSet.addUniform(new osg::Uniform("roughness", roughness));
 				stateSet.setDefine("ENABLE_SPECULAR");
 				stateSet.setDefine("ENABLE_ENVIRONMENT_MAP");
 			}

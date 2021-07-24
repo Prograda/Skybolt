@@ -48,7 +48,7 @@ static std::string preprocessIncludes(const std::string& source, const std::stri
 		throw std::runtime_error("header inclusion depth limit reached, might be caused by cyclic header inclusion");
 	using namespace std;
  
-	static const std::regex re("^[ ]*#[ ]*include[ ]+[\"<](.*)[\">].*");
+	static const std::regex re("^[ \t]*#[ ]*include[ ]+[\"<](.*)[\">].*");
 	stringstream input;
 	stringstream output;
 	input << source;
@@ -74,6 +74,13 @@ static std::string preprocessIncludes(const std::string& source, const std::stri
 	return output.str();
 }
 
+osg::Shader* readShaderFromString(osg::Shader::Type type, const std::string& source, const std::optional<std::string>& includeDirPath)
+{
+	std::string processedSource = includeDirPath ? preprocessIncludes(source, *includeDirPath) : source;
+	osg::Shader* shader = new osg::Shader(type, processedSource);
+	return shader;
+}
+
 osg::Shader* readShaderFile(osg::Shader::Type type, const std::string& filename)
 {
 	auto resolvedFilename = osgDB::Registry::instance()->findDataFile(filename, nullptr, osgDB::CASE_SENSITIVE);
@@ -85,9 +92,7 @@ osg::Shader* readShaderFile(osg::Shader::Type type, const std::string& filename)
 	std::string source = loadFileToString(resolvedFilename);
 	std::string includeDirPath = std::filesystem::path(filename).parent_path().string();
 
-	source = preprocessIncludes(source, includeDirPath);
-
-	osg::Shader* shader = new osg::Shader(type, source);
+	osg::Shader* shader = readShaderFromString(type, source, includeDirPath);
 	shader->setFileName(filename);
 	return shader;
 }

@@ -10,22 +10,25 @@
 
 float calcLambertDirectionalLight(vec3 L, vec3 N)
 {
-	return max(0.0, dot(L, N)) / M_PI;
+	return max(0.0f, dot(L, N)) / M_PI;
 }
 
 float calcLambertSkyLight(vec3 L, vec3 N)
 {
-	return (1.0 + dot(L, N)) * 0.5 / M_PI;
+	return (1.0f + dot(L, N)) * 0.5f / M_PI;
 }
 
-const vec3 groundAlbedo = vec3(0.3);
-const vec3 normalizedGroundReflectance = groundAlbedo / M_PI;
+const vec3 groundAlbedo = vec3(0.3f);
 
-vec3 calcLambertAmbientLight(vec3 normal, vec3 sunIrradiance, vec3 skyIrradiance)
+vec3 calcGroundIrradiance(vec3 sunIrradiance, vec3 skyIrradiance)
 {
-	vec3 groundReflectance = normalizedGroundReflectance * (sunIrradiance + skyIrradiance);
-	float groundWeight = (normal.z + 1.0) * 0.5;
-	return mix(skyIrradiance, groundReflectance, groundWeight) / M_PI;
+	return groundAlbedo / M_PI * (sunIrradiance + skyIrradiance);
+}
+
+vec3 calcLambertAmbientLight(vec3 normal, vec3 groundIrradiance, vec3 skyIrradiance)
+{
+	float groundWeight = (normal.z + 1.0f) * 0.5f;
+	return mix(skyIrradiance, groundIrradiance, groundWeight) / M_PI;
 }
 
 #endif // LAMBERT_H

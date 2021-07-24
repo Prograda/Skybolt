@@ -44,7 +44,7 @@ static ShaderProgramSourceFilesRegistry createShaderProgramSourceFilesRegistry()
 		}},
 		{ "model", {
 			{ osg::Shader::VERTEX, "Shaders/SimpleTextured.vert" },
-			{ osg::Shader::FRAGMENT, "Shaders/SimpleTexturedLambert.frag" }
+			{ osg::Shader::FRAGMENT, "Shaders/PrincipledBrdf.frag" }
 		}},
 		{ "modelText", {
 			{ osg::Shader::VERTEX, "Shaders/SimpleTextured.vert" },
