@@ -74,6 +74,7 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 		config.heightMap = textures.height.texture;
 		config.normalMap = textures.normal;
 		config.overallAlbedoMap = textures.albedo.texture;
+		config.attributeMap = textures.attribute ? textures.attribute->texture : nullptr;
 
 		config.heightMapUvScale = heightImageScale;
 		config.heightMapUvOffset = heightImageOffset;

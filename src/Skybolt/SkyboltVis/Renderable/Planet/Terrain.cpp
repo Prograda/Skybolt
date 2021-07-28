@@ -113,6 +113,12 @@ static void setupTerrainStateSet(osg::StateSet& ss, const TerrainConfig& config)
 	ss.setTextureAttributeAndModes(unit, config.overallAlbedoMap);
 	ss.addUniform(createUniformSampler2d("overallAlbedoSampler", unit++));
 
+	if (config.attributeMap)
+	{
+		ss.setTextureAttributeAndModes(unit, config.attributeMap);
+		ss.addUniform(createUniformSampler2d("attributeSampler", unit++));
+	}
+
 	if (auto uniformTechnique = dynamic_cast<const UniformDetailMappingTechnique*>(config.detailMappingTechnique.get()); uniformTechnique)
 	{
 		ss.setDefine("DETAIL_MAPPING_TECHNIQUE_UNIFORM");
