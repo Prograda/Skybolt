@@ -17,8 +17,11 @@ uniform sampler2D coverageDetailSampler2;
 float calcDensityLowRes2(sampler2D cloudSampler, vec2 uv)
 {
 	float cloudType;
-	float coverageDetail = sampleCoverageDetail(coverageDetailSampler2, uv, /* lod */ 0.0, cloudType);
-	float density = calcCloudDensityLowRes(cloudSampler, uv, /* heightMultiplier */ 1.0, coverageDetail);
+	vec2 lod = vec2(0.0);
+	float coverageBase = sampleBaseCloudCoverage(cloudSampler, uv);
+	float coverageDetail = sampleCoverageDetail(coverageDetailSampler2, uv, lod.x, cloudType);
+
+	float density = calcCloudDensityLowRes(coverageBase, coverageDetail, /* heightMultiplier */ 1.0, lod, /* padding multiplier */ 1.0);
 	return clamp(remap(density, 0.4, 0.6, 0.0, 1.0), 0.0, 1.0); // should look the same as smallest mipmap of the baseNoiseSampler texture
 }
 
@@ -64,7 +67,7 @@ float sampleCloudSkyOcclusionMaskAtCloudsUv(sampler2D cloudSampler, vec2 uv)
 	const int lod = 1; // use a lower res lod to get an average of occlusion in the area
 	float coverage = clamp(1.5 * (textureLod(cloudSampler, uv, lod).r) - 0.2, 0.0, 1.0);
 #else
-	float coverage = cloudCoverageFraction;
+	float coverage = max(0.0, cloudCoverageFraction*1.5-0.5);
 #endif
 	return mix(1.0, 0.1, coverage);
 }

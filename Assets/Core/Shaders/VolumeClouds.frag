@@ -33,11 +33,11 @@ uniform vec3 ambientLightColor;
 const float cloudLayerMaxHeight = 5000;
 const float cloudLayerMinHeight = 2000;
 const vec2 cloudTopZeroDensityHeight = vec2(3000, 5000);
-const vec2 cloudBottomZeroDensity = vec2(2400, 2000);
+const vec2 cloudBottomZeroDensity = vec2(2000, 2000);
 const vec2 cloudOcclusionStrength = vec2(0.25, 0.5);
-const vec2 cloudDensityMultiplier = vec2(0.005, 0.005);
+const vec2 cloudDensityMultiplier = vec2(0.005, 0.02);
 
-const vec3 noiseFrequencyScale = vec3(0.0002);
+const vec3 noiseFrequencyScale = vec3(0.00025);
 
 // Returns a semicircle over x in range [-1, 1]
 float semicircle(float x)
@@ -60,31 +60,39 @@ const float maximumStepSize = 500;
 const float stepSizeGrowthFactor = 1.002;
 const float maxRenderDistance = 300000;
 
-float calcDensityLowRes(vec2 uv, float height, out float cloudType, vec2 lod)
+float sampleDensityLowRes(vec2 uv, float height, out float cloudType, vec2 lod, float paddingMultiplier)
 {
+	float coverageBase = sampleBaseCloudCoverage(globalAlphaSampler, uv);
 	float coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod.x, cloudType);
 	float heightMultiplier = calcHeightMultiplier(height, cloudType);
-	return calcCloudDensityLowRes(globalAlphaSampler, uv, heightMultiplier, coverageDetail);
+	return calcCloudDensityLowRes(coverageBase, coverageDetail, heightMultiplier, lod, paddingMultiplier);
+}
+
+vec2 sampleDensityHighRes(vec2 uv, float height, out float cloudType, vec2 lod)
+{
+	float coverageBase = sampleBaseCloudCoverage(globalAlphaSampler, uv);
+	float coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod.x, cloudType);
+	float heightMultiplier = calcHeightMultiplier(height, cloudType);
+	return calcCloudDensityHighRes(coverageBase, coverageDetail, heightMultiplier, lod);
 }
 
 const float cloudChaos = 1.0;
 const float averageNoiseSamplerValue = cloudChaos * 0.5;
-		
+
 //! @param lod is 0 for zero detail, 1 where frequencies of pos*noiseFrequencyScale should be visible
 float calcDensity(vec3 pos, vec2 uv, vec2 lod, float height, out float cloudType)
 {
-	float density = calcDensityLowRes(uv, height, cloudType, lod);
-
+	vec2 densityAtLods = sampleDensityHighRes(uv, height, cloudType, lod);
+	float density = densityAtLods.r;
+	
 	// Apply detail
 	if (lod.y > 0)
 	{
-		float clampedLod = min(lod.y, 1.0);
-	
-		// MTODO: 3D noise texture has visible tiling artifacts when viewed along an axis, e.g at the equator. Need to fix this.
-		vec4 noise = textureLod(baseNoiseSampler, pos*noiseFrequencyScale, 0); // MTODO: tweak
+		vec4 noise = textureLod(baseNoiseSampler, pos*noiseFrequencyScale, 0);
 		
-		float filteredNoise = mix(averageNoiseSamplerValue, min(0.9, cloudChaos*noise.r), clampedLod); // filter cloud noise based on lod.
-		density = clamp(remap(density, filteredNoise, 1.0, 0.0, 1.0), 0.0, 1.0);		
+		float filteredNoise = min(0.9, cloudChaos * noise.r);
+		float highResDensity = clamp(remap(densityAtLods.g, filteredNoise, 1.0, 0.0, 1.0), 0.0, 1.0);
+		density = mix(density, highResDensity, min(lod.y, 1.0));
 		
 		// Apply high detail
 		
@@ -92,15 +100,9 @@ float calcDensity(vec3 pos, vec2 uv, vec2 lod, float height, out float cloudType
 #ifdef ENABLE_HIGH_DETAIL_CLOUDS
 		if (lod.y > 4)
 		{
-			//float highDetailStrength = min(lod.y - 4, 0.7);
 			float filteredNoise2 = textureLod(baseNoiseSampler, pos * noiseFrequencyScale * 3, 0).r;
-			density = clamp(remap(density, 0.6*filteredNoise2, 1.0, 0.0, 1.0), 0.0, 1.0);
 		}
 #endif
-	}
-	else
-	{
-		density = clamp(remap(density, averageNoiseSamplerValue, 1.0, 0.0, 1.0), 0.0, 1.0); // should look the same as smallest mipmap of the baseNoiseSampler texture
 	}
 	
 	return density * mix(cloudDensityMultiplier.x, cloudDensityMultiplier.y, cloudType);
@@ -216,6 +218,7 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 ligh
 		vec2 uv = cloudUvFromPosRelPlanet(pos);
 		float height = length(pos) - innerRadius;
 		float outCloudType;
+		
         float density = calcDensity(pos + vec3(cloudDisplacementMeters.xy,0), uv, lod, height, outCloudType);
 		
 		if (density > effectiveZeroDensity)
@@ -255,7 +258,8 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 ligh
 				uv = cloudUvFromPosRelPlanet(pos);
 				float height = length(pos) - innerRadius;
 				float outCloudType;
-				float density = calcDensityLowRes(uv, height, outCloudType, lod);
+				float padding = 1.5; // pad low res coverage in case high res exceeds low res bounds. TODO: fix and remove.
+				float density = sampleDensityLowRes(uv, height, outCloudType, lod, padding);
 				
 				// If no longer in empty space, go back one step and break
 				if (density > effectiveZeroDensity)
@@ -303,9 +307,9 @@ vec3 desaturate(vec3 c)
 	return vec3(length(c));
 }
 
-vec4 evaluateGlobalLowResColor(vec2 cloudsUv, vec3 irradiance)
+vec4 evaluateGlobalLowResColor(vec2 cloudsUv, vec3 irradiance, float rayFar)
 {
-	float alpha = textureLod(globalAlphaSampler, cloudsUv, 0).r; // MTODO: auto lod
+	float alpha = textureLod(globalAlphaSampler, cloudsUv, log2(rayFar/4000000)).r; // MTODO: auto lod
 	vec3 color = irradiance * alpha * oneOnFourPi;
 	color = mix(color, desaturate(color), 0.15); // desaturate color to simulate scattering. This makes sunsets less extreme.
 	return vec4(color, alpha);
@@ -400,7 +404,7 @@ void main()
 	vec3 directIrradiance = (sunIrradiance + skyIrradiance);
 	
 	float stepSize = initialStepSize;
-	stepSize = min(stepSize + rayNear / 10000, maximumStepSize);
+	stepSize = min(stepSize + rayNear / 4000, maximumStepSize);
 	vec2 lod;
 	lod.x = smoothstep(0.1, 1.0, stepSize / maximumStepSize);
 	lod.y = max(0.0, 150000 / (rayNear + 0.1) - 1.0);
@@ -424,7 +428,7 @@ void main()
 	}
 
 	vec2 cloudsUv = cloudUvFromPosRelPlanet(positionRelPlanetPlanetAxes);
-	vec4 lowResColor = evaluateGlobalLowResColor(cloudsUv, directIrradiance) * lowResBrightnessMultiplier;
+	vec4 lowResColor = evaluateGlobalLowResColor(cloudsUv, directIrradiance, rayFar) * lowResBrightnessMultiplier;
 	colorOut = mix(colorOut, vec4(lowResColor), lod.x);
 
 	if (hasSample)

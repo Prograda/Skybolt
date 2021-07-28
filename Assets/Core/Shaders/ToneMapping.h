@@ -55,8 +55,6 @@ vec3 toneMap_Uchimura(vec3 x, vec3 P, float a, vec3 m, vec3 l, vec3 c, vec3 b) {
     return T * w0 + L * w1 + S * w2;
 }
 
-// Tone Mapping curve by John Hable used in Uncharted 2.
-// See https://www.gdcvault.com/play/1012351/Uncharted-2-HDR
 vec3 toneMap_Uchimura(vec3 x) {
     const vec3 P = vec3(1.0);  // max display brightness
     const float a = 1.0;  // contrast
@@ -67,6 +65,8 @@ vec3 toneMap_Uchimura(vec3 x) {
     return toneMap_Uchimura(x, P, a, m, l, c, b);
 }
 
+// Tone Mapping curve by John Hable used in Uncharted 2.
+// See https://www.gdcvault.com/play/1012351/Uncharted-2-HDR
 vec3 toneMap_uncharted2(vec3 x)
 {
     float A = 0.15f;
