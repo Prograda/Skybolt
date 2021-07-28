@@ -45,7 +45,7 @@ osg::ref_ptr<osg::Image> MapboxElevationTileSource::createImage(const QuadTreeTi
 			s++; // a
 
 			int v = -10000 + int(float(r * 256 * 256 + g * 256 + b) * 0.1f);
-			if (v == 0)
+			if (v <= 0)
 			{
 				v = -500;
 			}
