@@ -52,7 +52,7 @@ private slots:
 	void open();
 	void save();
 	void saveAs();
-	void update();
+	void updateIfIntervalElapsed();
 	void about();
 	void exit();
 	void captureImage();
@@ -68,6 +68,8 @@ private slots:
 
 private:
 	void onEvent(const skybolt::Event& event) override;
+
+	void update();
 
 private:
 	void loadViewport(const QJsonObject& json);

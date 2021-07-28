@@ -60,6 +60,7 @@
 #include <SkyboltVis/Camera.h>
 #include <SkyboltVis/Shader/OsgShaderHelpers.h>
 #include <SkyboltVis/Scene.h>
+#include <SkyboltVis/Renderable/Planet/Planet.h>
 #include <SkyboltVis/Renderable/Arrows.h>
 #include <SkyboltVis/RenderTarget/RenderTargetSceneAdapter.h>
 #include <SkyboltVis/RenderTarget/ViewportHelpers.h>
@@ -508,7 +509,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	// Necessary because Qt may decide to render the viewport before the update timer fires for the first time.
 	update();
 
-	QTimer::singleShot(0, this, SLOT(update()));
+	QTimer::singleShot(0, this, SLOT(updateIfIntervalElapsed()));
 }
 
 MainWindow::~MainWindow()
@@ -565,15 +566,7 @@ static QString addSeparator(const QString& str)
 
 void MainWindow::update()
 {
-	double elapsed;
-	while (1) // this loop enforces max frame rate
-	{
-		elapsed = timer.elapsed();
-		if (elapsed - prevElapsedTime > minFrameDuration)
-			break;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	}
-
+	double elapsed = timer.elapsed();
 	float dt = (float)(elapsed - prevElapsedTime);
 	prevElapsedTime = elapsed;
 
@@ -643,8 +636,19 @@ void MainWindow::update()
 		status += "Processing tasks: " + QString::number(activeTasks);
 	}
 	statusBar()->showMessage(status);
+}
 
-	QTimer::singleShot(0, this, SLOT(update()));
+void MainWindow::updateIfIntervalElapsed()
+{
+	QTimer::singleShot(0, this, SLOT(updateIfIntervalElapsed()));
+
+	double elapsed = timer.elapsed();
+	if (elapsed - prevElapsedTime < minFrameDuration)
+	{
+		return;
+	}
+
+	update();
 }
 
 static bool isNamedEntityWithPosition(const Entity& entity)
@@ -1135,6 +1139,17 @@ void MainWindow::captureImage()
 
 	showCaptureImageSequenceDialog([=](double time, const QString& filename) {
 			mEngineRoot->scenario.timeSource.setTime(time);
+			update();
+			bool fullyLoadEachFrameBeforeProgressing = false;
+			if (fullyLoadEachFrameBeforeProgressing)
+			{
+				while (mEngineRoot->stats.tileLoadQueueSize > 0)
+				{
+					using namespace std::chrono_literals;
+					std::this_thread::sleep_for(1ms);
+					updateIfIntervalElapsed();
+				}
+			}
 			QImage image = mOsgWidget->grabFramebuffer();
 			image.save(filename);
 		}, defaultSequenceName, this);
