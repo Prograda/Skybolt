@@ -12,6 +12,7 @@
 #pragma import_defines ( ENABLE_NORMAL_MAP )
 #pragma import_defines ( ENABLE_SHADOWS )
 #pragma import_defines ( ENABLE_SPECULAR )
+#pragma import_defines ( UNIFORM_ALBEDO )
 
 #include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
@@ -31,14 +32,18 @@ in AtmosphericScattering scattering;
 
 out vec4 color;
 
-uniform sampler2D albedoSampler;
-uniform sampler2D normalSampler;
-
 uniform vec3 lightDirection;
 uniform vec3 ambientLightColor;
 uniform vec3 specularity;
 uniform float roughness;
 
+#ifdef UNIFORM_ALBEDO
+	uniform vec4 albedoColor;
+#else
+	uniform sampler2D albedoSampler;
+#endif
+
+uniform sampler2D normalSampler;
 uniform sampler2D environmentSampler;
 
 #ifdef ENABLE_DEPTH_OFFSET
@@ -104,7 +109,11 @@ void main()
 		environmentResult = evalPrincipledBrdfEnvironmentLight(args, environmentSampler);
 	}
 	
+#ifdef UNIFORM_ALBEDO
+	vec4 albedo = albedoColor;
+#else
 	vec4 albedo = texture(albedoSampler, texCoord.xy);
+#endif
 	color.a = albedo.a;
 
 	color.rgb = albedo.rgb * (directResult.diffuse * lightVisibility + environmentResult.diffuse + ambientLightColor);
