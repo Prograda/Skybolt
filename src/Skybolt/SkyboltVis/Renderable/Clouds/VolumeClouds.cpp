@@ -172,15 +172,15 @@ VolumeClouds::VolumeClouds(const VolumeCloudsConfig& config)
 	osg::ref_ptr<osg::Texture2D> depthTexture = createCloudDepthTexture(width, height);
 	
 	TextureGeneratorCameraFactory factory;
-	osg::ref_ptr<osg::Camera> camera = factory.createCamera({ mColorTexture, depthTexture }, stateSet, /* clear */ false);
+	osg::ref_ptr<osg::Camera> camera = factory.createCameraWithQuad({ mColorTexture, depthTexture }, stateSet, /* clear */ false);
 	mTransform->addChild(camera);
 
 	osg::StateSet* texturedQuadStateSet = createTexturedQuadStateSet(config.compositorProgram, mColorTexture, depthTexture);
-	makeStateSetTransparent(*texturedQuadStateSet);
+	makeStateSetTransparent(*texturedQuadStateSet, vis::TransparencyMode::PremultipliedAlpha);
 
 	mGeode->setStateSet(texturedQuadStateSet);
 #else
-	makeStateSetTransparent(*stateSet);
+	makeStateSetTransparent(*stateSet, vis::TransparencyMode::PremultipliedAlpha);
 	mGeode->setStateSet(stateSet);
 #endif
 	mGeode->addDrawable(quad);

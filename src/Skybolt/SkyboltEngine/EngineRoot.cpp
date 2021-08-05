@@ -55,7 +55,7 @@ static vis::ModelFactoryPtr createModelFactory(const vis::ShaderPrograms& progra
 	{
 		config.stateSetModifiers[name] = [=](osg::StateSet& stateSet, const osg::Material& material) {
 			stateSet.setAttribute(glassProgram);
-			vis::makeStateSetTransparent(stateSet);
+			vis::makeStateSetTransparent(stateSet, vis::TransparencyMode::PremultipliedAlpha);
 		};
 	}
 

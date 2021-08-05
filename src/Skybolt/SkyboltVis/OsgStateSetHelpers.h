@@ -56,7 +56,13 @@ inline osg::Uniform* createUniformSamplerTbo(const std::string& name, int id)
 	return uniform;
 }
 
-void makeStateSetTransparent(osg::StateSet& stateSet);
+enum class TransparencyMode
+{
+	PremultipliedAlpha, // source.rgb + destination.rgb * (1 - source.a)
+	Classic // source.rgb * source.a + destination.rgb * (1 - source.a)
+};
+
+void makeStateSetTransparent(osg::StateSet& stateSet, TransparencyMode transparencyMode);
 
 } // namespace vis
 } // namespace skybolt

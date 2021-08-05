@@ -80,7 +80,6 @@ osg::Geometry* createSphere(float radius, unsigned int rings, unsigned int secto
 	osg::Geometry* sphereGeometry = new osg::Geometry;
 
 	osg::Vec3Array* sphereVertices = new osg::Vec3Array;
-	osg::Vec3Array* sphereNormals = new osg::Vec3Array;
 	osg::Vec2Array* sphereTexCoords = new osg::Vec2Array;
 
 	float const R = 1. / (float)(rings - 1);
@@ -101,8 +100,6 @@ osg::Geometry* createSphere(float radius, unsigned int rings, unsigned int secto
 			sphereVertices->push_back(osg::Vec3(x * radius,
 				y * radius,
 				z * radius));
-
-			sphereNormals->push_back(osg::Vec3(x, y, z));
 		}
 	}
 

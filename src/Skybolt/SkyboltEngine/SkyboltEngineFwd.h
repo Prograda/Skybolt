@@ -34,6 +34,7 @@ class TriggerZone;
 class Updatable;
 class VisHud;
 class VisNameLabels;
+class VisObjectsComponent;
 class VisOrbits;
 
 typedef std::shared_ptr<ComponentFactory> ComponentFactoryPtr;
@@ -44,6 +45,7 @@ typedef std::shared_ptr<Plugin> PluginPtr;
 typedef std::shared_ptr<PolylineVisBinding> PolylineVisBindingPtr;
 typedef std::shared_ptr<SimVisBinding> SimVisBindingPtr;
 typedef std::shared_ptr<StateSequenceController> StateSequenceControllerPtr;
+typedef std::shared_ptr<VisObjectsComponent> VisObjectsComponentPtr;
 
 typedef std::function<double()> JulianDateProvider;
 
