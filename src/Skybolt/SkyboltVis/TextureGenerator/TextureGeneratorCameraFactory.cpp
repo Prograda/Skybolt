@@ -28,7 +28,7 @@ TextureGeneratorCameraFactory::~TextureGeneratorCameraFactory()
 {
 }
 
-osg::ref_ptr<osg::Camera> TextureGeneratorCameraFactory::createCamera(std::vector<osg::ref_ptr<osg::Texture>> outputTextures, const osg::ref_ptr<osg::StateSet>& stateSet, bool clear) const
+osg::ref_ptr<osg::Camera> TextureGeneratorCameraFactory::createCamera(std::vector<osg::ref_ptr<osg::Texture>> outputTextures, bool clear) const
 {
 	assert(!outputTextures.empty());
 	osg::ref_ptr<osg::Camera> camera = new osg::Camera;
@@ -39,9 +39,6 @@ osg::ref_ptr<osg::Camera> TextureGeneratorCameraFactory::createCamera(std::vecto
 	camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 	camera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
 		
-	// NOTE: we merge StateSet instead of setting, because Camera has it's own state already (e.g viewport) which we don't want to replace.
-	camera->getOrCreateStateSet()->merge(*stateSet);
-
 	// Ensure there is no depth buffer attached, otherwise we can't write to 3d texture layers.
 	// OSG tries to automatically add a depth buffer for historical reasons, because
 	// old drivers requred it. It's no longer needed. See https://groups.google.com/g/osg-users/c/_MksKA4Dmb4
@@ -56,8 +53,17 @@ osg::ref_ptr<osg::Camera> TextureGeneratorCameraFactory::createCamera(std::vecto
 	{
 		camera->attach(osg::Camera::BufferComponent(osg::Camera::COLOR_BUFFER0 + i), outputTextures[i], 0, face);
 	}
+	return camera;
+}
 
+osg::ref_ptr<osg::Camera> TextureGeneratorCameraFactory::createCameraWithQuad(std::vector<osg::ref_ptr<osg::Texture>> outputTextures, const osg::ref_ptr<osg::StateSet>& stateSet, bool clear) const
+{
+	osg::ref_ptr<osg::Camera> camera = createCamera(outputTextures, clear);
 	camera->addChild(mQuad->_getNode());
+
+	// NOTE: we merge StateSet instead of setting, because Camera has it's own state already (e.g viewport) which we don't want to replace.
+	camera->getOrCreateStateSet()->merge(*stateSet);
+
 	return camera;
 }
 

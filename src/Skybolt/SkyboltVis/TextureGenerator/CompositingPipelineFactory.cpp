@@ -62,7 +62,7 @@ osg::ref_ptr<osg::Group> CompositingPipelineFactory::createCompositingPipeline(c
 			}
 		}
 
-		auto camera = mTextureGeneratorCameraFactory->createCamera(stage.outputs, stateSet, stage.clear);
+		auto camera = mTextureGeneratorCameraFactory->createCameraWithQuad(stage.outputs, stateSet, stage.clear);
 		group->addChild(camera);
 	}
 

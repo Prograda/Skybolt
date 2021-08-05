@@ -20,7 +20,8 @@ public:
 	TextureGeneratorCameraFactory();
 	~TextureGeneratorCameraFactory();
 
-	osg::ref_ptr<osg::Camera> createCamera(std::vector<osg::ref_ptr<osg::Texture>> outputTextures, const osg::ref_ptr<osg::StateSet>& stateSet, bool clear = true) const;
+	osg::ref_ptr<osg::Camera> createCamera(std::vector<osg::ref_ptr<osg::Texture>> outputTextures, bool clear = true) const;
+	osg::ref_ptr<osg::Camera> createCameraWithQuad(std::vector<osg::ref_ptr<osg::Texture>> outputTextures, const osg::ref_ptr<osg::StateSet>& stateSet, bool clear = true) const;
 private:
 	std::unique_ptr<ScreenQuad> mQuad;
 };
