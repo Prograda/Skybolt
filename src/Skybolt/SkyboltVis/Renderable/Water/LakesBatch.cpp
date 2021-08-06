@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "LakesBatch.h"
+#include "SkyboltVis/OsgGeometryHelpers.h"
 #include "SkyboltVis/OsgImageHelpers.h"
 #include "SkyboltVis/OsgStateSetHelpers.h"
 #include "SkyboltVis/Camera.h"
@@ -94,9 +95,7 @@ osg::Geode* createLakes(const Lakes& lakes)
 	geometry->setNormalBinding(osg::Geometry::BIND_PER_VERTEX);
 
 	geometry->setTexCoordArray(0, uvBuffer);
-	geometry->setUseDisplayList(false);
-	geometry->setUseVertexBufferObjects(true);
-	geometry->setUseVertexArrayObject(true);
+	configureDrawable(*geometry);
 
 	geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
 

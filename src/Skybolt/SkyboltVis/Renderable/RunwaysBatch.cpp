@@ -80,9 +80,7 @@ static osg::Geometry* createGeometry(const MeshBuffers& buffers)
 	geometry->setNormalArray(buffers.normal);
 	geometry->setNormalBinding(osg::Geometry::BIND_PER_VERTEX);
 	geometry->setTexCoordArray(0, buffers.uv);
-	geometry->setUseDisplayList(false);
-	geometry->setUseVertexBufferObjects(true);
-	geometry->setUseVertexArrayObject(true);
+	configureDrawable(*geometry);
 
 	geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, buffers.index->size(), (GLuint*)buffers.index->getDataPointer()));
 	geometry->setComputeBoundingBoxCallback(createFixedBoundingBoxCallback(osg::BoundingBox())); // TODO: set bounds

@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "OsgGeometryFactory.h"
+#include "OsgGeometryHelpers.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 
 using namespace skybolt;
@@ -148,9 +149,7 @@ osg::Geometry* createQuad(const BoundingBox2f& box, QuadUpDirection upDir)
 	}
 	quad->setVertexArray(verts);
 	quad->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::TRIANGLE_STRIP, 0, 4));
-	quad->setUseDisplayList(false);
-	quad->setUseVertexBufferObjects(true);
-	quad->setUseVertexArrayObject(true);
+	configureDrawable(*quad);
 
 	return quad;
 }
@@ -185,9 +184,7 @@ osg::Geometry* createQuadWithUvs(const BoundingBox2f& box, QuadUpDirection upDir
 	quad->setTexCoordArray(0, uvs);
 
 	quad->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::TRIANGLE_STRIP, 0, 4));
-	quad->setUseDisplayList(false);
-	quad->setUseVertexBufferObjects(true);
-	quad->setUseVertexArrayObject(true);
+	configureDrawable(*quad);
 
 	return quad;
 }
@@ -224,9 +221,7 @@ osg::Geometry* createLineBox(const osg::BoundingBox& box)
 	// This time we simply use primitive, and hardwire the number 
 	// of coords to use since we know up front,
 	geometry->addPrimitiveSet(new osg::DrawElementsUShort(osg::PrimitiveSet::LINES, 24, indices));
-	geometry->setUseDisplayList(false);
-	geometry->setUseVertexBufferObjects(true);
-	geometry->setUseVertexArrayObject(true);
+	configureDrawable(*geometry);
 
 	return geometry;
 }

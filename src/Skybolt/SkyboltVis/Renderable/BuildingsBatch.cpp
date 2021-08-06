@@ -183,9 +183,7 @@ static osg::Geode* createBuildings(const Buildings& buildings, const BuildingTyp
 	geometry->setNormalBinding(osg::Geometry::BIND_PER_VERTEX);
 
 	geometry->setTexCoordArray(0, uvBuffer); 
-	geometry->setUseDisplayList(false); 
-    geometry->setUseVertexBufferObjects(true); 
-	geometry->setUseVertexArrayObject(true);
+	configureDrawable(*geometry);
 
     geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
 	geometry->setComputeBoundingBoxCallback(createFixedBoundingBoxCallback(bounds));

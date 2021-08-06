@@ -14,12 +14,6 @@
 namespace skybolt {
 namespace vis {
 
-enum class RenderPass
-{
-	ShadowCaster,
-	Main
-};
-
 class VisObject
 {
 public:

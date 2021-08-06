@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 
-#include "SkyboltVis/Renderable/Arrows.h"
+#include "Arrows.h"
+#include "SkyboltVis/OsgGeometryHelpers.h"
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -82,9 +83,7 @@ void Arrows::setSegments(const std::vector<Vec3Segment>& segments)
 
 		// Create new geometry
 		mGeometry = new osg::Geometry;
-		mGeometry->setUseDisplayList(false);
-		mGeometry->setUseVertexBufferObjects(true);
-		mGeometry->setUseVertexArrayObject(true);
+		configureDrawable(*mGeometry);
 		mGeode->addDrawable(mGeometry);
 
 		// Add points to geometry

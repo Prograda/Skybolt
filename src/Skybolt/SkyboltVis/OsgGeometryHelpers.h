@@ -29,5 +29,7 @@ inline osg::ref_ptr<FixedBoundingBoxCallback> createFixedBoundingBoxCallback(con
 	return new FixedBoundingBoxCallback(boundingBox);
 }
 
+void configureDrawable(osg::Drawable& drawable);
+
 } // namespace vis
 } // namespace skybolt

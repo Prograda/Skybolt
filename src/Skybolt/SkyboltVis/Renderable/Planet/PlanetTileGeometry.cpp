@@ -81,9 +81,7 @@ osg::Geometry* createPlanetTileGeometry(const osg::Vec3d& tileCenter, const Box2
 
 	geometry->setVertexArray(posBuffer);
 	geometry->setTexCoordArray(0, uvBuffer);
-	geometry->setUseDisplayList(false);
-	geometry->setUseVertexBufferObjects(true);
-	geometry->setUseVertexArrayObject(true);
+	vis::configureDrawable(*geometry);
 	geometry->setComputeBoundingBoxCallback(createFixedBoundingBoxCallback(bounds));
 
 	geometry->addPrimitiveSet(new osg::DrawElementsUInt(toOsgPrimitiveType(type), indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));

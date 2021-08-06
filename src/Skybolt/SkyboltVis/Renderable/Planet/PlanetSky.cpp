@@ -8,6 +8,7 @@
 #include "PlanetSky.h"
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/OsgGeometryFactory.h"
+#include <SkyboltVis/OsgGeometryHelpers.h>
 #include "SkyboltVis/RenderContext.h"
 
 #include <osg/BlendEquation>
@@ -50,10 +51,7 @@ PlanetSky::PlanetSky(const PlanetSkyConfig& config) :
 	radius(config.radius)
 {
 	osg::Geometry* geometry = createSphere(config.radius, 256, 128);
-
-	geometry->setUseDisplayList(false);
-	geometry->setUseVertexBufferObjects(true);
-	geometry->setUseVertexArrayObject(true);
+	vis::configureDrawable(*geometry);
 
 	mGeode = new osg::Geode();
 	mGeode->setCullingActive(false);

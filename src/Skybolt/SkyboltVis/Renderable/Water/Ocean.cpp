@@ -9,6 +9,7 @@
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/Scene.h"
 #include "SkyboltVis/OsgGeometryFactory.h"
+#include "SkyboltVis/OsgGeometryHelpers.h"
 #include "SkyboltVis/RenderContext.h"
 
 #include <osg/CullFace>
@@ -36,9 +37,7 @@ osg::Node* createPlane(const osg::Vec2f &size)
     osg::Geometry *geometry = new osg::Geometry();
 
     geometry->setVertexArray(posBuffer);
-	geometry->setUseDisplayList(false); 
-    geometry->setUseVertexBufferObjects(true); 
-	geometry->setUseVertexArrayObject(true);
+	configureDrawable(*geometry);
 	geometry->setCullingActive(false);
 
     geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));

@@ -194,9 +194,7 @@ static osg::Geode* createRoads(const Roads& roads)
 	geometry->setNormalArray(normalBuffer);
 	geometry->setNormalBinding(osg::Geometry::BIND_PER_VERTEX);
 	geometry->setTexCoordArray(0, uvBuffer); 
-	geometry->setUseDisplayList(false); 
-    geometry->setUseVertexBufferObjects(true); 
-	geometry->setUseVertexArrayObject(true);
+	configureDrawable(*geometry);
 
     geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
 	geometry->setComputeBoundingBoxCallback(createFixedBoundingBoxCallback(osg::BoundingBox())); // TODO: set bounds
@@ -278,6 +276,7 @@ static void createRegion(const PolyRegion& region, osg::Vec3Array* posBuffer, os
 
 static osg::Geode* createRegions(const PolyRegions& regions)
 {
+	// MTODO: cleanup?
 	osg::Vec3Array* posBuffer = new osg::Vec3Array();
 	osg::Vec3Array* normalBuffer = new osg::Vec3Array();
 	osg::Vec2Array* uvBuffer = new osg::Vec2Array();
@@ -294,9 +293,7 @@ static osg::Geode* createRegions(const PolyRegions& regions)
 	geometry->setNormalBinding(osg::Geometry::BIND_PER_VERTEX);
 
 	geometry->setTexCoordArray(0, uvBuffer);
-	geometry->setUseDisplayList(false);
-	geometry->setUseVertexBufferObjects(true);
-	geometry->setUseVertexArrayObject(true);
+	configureDrawable(*geometry);
 
 	geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
 

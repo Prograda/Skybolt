@@ -39,9 +39,7 @@ osg::Geometry* createGeometry(const std::vector<BillboardForest::Tree>& trees, c
 	}
 
     geometry->setVertexArray(vertPositions);
-	geometry->setUseDisplayList(false); 
-    geometry->setUseVertexBufferObjects(true); 
-	geometry->setUseVertexArrayObject(true);
+	vis::configureDrawable(*geometry);
 
 	double maxForestAltitude = 9000;
 	osg::Vec3 halfBoundsWidth(tileBoundsMeters.x() * 0.5, tileBoundsMeters.y() * 0.5, maxForestAltitude);

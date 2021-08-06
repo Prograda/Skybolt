@@ -7,6 +7,7 @@
 #include "Terrain.h"
 #include "OsgGeocentric.h"
 #include "OsgGeometryFactory.h"
+#include "OsgGeometryHelpers.h"
 #include "OsgStateSetHelpers.h"
 #include "PlanetTileGeometry.h"
 
@@ -88,9 +89,7 @@ static osg::Node* createFlatTileGeode(const osg::Vec2f &size)
 
     geometry->setVertexArray(posBuffer);
 	geometry->setTexCoordArray(0, uvBuffer); 
-	geometry->setUseDisplayList(false); 
-    geometry->setUseVertexBufferObjects(true); 
-	geometry->setUseVertexArrayObject(true);
+	configureDrawable(*geometry);
 
     geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::PATCHES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
     geode->addDrawable(geometry);

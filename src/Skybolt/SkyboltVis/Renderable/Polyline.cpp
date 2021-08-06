@@ -6,6 +6,7 @@
 
 
 #include "Polyline.h"
+#include "OsgGeometryHelpers.h"
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -37,9 +38,7 @@ void Polyline::setPoints(const osg::ref_ptr<osg::Vec3Array>& points)
 	{
 		// Create new geometry
 		mGeometry = new osg::Geometry;
-		mGeometry->setUseDisplayList(false);
-		mGeometry->setUseVertexBufferObjects(true);
-		mGeometry->setUseVertexArrayObject(true);
+		configureDrawable(*mGeometry);
 		mGeode->addDrawable(mGeometry);
 
 		// Add points to geometry
