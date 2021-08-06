@@ -26,7 +26,7 @@ public:
 
 	void setMaxRenderDistance(float distance);
 
-	void setVisibilityCategoryMask(uint32_t mask);
+	void setVisibilityCategoryMask(uint32_t mask) override;
 
 private:
 	void updatePreRender(const RenderContext& context) override;

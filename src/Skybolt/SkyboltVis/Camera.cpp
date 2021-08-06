@@ -71,6 +71,7 @@ void Camera::updateOsgCameraGeometry(osg::Camera& camera) const
 {
 	camera.setViewMatrix(mViewMatrix);
 	camera.setProjectionMatrix(mProjectionMatrix);
+	camera.setCullMask(mCullMask);
 }
 
 void Camera::updateViewMatrix()

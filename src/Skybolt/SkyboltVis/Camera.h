@@ -43,6 +43,8 @@ public:
 	osg::Matrix getViewMatrix() const { return mViewMatrix; }
 	osg::Matrix getProjectionMatrix() const { return mProjectionMatrix; }
 
+	void setVisibilityCategoryMask(uint32_t mask) { mCullMask = mask; }
+
 private:
 	void updateViewMatrix();
 	void updateProjectionMatrix();
@@ -57,6 +59,7 @@ private:
 	float mNear;
 	float mFar;
 	boost::optional<osg::Plane> mObliqueClippingPlane;
+	uint32_t mCullMask = ~0;
 };
 
 } // namespace vis
