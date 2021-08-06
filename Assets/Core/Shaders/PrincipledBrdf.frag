@@ -99,7 +99,7 @@ void main()
 		args.dotNV = dotNV;
 		args.normal = normal;
 		args.viewDirection = viewDirection;
-		args.groundIrradiance = calcGroundIrradiance(visibleSunIrradiance, scattering.skyIrradiance);
+		args.groundIrradiance = calcGroundIrradiance(visibleSunIrradiance, scattering.skyIrradiance, lightDirection);
 		args.skyIrradiance = scattering.skyIrradiance;
 	#ifdef ENABLE_SPECULAR
 		args.specularF0 = specularity;

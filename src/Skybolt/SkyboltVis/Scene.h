@@ -64,6 +64,7 @@ private:
 	osg::Uniform* mDirectLightColorUniform;
 	osg::Uniform* mAmbientLightColorUniform;
 	osg::Uniform* mWrappedNoiseOriginUniform;
+	osg::Uniform* mGroundIrradianceMultiplierUniform;
 	osg::Vec3f mWrappedNoiseOrigin;
 	float mWrappedNoisePeriod;
 };

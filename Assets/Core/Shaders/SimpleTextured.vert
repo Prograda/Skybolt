@@ -23,7 +23,6 @@ out vec3 normalWS;
 out vec3 tangentWS;
 out vec3 positionRelCamera;
 out float logZ;
-out vec3 sunIrradiance;
 out vec3 shadowTexCoord;
 out AtmosphericScattering scattering;
 
@@ -56,7 +55,8 @@ void main()
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
 	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
 #else
-	sunIrradiance = GetSunIrradianceInSpace();
+	scattering.sunIrradiance = GetSunIrradianceInSpace();
+	scattering.skyIrradiance = vec3(0);
 #endif
 	shadowTexCoord = (shadowProjectionMatrix0 * positionWS).xyz;
 }

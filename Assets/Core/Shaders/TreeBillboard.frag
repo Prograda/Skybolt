@@ -45,9 +45,17 @@ void main()
 	float lightVisibility = 1.0;
 #endif
 	
+	float direct = calcLambertDirectionalLight(lightDirection, normal);
+	
+	float fadeOut = fragmentViewDistance / 10000;
+	direct = mix(direct, 0.1, fadeOut);
+			   
+	
 	color.rgb = randomizeColor(color.rgb, perTreeUnitRandom);
-	color.rgb *= calcLambertDirectionalLight(lightDirection, normal) * scattering.sunIrradiance * lightVisibility
-			   + calcLambertAmbientLight(normal, calcGroundIrradiance(scattering.sunIrradiance, scattering.skyIrradiance), scattering.skyIrradiance) + ambientLightColor;	
+	color.rgb *= direct * scattering.sunIrradiance * lightVisibility
+			   + calcLambertAmbientLight(normal, calcGroundIrradiance(scattering.sunIrradiance, scattering.skyIrradiance), scattering.skyIrradiance, lightDirection) + ambientLightColor;	
+			   
+
 	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;
 
 	gl_FragDepth = logarithmicZ_fragmentShader(logZ);

@@ -81,8 +81,8 @@ void main()
 #ifdef CAST_SHADOWS
 	posRelCamera = vec3(worldPos.xyz - viewCameraPosition);
 #endif
-	fragmentViewDistance = length(posRelCamera) + yawIndex * 300;
-	//float visibility = clamp((maxVisibilityRange*1.1 - fragmentViewDistance)*0.001, 0.0f, 1.0f);
+	fragmentViewDistance = length(posRelCamera) + yawIndex * 1000;
+	//float visibility = clamp((maxVisibilityRange - fragmentViewDistance)*0.0005, 0.0f, 1.0f);
 	float visibility = (fragmentViewDistance < maxVisibilityRange) ? 1.0 : 0.0;
 	
 	vec3 posOffset = rightDir * (x - 0.5) * billboardSize.x + upDir * y * billboardSize.y * visibility;
@@ -106,7 +106,7 @@ void main()
 	float horizontalNormalScale = 2.5; // scale normal so that it reaches 1 at the edge of the tree. This accounts for wasted texture space around the tree texture.
 	normal = rightDir * 2.5 * (x - 0.5) + upDir * y;
 	normal.xy -= forwardDirH.xy * sqrt(max(0.0, (1.0 - dot(normal,normal))));
-	
+
 	float occlusion = y;
 	
 	// Atmospheric scattering

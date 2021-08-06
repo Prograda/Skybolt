@@ -94,6 +94,8 @@ public:
 
 	float calcAtmosphericDensity(const osg::Vec3f& position) const;
 
+	double getInnerRadius() const { return mInnerRadius; }
+
 public:
 	// RootNode Implementation
 	void setPosition(const osg::Vec3d &position) override;

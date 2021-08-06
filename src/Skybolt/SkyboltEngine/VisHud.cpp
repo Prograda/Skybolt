@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "VisHud.h"
+#include <SkyboltVis/OsgGeometryHelpers.h>
 
 #include <osg/Geode>
 #include <osgText/Text>
@@ -184,9 +185,7 @@ void VisHud::traverse(osg::NodeVisitor& visitor)
 			osg::Geometry* geom = new osg::Geometry;
 			geom->setVertexArray(mLineVertices);
 			geom->addPrimitiveSet(new osg::DrawArrays(GL_LINES, 0, mLineVertices->size()));
-			geom->setUseDisplayList(false);
-			geom->setUseVertexBufferObjects(true);
-			geom->setUseVertexArrayObject(true);
+			vis::configureDrawable(*geom);
 			geom->setCullingActive(false);
 			mPrimitivesGeode->addDrawable(geom);
 		}
@@ -196,9 +195,7 @@ void VisHud::traverse(osg::NodeVisitor& visitor)
 			osg::Geometry* geom = new osg::Geometry;
 			geom->setVertexArray(mQuadVertices);
 			geom->addPrimitiveSet(new osg::DrawArrays(GL_QUADS, 0, mQuadVertices->size()));
-			geom->setUseDisplayList(false);
-			geom->setUseVertexBufferObjects(true);
-			geom->setUseVertexArrayObject(true);
+			vis::configureDrawable(*geom);
 			geom->setCullingActive(false);
 			mPrimitivesGeode->addDrawable(geom);
 		}

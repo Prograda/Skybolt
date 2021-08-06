@@ -33,7 +33,6 @@
 #include <SkyboltVis/Camera.h>
 #include <SkyboltVis/Light.h>
 #include <SkyboltVis/OsgImageHelpers.h>
-
 #include <SkyboltVis/OsgStateSetHelpers.h>
 #include <SkyboltVis/Scene.h>
 #include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
@@ -143,8 +142,6 @@ private:
 	const Positionable* mAttachedBody;
 	vis::RootNodePtr mVisObject;
 };
-
-typedef std::shared_ptr<VisObjectsComponent> VisObjectsComponentPtr;
 
 static osg::Vec3f readVec3f(const nlohmann::json& j)
 {

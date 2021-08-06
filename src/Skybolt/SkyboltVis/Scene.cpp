@@ -55,6 +55,9 @@ Scene::Scene() :
 	ss->addUniform(mWrappedNoiseOriginUniform);
 
 	ss->addUniform(new osg::Uniform("wrappedNoisePeriod", mWrappedNoisePeriod));
+
+	mGroundIrradianceMultiplierUniform = new osg::Uniform("groundIrradianceMultiplier", 0.f);
+	ss->addUniform(mGroundIrradianceMultiplierUniform);
 }
 
 Scene::~Scene()
@@ -78,6 +81,17 @@ void Scene::updatePreRender(const RenderContext& context)
 	mLightDirectionUniform->set(-getPrimaryLightDirection());
 
 	mWrappedNoiseOriginUniform->set(mWrappedNoiseOrigin);
+
+	{
+		float multiplier = 0.f;
+		if (mPrimaryPlanet)
+		{
+			float planetRadius = float(mPrimaryPlanet->getInnerRadius());
+			float altitude = float((context.camera.getPosition() - mPrimaryPlanet->getPosition()).length()) - planetRadius;
+			multiplier = glm::clamp(glm::mix(1.f, 0.f, altitude / planetRadius), 0.f, 1.f);
+		}
+		mGroundIrradianceMultiplierUniform->set(multiplier);
+	}
 
 	for (VisObject* object : mObjects)
 	{
