@@ -51,7 +51,7 @@ CascadedShadowMapGenerator::CascadedShadowMapGenerator(osg::ref_ptr<osg::Program
 
 void CascadedShadowMapGenerator::update(const vis::Camera& viewCamera, const osg::Vec3& lightDirection, const osg::Vec3& wrappedNoiseOrigin)
 {
-	const float maxRange = 20000;
+	const float maxRange = 2000;
 	std::vector<float> cascadeBoundingDistances;
 	if (false) // Automatic split calculation. TODO: improve results
 	{
@@ -61,7 +61,7 @@ void CascadedShadowMapGenerator::update(const vis::Camera& viewCamera, const osg
 	}
 	else
 	{
-		cascadeBoundingDistances = {0, 500, 2000, 6000, maxRange};
+		cascadeBoundingDistances = {0, 50, 200, 600, maxRange};
 	}
 
 	mMaxShadowViewDistance->set(cascadeBoundingDistances.back());

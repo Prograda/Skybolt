@@ -6,6 +6,7 @@
 
 #version 440 core
 
+#pragma import_defines ( CAST_SHADOWS )
 #pragma import_defines ( ENABLE_ATMOSPHERE )
 #pragma import_defines ( ENABLE_NORMAL_MAP )
 
@@ -37,6 +38,11 @@ uniform sampler2D cloudSampler;
 void main()
 {
 	gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;
+	
+#ifdef CAST_SHADOWS
+	return;
+#endif
+	
 	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
 	
 	texCoord = osg_MultiTexCoord0.xyz;

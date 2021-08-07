@@ -10,6 +10,7 @@
 
 #include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
+#include "GroundIrradiance.h"
 #include "Trees.h"
 #include "Brdfs/Lambert.h"
 #include "Shadows/Shadows.h"

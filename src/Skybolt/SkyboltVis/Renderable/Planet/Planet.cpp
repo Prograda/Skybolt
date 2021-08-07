@@ -339,6 +339,7 @@ static osg::ref_ptr<osg::Texture2D> createSrgbTexture(const osg::ref_ptr<osg::Im
 	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
 	texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR_MIPMAP_LINEAR);
 	texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+	texture->setMaxAnisotropy(8);
 	return texture;
 }
 
@@ -394,7 +395,6 @@ Planet::Planet(const PlanetConfig& config) :
 	mInnerRadius(config.innerRadius),
 	mPlanetGroup(new osg::Group),
 	mTransform(new osg::MatrixTransform),
-	mShadowScenePlanetTransform(new osg::MatrixTransform),
 	mShadowSceneGroup(new osg::Group),
 	mPlanetSurfaceListener(new MyPlanetSurfaceListener(this))
 {
@@ -660,15 +660,13 @@ Planet::Planet(const PlanetConfig& config) :
 			ss->setDefine("ENABLE_SHADOWS");
 		}
 
-		mShadowScenePlanetTransform->addChild(buildingsGroup);
-		mShadowScenePlanetTransform->addChild(mPlanetSurface->getGroup());
 		mShadowSceneGroup->getOrCreateStateSet()->setDefine("CAST_SHADOWS");
-		mShadowSceneGroup->addChild(mShadowScenePlanetTransform);
-		mShadowSceneGroup->addChild(mForestGroup);
+
+		mShadowSceneGroup->addChild(mScene->_getGroup());
 		for (int i = 0; i < mShadowMapGenerator->getCascadeCount(); ++i)
 		{
 			mShadowMapGenerator->getCamera(i)->addChild(mShadowSceneGroup);
-			mScene->_getGroup()->addChild(mShadowMapGenerator->getCamera(i));
+			mScene->_getGroup()->getParent(0)->addChild(mShadowMapGenerator->getCamera(i));
 		}
 
 		if (false) // debug shadows
@@ -830,7 +828,6 @@ void Planet::updatePreRender(const RenderContext& context)
 {
 	if (mShadowMapGenerator)
 	{
-		mShadowScenePlanetTransform->setMatrix(mTransform->getMatrix());
 		mShadowMapGenerator->update(context.camera, context.lightDirection, mScene->getWrappedNoiseOrigin());
 	}
 

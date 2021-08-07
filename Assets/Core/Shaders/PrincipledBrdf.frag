@@ -6,6 +6,7 @@
 
 #version 440 core
 
+#pragma import_defines ( CAST_SHADOWS )
 #pragma import_defines ( ENABLE_ATMOSPHERE )
 #pragma import_defines ( ENABLE_DEPTH_OFFSET )
 #pragma import_defines ( ENABLE_ENVIRONMENT_MAP )
@@ -16,6 +17,7 @@
 
 #include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
+#include "GroundIrradiance.h"
 #include "NormalMapping.h"
 #include "Brdfs/PrincipledBrdfDirectionalLight.h"
 #include "Brdfs/PrincipledBrdfEnvironmentLight.h"
@@ -52,6 +54,9 @@ uniform sampler2D environmentSampler;
 
 void main()
 {
+#ifdef CAST_SHADOWS
+	return;
+#endif
 	float fragmentViewDistance = length(positionRelCamera);
 
 #ifdef ENABLE_NORMAL_MAP
@@ -99,7 +104,7 @@ void main()
 		args.dotNV = dotNV;
 		args.normal = normal;
 		args.viewDirection = viewDirection;
-		args.groundIrradiance = calcGroundIrradiance(visibleSunIrradiance, scattering.skyIrradiance, lightDirection);
+		args.groundIrradiance = calcGroundIrradiance(scattering.sunIrradiance, scattering.skyIrradiance, lightDirection);
 		args.skyIrradiance = scattering.skyIrradiance;
 	#ifdef ENABLE_SPECULAR
 		args.specularF0 = specularity;
