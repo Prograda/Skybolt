@@ -10,6 +10,7 @@
 #include <SkyboltSim/System/EntitySystem.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltVis/OsgStateSetHelpers.h>
+#include <SkyboltVis/TextureCache.h>
 #include <SkyboltVis/Renderable/Model/ModelFactory.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 #include <SkyboltCommon/File/FileUtility.h>
@@ -183,6 +184,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	context.fileLocator = locateFile;
 	context.assetPackagePaths = mAssetPackagePaths;
 	context.engineSettings = config.engineSettings;
+	context.textureCache = std::make_shared<vis::TextureCache>();
 
 	file::Paths paths = getFilesWithExtensionInDirectoryInAssetPackages(mAssetPackagePaths, "Entities", ".json");
 	entityFactory.reset(new EntityFactory(context, paths));

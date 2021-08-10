@@ -55,7 +55,7 @@ void BulletDynamicBodyComponent::updatePreDynamics(TimeReal dt, TimeReal dtWallC
 	}
 }
 
-void BulletDynamicBodyComponent::updatePostDynamics()
+void BulletDynamicBodyComponent::updatePostDynamics(TimeReal dt, TimeReal dtWallClock)
 {
 	// Calculate new node position
 	btVector3 worldSpaceCenterOfMass = quatRotate(mBody->getOrientation(), mCenterOfMass);

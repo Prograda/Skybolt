@@ -29,7 +29,7 @@ public:
 	~BulletDynamicBodyComponent() override;
 
 	void updatePreDynamics(TimeReal dt, TimeReal dtWallClock) override;
-	void updatePostDynamics() override;
+	void updatePostDynamics(TimeReal dt, TimeReal dtWallClock) override;
 
 	void setDynamicsEnabled(bool enabled) override;
 

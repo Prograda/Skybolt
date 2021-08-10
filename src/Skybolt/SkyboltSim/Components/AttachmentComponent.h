@@ -16,7 +16,7 @@ namespace sim {
 
 struct AttachmentParams
 {
-	std::string entityTemplate;
+	std::string entityTemplate; //!< Type of entity to restrict attachments to. Leave empty to allow all types.
 	Vector3 positionRelBody;
 	Quaternion orientationRelBody;
 };
@@ -34,7 +34,7 @@ public:
 
 	const std::string& getEntityTemplate() const { return mParams.entityTemplate; }
 
-	void updatePostDynamics() override;
+	void updatePostDynamics(TimeReal dt, TimeReal dtWallClock) override;
 
 	void setPositionRelBody(const Vector3& positionRelBody) { mParams.positionRelBody = positionRelBody; }
 	void setOrientationRelBody(const Quaternion& orientationRelBody) { mParams.orientationRelBody = orientationRelBody; }

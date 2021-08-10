@@ -54,7 +54,7 @@ void AttachmentComponent::resetTarget(Entity* target)
 	}
 }
 
-void AttachmentComponent::updatePostDynamics()
+void AttachmentComponent::updatePostDynamics(TimeReal dt, TimeReal dtWallClock)
 {
 	setTargetStateToParent();
 }

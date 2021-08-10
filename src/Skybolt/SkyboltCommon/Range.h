@@ -32,5 +32,6 @@ struct Range
 };
 
 typedef Range<int> IntRange;
+typedef Range<double> DoubleRange;
 
 } // namespace skybolt

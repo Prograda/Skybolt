@@ -13,6 +13,7 @@
 #include "GlobalDefines.h"
 #include "Planet.h"
 #include "RaySphereIntersection.h"
+#include "Brdfs/HenyeyGreenstein.h"
 
 in vec3 vertCameraWorldDir;
 in float cameraAltitude;
@@ -108,14 +109,6 @@ float calcDensity(vec3 pos, vec2 uv, vec2 lod, float height, out float cloudType
 	return density * mix(cloudDensityMultiplier.x, cloudDensityMultiplier.y, cloudType);
 }
 
-const float oneOnFourPi = 0.0795774715459;
-
-vec4 henyeyGreenstein(float cosAngle, vec4 eccentricity)
-{
-    vec4 eccentricity2 = eccentricity*eccentricity;
-    return oneOnFourPi * ((vec4(1.0) - eccentricity2) / pow(vec4(1.0) + eccentricity2 - 2.0*eccentricity*cosAngle, vec4(3.0/2.0)));
-}
-
 const vec3 RANDOM_VECTORS[6] = vec3[6]
 (
 	vec3( 0.38051305f,  0.92453449f, -0.02111345f),
@@ -192,10 +185,7 @@ float effectiveZeroDensity = 0.00001;
 vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, vec2 lod, vec3 lightDir, vec3 sunIrradiance, out float meanCloudFrontDistance)
 {
 	float cosAngle = dot(lightDir, dir);
-
-	// Tuned to match The "Watoo" phase function for clouds, from Bouthors et al.
-	// See http://wiki.nuaj.net/index.php?title=Clouds
-	float hg = dot(henyeyGreenstein(cosAngle, vec4(-0.2, 0.3, 0.96, 0)), vec4(0.5, 0.5, 0.03, 0.0));
+	float hg = watooHenyeyGreenstein(cosAngle);
 	
     // The color that is accumulated during raymarching
     vec3 totalRadiance = vec3(0, 0, 0);

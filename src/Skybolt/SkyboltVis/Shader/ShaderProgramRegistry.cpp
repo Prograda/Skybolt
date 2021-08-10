@@ -110,6 +110,10 @@ static ShaderProgramSourceFilesRegistry createShaderProgramSourceFilesRegistry()
 			{ osg::Shader::VERTEX, "Shaders/OceanStatic.vert" },
 			{ osg::Shader::FRAGMENT, "Shaders/Ocean.frag" }
 		}},
+		{ "particles", {
+			{ osg::Shader::VERTEX, "Shaders/Particles.vert" },
+			{ osg::Shader::FRAGMENT, "Shaders/Particles.frag" }
+		}},
 		{ "planet", {
 			{ osg::Shader::VERTEX, "Shaders/Planet.vert" },
 			{ osg::Shader::FRAGMENT, "Shaders/Planet.frag" }

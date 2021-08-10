@@ -54,10 +54,10 @@ void Entity::updatePostDynamicsSubstep(TimeReal dtSubstep)
 		c->updatePostDynamicsSubstep(dtSubstep);
 }
 
-void Entity::updatePostDynamics()
+void Entity::updatePostDynamics(TimeReal dt, TimeReal dtWallClock)
 {
 	for (const ComponentPtr& c : mComponents.getAllItems())
-		c->updatePostDynamics();
+		c->updatePostDynamics(dt, dtWallClock);
 }
 
 void Entity::updateAttachments(TimeReal dt, TimeReal dtWallClock)

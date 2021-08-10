@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "OsgTextureHelpers.h"
+#include "OsgImageHelpers.h"
 #include <osgDB/ReadFile>
 #include <osgDB/WriteFile>
 #include <iostream>
@@ -75,6 +76,17 @@ osg::ref_ptr<osg::Image> readTexture3dFromSeparateFiles(const std::string& filen
 	}
 
 	return dstImage;
+}
+
+osg::ref_ptr<osg::Texture2D> createTilingSrgbTexture(const osg::ref_ptr<osg::Image>& image)
+{
+	osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
+	texture->setInternalFormat(toSrgbInternalFormat(texture->getInternalFormat()));
+	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
+	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+	texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR_MIPMAP_LINEAR);
+	texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+	return texture;
 }
 
 } // namespace vis

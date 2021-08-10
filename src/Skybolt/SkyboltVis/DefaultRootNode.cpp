@@ -10,10 +10,10 @@
 using namespace skybolt::vis;
 
 DefaultRootNode::DefaultRootNode() :
-	mTransform(new osg::MatrixTransform),
-	mSwitch(new osg::Switch)
+	mSwitch(new osg::Switch),
+	mTransform(new osg::MatrixTransform)
 {
-	mTransform->addChild(mSwitch);
+	mSwitch->addChild(mTransform);
 }
 
 DefaultRootNode::~DefaultRootNode()

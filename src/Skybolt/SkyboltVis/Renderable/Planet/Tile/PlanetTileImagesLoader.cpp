@@ -129,7 +129,7 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 					return defaultLandMask;
 				}
 				osg::ref_ptr<osg::Image> image = convertHeightmapToLandMask(*heightImage);
-				fillBathymetryInHeightmap(*heightImage); // TODO: Remove this hack of modifying the heightImage in the factory for the land mask.
+				//fillBathymetryInHeightmap(*heightImage); // TODO: Remove this hack of modifying the heightImage in the factory for the land mask.
 				return image;
 			}).image;
 		}

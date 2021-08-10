@@ -12,9 +12,10 @@
 #include "SimVisBinding/SimVisBinding.h"
 #include "SimVisBinding/GeocentricToNedConverter.h"
 #include "SimVisBinding/CameraSimVisBinding.h"
-#include "SimVisBinding/MoonVisBinding.h"
-#include "SimVisBinding/PlanetVisBinding.h"
 #include "SimVisBinding/CelestialObjectVisBinding.h"
+#include "SimVisBinding/MoonVisBinding.h"
+#include "SimVisBinding/ParticlesVisBinding.h"
+#include "SimVisBinding/PlanetVisBinding.h"
 #include "SimVisBinding/PolylineVisBinding.h"
 #include "SimVisBinding/WakeBinding.h"
 
@@ -25,8 +26,10 @@
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/Node.h>
+#include <SkyboltSim/Components/ParticleSystemComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/Components/PropellerComponent.h>
+#include <SkyboltSim/Particles/ParticleSystem.h>
 #include <SkyboltSim/Physics/Astronomy.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 
@@ -34,8 +37,11 @@
 #include <SkyboltVis/Light.h>
 #include <SkyboltVis/OsgImageHelpers.h>
 #include <SkyboltVis/OsgStateSetHelpers.h>
+#include <SkyboltVis/OsgTextureHelpers.h>
+#include <SkyboltVis/TextureCache.h>
 #include <SkyboltVis/Scene.h>
 #include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
+#include <SkyboltVis/Renderable/Particles.h>
 #include <SkyboltVis/Renderable/Atmosphere/Bruneton/BruentonAtmosphere.h>
 #include <SkyboltVis/Renderable/CameraRelativeBillboard.h>
 #include <SkyboltVis/Renderable/Forest/GpuForest.h>
@@ -49,6 +55,7 @@
 #include <SkyboltVis/Renderable/Model/ModelFactory.h>
 #include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 
+#include <SkyboltCommon/Random.h>
 #include <SkyboltCommon/StringVector.h>
 #include <SkyboltCommon/File/FileUtility.h>
 #include <SkyboltCommon/Json/JsonHelpers.h>
@@ -243,6 +250,42 @@ static void loadVisualCamera(Entity* entity, const EntityFactory::Context& conte
 	simVisBindingComponent->bindings.push_back(cameraSimVisBinding);
 }
 
+static void loadParticleSystem(Entity* entity, const EntityFactory::Context& context, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
+{
+	ParticleEmitter::Params emitterParams;
+	emitterParams.emissionRate = json.at("emissionRate");
+	emitterParams.radius = json.at("radius");
+	emitterParams.positionable = entity->getFirstComponentRequired<Node>();
+	emitterParams.elevationAngle = DoubleRange(json.at("elevationAngleMin"), json.at("elevationAngleMax"));
+	emitterParams.speed = DoubleRange(json.at("speedMin"), json.at("speedMax"));
+	emitterParams.upDirection = readVector3(json.at("upDirection"));
+	emitterParams.random = std::make_shared<Random>(/* seed */ 0);
+
+	double lifetime = json.at("lifetime");
+
+	ParticleIntegrator::Params lifetimeParams;
+	lifetimeParams.lifetime = lifetime;
+	lifetimeParams.radiusLinearGrowthPerSecond = json.at("radiusLinearGrowthPerSecond");
+
+	auto particleSystem = std::make_shared<ParticleSystem>(ParticleSystem::Operations({
+		std::make_shared<ParticleIntegrator>(lifetimeParams), // integrate before emission ensure new particles emitted at end of time step
+		std::make_shared<ParticleEmitter>(emitterParams),
+		std::make_shared<ParticleKiller>(lifetime)
+	}));
+	entity->addComponent(std::make_shared<ParticleSystemComponent>(particleSystem));
+
+	osg::ref_ptr<osg::Texture2D> texture = context.textureCache->getOrCreateTexture(json.at("albedoTexture"), [](const std::string& filename) {
+		return vis::createTilingSrgbTexture(osgDB::readImageFile(filename));
+	});
+
+	auto program = context.programs->getRequiredProgram("particles");
+	auto visParticles = std::make_shared<vis::Particles>(program, texture);
+	visObjectsComponent->addObject(visParticles);
+
+	SimVisBindingPtr binding(new ParticlesVisBinding(particleSystem, visParticles));
+	simVisBindingComponent->bindings.push_back(binding);
+}
+
 struct PlanetStatsUpdater : vis::PlanetSurfaceListener, vis::QuadTreeTileLoaderListener, sim::Component
 {
 	PlanetStatsUpdater(EngineStats* stats, vis::PlanetSurface* surface)
@@ -283,7 +326,7 @@ private:
 	size_t mOwnTilesLoading = 0;
 };
 
-static osg::Texture2D* createCloudTexture(const std::string& filepath)
+static osg::ref_ptr<osg::Texture2D> createCloudTexture(const std::string& filepath)
 {
 	osg::Image* image = vis::readImageWithCorrectOrientation(filepath);
 	image->setInternalTextureFormat(vis::toSrgbInternalFormat(image->getInternalTextureFormat()));
@@ -315,17 +358,6 @@ static osg::ref_ptr<osg::Texture2D> readTilingNonSrgbTexture(const std::string& 
 	return texture;
 }
 
-static osg::ref_ptr<osg::Texture2D> readTilingAlbedoTexture(const std::string& filename)
-{
-	osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(osgDB::readImageFile(filename));
-	texture->setInternalFormat(vis::toSrgbInternalFormat(texture->getInternalFormat()));
-	texture->setFilter(osg::Texture::FilterParameter::MIN_FILTER, osg::Texture::FilterMode::LINEAR_MIPMAP_LINEAR);
-	texture->setFilter(osg::Texture::FilterParameter::MAG_FILTER, osg::Texture::FilterMode::LINEAR);
-	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
-	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
-	return texture;
-}
-
 static void loadPlanet(Entity* entity, const EntityFactory::Context& context, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	double planetRadius = json.at("radius").get<double>();
@@ -346,7 +378,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 		if (it != json.end())
 		{
 			const nlohmann::json& clouds = it.value();
-			config.cloudsTexture = createCloudTexture(clouds.at("map"));
+			config.cloudsTexture = context.textureCache->getOrCreateTexture(clouds.at("map"), &createCloudTexture);
 		}
 	}
 
@@ -414,7 +446,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 	if (it != layers.end())
 	{
 		std::string filename = it->at("texture");
-		auto texture = readTilingAlbedoTexture(filename);
+		auto texture = vis::createTilingSrgbTexture(osgDB::readImageFile(filename));
 		convertSrgbToTexturizerMap(*texture->getImage());
 		auto technique = std::make_shared<vis::UniformDetailMappingTechnique>();
 		technique->albedoDetailMap = texture;
@@ -431,7 +463,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 			auto textures = it->at("textures").items();
 			for (const auto filename : textures)
 			{
-				auto texture = readTilingAlbedoTexture(filename.value());
+				auto texture = vis::createTilingSrgbTexture(osgDB::readImageFile(filename.value()));
 				technique->albedoDetailMaps.push_back(texture);
 			}
 
@@ -496,12 +528,11 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 
 typedef std::function<void(Entity*, const EntityFactory::Context&, VisObjectsComponentPtr&, const SimVisBindingsComponentPtr&, const nlohmann::json&)> VisComponentLoader;
 
-EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const std::string& templateName, const std::string& instanceName, const Vector3& position, const Quaternion& orientation) const
+EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const std::string& instanceName, const Vector3& position, const Quaternion& orientation) const
 {
 	EntityPtr entity = std::make_shared<sim::Entity>();
 
 	entity->addComponent(ComponentPtr(new NameComponent(instanceName, mContext.namedObjectRegistry, entity.get())));
-	entity->addComponent(ComponentPtr(new TemplateNameComponent(templateName)));
 
 	SimVisBindingsComponentPtr simVisBindingComponent(new SimVisBindingsComponent);
 	entity->addComponent(simVisBindingComponent);
@@ -541,10 +572,11 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 				static std::map<std::string, VisComponentLoader> visComponentLoaders =
 				{
 					{"camera", loadVisualCamera },
+					{ "particleSystem", loadParticleSystem },
+					{ "planet", loadPlanet },
 					{ "visualModel", loadVisualModel },
 					{ "visualMainRotor", loadVisualMainRotor },
-					{ "visualTailRotor", loadVisualTailRotor },
-					{ "planet", loadPlanet }
+					{ "visualTailRotor", loadVisualTailRotor }
 				};
 
 				auto it = visComponentLoaders.find(key);
@@ -600,7 +632,9 @@ EntityPtr EntityFactory::createEntity(const std::string& templateName, const std
 			std::string name = nameIn.empty() ? createUniqueObjectName(templateName) : nameIn;
 			try
 			{
-				return createEntityFromJson(i->second, templateName, name, position, orientation);
+				EntityPtr entity = createEntityFromJson(i->second, name, position, orientation);
+				entity->addComponent(ComponentPtr(new TemplateNameComponent(templateName)));
+				return entity;
 			}
 			catch (const std::exception& e)
 			{

@@ -58,6 +58,8 @@ private:
 	osg::Uniform* mCameraPositionUniform;
 	osg::Uniform* mViewCameraPositionUniform; //!< Position of final view camera. Useful for getting view camera info in render targets other than the main view.
 	osg::Uniform* mCameraCenterDirectionUniform;
+	osg::Uniform* mCameraUpDirectionUniform;
+	osg::Uniform* mCameraRightDirectionUniform;
 	osg::Uniform* mViewMatrixUniform;
 	osg::Uniform* mViewProjectionMatrixUniform;
 	osg::Uniform* mLightDirectionUniform;

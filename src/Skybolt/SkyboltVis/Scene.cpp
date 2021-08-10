@@ -33,8 +33,14 @@ Scene::Scene() :
 	mViewCameraPositionUniform = new osg::Uniform("viewCameraPosition", osg::Vec3f(0, 0, 0));
 	ss->addUniform(mViewCameraPositionUniform);
 
-	mCameraCenterDirectionUniform = new osg::Uniform("cameraCenterDirection", osg::Vec3f(0, 0, -1));
+	mCameraCenterDirectionUniform = new osg::Uniform("cameraCenterDirection", osg::Vec3f(0, 0, 0));
 	ss->addUniform(mCameraCenterDirectionUniform);
+
+	mCameraUpDirectionUniform = new osg::Uniform("cameraUpDirection", osg::Vec3f(0, 0, 0));
+	ss->addUniform(mCameraUpDirectionUniform);
+
+	mCameraRightDirectionUniform = new osg::Uniform("cameraRightDirection", osg::Vec3f(0, 0, 0));
+	ss->addUniform(mCameraRightDirectionUniform);
 
 	mViewMatrixUniform = new osg::Uniform("viewMatrix", osg::Matrixf());
 	ss->addUniform(mViewMatrixUniform);
@@ -69,6 +75,8 @@ void Scene::updatePreRender(const RenderContext& context)
 	mViewCameraPositionUniform->set(osg::Vec3f(context.camera.getPosition()));
 
 	mCameraCenterDirectionUniform->set(context.camera.getOrientation() * osg::Vec3f(1, 0, 0));
+	mCameraUpDirectionUniform->set(context.camera.getOrientation() * osg::Vec3f(0, 0, -1));
+	mCameraRightDirectionUniform->set(context.camera.getOrientation() * osg::Vec3f(0, 1, 0));
 
 	const auto& camera = context.camera;
 

@@ -27,14 +27,14 @@ public:
 	osg::Vec3d getPosition() const { return mTransform->getMatrix().getTrans(); }
 	osg::Quat getOrientation() const { return mTransform->getMatrix().getRotate(); }
 
-	osg::Node* _getNode() const { return mTransform; }
+	osg::Node* _getNode() const { return mSwitch; }
 
 	void setVisible(bool visible) override;
 	bool isVisible() const override;
 
 protected:
-	osg::ref_ptr<osg::MatrixTransform> mTransform;
 	osg::ref_ptr<osg::Switch> mSwitch;
+	osg::ref_ptr<osg::MatrixTransform> mTransform;
 };
 
 } // namespace vis

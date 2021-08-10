@@ -21,7 +21,7 @@ public:
 	virtual void updatePreDynamics(TimeReal dt, TimeReal dtWallClock) {};
 	virtual void updatePreDynamicsSubstep(TimeReal dtSubstep) {}
 	virtual void updatePostDynamicsSubstep(TimeReal dtSubstep) {}
-	virtual void updatePostDynamics() {};
+	virtual void updatePostDynamics(TimeReal dt, TimeReal dtWallClock) {};
 	virtual void updateAttachments(TimeReal dt, TimeReal dtWallClock) {};
 
 	virtual void setDynamicsEnabled(bool enabled) {};

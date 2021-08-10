@@ -276,11 +276,10 @@ static void createRegion(const PolyRegion& region, osg::Vec3Array* posBuffer, os
 
 static osg::Geode* createRegions(const PolyRegions& regions)
 {
-	// MTODO: cleanup?
 	osg::Vec3Array* posBuffer = new osg::Vec3Array();
 	osg::Vec3Array* normalBuffer = new osg::Vec3Array();
 	osg::Vec2Array* uvBuffer = new osg::Vec2Array();
-	osg::UIntArray* indexBuffer = new osg::UIntArray();
+	osg::ref_ptr<osg::UIntArray> indexBuffer = new osg::UIntArray();
 
     osg::Geometry* geometry = new osg::Geometry();
 	int firstVert = 0;
