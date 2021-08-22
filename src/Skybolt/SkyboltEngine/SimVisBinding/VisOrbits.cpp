@@ -14,6 +14,8 @@
 #include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 
+#include <SkyboltVis/VisibilityCategory.h>
+
 #include <osg/Depth>
 #include <osg/Geode>
 #include <osgText/Text>
@@ -27,6 +29,7 @@ VisOrbits::VisOrbits(World* world, osg::Group* parent, const vis::Polyline::Para
 	mParams(params),
 	mJulianDateProvider(julianDateProvider)
 {
+	mGroup->setNodeMask(~vis::VisibilityCategory::shadowCaster);
 }
 
 VisOrbits::~VisOrbits()

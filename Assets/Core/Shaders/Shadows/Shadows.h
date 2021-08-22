@@ -275,7 +275,7 @@ float sampleShadowCascadesAtTexCoord(vec2 shadowTexcoord, float receiverDepth, f
 float sampleShadowsAtTexCoord(vec2 shadowTexcoord, float receiverDepth, float dotLN, float fragmentViewDistance)
 {
 	float visibility = sampleShadowCascadesAtTexCoord(shadowTexcoord, receiverDepth, dotLN);
-	float blend = min(1.0, (maxShadowViewDistance - fragmentViewDistance) / (maxShadowViewDistance*0.2));
+	float blend = saturate((maxShadowViewDistance - fragmentViewDistance) / (maxShadowViewDistance*0.2));
 	return mix(1.0, visibility, blend);
 }
 

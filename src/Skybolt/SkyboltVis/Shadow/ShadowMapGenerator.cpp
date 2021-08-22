@@ -7,6 +7,7 @@
 #include "ShadowMapGenerator.h"
 #include "SkyboltVis/MatrixHelpers.h"
 #include "SkyboltVis/OsgTextureHelpers.h"
+#include "SkyboltVis/VisibilityCategory.h"
 
 #include <osg/Camera>
 
@@ -54,6 +55,7 @@ ShadowMapGenerator::ShadowMapGenerator(osg::ref_ptr<osg::Program> shadowCasterPr
 	mCamera->setRenderOrder(osg::Camera::PRE_RENDER);
 	mCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
 	mCamera->attach(osg::Camera::DEPTH_BUFFER, mTexture);
+	mCamera->setCullMask(VisibilityCategory::shadowCaster); // Only render shadow casters
 
 	setRadiusWorldSpace(mRadiusWorldSpace);
 

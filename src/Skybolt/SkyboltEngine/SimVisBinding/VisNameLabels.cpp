@@ -8,7 +8,8 @@
 #include "GeocentricToNedConverter.h"
 #include "TemplateNameComponent.h"
 #include <SkyboltSim/Components/NameComponent.h>
-#include "SkyboltVis/Shader/ShaderProgramRegistry.h"
+#include <SkyboltVis/VisibilityCategory.h>
+#include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <osg/Depth>
 #include <osg/Geode>
 #include <osgText/Text>
@@ -20,6 +21,8 @@ using namespace sim;
 VisNameLabels::VisNameLabels(World* world, osg::Group* parent, const vis::ShaderPrograms& programs) :
 	SimVisObjectsReflector<osg::MatrixTransform*>(world, parent)
 {
+	mGroup->setNodeMask(~vis::VisibilityCategory::shadowCaster);
+
 	osg::ref_ptr<osg::StateSet> ss = mGroup->getOrCreateStateSet();
 	{
 		ss->setAttributeAndModes(programs.getRequiredProgram("hudText"), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
