@@ -40,17 +40,22 @@ void ParticleEmitter::update(float dt, std::vector<Particle>& particles)
 		for (int i = 0; i < particleCount; ++i)
 		{
 			particles.push_back(createParticle(emitterVelocity, timeOffset));
+			timeOffset += dtSubstep;
 		}
 	}
 }
+
+int ParticleEmitter::mNextParticleId = 0;
 
 Particle ParticleEmitter::createParticle(const Vector3& emitterVelocity, float timeOffset) const
 {
 	Vector3 velocityRelEmitter = calculateParticleVelocityRelEmitter();
 	Particle particle;
+	particle.guid = mNextParticleId++;
 	particle.position = mParams.positionable->getPosition() + velocityRelEmitter * double(timeOffset);
 	particle.velocity = emitterVelocity + velocityRelEmitter;
 	particle.radius = mParams.radius;
+	particle.alpha = 1.0 * mEmissionAlphaMultiplier;
 	return particle;
 }
 
@@ -91,8 +96,11 @@ void ParticleKiller::update(float dt, std::vector<Particle>& particles)
 void ParticleIntegrator::update(float dt, std::vector<Particle>& particles)
 {
 	double dtD = double(dt);
+	double velocityDamping = std::exp(-mParams.atmosphericSlowdownFactor * dt);
 	for (auto& particle : particles)
 	{
+		particle.velocity  *= velocityDamping;
+
 		particle.position += particle.velocity * dtD;
 		particle.radius += mParams.radiusLinearGrowthPerSecond * dt;
 		particle.alpha = 1.0 - particle.age / mParams.lifetime;

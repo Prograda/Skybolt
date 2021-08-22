@@ -26,9 +26,16 @@ uniform vec3 lightDirection;
 
 uniform sampler2D cloudSampler;
 
+vec2 rotate(vec2 v, float a)
+{
+	float s = sin(a);
+	float c = cos(a);
+	mat2 m = mat2(c, -s, s, c);
+	return m * v;
+}
+
 void main()
 {
-
 	float x = ((gl_VertexID + 1) % 4) > 1 ? 1.0f : 0.0f;
 	float y = (gl_VertexID % 4) / 2;
 	
@@ -36,6 +43,8 @@ void main()
 	
 	vec4 pos = osg_Vertex;
 	vec2 offset = (texCoord - 0.5) * osg_MultiTexCoord0.xx * 2.0;
+	float rotationAngle = osg_MultiTexCoord0.z;
+	offset = rotate(offset, rotationAngle);
 	pos.xyz += offset.x * cameraRightDirection + offset.y * cameraUpDirection;
 	
 	alpha = osg_MultiTexCoord0.y;

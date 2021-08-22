@@ -9,6 +9,7 @@
 #include "SkyboltVis/OsgGeometryHelpers.h"
 #include "SkyboltVis/OsgStateSetHelpers.h"
 #include <SkyboltSim/Particles/ParticleSystem.h>
+#include <SkyboltCommon/Math/MathUtility.h>
 
 #include <glm/glm.hpp>
 
@@ -19,7 +20,7 @@ Particles::Particles(const osg::ref_ptr<osg::Program>& program, const osg::ref_p
 	mGeometry(new osg::Geometry()),
 	mDrawArrays(new osg::DrawArrays()),
 	mParticleVertices(new osg::Vec3Array()),
-	mParticleUvs(new osg::Vec2Array())
+	mParticleUvs(new osg::Vec3Array())
 {
 	mGeometry->addPrimitiveSet(mDrawArrays);
 	configureDrawable(*mGeometry);
@@ -35,6 +36,8 @@ Particles::Particles(const osg::ref_ptr<osg::Program>& program, const osg::ref_p
 
 	mTransform->addChild(mGeometry);
 }
+
+static float randomFast(float n) { return glm::fract(sin(n) * 43758.5453123); }
 
 void Particles::setParticles(const std::vector<sim::Particle>& particles, const osg::ref_ptr<osg::Vec3Array>& visParticlePositions)
 {
@@ -54,10 +57,12 @@ void Particles::setParticles(const std::vector<sim::Particle>& particles, const 
 		osg::BoundingBox box(pos - corner, pos + corner);
 		bounds.expandBy(box);
 
+		const float rotation = randomFast(particle.guid % 100000) * math::twoPiF();
+
 		for (int j = 0; j < 4; ++j)
 		{
 			mParticleVertices->push_back(pos);
-			mParticleUvs->push_back(osg::Vec2(radius, particle.alpha));
+			mParticleUvs->push_back(osg::Vec3(radius, particle.alpha, rotation));
 		}
 
 		++i;

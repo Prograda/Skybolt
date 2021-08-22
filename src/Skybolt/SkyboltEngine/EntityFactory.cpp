@@ -266,6 +266,7 @@ static void loadParticleSystem(Entity* entity, const EntityFactory::Context& con
 	ParticleIntegrator::Params lifetimeParams;
 	lifetimeParams.lifetime = lifetime;
 	lifetimeParams.radiusLinearGrowthPerSecond = json.at("radiusLinearGrowthPerSecond");
+	lifetimeParams.atmosphericSlowdownFactor = json.at("atmosphericSlowdownFactor");
 
 	auto particleSystem = std::make_shared<ParticleSystem>(ParticleSystem::Operations({
 		std::make_shared<ParticleIntegrator>(lifetimeParams), // integrate before emission ensure new particles emitted at end of time step

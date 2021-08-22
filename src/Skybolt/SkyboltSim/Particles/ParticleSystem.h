@@ -22,6 +22,7 @@ namespace sim {
 
 struct Particle
 {
+	int guid; //!< ID of particle, semi-unique across all particle systems. May repeat after numeric limit is reached.
 	Vector3 position;
 	Vector3 velocity;
 	float radius;
@@ -60,6 +61,11 @@ public:
 		mEmissionRateMultiplier = emissionRateMultiplier; 
 	}
 
+	void setEmissionAlphaMultiplier(float emissionAlphaMultiplier)
+	{
+		mEmissionAlphaMultiplier = emissionAlphaMultiplier;
+	}
+
 	virtual Particle createParticle(const Vector3& emitterVelocity, float timeOffset) const;
 
 private:
@@ -70,7 +76,9 @@ private:
 	Matrix3 mOrientation;
 	float mTimeSinceLastEmission = 0;
 	float mEmissionRateMultiplier = 1.0;
+	float mEmissionAlphaMultiplier = 1.0;
 	std::optional<Vector3> mPrevPosition;
+	static int mNextParticleId;
 };
 
 class ParticleKiller : public ParticleSystemOperation
@@ -92,6 +100,7 @@ public:
 	{
 		float radiusLinearGrowthPerSecond;
 		float lifetime;
+		float atmosphericSlowdownFactor;
 	};
 
 	ParticleIntegrator(const Params& params) : mParams(params) {}
