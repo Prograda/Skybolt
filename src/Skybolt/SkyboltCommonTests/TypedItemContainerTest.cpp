@@ -104,5 +104,7 @@ TEST_CASE("TypedItemContainer add and remove item with multiple exposed types")
 	CHECK(c.getFirstItemOfType<MultiTypeBase>() == item);
 
 	c.removeItem(item);
+	CHECK(c.getFirstItemOfType<MultiTypeDerived>() == nullptr);
+	CHECK(c.getFirstItemOfType<MultiTypeBase>() == nullptr);
 	CHECK(c.getAllItems().empty());
 }

@@ -57,18 +57,15 @@ public:
 			}
 		}
 
-		for (const auto& type : getExposedTypes(*c))
+		for (auto it = mComponentMap.begin(); it != mComponentMap.end();)
 		{
-			typename ComponentMap::const_iterator it = mComponentMap.lower_bound(type);
-			typename ComponentMap::const_iterator it2 = mComponentMap.upper_bound(type);
-
-			while (it != it2)
+			if (it->second == c)
 			{
-				if (it->second == c)
-				{
-					mComponentMap.erase(it);
-					break;
-				}
+				it = mComponentMap.erase(it);
+			}
+			else
+			{
+				++it;
 			}
 		}
 	}
