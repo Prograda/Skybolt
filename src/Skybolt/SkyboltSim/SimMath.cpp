@@ -23,6 +23,13 @@ void getOrthonormalBasis(const Vector3 &normal, Vector3 &tangent, Vector3 &binor
 	tangent = glm::cross(binormal, normal);
 }
 
+Matrix3 getOrientationFromDirection(const Vector3& direction)
+{
+	Vector3 tangent, binormal;
+	getOrthonormalBasis(direction, tangent, binormal);
+	return Matrix3(direction, tangent, binormal);
+}
+
 DistReal posInfinity()
 {
 	auto r = std::numeric_limits<DistReal>::infinity();

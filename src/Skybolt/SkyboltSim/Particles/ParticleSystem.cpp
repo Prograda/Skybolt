@@ -5,6 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "ParticleSystem.h"
+#include <SkyboltSim/Physics/Atmosphere.h>
+#include "SkyboltSim/Spatial/GreatCircle.h"
 #include "SkyboltSim/Spatial/Positionable.h"
 #include <SkyboltCommon/Random.h>
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -14,9 +16,7 @@ namespace sim {
 
 ParticleEmitter::ParticleEmitter(const Params& params) : mParams(params)
 {
-	Vector3 tangent, binormal;
-	getOrthonormalBasis(mParams.upDirection, tangent, binormal);
-	mOrientation = Matrix3(mParams.upDirection, tangent, binormal);
+	mOrientation = getOrientationFromDirection(mParams.upDirection);
 }
 
 void ParticleEmitter::update(float dt, std::vector<Particle>& particles)
@@ -24,16 +24,16 @@ void ParticleEmitter::update(float dt, std::vector<Particle>& particles)
 	// Calculate emitter velocity
 	Vector3 position = mParams.positionable->getPosition();
 	Vector3 emitterVelocity = mPrevPosition ?
-		(emitterVelocity = (position - *mPrevPosition) / double(dt)) :
+		(position - *mPrevPosition) / double(dt) :
 		Vector3();
 	mPrevPosition = position;
 
 	// Create particles
-	mTimeSinceLastEmission += dt;
-	int particleCount = int(mParams.emissionRate * mEmissionRateMultiplier * mTimeSinceLastEmission);
+	mParticlesToEmit += mParams.emissionRate * mEmissionRateMultiplier * dt;
+	int particleCount = int(mParticlesToEmit);
 	if (particleCount > 0)
 	{
-		mTimeSinceLastEmission = 0;
+		mParticlesToEmit -= particleCount;
 		float dtSubstep = dt / particleCount;
 		float timeOffset = 0;
 
@@ -53,9 +53,10 @@ Particle ParticleEmitter::createParticle(const Vector3& emitterVelocity, float t
 	Particle particle;
 	particle.guid = mNextParticleId++;
 	particle.position = mParams.positionable->getPosition() + velocityRelEmitter * double(timeOffset);
-	particle.velocity = emitterVelocity + velocityRelEmitter;
+	particle.velocity = emitterVelocity +velocityRelEmitter;
 	particle.radius = mParams.radius;
-	particle.alpha = 1.0f * mEmissionAlphaMultiplier;
+	particle.initialAlpha = 1.0f * mEmissionAlphaMultiplier;
+	particle.alpha = particle.initialAlpha;
 	return particle;
 }
 
@@ -95,15 +96,18 @@ void ParticleKiller::update(float dt, std::vector<Particle>& particles)
 
 void ParticleIntegrator::update(float dt, std::vector<Particle>& particles)
 {
+	static Atmosphere atmosphere = createEarthAtmosphere(); // TODO: get atmosphere specific to planet
+	double density = particles.empty() ? 0.0 : atmosphere.getDensity(glm::length(particles.front().position) - earthRadius());
+
 	double dtD = double(dt);
-	double velocityDamping = std::exp(-mParams.atmosphericSlowdownFactor * dt);
+	double velocityDamping = std::exp(-mParams.atmosphericSlowdownFactor * density * dt);
 	for (auto& particle : particles)
 	{
 		particle.velocity  *= velocityDamping;
 
 		particle.position += particle.velocity * dtD;
 		particle.radius += mParams.radiusLinearGrowthPerSecond * dt;
-		particle.alpha = 1.0f - particle.age / mParams.lifetime;
+		particle.alpha = glm::mix(particle.initialAlpha, 0.0f, particle.age / mParams.lifetime);
 	}
 }
 

@@ -27,6 +27,7 @@ struct Particle
 	Vector3 velocity;
 	float radius;
 	float age = 0;
+	float initialAlpha = 1;
 	float alpha = 1;
 };
 
@@ -74,7 +75,7 @@ private:
 private:
 	const Params mParams;
 	Matrix3 mOrientation;
-	float mTimeSinceLastEmission = 0;
+	float mParticlesToEmit = 0;
 	float mEmissionRateMultiplier = 1.0;
 	float mEmissionAlphaMultiplier = 1.0;
 	std::optional<Vector3> mPrevPosition;

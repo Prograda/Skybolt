@@ -25,6 +25,9 @@ typedef glm::dmat4 Matrix4;
 //! Returns tangent and binormal perpendiular to normal and each other
 void getOrthonormalBasis(const Vector3 &normal, Vector3 &tangent, Vector3 &binormal);
 
+//! Generates an orientation from a direction, with arbitrary roll angle
+Matrix3 getOrientationFromDirection(const Vector3& direction);
+
 DistReal posInfinity();
 DistReal negInfinity();
 
