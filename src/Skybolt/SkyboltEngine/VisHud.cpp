@@ -93,9 +93,10 @@ static const char *passThroughVertSource = {
 static const char *hudFragSource = {
 	"#version 330 \n"
 	"out vec4 color;\n"
+	"uniform vec4 foregroundColor;\n"
 	"void main(void)\n"
 	"{\n"
-	"    color = vec4 (0.0, 1.0, 0.0, 1.0);\n"
+	"    color = foregroundColor;\n"
 	"}\n"
 };
 
@@ -104,10 +105,11 @@ static const char *maskedHudFragSource = {
 	"in vec4 texCoord;\n"
 	"out vec4 color;\n"
 	"uniform sampler2D glyphTexture;\n"
+	"uniform vec4 foregroundColor;\n"
 	"void main(void)\n"
 	"{\n"
 	"    float alpha = texture(glyphTexture, texCoord.xy).a;\n"
-	"    color = vec4 (0.0, 1.0, 0.0, alpha);\n"
+	"    color = vec4(1.0, 1.0, 1.0, alpha) * foregroundColor;\n"
 	"}\n"
 };
 
@@ -154,10 +156,16 @@ VisHud::VisHud() :
 		ss->setMode(GL_CULL_FACE, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
 	}
 
+	osg::ref_ptr<osg::Group> group = new osg::Group();
+	group->addChild(mPrimitivesGeode);
+	group->addChild(mTextGeode);
+
+	mColorUniform = osg::ref_ptr<osg::Uniform>(new osg::Uniform("foregroundColor", osg::Vec4f(1, 1, 1, 1)));
+	group->getOrCreateStateSet()->addUniform(mColorUniform);
+
 	mTextPool.reset(new TextPool());
 	
-	mCamera->addChild(mPrimitivesGeode);
-	mCamera->addChild(mTextGeode);
+	mCamera->addChild(group);
 	addChild(mCamera);
 
 	clear();
@@ -211,6 +219,11 @@ void VisHud::clear()
 	mTextGeode->removeDrawables(0, mTextGeode->getNumDrawables());
 
 	setDirty();
+}
+
+void VisHud::setColor(const osg::Vec4f& color)
+{
+	mColorUniform->set(color);
 }
 
 void VisHud::setDirty()
@@ -272,6 +285,7 @@ void VisHud::drawText(const glm::vec2 &p, const std::string &message, float rota
     text->setPosition(toVec3(p));
 	text->setCharacterSize(size < 0.0 ? 0.03 : size);
 	text->setRotation(osg::Quat(rotation, osg::Vec3f(0,0,1)));
+	text->setLineSpacing(0.25);
 
     mTextGeode->addDrawable(text);
 

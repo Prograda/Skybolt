@@ -42,7 +42,7 @@ class KeyAxis : public LogicalAxis
 public:
 	KeyAxis(const InputDevicePtr& device, int decreaseCode, int increaseCode, float rate, float restorationRate = 0, float _min = 0, float _max = 1, float _center = 0);
 	void update(float dt) override;
-	void resetState() override { mValue = 0; }
+	void resetState() override { mValue = mCenter; }
 
 	float getState() const override {return mValue;}
 

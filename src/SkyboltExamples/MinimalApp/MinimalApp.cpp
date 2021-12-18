@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include <ExamplesCommon/HelpDisplaySystem.h>
+#include <ExamplesCommon/HelpDisplayToggleEventListener.h>
 #include <ExamplesCommon/WindowUtility.h>
 
 #include <SkyboltEngine/CameraInputSystem.h>
@@ -49,9 +51,25 @@ static void createEntities(const EntityFactory& entityFactory, World& world, Cam
 	cameraController.setTarget(planet.get());
 }
 
-std::unique_ptr<StandaloneWindow> createWindow()
+static std::unique_ptr<StandaloneWindow> createWindow()
 {
 	return std::make_unique<StandaloneWindow>(RectI(0, 0, 1080, 720));
+}
+
+static std::shared_ptr<HelpDisplaySystem> createHelpDisplaySystem(const vis::Window& window)
+{
+	std::string helpMessage =
+R"(= Controls =
+W: Zoom in
+S: Zoom out
+H: Toggle help message
+Shift (hold): Camera tilt modifier
+Mouse: Rotate camera
+)";
+
+	auto helpDisplaySystem = std::make_shared<HelpDisplaySystem>(window);
+	helpDisplaySystem->setMessage(helpMessage);
+	return helpDisplaySystem;
 }
 
 int main(int argc, char *argv[])
@@ -78,6 +96,11 @@ int main(int argc, char *argv[])
 		// Create systems
 		engineRoot->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, window.get(), axes));
 		engineRoot->systemRegistry->push_back(std::make_shared<CameraInputSystem>(simCamera, inputPlatform, axes));
+
+		auto helpDisplaySystem = createHelpDisplaySystem(*window);
+		engineRoot->systemRegistry->push_back(helpDisplaySystem);
+		auto helpDisplayToggleEventListener = std::make_shared<HelpDisplayToggleEventListener>(helpDisplaySystem);
+		inputPlatform->getEventEmitter()->addEventListener<KeyEvent>(helpDisplayToggleEventListener.get());
 
 //#define SHOW_STATS
 #ifdef SHOW_STATS

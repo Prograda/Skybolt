@@ -16,7 +16,7 @@ KeyAxis::KeyAxis(const InputDevicePtr& device, int decreaseCode, int increaseCod
 	mDevice(device),
 	mRate(rate),
 	mRestorationRate(restorationRate),
-	mValue(0),
+	mValue(center),
 	mDecreaseCode(decreaseCode),
 	mIncreaseCode(increaseCode),
 	mMin(_min),

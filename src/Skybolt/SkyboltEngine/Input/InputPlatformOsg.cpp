@@ -282,7 +282,7 @@ public:
 					if (keyCode)
 					{
 						mPressedKeys.erase(*keyCode);
-						KeyEvent event(KeyEvent::Type::Pressed, *keyCode);
+						KeyEvent event(KeyEvent::Type::Released, *keyCode);
 						mEmitter->emitEvent(event);
 						return true;
 					}

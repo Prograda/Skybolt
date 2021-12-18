@@ -21,6 +21,9 @@ public:
 
 	void clear();
 
+	void setColor(const osg::Vec4f& color);
+
+public:
 	// HudDrawer interface
 	void drawLine(const glm::vec2 &p0, const glm::vec2 &p1) override;
 	void drawLineDashed(const glm::vec2 &p0, const glm::vec2 &p1, const DashedLineParams& params) override;
@@ -37,6 +40,7 @@ private:
 	osg::ref_ptr<osg::Geode> mTextGeode;
 	osg::ref_ptr<osg::Vec3Array> mLineVertices;
 	osg::ref_ptr<osg::Vec3Array> mQuadVertices;
+	osg::ref_ptr<osg::Uniform> mColorUniform;
 	std::unique_ptr<class TextPool> mTextPool;
 	bool mDirty = false;
 };
