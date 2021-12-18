@@ -41,7 +41,7 @@ static float randomFast(float n) { return glm::fract(sin(n) * 43758.5453123); }
 
 void Particles::setParticles(const std::vector<sim::Particle>& particles, const osg::ref_ptr<osg::Vec3Array>& visParticlePositions)
 {
-	assert(visVertexPositions.size() == particles.size());
+	assert(visParticlePositions->size() == particles.size());
 	mParticleVertices->reserve(particles.size() * 4);
 	mParticleVertices->clear();
 	mParticleUvs->reserve(particles.size() * 4);

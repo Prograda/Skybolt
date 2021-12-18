@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "NormalMapHelpers.h"
+#include <osg/Texture> // included for GL_R16
 #include <algorithm>
 #include <assert.h>
 

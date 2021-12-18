@@ -55,7 +55,7 @@ Particle ParticleEmitter::createParticle(const Vector3& emitterVelocity, float t
 	particle.position = mParams.positionable->getPosition() + velocityRelEmitter * double(timeOffset);
 	particle.velocity = emitterVelocity + velocityRelEmitter;
 	particle.radius = mParams.radius;
-	particle.alpha = 1.0 * mEmissionAlphaMultiplier;
+	particle.alpha = 1.0f * mEmissionAlphaMultiplier;
 	return particle;
 }
 
@@ -103,7 +103,7 @@ void ParticleIntegrator::update(float dt, std::vector<Particle>& particles)
 
 		particle.position += particle.velocity * dtD;
 		particle.radius += mParams.radiusLinearGrowthPerSecond * dt;
-		particle.alpha = 1.0 - particle.age / mParams.lifetime;
+		particle.alpha = 1.0f - particle.age / mParams.lifetime;
 	}
 }
 

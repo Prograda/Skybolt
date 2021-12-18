@@ -55,8 +55,8 @@ float createWorleyFbm(const glm::vec3& pos)
 	for (int i = 0; i < 4; ++i)
 	{
 		worleyNoise += amplitude * (1.0 - Tileable3dNoise::WorleyNoise(pos, frequency));
-		frequency *= 1.8;
-		amplitude *= 0.6;
+		frequency *= 1.8f;
+		amplitude *= 0.6f;
 	}
 
 	return glm::clamp(worleyNoise - 0.2f, 0.0f, 1.0f);

@@ -44,7 +44,7 @@ public:
 	{
 		PositionablePtr positionable;
 		float emissionRate;
-		double radius;
+		float radius;
 		Vector3 upDirection;
 		DoubleRange speed;
 		DoubleRange elevationAngle;

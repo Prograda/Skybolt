@@ -85,7 +85,7 @@ static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryCon
 
 	params->maxRpm = json.at("maxRpm").get<double>();
 
-	double surfaceAreaPerBlade = readOptionalOrDefault(json, "surfaceAreaPerBlade", 1.3);
+	float surfaceAreaPerBlade = readOptionalOrDefault(json, "surfaceAreaPerBlade", 1.3f);
 	int bladeCount = readOptionalOrDefault(json, "bladeCount", 4);
 
 	// TODO: read from json
@@ -95,7 +95,7 @@ static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryCon
 	params->maxTppPitch = 0.1;
 	params->maxTppRoll = 0.05;
 	params->tppPitchOffset = readOptionalOrDefault(json, "tppPitchOffset", -3.f)  * skybolt::math::degToRadF();
-	params->liftConst = 0.5f * 5.9 * surfaceAreaPerBlade * bladeCount; // 0.5 * liftSlope[1/rad] * bladeSurfaceArea * bladeCount
+	params->liftConst = 0.5f * 5.9f * surfaceAreaPerBlade * bladeCount; // 0.5 * liftSlope[1/rad] * bladeSurfaceArea * bladeCount
 	params->diskRadius = readOptionalOrDefault(json, "diskRadius", 7.3f);
 	params->zeroLiftAlpha = 0;
 

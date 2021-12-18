@@ -148,13 +148,13 @@ void EntityStateSequenceController::setStateT(const EntitySequenceState& state)
 SequenceStatePtr EntityStateSequenceController::getStateAtInterpolationPoint(const math::InterpolationPoint& point) const
 {
 	glm::dvec3 position;
-	for (size_t i = 0; i < mPositionInterpolators.size(); ++i)
+	for (int i = 0; i < (int)mPositionInterpolators.size(); ++i)
 	{
 		position[i] = mPositionInterpolators[i]->interpolate(point.bounds.first, point.bounds.last, point.weight);
 	}
 
 	glm::dquat orientation;
-	for (size_t i = 0; i < mOrientationInterpolators.size(); ++i)
+	for (int i = 0; i < (int)mOrientationInterpolators.size(); ++i)
 	{
 		orientation[i] = mOrientationInterpolators[i]->interpolate(point.bounds.first, point.bounds.last, point.weight);
 	}
