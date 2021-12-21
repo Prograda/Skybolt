@@ -22,6 +22,13 @@ using namespace glm;
 using namespace skybolt;
 using namespace vis;
 
+// Workaround for GLSL swizzle members not working on GCC due to lack of support for 'anonymous structs as union members'.
+// They can be used as functions instead.
+// See https://chromium.googlesource.com/external/github.com/g-truc/glm/+/HEAD/manual.md
+#define rgb rgb()
+
+#undef M_PI // Avoid redefinition warning due to M_PI define in cmath, included by catch.
+
 #define ENABLE_SPECULAR
 #include "Brdfs/PrincipledBrdfDirectionalLight.h"
 

@@ -8,6 +8,7 @@ include_directories("../../Skybolt")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(LIBRARIES
+	AircraftHud
 	SkyboltEngine
 )
 

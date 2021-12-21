@@ -7,7 +7,6 @@ include_directories("../")
 include_directories("../../Skybolt")
 
 set(LIBS
-AircraftHud
 ExamplesCommon
 )
 
