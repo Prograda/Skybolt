@@ -36,6 +36,22 @@ void Model::setVisibilityCategoryMask(uint32_t mask)
 	mNode->setNodeMask(mask);
 }
 
+void Model::setVisible(bool visible)
+{
+	if (visible != mVisible)
+	{
+		mVisible = visible;
+		if (mVisible)
+		{
+			mTransform->addChild(mNode);
+		}
+		else
+		{
+			mTransform->removeChild(mNode);
+		}
+	}
+}
+
 void Model::updatePreRender(const RenderContext& context)
 {
 	// Disable atmospheric shading if atmospheric density is too low because it causes rendering artifacts,

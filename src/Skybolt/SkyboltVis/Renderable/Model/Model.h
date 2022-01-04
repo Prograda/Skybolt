@@ -28,12 +28,19 @@ public:
 
 	void setVisibilityCategoryMask(uint32_t mask) override;
 
+	void setVisible(bool visible) override;
+
+	bool isVisible() const override { return mVisible; }
+
 private:
 	void updatePreRender(const RenderContext& context) override;
 
-private:
+protected:
 	osg::Node* mNode;
+
+private:
 	osg::Uniform* mModelMatrix;
+	bool mVisible = true;
 };
 
 } // namespace vis
