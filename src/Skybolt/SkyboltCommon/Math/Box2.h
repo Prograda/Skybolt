@@ -76,5 +76,6 @@ struct Box2T
 };
 
 using Box2 = Box2T<glm::vec2>;
+using Box2i = Box2T<glm::ivec2>;
 
 } // namespace skybolt

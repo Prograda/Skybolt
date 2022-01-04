@@ -320,7 +320,7 @@ void main()
 	{
 		if (hitPlanet)
 		{
-			colorOut.rgb = vec3(0.0);
+			colorOut = vec4(0.0);
 			depthOut = 1.0;
 			return;
 		}
@@ -372,7 +372,7 @@ void main()
 	
 	if (rayNear < 0.0)
 	{
-			colorOut.rgb = vec3(0.0);
+			colorOut = vec4(0.0);
 			depthOut = 1.0;
 			return;
 	}

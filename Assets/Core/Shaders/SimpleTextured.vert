@@ -9,6 +9,7 @@
 #pragma import_defines ( CAST_SHADOWS )
 #pragma import_defines ( ENABLE_ATMOSPHERE )
 #pragma import_defines ( ENABLE_NORMAL_MAP )
+#pragma import_defines ( FLIP_V )
 
 #include "AtmosphericScatteringWithClouds.h"
 #include "CloudShadows.h"
@@ -46,6 +47,11 @@ void main()
 	gl_Position.z = logarithmicZ_vertexShader(gl_Position.z, gl_Position.w, logZ);
 	
 	texCoord = osg_MultiTexCoord0.xyz;
+	
+#ifdef FLIP_V
+	texCoord.y = 1.0 - texCoord.y;
+#endif
+	
 	normalWS = mat3(modelMatrix) * osg_Normal.xyz;
 	
 #ifdef ENABLE_NORMAL_MAP

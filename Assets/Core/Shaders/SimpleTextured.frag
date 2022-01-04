@@ -5,6 +5,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #version 440 core
+
+#pragma import_defines ( OUTPUT_PREMULTIPLIED_ALPHA )
+
 #include "DepthPrecision.h"
 
 in vec3 texCoord;
@@ -17,5 +20,10 @@ uniform sampler2D albedoSampler;
 void main()
 {
 	color = texture(albedoSampler, texCoord.xy);
+	
+#ifdef OUTPUT_PREMULTIPLIED_ALPHA
+	color.rgb *= color.a;
+#endif
+	
 	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }

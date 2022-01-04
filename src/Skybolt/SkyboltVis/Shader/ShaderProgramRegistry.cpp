@@ -130,6 +130,10 @@ static ShaderProgramSourceFilesRegistry createShaderProgramSourceFilesRegistry()
 			{ osg::Shader::VERTEX, "Shaders/SimpleColor.vert" },
 			{ osg::Shader::FRAGMENT, "Shaders/SimpleColor.frag" }
 		}},
+		{"unlitTextured", {
+			{ osg::Shader::VERTEX, "Shaders/SimpleTextured.vert" },
+			{ osg::Shader::FRAGMENT, "Shaders/SimpleTextured.frag" }
+		}},
 		{ "volumeClouds", {
 			{ osg::Shader::VERTEX, "Shaders/VolumeClouds.vert" },
 			{ osg::Shader::FRAGMENT, "Shaders/VolumeClouds.frag" }
