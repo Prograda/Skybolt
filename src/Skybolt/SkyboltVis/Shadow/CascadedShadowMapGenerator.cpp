@@ -32,15 +32,29 @@ static std::vector<float> calculateSplitDistances(size_t cascadeCount, float nea
 	return splitDistances;
 }
 
-CascadedShadowMapGenerator::CascadedShadowMapGenerator(osg::ref_ptr<osg::Program> shadowCasterProgram, int cascadeCount)
+static std::vector<float> calculateCascadeBoundingDistances(size_t cascadeCount, double maxRange)
 {
+	// Automatic split calculation. TODO: improve results
+	static std::vector<float> cascadeBoundingDistances = calculateSplitDistances(cascadeCount, 0.1f, maxRange);
+	cascadeBoundingDistances.insert(cascadeBoundingDistances.begin(), 0);
+	cascadeBoundingDistances.push_back(maxRange);
+	return cascadeBoundingDistances;
+}
+
+CascadedShadowMapGenerator::CascadedShadowMapGenerator(const CascadedShadowMapGeneratorConfig& config) :
+	mCascadeBoundingDistances(config.cascadeBoundingDistances)
+{
+	int cascadeCount = config.cascadeBoundingDistances.size() - 1;
 	assert(cascadeCount >= 1);
 
 	mCascadeShadowMatrixModifierUniform = new osg::Uniform(osg::Uniform::FLOAT_VEC4, "cascadeShadowMatrixModifier", cascadeCount);
 
 	for (int i = 0; i < cascadeCount; ++i)
 	{
-		mShadowMapGenerators.push_back(std::make_shared<ShadowMapGenerator>(shadowCasterProgram, i));
+		ShadowMapGeneratorConfig config;
+		config.textureSize = config.textureSize;
+		config.shadowMapId = i;
+		mShadowMapGenerators.push_back(std::make_shared<ShadowMapGenerator>(config));
 		mTextures.push_back(mShadowMapGenerators[i]->getTexture());
 
 	}
@@ -51,20 +65,7 @@ CascadedShadowMapGenerator::CascadedShadowMapGenerator(osg::ref_ptr<osg::Program
 
 void CascadedShadowMapGenerator::update(const vis::Camera& viewCamera, const osg::Vec3& lightDirection, const osg::Vec3& wrappedNoiseOrigin)
 {
-	const float maxRange = 2000;
-	std::vector<float> cascadeBoundingDistances;
-	if (false) // Automatic split calculation. TODO: improve results
-	{
-		cascadeBoundingDistances = calculateSplitDistances(mShadowMapGenerators.size(), 0.1f, maxRange);
-		cascadeBoundingDistances.insert(cascadeBoundingDistances.begin(), 0);
-		cascadeBoundingDistances.push_back(maxRange);
-	}
-	else
-	{
-		cascadeBoundingDistances = {0, 50, 200, 600, maxRange};
-	}
-
-	mMaxShadowViewDistance->set(cascadeBoundingDistances.back());
+	mMaxShadowViewDistance->set(mCascadeBoundingDistances.back());
 
 	for (size_t i = 0; i < mShadowMapGenerators.size(); ++i)
 	{
@@ -73,13 +74,13 @@ void CascadedShadowMapGenerator::update(const vis::Camera& viewCamera, const osg
 		Frustum frustum;
 		frustum.fieldOfViewY = viewCamera.getFovY();
 		frustum.aspectRatio = viewCamera.getAspectRatio();
-		frustum.nearPlaneDistance = cascadeBoundingDistances[i];
-		frustum.farPlaneDistance = cascadeBoundingDistances[i + 1];
+		frustum.nearPlaneDistance = mCascadeBoundingDistances[i];
+		frustum.farPlaneDistance = mCascadeBoundingDistances[i + 1];
 		auto result = calculateMinimalEnclosingSphere(frustum);
 
 		double radiusPaddingMultiplier = 1.05; // make cascade slightly bigger to ensure enough overlap for blending between cascades. TODO: calculate actual overlap required.
 		generator->setRadiusWorldSpace(result.radius * radiusPaddingMultiplier);
-		generator->setDepthRangeWorldSpace(maxRange * 2);
+		generator->setDepthRangeWorldSpace(mCascadeBoundingDistances.back() * 2);
 
 		osg::Vec3 viewCameraDirection = viewCamera.getOrientation() * osg::Vec3f(1, 0, 0);
 		osg::Vec3 shadowCameraPosition = viewCamera.getPosition() + viewCameraDirection * result.centerDistance + lightDirection * generator->getDepthRangeWorldSpace() * 0.5f;

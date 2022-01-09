@@ -14,10 +14,16 @@
 namespace skybolt {
 namespace vis {
 
+struct CascadedShadowMapGeneratorConfig
+{
+	int textureSize;
+	std::vector<float> cascadeBoundingDistances; //!< size is number of cascades + 1
+};
+
 class CascadedShadowMapGenerator
 {
 public:
-	CascadedShadowMapGenerator(osg::ref_ptr<osg::Program> shadowCasterProgram, int cascadeCount);
+	CascadedShadowMapGenerator(const CascadedShadowMapGeneratorConfig& config);
 
 	void update(const vis::Camera& viewCamera, const osg::Vec3& lightDirection, const osg::Vec3& wrappedNoiseOrigin);
 
@@ -53,6 +59,7 @@ private:
 private:
 	std::vector<osg::ref_ptr<osg::Texture2D>> mTextures;
 	std::vector<std::shared_ptr<class ShadowMapGenerator>> mShadowMapGenerators;
+	std::vector<float> mCascadeBoundingDistances;
 
 	//! Vec4f array. Stores a Vec4f for each cascade with values [scaleXY, offsetX, offsetY, offsetZ] relative to the first cascade.
 	//! This is used by the shader to avoid having multiplying the shaded point by the matrix of every cascade.

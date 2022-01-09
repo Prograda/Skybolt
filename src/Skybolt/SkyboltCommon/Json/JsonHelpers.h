@@ -49,4 +49,20 @@ static std::map<std::string, T> readNameMap(const nlohmann::json& j, const std::
 	return result;
 }
 
+template <typename T>
+static std::vector<T> readOptionalVector(const nlohmann::json& j, const std::string& name, const std::vector<T>& defaultValue)
+{
+	auto item = j.find(name);
+	if (item != j.end())
+	{
+		std::vector<T> r;
+		for (const auto& v : item.value())
+		{
+			r.push_back(v.get<T>());
+		}
+		return r;
+	}
+	return defaultValue;
+}
+
 } // namespace skybolt

@@ -652,8 +652,10 @@ Planet::Planet(const PlanetConfig& config) :
 	// Shadows
 	if (config.shadowParams)
 	{
-		int shadowCascades = 4;
-		mShadowMapGenerator = std::make_unique<CascadedShadowMapGenerator>(config.programs->getRequiredProgram("shadowCaster"), shadowCascades);
+		CascadedShadowMapGeneratorConfig c;
+		c.cascadeBoundingDistances = config.shadowParams->cascadeBoundingDistances;
+		c.textureSize = config.shadowParams->textureSize;
+		mShadowMapGenerator = std::make_unique<CascadedShadowMapGenerator>(c);
 
 		{
 			osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();

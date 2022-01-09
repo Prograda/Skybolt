@@ -31,6 +31,8 @@ namespace vis {
 
 struct ShadowParams
 {
+	int textureSize;
+	std::vector<float> cascadeBoundingDistances;
 };
 
 struct PlanetConfig

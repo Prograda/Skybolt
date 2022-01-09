@@ -27,10 +27,10 @@ static void getOrthonormalBasis(const osg::Vec3 &normal, osg::Vec3 &tangent, osg
 	tangent = bitangent ^ normal;
 }
 
-ShadowMapGenerator::ShadowMapGenerator(osg::ref_ptr<osg::Program> shadowCasterProgram, int shadowMapId)
+ShadowMapGenerator::ShadowMapGenerator(const ShadowMapGeneratorConfig& config)
 {
-	int textureWidth = 1024;
-	int textureHeight = 1024;
+	int textureWidth = config.textureSize;
+	int textureHeight = config.textureSize;
 
 	mTexture = createRenderTexture(textureWidth, textureHeight);
 
@@ -72,7 +72,7 @@ ShadowMapGenerator::ShadowMapGenerator(osg::ref_ptr<osg::Program> shadowCasterPr
 	ss->addUniform(mViewProjectionMatrixUniform);
 
 	// Receiver uniforms
-	mShadowProjectionMatrixUniform = new osg::Uniform(std::string("shadowProjectionMatrix" + std::to_string(shadowMapId)).c_str(), osg::Matrixf());
+	mShadowProjectionMatrixUniform = new osg::Uniform(std::string("shadowProjectionMatrix" + std::to_string(config.shadowMapId)).c_str(), osg::Matrixf());
 }
 
 void ShadowMapGenerator::setRadiusWorldSpace(double radius)

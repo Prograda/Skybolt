@@ -14,10 +14,16 @@
 namespace skybolt {
 namespace vis {
 
+struct ShadowMapGeneratorConfig
+{
+	int textureSize = 1024;
+	int shadowMapId = 0;
+};
+
 class ShadowMapGenerator
 {
 public:
-	ShadowMapGenerator(osg::ref_ptr<osg::Program> shadowCasterProgram, int shadowMapId = 0);
+	ShadowMapGenerator(const ShadowMapGeneratorConfig& config);
 
 	void update(const osg::Vec3& shadowCameraPosition, const osg::Vec3& lightDirection, const osg::Vec3& wrappedNoiseOrigin);
 	float getRadiusWorldSpace() const { return mRadiusWorldSpace; }

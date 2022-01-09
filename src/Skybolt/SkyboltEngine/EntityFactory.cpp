@@ -343,7 +343,11 @@ static std::optional<vis::ShadowParams> toShadowParams(const nlohmann::json& jso
 	{
 		if (readOptionalOrDefault<bool>(i.value(), "enabled", true))
 		{
-			return vis::ShadowParams();
+			vis::ShadowParams params;
+			params.cascadeBoundingDistances = readOptionalVector<float>(i.value(), "cascadeBoundingDistances", {0, 50, 200, 600, 2000});
+			params.textureSize = readOptionalOrDefault<int>(i.value(), "textureSize", 1024);
+
+			return params;
 		}
 	}
 	return {};
