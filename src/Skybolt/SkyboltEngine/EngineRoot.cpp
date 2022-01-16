@@ -168,6 +168,9 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	auto visFactoryRegistry = std::make_shared<vis::VisFactoryRegistry>();
 	vis::addDefaultFactories(*visFactoryRegistry);
 
+	tileSourceFactoryRegistry = std::make_shared<vis::JsonTileSourceFactoryRegistry>(config.tileSourceFactoryRegistryConfig);
+	vis::addDefaultFactories(*tileSourceFactoryRegistry);
+
 	// Create object factory
 	EntityFactory::Context context;
 	context.scheduler = scheduler.get();
@@ -179,7 +182,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	context.namedObjectRegistry = namedObjectRegistry;
 	context.stats = &stats;
 	context.visFactoryRegistry = visFactoryRegistry;
-	context.tileSourceFactory = std::make_shared<vis::JsonTileSourceFactory>(config.tileSourceFactoryConfig);
+	context.tileSourceFactoryRegistry = tileSourceFactoryRegistry;
 	context.modelFactory = createModelFactory(programs);
 	context.fileLocator = locateFile;
 	context.assetPackagePaths = mAssetPackagePaths;

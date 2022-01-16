@@ -433,17 +433,20 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 	{
 		nlohmann::json elevation = layers.at("elevation");
 		config.elevationMaxLodLevel = elevation.at("maxLevel");
-		config.planetTileSources.elevation = context.tileSourceFactory->createTileSourceFromJson(elevation);
+		config.planetTileSources.elevation = context
+			.tileSourceFactoryRegistry->getFactory(elevation.at("format"))(elevation);
 	}
 	{
 		nlohmann::json albedo = layers.at("albedo");
 		config.albedoMaxLodLevel = albedo.at("maxLevel");
-		config.planetTileSources.albedo = context.tileSourceFactory->createTileSourceFromJson(albedo);
+		config.planetTileSources.albedo = context
+			.tileSourceFactoryRegistry->getFactory(albedo.at("format"))(albedo);
 	}
 	auto it = layers.find("attribute");
 	if (it != layers.end())
 	{
-		config.planetTileSources.attribute = context.tileSourceFactory->createTileSourceFromJson(*it);
+		config.planetTileSources.attribute = context
+			.tileSourceFactoryRegistry->getFactory(it->at("format"))(*it);
 		config.attributeMinLodLevel = it->at("minLevel");
 		config.attributeMaxLodLevel = it->at("maxLevel");
 	}

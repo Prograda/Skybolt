@@ -15,26 +15,38 @@
 namespace skybolt {
 namespace vis {
 
-struct JsonTileSourceFactoryConfig
+struct JsonTileSourceFactoryRegistryConfig
 {
 	std::string cacheDirectory;
 	std::map<std::string, std::string> apiKeys;
 };
 
-class JsonTileSourceFactory
+using JsonTileSourceFactory = std::function<TileSourcePtr(const nlohmann::json& json)>;
+
+using ApiKeys = std::map<std::string, std::string>;
+const std::string& getApiKey(const ApiKeys& keys, const std::string& name);
+
+class JsonTileSourceFactoryRegistry
 {
 public:
-	JsonTileSourceFactory(const JsonTileSourceFactoryConfig& config);
+	JsonTileSourceFactoryRegistry(const JsonTileSourceFactoryRegistryConfig& config);
 
-	TileSourcePtr createTileSourceFromJson(const nlohmann::json& json) const;
+	void addFactory(const std::string& name, JsonTileSourceFactory factory);
+	const JsonTileSourceFactory& getFactory(const std::string& name) const;
+
+	JsonTileSourceFactory wrapWithCacheSupport(JsonTileSourceFactory factory) const;
+	JsonTileSourceFactory wrapWithProjectionSupport(JsonTileSourceFactory factory) const;
+
+	const std::string& getCacheDirectory() const { return mCacheDirectory; }
+	ApiKeys getApiKeys() const { return mApiKeys; }
 
 private:
-	std::string getApiKey(const std::string& name) const;
-
-private:
-	std::string mCacheDirectory;
-	std::map<std::string, std::string> mApiKeys;
+	const std::string mCacheDirectory;
+	ApiKeys mApiKeys;
+	std::map<std::string, JsonTileSourceFactory> mFactories;
 };
+
+void addDefaultFactories(JsonTileSourceFactoryRegistry& registry);
 
 } // namespace vis
 } // namespace skybolt

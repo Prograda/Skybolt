@@ -42,8 +42,8 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFa
 {
 	EngineRootConfig config;
 	config.pluginFactories = pluginFactories;
-	config.tileSourceFactoryConfig.apiKeys = readNameMap<std::string>(settings, "tileApiKeys");
-	config.tileSourceFactoryConfig.cacheDirectory = "Cache";
+	config.tileSourceFactoryRegistryConfig.apiKeys = readNameMap<std::string>(settings, "tileApiKeys");
+	config.tileSourceFactoryRegistryConfig.cacheDirectory = "Cache";
 	config.engineSettings = settings;
 	return std::make_unique<EngineRoot>(config);
 }

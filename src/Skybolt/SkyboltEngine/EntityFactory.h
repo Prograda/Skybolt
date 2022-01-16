@@ -35,7 +35,7 @@ public:
 		JulianDateProvider julianDateProvider;
 		sim::NamedObjectRegistryPtr namedObjectRegistry;
 		ComponentFactoryRegistryPtr componentFactoryRegistry;
-		vis::JsonTileSourceFactoryPtr tileSourceFactory;
+		vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
 		vis::ModelFactoryPtr modelFactory;
 		EngineStats* stats;
 		file::FileLocator fileLocator;

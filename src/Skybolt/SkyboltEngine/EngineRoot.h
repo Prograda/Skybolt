@@ -26,7 +26,7 @@ typedef std::function<PluginPtr(const PluginConfig&)> PluginFactory;
 struct EngineRootConfig
 {
 	std::vector<PluginFactory> pluginFactories;
-	vis::JsonTileSourceFactoryConfig tileSourceFactoryConfig;
+	vis::JsonTileSourceFactoryRegistryConfig tileSourceFactoryRegistryConfig;
 	nlohmann::json engineSettings;
 };
 
@@ -52,6 +52,7 @@ public:
 	std::unique_ptr<sim::World> simWorld;
 	std::unique_ptr<EntityFactory> entityFactory;
 	sim::NamedObjectRegistryPtr namedObjectRegistry;
+	vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
 	EngineStats stats;
 	Scenario scenario;
 	sim::SystemRegistryPtr systemRegistry;
