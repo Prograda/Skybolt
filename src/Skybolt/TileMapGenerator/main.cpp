@@ -7,6 +7,7 @@
 #include "TileMapGenerator.h"
 #include <SkyboltVis/OsgImageHelpers.h>
 #include <SkyboltVis/OsgMathHelpers.h>
+#include <SkyboltVis/Renderable/Planet/Tile/HeightMap.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <osgDB/ReadFile>
 
@@ -38,7 +39,7 @@ void postProcessStrm(osg::Image& image)
 		{
 			value = -500; // set to match mask in GLOBE data
 		}
-		value += 32767;
+		value += getHeightmapSeaLevelValueInt();
 	}
 }
 

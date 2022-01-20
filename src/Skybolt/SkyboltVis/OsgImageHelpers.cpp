@@ -7,6 +7,7 @@
 #include "OsgImageHelpers.h"
 #include "OsgMathHelpers.h"
 #include <SkyboltCommon/Math/MathUtility.h>
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMap.h"
 #include <osg/Texture>
 #include <osgDB/ReadFile>
 #include <boost/algorithm/string/predicate.hpp>
@@ -72,7 +73,7 @@ osg::ref_ptr<osg::Image> loadRawImage16bit(const std::string& filename, int widt
 
 		// Offset sea level
 		uint16_t& value = *(uint16_t*)p;
-		value += 32767;
+		value += getHeightmapSeaLevelValueInt();
 
 		p += 2;
 	}

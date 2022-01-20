@@ -7,6 +7,7 @@
 #include "HeightmapLeveler.h"
 #include <SkyboltVis/OsgBox2.h>
 #include <SkyboltVis/GeoImageHelpers.h>
+#include <SkyboltVis/Renderable/Planet/Tile/HeightMap.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 
 #include <filesystem>
@@ -203,7 +204,7 @@ void levelHeightmapsUnderFeatures(const std::string& heightmapSourceDirectory, c
 
 static float heightmapValueToFloatAltitude(float value)
 {
-	return value - 32767.f;
+	return value - vis::getHeightmapSeaLevelValueFloat();
 }
 
 double getAltitudeAtPosition(const std::string& heightmapSourceDirectory, const sim::LatLon& position)

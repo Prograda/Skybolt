@@ -8,6 +8,7 @@
 #include "TileSource/TileSource.h"
 #include "SkyboltVis/Renderable/Planet/AttributeMapHelpers.h"
 #include "SkyboltVis/Renderable/Planet/Tile/NormalMapHelpers.h"
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMap.h"
 #include "SkyboltVis/OsgImageHelpers.h"
 #include "SkyboltVis/OsgTextureHelpers.h"
 #include <algorithm>
@@ -64,13 +65,13 @@ static void fillBathymetryInHeightmap(osg::Image& src)
 		uint16_t& v = pSrc[i];
 
 		//if (v <= 32267) // If water mask TODO: fix. The water mask values are not set in the TMS height map high LOD tiles in the Seattle bay.
-		if (v <= 32766) // if below sea level
+		if (v < getHeightmapSeaLevelValueInt()) // if below sea level
 		{
-			v = 32767 - 10; // set sea floor level to just below sea level, to get sloping shore lines. TODO: should use real bathymetry
+			v = getHeightmapSeaLevelValueInt() - 10; // set sea floor level to just below sea level, to get sloping shore lines. TODO: should use real bathymetry
 		}
-		else if (v <= 32767) // Rase land above sea level. TODO: fix for dry areas below sea level, e.g Shore of Dead Sea
+		else if (v <= getHeightmapSeaLevelValueInt()) // Rase land above sea level. TODO: fix for dry areas below sea level, e.g Shore of Dead Sea
 		{
-			v = 32768;
+			v = getHeightmapSeaLevelValueInt() + 1;
 		}
 	}
 }

@@ -7,7 +7,7 @@
 #include "MapboxElevationTileSource.h"
 
 #include "SkyboltVis/OsgImageHelpers.h"
-
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMap.h"
 #include <boost/algorithm/string/replace.hpp>
 
 using namespace skybolt;
@@ -50,7 +50,7 @@ osg::ref_ptr<osg::Image> MapboxElevationTileSource::createImage(const QuadTreeTi
 			//	v = -500;
 			}
 
-			*d++ = v + 32767;
+			*d++ = v + getHeightmapSeaLevelValueInt();
 		}
 
 		return dest;

@@ -8,6 +8,7 @@
 
 #include "ElevationProvider.h"
 #include "SkyboltVis/OsgBox2.h"
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMap.h"
 #include <osg/Image>
 
 namespace skybolt {
@@ -16,12 +17,12 @@ namespace vis {
 //@param take value as float instead of uint16_t so we can handle conversion of non integer heights produced by interpolation.
 inline float heightmapValueToFloat(float value)
 {
-	return -value + 32767.f;
+	return -value + getHeightmapSeaLevelValueFloat();
 }
 
 inline uint16_t floatToHeightmapValue(float z)
 {
-	return uint16_t(-z + 32767);
+	return uint16_t(-z + getHeightmapSeaLevelValueFloat());
 }
 
 class HeightmapElevationProvider : public ElevationProvider
