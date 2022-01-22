@@ -8,6 +8,7 @@
 #include "Camera.h"
 #include "ShadowMapGenerator.h"
 #include <assert.h>
+#include <algorithm>
 
 namespace skybolt {
 namespace vis {

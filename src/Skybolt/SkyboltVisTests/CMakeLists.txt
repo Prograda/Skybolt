@@ -12,6 +12,6 @@ add_definitions(-DCMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} -DSHADERS_SOURCE_DIR="${C
 
 add_executable(${APP_NAME} ${SOURCE_FILES})
 
-target_link_libraries(${APP_NAME} SkyboltVis Catch2 ${OPENGL_LIBRARIES})
+target_link_libraries(${APP_NAME} SkyboltVis Catch2::Catch2 ${OPENGL_LIBRARIES})
 
 catch_discover_tests(${APP_NAME})

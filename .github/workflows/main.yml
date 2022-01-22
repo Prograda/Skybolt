@@ -1,0 +1,58 @@
+name: Build Skybolt
+on: [push]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04]
+        include:
+          - os: ubuntu-20.04
+            python-arch: "x64"
+            python-version: "3.6.x" 
+            install-headerfiles: true
+            prepare-python: true
+            gcc-version: "9"
+
+    runs-on: ${{ matrix.os }}
+    env:
+      buildDir: ${{github.workspace}}/build
+      depsDir: ${{github.workspace}}/deps
+    steps:
+    - uses: actions/checkout@v2.4.0
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: ${{ matrix.python-arch }}
+      if: matrix.prepare-python
+    - name: Install Linux packages
+      run: sudo apt-get install -y libgl-dev
+      if: runner.os == 'Linux'
+    - name: Install C and C++ header files
+      run: |
+        sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib
+      if: matrix.install-headerfiles
+    - name: Install conan
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install conan
+    - name: Enable C++11
+      run: |
+        conan profile new default --detect
+        conan profile update settings.compiler.libcxx=libstdc++11 default
+    - name: Conan install
+      run: |
+        mkdir ${{env.depsDir}}
+        cd ${{env.depsDir}}
+        conan install ${{github.workspace}} --build=cxxtimer --build=px_sched --build=xsimd
+    - name: Cmake build
+      run: |
+        mkdir ${{env.buildDir}}
+        cd ${{env.buildDir}}
+        cmake -DCMAKE_TOOLCHAIN_FILE=${{env.depsDir}}/conan_paths.cmake ${{github.workspace}}
+        cmake --build .
+    - name: Cmake test
+      run: |
+        cd ${{env.buildDir}}
+        ctest

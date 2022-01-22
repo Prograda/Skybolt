@@ -8,6 +8,6 @@ find_package(Catch2)
 
 add_executable(${APP_NAME} ${SOURCE_FILES})
 
-target_link_libraries (${APP_NAME} SkyboltSim Catch2)
+target_link_libraries (${APP_NAME} SkyboltSim Catch2::Catch2)
 
 catch_discover_tests(${APP_NAME})

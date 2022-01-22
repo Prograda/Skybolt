@@ -14,10 +14,10 @@ find_package(cxxtimer)
 find_package(xsimd)
 
 set(LIBS
-	cxxtimer
+	cxxtimer::cxxtimer
 	SkyboltEngine
 	${muFFT_LIBRARIES}
-	xsimd
+	xsimd::xsimd
 )
 
 add_definitions(-D_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING) # disable deprecation warning for xsimd
@@ -33,4 +33,3 @@ target_include_directories(${TARGET_NAME} PUBLIC
 set_target_properties(${TARGET_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE) #Export symbols for tests
 set_engine_plugin_target_properties(${TARGET_NAME})
 skybolt_plugin_install(${TARGET_NAME})
-skybolt_install(xsimd)

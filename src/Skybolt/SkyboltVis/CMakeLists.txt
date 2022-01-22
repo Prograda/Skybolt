@@ -37,10 +37,10 @@ set(LIBRARIES
 	${OSG_OSGVIEWER_LIBRARY}
 	${OPENTHREADS_LIBRARIES}
 	${muFFT_LIBRARIES}
-	cxxtimer
-	earcut
-	httplib
-	px_sched
+	cxxtimer::cxxtimer
+	earcut::earcut
+	httplib::httplib
+	px_sched::px_sched
 )
 
 add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
@@ -54,7 +54,3 @@ target_include_directories(${LIB_NAME} PUBLIC
 )
 
 skybolt_install(${LIB_NAME})
-skybolt_install(cxxtimer)
-skybolt_install(earcut)
-skybolt_install(httplib)
-skybolt_install(px_sched)
