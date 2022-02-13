@@ -88,7 +88,7 @@ public:
 private:
 	sim::Entity* mEntity;
 	std::unique_ptr<JSBSim::FGFDMExec> mExec;
-	boost::optional<sim::Vector3> mLastPosition;
+	std::optional<sim::Vector3> mLastPosition;
 	std::shared_ptr<ControlInputT<glm::vec2>> mStickInput;
 	std::shared_ptr<ControlInputT<float>> mThrottleInput;
 	std::shared_ptr<ControlInputT<float>> mRudderInput;

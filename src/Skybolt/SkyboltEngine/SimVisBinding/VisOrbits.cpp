@@ -36,7 +36,7 @@ VisOrbits::~VisOrbits()
 {
 }
 
-static boost::optional<Orbit> getOrbit(const Entity& entity, double julianDate)
+static std::optional<Orbit> getOrbit(const Entity& entity, double julianDate)
 {
 	if (const auto& controller = entity.getFirstComponent<OrbitComponent>())
 	{
@@ -58,7 +58,7 @@ static boost::optional<Orbit> getOrbit(const Entity& entity, double julianDate)
 			return createOrbitFromEclipticCoordinates(args);
 		}
 	}
-	return boost::none;
+	return std::nullopt;
 }
 
 static bool hasOrbit(const Entity& entity)
@@ -101,13 +101,13 @@ void VisOrbits::syncVis(const GeocentricToNedConverter& converter)
 	}
 }
 
-boost::optional< vis::PolylinePtr> VisOrbits::createObject(const sim::EntityPtr& entity)
+std::optional< vis::PolylinePtr> VisOrbits::createObject(const sim::EntityPtr& entity)
 {
 	if (hasOrbit(*entity))
 	{
 		return std::make_shared<vis::Polyline>(mParams);
 	}
-	return boost::none;
+	return std::nullopt;
 }
 
 } // namespace skybolt

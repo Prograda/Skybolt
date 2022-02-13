@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "DefaultRootNode.h"
+#include "SkyboltVis/DefaultRootNode.h"
 #include <osg/Billboard>
 
 namespace skybolt {
@@ -18,9 +18,9 @@ class Billboard : public DefaultRootNode
 {
 public:
 	Billboard(const osg::ref_ptr<osg::StateSet>& stateSet, float width, float height);
-	~Billboard();
+	~Billboard() override;
 
-	void setOrientation(const osg::Quat &orientation) {}; // has no effect
+	void setOrientation(const osg::Quat &orientation) override {}; // has no effect
 
 	void setUpDirection(const osg::Vec3f& dir);
 

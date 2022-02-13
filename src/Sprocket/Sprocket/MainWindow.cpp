@@ -653,12 +653,12 @@ void MainWindow::updateIfIntervalElapsed()
 
 static bool isNamedEntityWithPosition(const Entity& entity)
 {
-	return getPosition(entity).is_initialized() && entity.getFirstComponent<TemplateNameComponent>() != nullptr;
+	return getPosition(entity).has_value() && entity.getFirstComponent<TemplateNameComponent>() != nullptr;
 }
 
 static bool isPlanet(const Entity& entity)
 {
-	return getPosition(entity).is_initialized() && entity.getFirstComponent<PlanetComponent>() != nullptr;
+	return getPosition(entity).has_value() && entity.getFirstComponent<PlanetComponent>() != nullptr;
 }
 
 class CameraControllerWidget : public QWidget

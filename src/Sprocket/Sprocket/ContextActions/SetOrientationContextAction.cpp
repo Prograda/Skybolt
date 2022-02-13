@@ -39,7 +39,7 @@ void SetOrientationContextAction::execute(Entity& entity) const
 	sim::LatLon latLon = sim::toLatLon(toLatLonAlt(GeocentricPosition(*position)).position);
 
 	OrientationEditor* editor = new OrientationEditor();
-	editor->setOrientation(std::make_shared<GeocentricOrientation>(orientation.get()), latLon);
+	editor->setOrientation(std::make_shared<GeocentricOrientation>(*orientation), latLon);
 	auto dialog = createDialog(editor, "Set Orientation");
 
 	if (dialog->exec() == QDialog::Accepted)

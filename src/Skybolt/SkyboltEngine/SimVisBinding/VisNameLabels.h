@@ -23,7 +23,7 @@ public:
 
 	void syncVis(const GeocentricToNedConverter& converter) override;
 
-	boost::optional<osg::MatrixTransform*> createObject(const sim::EntityPtr& entity) override;
+	std::optional<osg::MatrixTransform*> createObject(const sim::EntityPtr& entity) override;
 
 	void destroyObject(osg::MatrixTransform* const& object) override {}
 

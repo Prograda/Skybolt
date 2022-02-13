@@ -44,24 +44,29 @@ ScatteringCoefficientCalculator createTableReyleighScatteringCoefficientCalculat
 	};
 }
 
+// Values from "Reference Solar Spectral Irradiance: ASTM G-173", ETR column
+// (see http://rredc.nrel.gov/solar/spectra/am1.5/ASTMG173/ASTMG173.html),
+// summed and averaged in each bin (e.g. the value for 360nm is the average
+// of the ASTM G-173 values for all wavelengths between 360 and 370nm).
+// Values in W.m^-2.
+constexpr int kLambdaMin = 360;
+constexpr int kLambdaMax = 830;
+constexpr double kSolarIrradiance[48] = {
+	1.11776, 1.14259, 1.01249, 1.14716, 1.72765, 1.73054, 1.6887, 1.61253,
+	1.91198, 2.03474, 2.02042, 2.02212, 1.93377, 1.95809, 1.91686, 1.8298,
+	1.8685, 1.8931, 1.85149, 1.8504, 1.8341, 1.8345, 1.8147, 1.78158, 1.7533,
+	1.6965, 1.68194, 1.64654, 1.6048, 1.52143, 1.55622, 1.5113, 1.474, 1.4482,
+	1.41018, 1.36775, 1.34188, 1.31429, 1.28303, 1.26758, 1.2367, 1.2082,
+	1.18737, 1.14683, 1.12362, 1.1058, 1.07124, 1.04992
+};
+
+// Wavelength independent solar irradiance "spectrum" (not physically
+// realistic, but was used in the original implementation).
+constexpr double kConstantSolarIrradiance = 1.5;
+
 BruentonAtmosphere::BruentonAtmosphere(const BruentonAtmosphereConfig& config) :
 	mGroup(new osg::Group())
 {
-	// Values from "Reference Solar Spectral Irradiance: ASTM G-173", ETR column
-	// (see http://rredc.nrel.gov/solar/spectra/am1.5/ASTMG173/ASTMG173.html),
-	// summed and averaged in each bin (e.g. the value for 360nm is the average
-	// of the ASTM G-173 values for all wavelengths between 360 and 370nm).
-	// Values in W.m^-2.
-	constexpr int kLambdaMin = 360;
-	constexpr int kLambdaMax = 830;
-	constexpr double kSolarIrradiance[48] = {
-	  1.11776, 1.14259, 1.01249, 1.14716, 1.72765, 1.73054, 1.6887, 1.61253,
-	  1.91198, 2.03474, 2.02042, 2.02212, 1.93377, 1.95809, 1.91686, 1.8298,
-	  1.8685, 1.8931, 1.85149, 1.8504, 1.8341, 1.8345, 1.8147, 1.78158, 1.7533,
-	  1.6965, 1.68194, 1.64654, 1.6048, 1.52143, 1.55622, 1.5113, 1.474, 1.4482,
-	  1.41018, 1.36775, 1.34188, 1.31429, 1.28303, 1.26758, 1.2367, 1.2082,
-	  1.18737, 1.14683, 1.12362, 1.1058, 1.07124, 1.04992
-	};
 	// Values from http://www.iup.uni-bremen.de/gruppen/molspec/databases/
 	// referencespectra/o3spectra2011/index.html for 233K, summed and averaged in
 	// each bin (e.g. the value for 360nm is the average of the original values
@@ -81,9 +86,6 @@ BruentonAtmosphere::BruentonAtmosphere(const BruentonAtmosphereConfig& config) :
 	// 300 Dobson units of ozone - for this we divide 300 DU by the integral of
 	// the ozone density profile defined below, which is equal to 15km).
 	constexpr double kMaxOzoneNumberDensity = 300.0 * kDobsonUnit / 15000.0;
-	// Wavelength independent solar irradiance "spectrum" (not physically
-	// realistic, but was used in the original implementation).
-	constexpr double kConstantSolarIrradiance = 1.5;
 
 	BruentonAtmosphereGeneratorConfig generatorConfig;
 
@@ -152,6 +154,34 @@ BruentonAtmosphere::~BruentonAtmosphere()
 	{
 		mGroup->removeChild(mGenerator.get());
 	}
+}
+
+static osg::Vec3f calcSolarIrradiance()
+{
+	std::vector<double> wavelengths;
+	std::vector<double> solarIrradiance;
+
+	for (int lambda = kLambdaMin; lambda <= kLambdaMax; lambda += 10)
+	{
+		double lambdaMicroMeters = static_cast<double>(lambda) * 1e-3;  // micro-meters
+		wavelengths.push_back(lambda);
+		if (use_constant_solar_spectrum)
+		{
+			solarIrradiance.push_back(kConstantSolarIrradiance);
+		}
+		else
+		{
+			solarIrradiance.push_back(kSolarIrradiance[(lambda - kLambdaMin) / 10]);
+		}
+	}
+	osg::Vec3 rgbWavelengths(atmosphere::Model::kLambdaR, atmosphere::Model::kLambdaG, atmosphere::Model::kLambdaB);
+	return Interpolate(wavelengths, solarIrradiance, rgbWavelengths);
+}
+
+osg::Vec3f BruentonAtmosphere::getSolarIrradiance()
+{
+	static osg::Vec3f solarIrradiance = calcSolarIrradiance();
+	return solarIrradiance;
 }
 
 const osg::ref_ptr<osg::Texture>& BruentonAtmosphere::getTransmittanceTexture() const

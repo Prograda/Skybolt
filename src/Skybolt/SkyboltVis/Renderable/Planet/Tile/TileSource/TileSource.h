@@ -20,6 +20,8 @@ class TileSource
 public:
 	virtual ~TileSource() {}
 
+	//! createImage may be called concurrently from different threads to create different images.
+	//!@ThreadSafe
 	virtual osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const = 0;
 };
 

@@ -21,6 +21,7 @@
 
 #include <SkyboltSim/JsonHelpers.h>
 #include <SkyboltSim/World.h>
+#include <SkyboltSim/WorldUtil.h>
 #include <SkyboltSim/Components/DynamicBodyComponent.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
@@ -263,13 +264,16 @@ static void loadParticleSystem(Entity* entity, const EntityFactory::Context& con
 
 	double lifetime = json.at("lifetime");
 
-	ParticleIntegrator::Params lifetimeParams;
-	lifetimeParams.lifetime = lifetime;
-	lifetimeParams.radiusLinearGrowthPerSecond = json.at("radiusLinearGrowthPerSecond");
-	lifetimeParams.atmosphericSlowdownFactor = json.at("atmosphericSlowdownFactor");
+	ParticleIntegrator::Params integratorParams;
+	integratorParams.lifetime = lifetime;
+	integratorParams.radiusLinearGrowthPerSecond = json.at("radiusLinearGrowthPerSecond");
+	integratorParams.atmosphericSlowdownFactor = json.at("atmosphericSlowdownFactor");
+	integratorParams.nearestPlanetProvider = [world = context.simWorld] (const Vector3& position) {
+		return findNearestEntityWithComponent<sim::PlanetComponent>(world->getEntities(), position);
+	};
 
 	auto particleSystem = std::make_shared<ParticleSystem>(ParticleSystem::Operations({
-		std::make_shared<ParticleIntegrator>(lifetimeParams), // integrate before emission ensure new particles emitted at end of time step
+		std::make_shared<ParticleIntegrator>(integratorParams), // integrate before emission ensure new particles emitted at end of time step
 		std::make_shared<ParticleEmitter>(emitterParams),
 		std::make_shared<ParticleKiller>(lifetime)
 	}));

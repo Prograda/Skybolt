@@ -12,6 +12,8 @@
 #include <SkyboltSim/Component.h>
 #include <SkyboltVis/RootNode.h>
 
+#include <optional>
+
 namespace skybolt {
 
 class GeocentricToNedConverter
@@ -19,7 +21,15 @@ class GeocentricToNedConverter
 public:
 	GeocentricToNedConverter() : mNedBasis(sim::Matrix4()), mNedBasisInverse(sim::Matrix4()) {}
 
-	void setOrigin(const sim::Vector3& geocentricPosition);
+	struct PlanetPose
+	{
+		sim::Vector3 position;
+		sim::Quaternion orientation;
+	};
+
+	void setOrigin(const sim::Vector3& origin, const std::optional<PlanetPose>& planetPose);
+
+	std::optional<PlanetPose> getPlanetPose() const { return mPlanetPose; }
 
 	osg::Vec3d convertPosition(const sim::Vector3 &position) const;
 	osg::Vec3d convertLocalPosition(const sim::Vector3 &position) const;
@@ -31,6 +41,7 @@ public:
 private:
 	sim::Matrix4 mNedBasis;
 	sim::Matrix4 mNedBasisInverse;
+	std::optional<PlanetPose> mPlanetPose;
 };
 
 } // namespace skybolt

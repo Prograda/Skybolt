@@ -17,11 +17,21 @@ namespace skybolt {
 using namespace sim;
 using namespace vis;
 
-void GeocentricToNedConverter::setOrigin(const sim::Vector3& geocentricPosition)
+void GeocentricToNedConverter::setOrigin(const sim::Vector3& origin, const std::optional<PlanetPose>& planetPose)
 {
-	double length = glm::length(geocentricPosition);
-	Vector3 down = length > 0 ? -geocentricPosition / length : Vector3(-1,0,0);
-	Vector3 north(0, 0, 1);
+	sim::Vector3 posRelPlanet = origin;
+	if (planetPose)
+	{
+		posRelPlanet -= planetPose->position;
+	}
+
+	double length = glm::length(posRelPlanet);
+	Vector3 down = length > 0 ? -posRelPlanet / length : Vector3(-1,0,0);
+	Vector3 north = Vector3(0, 0, 1);
+	if (planetPose)
+	{
+		north = planetPose->orientation * north;
+	}
 	
 	Vector3 eastUnnormalized = glm::cross(down, north);
 	length = glm::length(eastUnnormalized);
@@ -30,9 +40,11 @@ void GeocentricToNedConverter::setOrigin(const sim::Vector3& geocentricPosition)
 
 	Matrix3 rotation(north, east, down);
 	mNedBasis = Matrix4(rotation);
-	mNedBasis[3] = glm::dvec4(geocentricPosition, 1);
+	mNedBasis[3] = glm::dvec4(origin, 1);
 
 	mNedBasisInverse = glm::inverse(mNedBasis);
+
+	mPlanetPose = planetPose;
 }
 
 osg::Vec3d GeocentricToNedConverter::convertPosition(const sim::Vector3 &position) const

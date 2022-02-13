@@ -10,8 +10,10 @@
 #include "SimVisBinding/SimVisBinding.h"
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/Node.h>
+#include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/World.h>
+#include <SkyboltSim/WorldUtil.h>
 #include <assert.h>
 
 namespace skybolt {
@@ -34,12 +36,35 @@ SimVisSystem::~SimVisSystem()
 
 void SimVisSystem::updatePostDynamics(const System::StepArgs& args)
 {
-	// Calculate camera movement since last frame and apply offset to scene noise
-	Vector3 cameraPosition = mSceneOriginProvider();
+	Vector3 origin = mSceneOriginProvider();
 
-	osg::Vec3f cameraNedMovement = mCoordinateConverter->convertPosition(cameraPosition);
-	mScene->translateNoiseOrigin(-cameraNedMovement);
-	mCoordinateConverter->setOrigin(cameraPosition);
+	// Get nearest planet
+	sim::Entity* planet = findNearestEntityWithComponent<sim::PlanetComponent>(mWorld->getEntities(), origin);
+	std::optional<GeocentricToNedConverter::PlanetPose> planetPose;
+	if (planet)
+	{
+		GeocentricToNedConverter::PlanetPose p;
+		p.position = *getPosition(*planet);
+		p.orientation = *getOrientation(*planet);
+		planetPose = p;
+	}
+
+	// Calculate planet-space origin movement since last frame and apply offset to scene noise so that the
+	// noise appears fixed relative to the planet, even though the origin and planet may have moved.
+	auto prevPlanetPose = mCoordinateConverter->getPlanetPose();
+	if (planetPose && prevPlanetPose)
+	{
+		sim::Vector3 originPlanetSpace = glm::inverse(planetPose->orientation) * (origin - planetPose->position);
+		sim::Vector3 originWorldSpaceUsingPrevPlanetPose = (prevPlanetPose->orientation * originPlanetSpace) + prevPlanetPose->position;
+
+		// Calculate the origin's translation since the previous frame by querying the position of the new origin
+		// relative to the previous frame's origin and planet pose.
+		osg::Vec3f originTranslation = mCoordinateConverter->convertPosition(originWorldSpaceUsingPrevPlanetPose);
+		mScene->translateNoiseOrigin(-originTranslation);
+	}
+
+	// Update viz origin
+	mCoordinateConverter->setOrigin(origin, planetPose);
 
 	syncVis(*mWorld, *mCoordinateConverter);
 }

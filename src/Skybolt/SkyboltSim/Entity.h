@@ -13,7 +13,7 @@
 #include <SkyboltCommon/Listenable.h>
 #include <SkyboltCommon/TypedItemContainer.h>
 
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace skybolt {
 namespace sim {
@@ -78,9 +78,10 @@ private:
 	bool mDynamicsEnabled = true;
 };
 
-boost::optional<Vector3> getPosition(const Entity& entity);
-boost::optional<Quaternion> getOrientation(const Entity& entity);
-boost::optional<Vector3> getVelocity(const Entity& entity);
+std::optional<Vector3> getPosition(const Entity& entity);
+std::optional<Quaternion> getOrientation(const Entity& entity);
+std::optional<Vector3> getVelocity(const Entity& entity);
+std::optional<glm::dmat4> getTransform(const sim::Entity& entity);
 
 void setPosition(Entity& entity, const Vector3& position);
 void setOrientation(Entity& entity, const Quaternion& orientation);

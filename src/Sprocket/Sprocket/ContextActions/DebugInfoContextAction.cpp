@@ -16,7 +16,7 @@ using namespace skybolt::sim;
 
 bool DebugInfoContextAction::handles(const Entity& entity) const
 {
-	return getPosition(entity).is_initialized();
+	return getPosition(entity).has_value();
 }
 
 void DebugInfoContextAction::execute(Entity& entity) const

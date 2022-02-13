@@ -23,7 +23,7 @@ public:
 	void syncVis(const GeocentricToNedConverter& converter) override;
 
 private:
-	boost::optional<vis::PolylinePtr> createObject(const sim::EntityPtr& entity) override;
+	std::optional<vis::PolylinePtr> createObject(const sim::EntityPtr& entity) override;
 
 	void destroyObject(const vis::PolylinePtr& object) override {}
 

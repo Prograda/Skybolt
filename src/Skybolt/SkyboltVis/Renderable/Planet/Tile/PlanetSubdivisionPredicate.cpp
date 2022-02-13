@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "PlanetSubdivisionPredicate.h"
+#include "HeightMap.h"
 #include "SkyboltVis/OsgGeocentric.h"
 #include "SkyboltVis/OsgMathHelpers.h"
 
@@ -26,20 +27,25 @@ bool PlanetSubdivisionPredicate::operator()(const Box2d& bounds, const QuadTreeT
 
 	osg::Vec2d latLon = nearestPointInSolidBox(observerLatLon, latLonBounds);
 
-	osg::Vec3d tileP = llaToGeocentric(latLon, 0, planetRadius);
-	osg::Vec3d observerP = llaToGeocentric(observerLatLon, std::max(1.0, observerAltitude), planetRadius);
+	osg::Vec3d observerPosition = llaToGeocentric(observerLatLon, std::max(1.0, observerAltitude), planetRadius);
 
-	osg::Vec3d dir = observerP - tileP;
-	double distance = dir.normalize();
-	tileP.normalize();
+	// Assume mean tile elevation is close to sea level. TODO: improve assumtion. We should use min and max tile bounds if available.
+	osg::Vec3d tileNearestPointAtSeaLevel = llaToGeocentric(latLon, 0, planetRadius);
+	double distanceToTileNearestPoint = (tileNearestPointAtSeaLevel - observerPosition).length();
 
-	float cosElevation = dir * tileP;
-	bool visible = (cosElevation > 0.0f); // TODO: tune
+	osg::Vec3d tileNearestPointAtLowestAltitude = llaToGeocentric(latLon, 0, planetRadius + getHeightmapMinAltitude());
+
+	osg::Vec3d directionFromTileNearestPointAtLowestAltitudeToObserver = (observerPosition - tileNearestPointAtLowestAltitude);
+	directionFromTileNearestPointAtLowestAltitudeToObserver.normalize();
+
+	tileNearestPointAtLowestAltitude.normalize();
+	float cosElevation = directionFromTileNearestPointAtLowestAltitudeToObserver * tileNearestPointAtLowestAltitude;
+	bool visible = (cosElevation > 0.0f);
 
 	if (visible)
 	{
 		double tileSize = planetRadius / std::pow(2, key.level);
-		double projectedSize = tileSize / std::max(0.01, distance);
+		double projectedSize = tileSize / std::max(0.01, distanceToTileNearestPoint);
 		return projectedSize > glm::mix(0.4f, 0.1f, cosElevation); // TODO: tune
 	}
 

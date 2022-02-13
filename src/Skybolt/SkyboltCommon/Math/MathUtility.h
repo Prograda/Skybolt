@@ -109,6 +109,8 @@ int nextPow2(int v);
 const glm::quat& quatIdentity();
 const glm::dquat& dquatIdentity();
 
+const glm::dmat4& dmat4Identity();
+
 const glm::vec3& vec3Zero();
 const glm::vec3& vec3UnitX();
 const glm::vec3& vec3UnitY();

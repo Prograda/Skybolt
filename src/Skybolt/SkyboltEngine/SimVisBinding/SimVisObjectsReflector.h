@@ -43,7 +43,7 @@ public:
 	}
 
 protected:
-	virtual boost::optional<T> createObject(const sim::EntityPtr& entity) = 0;
+	virtual std::optional<T> createObject(const sim::EntityPtr& entity) = 0;
 	virtual void destroyObject(const T& object) = 0;
 	virtual osg::Node* getNode(const T& object) const = 0;
 
@@ -59,10 +59,10 @@ protected:
 private:
 	void entityAdded(const sim::EntityPtr& entity) override
 	{
-		boost::optional<T> optionalVisObject = createObject(entity);
+		std::optional<T> optionalVisObject = createObject(entity);
 		if (optionalVisObject)
 		{
-			const T& visObject = optionalVisObject.get();
+			const T& visObject = *optionalVisObject;
 
 			mEntities[entity.get()] = visObject;
 			mGroup->addChild(getNode(visObject));

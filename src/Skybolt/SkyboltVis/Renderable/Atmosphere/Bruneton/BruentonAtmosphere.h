@@ -56,6 +56,8 @@ public:
 	const osg::ref_ptr<osg::Texture>& getTransmittanceTexture() const;
 	const osg::ref_ptr<osg::Texture>& getScatteringTexture() const;
 
+	static osg::Vec3f getSolarIrradiance();
+
 protected:
 	void updatePreRender(const RenderContext& context) override;
 	osg::Node* _getNode() const override { return mGroup; }

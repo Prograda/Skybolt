@@ -59,9 +59,9 @@ void VisNameLabels::syncVis(const GeocentricToNedConverter& converter)
 	}
 }
 
-boost::optional<osg::MatrixTransform*> VisNameLabels::createObject(const sim::EntityPtr& entity)
+std::optional<osg::MatrixTransform*> VisNameLabels::createObject(const sim::EntityPtr& entity)
 {
-	boost::optional<sim::Vector3> position = getPosition(*entity);
+	std::optional<sim::Vector3> position = getPosition(*entity);
 	if (position && entity->getFirstComponent<TemplateNameComponent>())
 	{
 		std::string name = getName(*entity);
@@ -84,7 +84,7 @@ boost::optional<osg::MatrixTransform*> VisNameLabels::createObject(const sim::En
 			return transform;
 		}
 	}
-	return boost::none;
+	return std::nullopt;
 }
 
 } // namespace skybolt

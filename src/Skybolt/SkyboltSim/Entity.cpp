@@ -10,7 +10,6 @@
 #include "World.h"
 #include "Components/DynamicBodyComponent.h"
 #include "Components/Node.h"
-#include <boost/foreach.hpp>
 
 namespace skybolt {
 namespace sim {
@@ -82,36 +81,50 @@ Positionable* getPositionable(const Entity& entity)
 	return entity.getFirstComponent<Node>().get();
 }
 
-boost::optional<Vector3> getPosition(const Entity& entity)
+std::optional<Vector3> getPosition(const Entity& entity)
 {
 	Positionable* positionable = getPositionable(entity);
 	if (positionable)
 	{
 		return positionable->getPosition();
 	}
-	return boost::none;
+	return std::nullopt;
 }
 
-boost::optional<Quaternion> getOrientation(const Entity& entity)
+std::optional<Quaternion> getOrientation(const Entity& entity)
 {
 	Positionable* positionable = getPositionable(entity);
 	if (positionable)
 	{
 		return positionable->getOrientation();
 	}
-	return boost::none;
+	return std::nullopt;
 }
 
-boost::optional<Vector3> getVelocity(const Entity& entity)
+std::optional<Vector3> getVelocity(const Entity& entity)
 {
 	auto* component = entity.getFirstComponent<DynamicBodyComponent>().get();
 	if (component)
 	{
 		return component->getLinearVelocity();
 	}
-	return boost::none;
+	return std::nullopt;
 }
 
+std::optional<glm::dmat4> getTransform(const sim::Entity& entity)
+{
+	Positionable* positionable = getPositionable(entity);
+	if (positionable)
+	{
+		auto r = glm::dmat4(glm::dmat3x3(positionable->getOrientation()));
+		auto t = positionable->getPosition();
+		r[3][0] = t.x;
+		r[3][1] = t.y;
+		r[3][2] = t.z;
+		return r;
+	}
+	return std::nullopt;
+}
 
 void setPosition(Entity& entity, const Vector3& position)
 {

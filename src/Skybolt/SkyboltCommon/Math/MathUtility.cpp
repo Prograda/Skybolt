@@ -100,6 +100,12 @@ namespace math {
 		return q;
 	}
 
+	const glm::dmat4& dmat4Identity()
+	{
+		static glm::dmat4 m(1.0);
+		return m;
+	}
+
 	const glm::vec3& vec3Zero()
 	{
 		static glm::vec3 r(0, 0, 0);

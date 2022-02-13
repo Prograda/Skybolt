@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "ParticleSystem.h"
+#include <SkyboltSim/Entity.h>
 #include <SkyboltSim/Physics/Atmosphere.h>
 #include "SkyboltSim/Spatial/GreatCircle.h"
 #include "SkyboltSim/Spatial/Positionable.h"
@@ -94,16 +95,55 @@ void ParticleKiller::update(float dt, std::vector<Particle>& particles)
 	}
 }
 
+ParticleIntegrator::ParticleIntegrator(const Params& params) :
+	mParams(params)
+{
+	assert(mParams.nearestPlanetProvider);
+}
+
 void ParticleIntegrator::update(float dt, std::vector<Particle>& particles)
 {
-	static Atmosphere atmosphere = createEarthAtmosphere(); // TODO: get atmosphere specific to planet
-	double density = particles.empty() ? 0.0 : atmosphere.getDensity(glm::length(particles.front().position) - earthRadius());
+	if (particles.empty())
+	{
+		return;
+	}
 
 	double dtD = double(dt);
-	double velocityDamping = std::exp(-mParams.atmosphericSlowdownFactor * density * dt);
+
+	// Calculate wind velocity and damping factor
+	std::optional<sim::Vector3> windVelocity;
+	double velocityDamping;
+	sim::Entity* planet = mParams.nearestPlanetProvider(particles.front().position);
+	if (planet)
+	{
+		glm::dmat4 planetTransform = getTransform(*planet).value_or(math::dmat4Identity());
+		glm::dmat4 invPlanetTransform = glm::inverse(planetTransform);
+		sim::Vector3 firstParticlePosition = particles.front().position;
+
+		sim::Vector3 particlePositionPlanetSpace = invPlanetTransform * glm::dvec4(firstParticlePosition, 1.0);
+		if (mPrevPlanetTransform)
+		{
+			sim::Vector3 particlePrevPositionWorldSpace = *mPrevPlanetTransform * glm::dvec4(particlePositionPlanetSpace, 1.0);
+
+			windVelocity = (firstParticlePosition - particlePrevPositionWorldSpace) / dtD;
+		}
+
+		mPrevPlanetTransform = planetTransform;
+
+		static Atmosphere atmosphere = createEarthAtmosphere(); // TODO: get atmosphere specific to planet
+		double density = atmosphere.getDensity(glm::length(particlePositionPlanetSpace) - earthRadius());
+
+		velocityDamping = std::exp(-mParams.atmosphericSlowdownFactor * density * dt);
+	}
+
+	// Integrate particle motion
 	for (auto& particle : particles)
 	{
-		particle.velocity  *= velocityDamping;
+		if (windVelocity)
+		{
+			sim::Vector3 velocityRelWind = particle.velocity - *windVelocity;
+			particle.velocity = *windVelocity + velocityRelWind * velocityDamping;
+		}
 
 		particle.position += particle.velocity * dtD;
 		particle.radius += mParams.radiusLinearGrowthPerSecond * dt;

@@ -18,7 +18,7 @@ void PlanetVisBinding::syncVis(const GeocentricToNedConverter& converter)
 {
 	SimpleSimVisBinding::syncVis(converter);
 
-	static_cast<vis::Planet*>(mVisObject.get())->setJulianDate(mDateProvider());
+	static_cast<vis::Planet*>(mVisObjects.front().object.get())->setJulianDate(mDateProvider());
 }
 
 } // namespace skybolt

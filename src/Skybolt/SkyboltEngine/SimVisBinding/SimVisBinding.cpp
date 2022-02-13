@@ -16,19 +16,35 @@ namespace skybolt {
 using namespace sim;
 using namespace vis;
 
+SimpleSimVisBinding::SimpleSimVisBinding(const sim::Entity* entity) :
+	mEntity(entity)
+{
+	assert(mEntity);
+}
+
 SimpleSimVisBinding::SimpleSimVisBinding(const sim::Entity* entity, const RootNodePtr& visObject,
 					const osg::Vec3d& visPositionOffset, const osg::Quat& visOrientationOffset) :
-	mEntity(entity), mVisObject(visObject), mVisPositionOffset(visPositionOffset), mVisOrientationOffset(visOrientationOffset)
+	mEntity(entity)
 {
+	assert(mEntity);
+	addVisObject(visObject, visPositionOffset, visOrientationOffset);
+}
+
+void SimpleSimVisBinding::addVisObject(const vis::RootNodePtr& visObject, const osg::Vec3d& visPositionOffset, const osg::Quat& visOrientationOffset)
+{
+	mVisObjects.push_back({	visObject, visPositionOffset, visOrientationOffset });
 }
 
 void SimpleSimVisBinding::syncVis(const GeocentricToNedConverter& converter)
 {
 	osg::Quat q = converter.convert(*sim::getOrientation(*mEntity));
-	mVisObject->setOrientation(mVisOrientationOffset * q);
-
 	osg::Vec3d p = converter.convertPosition(*sim::getPosition(*mEntity));
-	mVisObject->setPosition(p + osg::Vec3d(q * mVisPositionOffset));
+
+	for (const auto& item : mVisObjects)
+	{
+		item.object->setOrientation(item.orientationOffset * q);
+		item.object->setPosition(p + osg::Vec3d(q * item.positionOffset));
+	}
 }
 
 void syncVis(const sim::World& world, const GeocentricToNedConverter& converter)

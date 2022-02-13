@@ -26,16 +26,29 @@ public:
 class SimpleSimVisBinding : public SimVisBinding
 {
 public:
+	//! Create binding with no vis objects. Call addVisObject() to add objects after construction.
+	SimpleSimVisBinding(const sim::Entity* entity);
+
+	//! Create binding with one vis object
 	SimpleSimVisBinding(const sim::Entity* entity, const vis::RootNodePtr& visObject,
 					const osg::Vec3d& visPositionOffset = osg::Vec3d(), const osg::Quat& visOrientationOffset = osg::Quat());
+
+	void addVisObject(const vis::RootNodePtr& visObject,
+		const osg::Vec3d& visPositionOffset = osg::Vec3d(), const osg::Quat& visOrientationOffset = osg::Quat());
 
 	void syncVis(const GeocentricToNedConverter& converter) override;
 
 protected:
 	const sim::Entity* mEntity;
-	const vis::RootNodePtr mVisObject;
-	osg::Vec3d mVisPositionOffset;
-	osg::Quat mVisOrientationOffset;
+
+	struct VisItem
+	{
+		const vis::RootNodePtr object;
+		osg::Vec3d positionOffset;
+		osg::Quat orientationOffset;
+	};
+
+	std::vector<VisItem> mVisObjects;
 };
 
 struct SimVisBindingsComponent : public sim::Component

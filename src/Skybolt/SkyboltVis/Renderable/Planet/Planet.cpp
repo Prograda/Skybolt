@@ -432,6 +432,8 @@ Planet::Planet(const PlanetConfig& config) :
 
 		mCloudCoverageFractionUniform = new osg::Uniform("cloudCoverageFraction", 0.5f);
 		ss->addUniform(mCloudCoverageFractionUniform);
+
+		ss->addUniform(new osg::Uniform("solar_irradiance", BruentonAtmosphere::getSolarIrradiance()));
 	}
 
 	// Create sky environment sphere
