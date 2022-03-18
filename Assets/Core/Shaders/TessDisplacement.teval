@@ -6,6 +6,7 @@
 
 #version 410 core
 #pragma import_defines ( CAST_SHADOWS )
+#pragma import_defines ( ENABLE_ATMOSPHERE )
 
 #include "AtmosphericScatteringWithClouds.h"
 #include "CloudShadows.h"
@@ -119,9 +120,17 @@ void main()
 	float shadowLength = 0.0; // length of shadowed part of view ray
 	
 	// Atmospheric scattering
+#ifdef ENABLE_ATMOSPHERE
 	//position_worldSpace.z = min(position_worldSpace.z, 0); // TODO: prevent points going underground which causes artifacts
 	vec3 positionRelPlanet = position_worldSpace - planetCenter;
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
 
 	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
+#else
+	scattering.sunIrradiance = GetSunIrradianceInSpace();
+	scattering.skyIrradiance = vec3(0);
+	scattering.transmittance = vec3(1);
+	scattering.skyRadianceToPoint = vec3(0);
+#endif
+	
 }

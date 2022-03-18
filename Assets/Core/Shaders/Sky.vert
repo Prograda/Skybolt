@@ -6,6 +6,7 @@
 
 #version 330 core
 #include "AtmosphericScattering.h"
+#include "DepthClamp.h"
 
 // Based on GPU Gems 2 Chapter 16. Accurate Atmospheric Scattering.
 
@@ -23,6 +24,7 @@ uniform vec3 cameraPosition;
 void main()
 {
 	gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;
+	gl_Position.z = calcFarDepthClampedZ(gl_Position);
 
 	// Get the ray from the camera to the vertex, and its length (which is the far point of the ray passing through the atmosphere)
 	vec3 cameraPositionRelPlanetCenter = cameraPosition - planetCenter;

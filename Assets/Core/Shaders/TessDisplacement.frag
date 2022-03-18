@@ -6,6 +6,8 @@
 
 #version 440 core
 #pragma import_defines ( CAST_SHADOWS )
+#pragma import_defines ( ENABLE_ATMOSPHERE )
+#pragma import_defines ( ENABLE_OCEAN )
 #pragma import_defines ( ENABLE_SHADOWS )
 #pragma import_defines ( DETAIL_MAPPING_TECHNIQUE_ALBEDO_DERIVED )
 #pragma import_defines ( DETAIL_MAPPING_TECHNIQUE_UNIFORM )
@@ -372,7 +374,11 @@ void main()
 	}
 
 	// Water
+#ifdef ENABLE_OCEAN
 	bool isWater = (elevation < 0);
+#else
+	bool isWater = false;
+#endif
 	if (isWater)
 	{
 		normal = normalize(position_worldSpace - planetCenter);
@@ -398,7 +404,11 @@ void main()
 		totalReflectance = mix(totalReflectance, scattering.skyIrradiance, fresnel);
 	}
 
+#ifdef ENABLE_ATMOSPHERE
 	color.rgb = totalReflectance * scattering.transmittance + scattering.skyRadianceToPoint;
+#else
+	color.rgb = totalReflectance;
+#endif
 
 //#define DEBUG_EDGES
 #ifdef DEBUG_EDGES

@@ -6,8 +6,7 @@
 
 #version 440 core
 
-#pragma import_defines ( ENABLE_ATMOSPHERE )
-
+#include "DepthClamp.h"
 in vec4 osg_Vertex;
 in vec4 osg_MultiTexCoord0;
 
@@ -18,5 +17,7 @@ uniform mat4 osg_ModelViewProjectionMatrix;
 void main()
 {
 	gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;
+	gl_Position.z = calcFarDepthClampedZ(gl_Position);
+
 	texCoord = osg_MultiTexCoord0.xyz;
 }

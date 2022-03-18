@@ -62,7 +62,6 @@ void main()
 		
 #ifdef ENABLE_ATMOSPHERE
 	color.rgb = totalReflectance * scattering.transmittance + scattering.skyRadianceToPoint;
-
 #else
 	color.rgb = totalReflectance;
 #endif
