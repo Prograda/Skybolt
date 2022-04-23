@@ -65,6 +65,11 @@ if (Boost_STATIC_LIBS)
 	set(Boost_USE_STATIC_LIBS ON)
 endif()
 
+OPTION(OSG_STATIC_LIBS "OSG use static libs")
+if (OSG_STATIC_LIBS)
+	add_definitions(-DOSG_LIBRARY_STATIC)
+endif()
+
 #-------------------------------------------------------------
 # Build tree
 #-------------------------------------------------------------

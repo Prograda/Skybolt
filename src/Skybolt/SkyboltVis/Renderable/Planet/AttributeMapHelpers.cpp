@@ -188,11 +188,11 @@ osg::ref_ptr<osg::Image> convertToAttributeMap(const osg::Image& srcImage)
 							osg::Vec4f sourceColor = srcImage.getColor(px, py);
 							if (sampleId == 1)
 							{
-								averagedColor += osg::Vec4f(0.02, 0.1, 0.02, 0.0)*0.9;
+								averagedColor += osg::Vec4f(0.02f, 0.1f, 0.02f, 0.0f)*0.9f;
 							}
 							else if (sampleId == 2)
 							{
-								averagedColor += osg::Vec4f(0.02, 0.1, 0.02, 0.0)*0.35;
+								averagedColor += osg::Vec4f(0.02f, 0.1f, 0.02f, 0.0f)*0.35f;
 							}
 							else
 							{

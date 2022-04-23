@@ -10,6 +10,21 @@
 
 #include <boost/foreach.hpp>
 
+#ifdef OSG_LIBRARY_STATIC
+#include <osgDB/Registry>
+// include the plugins we need
+USE_OSGPLUGIN(bmp)
+USE_OSGPLUGIN(curl)
+USE_OSGPLUGIN(dds)
+USE_OSGPLUGIN(freetype)
+USE_OSGPLUGIN(jpeg)
+USE_OSGPLUGIN(png)
+USE_OSGPLUGIN(tga)
+
+// include the platform specific GraphicsWindow implementation
+USE_GRAPHICSWINDOW()
+#endif
+
 using namespace skybolt::vis;
 
 Window::Window() :
