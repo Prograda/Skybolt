@@ -18,7 +18,9 @@ nlohmann::json createDefaultEngineSettings()
 		"mapbox": ""
 	},
 	"shadows": {
-		"enabled": true
+		"enabled": true,
+		"textureSize": 2048,
+		"cascadeBoundingDistances": [0.02, 20.0, 70.0, 250.0, 7000]
 	}
 })"_json;
 }
