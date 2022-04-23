@@ -1,0 +1,7 @@
+sources:
+  3.6.5:
+    type: git
+    url: https://github.com/matthew-reid/OpenSceneGraph
+    branch: supportSrgbTextureFormats
+patches:
+  3.6.5: []

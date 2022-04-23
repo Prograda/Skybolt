@@ -3,7 +3,7 @@ import os
 
 class SkyboltConan(ConanFile):
     name = "skybolt"
-    version = "1.1"
+    version = "1.2.1"
     settings = "os", "compiler", "arch", "build_type"
     options = {
 		"shared": [True, False],
@@ -16,6 +16,7 @@ class SkyboltConan(ConanFile):
     generators = ["cmake_paths", "cmake_find_package", "virtualrunenv"]
     exports = "Conan/*"
     exports_sources = "*"
+    no_copy_source = True
 
     requires = [
 		"boost/1.75.0@_/_",
@@ -24,20 +25,25 @@ class SkyboltConan(ConanFile):
 		"earcut/2.2.3@_/_",
 		"glm/0.9.9.8@_/_",
 		"nlohmann_json/3.10.5@_/_",
-		"openscenegraph/3.6.5@_/_",
 		"zlib/1.2.12@_/_" # Indirect dependency. Specified to resolve version clash between boost and freetype.
 	]
 
-    def include_package(self, name, version):
+    def include_package(self, name, version, subfolder=None):
         currentDir = os.path.dirname(os.path.abspath(__file__))
         recipes_path = os.path.join(currentDir, "Conan/Recipes", name)
+        if (subfolder):
+            recipes_path = os.path.join(recipes_path, subfolder)
             
-        self.run("conan export . user/stable", cwd=recipes_path)
+        self.run(("conan export . %s/%s@user/stable" % (name, version)), cwd=recipes_path)
         self.requires(("%s/%s@user/stable" % (name, version)))
+
+    def configure(self):
+        self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
 
     def requirements(self):
         self.include_package("cxxtimer", "1.0.0")
         self.include_package("px_sched", "1.0.0")
+        self.include_package("openscenegraph-mr", "3.6.5", "all")
 		
         if self.options.enableFftOcean:
             self.include_package("xsimd", "7.4.10")
@@ -47,10 +53,20 @@ class SkyboltConan(ConanFile):
 
         if self.options.shared == False:
             cmake.definitions["Boost_STATIC_LIBS"] = "true"
+            cmake.definitions["OSG_STATIC_LIBS"] = "true"
 			
         if self.options.enableFftOcean == True:
             cmake.definitions["BUILD_FFT_OCEAN_PLUGIN"] = "true"
-			
+
         cmake.definitions["CMAKE_TOOLCHAIN_FILE"] = "conan_paths.cmake"
         cmake.configure()
         cmake.build()
+		
+    def package(self):
+        cmake = CMake(self)
+        cmake.install()
+		
+    def package_info(self):
+        self.cpp_info.includedirs = ["include"]
+        self.cpp_info.names["cmake_find_package"] = "Skybolt"
+        self.cpp_info.libs = ["AircraftHud", "SkyboltCommon", "SkyboltEngine", "SkyboltSim", "SkyboltVis"]
