@@ -9,6 +9,7 @@
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/OsgGeometryFactory.h"
 #include <SkyboltVis/OsgGeometryHelpers.h>
+#include "SkyboltVis/RenderBinHelpers.h"
 #include "SkyboltVis/RenderContext.h"
 
 #include <osg/BlendEquation>
@@ -43,6 +44,7 @@ static osg::StateSet* createStateSet(const osg::ref_ptr<osg::Program>& program)
 	stateSet->setAttributeAndModes(new osg::BlendFunc(osg::BlendFunc::ONE, osg::BlendFunc::ONE));
 
 	stateSet->setAttribute(program);
+	setRenderBin(*stateSet, RenderBinId::Sky);
 
 	return stateSet;
 }

@@ -10,6 +10,7 @@
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/OsgGeometryFactory.h"
 #include "SkyboltVis/OsgStateSetHelpers.h"
+#include "SkyboltVis/RenderBinHelpers.h"
 #include "SkyboltVis/RenderContext.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 
@@ -49,6 +50,8 @@ Starfield::Starfield(const StarfieldConfig& config)
 
 	mBrightnessUniform = new osg::Uniform("brightness", 1.0f);
 	ss->addUniform(mBrightnessUniform);
+
+	setRenderBin(*ss, RenderBinId::Stars);
 
 	// Create texture to store per-instance parameters
 	osg::ref_ptr<osg::Image> paramsImage = new osg::Image;
