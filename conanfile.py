@@ -24,7 +24,8 @@ class SkyboltConan(ConanFile):
 		"earcut/2.2.3@_/_",
 		"glm/0.9.9.8@_/_",
 		"nlohmann_json/3.10.5@_/_",
-		"openscenegraph/3.6.5@_/_"
+		"openscenegraph/3.6.5@_/_",
+		"zlib/1.2.12@_/_" # Indirect dependency. Specified to resolve version clash between boost and freetype.
 	]
 
     def configure(self):
