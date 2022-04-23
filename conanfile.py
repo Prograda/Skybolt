@@ -28,9 +28,6 @@ class SkyboltConan(ConanFile):
 		"zlib/1.2.12@_/_" # Indirect dependency. Specified to resolve version clash between boost and freetype.
 	]
 
-    def configure(self):
-	    self.options["openscenegraph"].shared = True
-
     def include_package(self, name, version):
         currentDir = os.path.dirname(os.path.abspath(__file__))
         recipes_path = os.path.join(currentDir, "Conan/Recipes", name)
