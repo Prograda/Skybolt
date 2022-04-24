@@ -22,7 +22,7 @@ if (OSG_STATIC_LIBS)
 endif()
 
 find_package(OSG REQUIRED COMPONENTS osg osgDB osgGA osgText osgUtil osgViewer ${OSG_STATIC_LINK_PLUGIN_NAMES})
-include_directories(${OSG_INCLUDE_DIR} REQUIRED VERSION 3.6.5)
+include_directories(${OSG_INCLUDE_DIR})
 
 find_package(OpenThreads)
 
@@ -59,6 +59,7 @@ if (OSG_STATIC_LIBS)
 	find_package(OpenGL REQUIRED)
 
 	list(APPEND LIBRARIES
+		${CMAKE_DL_LIBS}
 		${CURL_LIBRARIES}
 		${Freetype_LIBRARIES}
 		${JPEG_LIBRARIES}
@@ -68,12 +69,7 @@ endif()
 
 add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 
+target_include_directories(${LIB_NAME} PUBLIC ${OSG_INCLUDE_DIR})
 target_link_libraries(${LIB_NAME} ${LIBRARIES})
-
-target_include_directories(${LIB_NAME} PUBLIC
-	${Boost_INCLUDE_DIRS}
-	${OIS_INCLUDE_DIR}
-	${OSG_INCLUDE_DIR}
-)
 
 skybolt_install(${LIB_NAME})

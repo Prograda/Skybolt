@@ -43,18 +43,18 @@ class SkyboltConan(ConanFile):
     def requirements(self):
         self.include_package("cxxtimer", "1.0.0")
         self.include_package("px_sched", "1.0.0")
-        self.include_package("openscenegraph-mr", "3.6.5", "all")
+        self.include_package("openscenegraph-mr", "3.7.0", "all")
 		
         if self.options.enableFftOcean:
+            self.include_package("mufft", "1.0.0")
             self.include_package("xsimd", "7.4.10")
 
     def build(self):
         cmake = CMake(self)
 
-        if self.options.shared == False:
-            cmake.definitions["Boost_STATIC_LIBS"] = "true"
-            cmake.definitions["OSG_STATIC_LIBS"] = "true"
-			
+        cmake.definitions["Boost_STATIC_LIBS"] = str(not self.options["boost"].shared)
+        cmake.definitions["OSG_STATIC_LIBS"] = str(not self.options["openscenegraph-mr"].shared)
+
         if self.options.enableFftOcean == True:
             cmake.definitions["BUILD_FFT_OCEAN_PLUGIN"] = "true"
 
@@ -69,4 +69,4 @@ class SkyboltConan(ConanFile):
     def package_info(self):
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.names["cmake_find_package"] = "Skybolt"
-        self.cpp_info.libs = ["AircraftHud", "SkyboltCommon", "SkyboltEngine", "SkyboltSim", "SkyboltVis"]
+        self.cpp_info.libs = ["AircraftHud", "MapAttributesConverter", "SkyboltCommon", "SkyboltEngine", "SkyboltSim", "SkyboltVis"]
