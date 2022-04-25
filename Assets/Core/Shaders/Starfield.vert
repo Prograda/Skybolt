@@ -15,7 +15,7 @@ uniform samplerBuffer paramsSampler;
 uniform float brightness;
 
 float scale = 2;
-float luminanceReference = 10.0;
+float luminanceReference = 5.0; // visually pleasing value, not realistic
 float lowestVisibleMagnitude = 0;
 
 void main()
