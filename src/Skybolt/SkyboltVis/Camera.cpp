@@ -8,6 +8,7 @@
 #include "Camera.h"
 #include "MatrixHelpers.h"
 #include "RenderContext.h"
+#include "VisibilityCategory.h"
 #include "Window/Window.h"
 
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -20,7 +21,8 @@ Camera::Camera(float aspectRatio) :
 	mAspectRatio(aspectRatio),
 	mFovY(0.5f),
 	mNear(1),
-	mFar(1e6)
+	mFar(1e6),
+	mCullMask(~vis::VisibilityCategory::shadowCaster)
 {
 	setPosition(osg::Vec3f());
 	setOrientation(osg::Quat());

@@ -9,6 +9,7 @@
 #include "OsgImageHelpers.h"
 #include "OsgStateSetHelpers.h"
 #include "SkyboltVis/earcutOsg.h"
+#include <SkyboltVis/VisibilityCategory.h>
 #include "SkyboltVis/Renderable/Planet/Terrain.h"
 #include <SkyboltCommon/Math/IntersectionUtility.h>
 
@@ -315,6 +316,7 @@ RoadsBatch::RoadsBatch(const PolyRegions& regions, const osg::ref_ptr<osg::Progr
 	}
 
 	geode->setStateSet(stateSet);
+	mTransform->setNodeMask(~vis::VisibilityCategory::shadowCaster);
 	mTransform->addChild(geode);
 }
 

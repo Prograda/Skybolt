@@ -59,7 +59,7 @@ private:
 	float mNear;
 	float mFar;
 	boost::optional<osg::Plane> mObliqueClippingPlane;
-	uint32_t mCullMask = ~0;
+	uint32_t mCullMask;
 };
 
 } // namespace vis

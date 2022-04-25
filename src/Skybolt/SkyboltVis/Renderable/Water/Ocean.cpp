@@ -11,6 +11,7 @@
 #include "SkyboltVis/OsgGeometryFactory.h"
 #include "SkyboltVis/OsgGeometryHelpers.h"
 #include "SkyboltVis/RenderContext.h"
+#include <SkyboltVis/VisibilityCategory.h>
 
 #include <osg/CullFace>
 #include <osg/Geode>
@@ -83,6 +84,7 @@ Ocean::Ocean(const OceanConfig& config)
 	mGrid->setStateSet(createStateSet(config, mUniforms));
 
 	mTransform->setStateSet(config.waterStateSet);
+	mTransform->setNodeMask(~vis::VisibilityCategory::shadowCaster);
     mTransform->addChild(mGrid);
 
 	setPosition(osg::Vec3f(0,0,0));

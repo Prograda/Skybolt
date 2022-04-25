@@ -8,6 +8,7 @@
 #include "OsgGeometryHelpers.h"
 #include "OsgImageHelpers.h"
 #include "OsgStateSetHelpers.h"
+#include "VisibilityCategory.h"
 
 #include <SkyboltCommon/Math/MathUtility.h>
 
@@ -440,6 +441,7 @@ RunwaysBatch::RunwaysBatch(const Runways& runways, const osg::ref_ptr<osg::Progr
 	mUniforms.modelMatrix = new osg::Uniform("modelMatrix", osg::Matrixf());
 
 	geode->setStateSet(createStateSet(mUniforms));
+	mTransform->setNodeMask(~vis::VisibilityCategory::shadowCaster);
 	mTransform->addChild(geode);
 }
 
