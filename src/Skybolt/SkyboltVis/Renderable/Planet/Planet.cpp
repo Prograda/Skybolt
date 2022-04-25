@@ -732,16 +732,19 @@ Planet::~Planet()
 
 void Planet::setCloudsVisible(bool visible)
 {
-	osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
-	if (visible && !mCloudsVisible)
+	if (mVolumeClouds)
 	{
-		mScene->addObject(mVolumeClouds.get());
-		ss->setDefine("ENABLE_CLOUDS");
-	}
-	else if (!visible && mCloudsVisible)
-	{
-		mScene->removeObject(mVolumeClouds.get());
-		ss->removeDefine("ENABLE_CLOUDS");
+		osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
+		if (visible && !mCloudsVisible)
+		{
+			mScene->addObject(mVolumeClouds.get());
+			ss->setDefine("ENABLE_CLOUDS");
+		}
+		else if (!visible && mCloudsVisible)
+		{
+			mScene->removeObject(mVolumeClouds.get());
+			ss->removeDefine("ENABLE_CLOUDS");
+		}
 	}
 	mCloudsVisible = visible;
 }
