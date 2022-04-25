@@ -14,3 +14,6 @@ target_link_libraries (${APP_NAME} FftOcean Catch2::Catch2)
 set_target_properties(${APP_NAME} PROPERTIES FOLDER SkyboltPlugins)
 
 catch_discover_tests(${APP_NAME})
+
+set_engine_plugin_target_properties(${APP_NAME})
+skybolt_plugin_install(${APP_NAME})

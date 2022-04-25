@@ -56,7 +56,7 @@ public:
 
 	static float calcWindSpeedFromMaxWaveHeight(float maxWaveHeight, float g)
 	{
-		return std::sqrtf(maxWaveHeight * g);
+		return std::sqrt(maxWaveHeight * g);
 	}
 
 	static float calcMaxWaveHeight(float windSpeed, float g)
@@ -79,6 +79,15 @@ private:
 	void calcHt0();
 	complex_type generateRandomComplexGaussian();
 
+	using aligned_complex_type = complex_type; //!< Must be alligned for simd/avx. Allocate with mufft_alloc to gaurantee alignment
+
+	struct MufftArrayDeleter {
+		void operator() (aligned_complex_type *res) const;
+	};
+
+	using aligned_complex_type_ptr = std::unique_ptr<aligned_complex_type[], MufftArrayDeleter>; //!< wrapped to gaurantee data is freed with mufft_free
+	static aligned_complex_type_ptr allocateAlignedComplexType(size_t elementCount);
+
 private:
 	typedef boost::variate_generator<boost::mt19937, boost::random::normal_distribution<float> > RandomGenerator;
 	RandomGenerator mRandom;
@@ -91,11 +100,10 @@ private:
 	std::vector<complex_type> mHt0;
 	std::vector<complex_type> mHt0Conj;
 
-	std::vector<complex_type> mFftInputVertical;
-	std::vector<complex_type> mFftInputHorizontal[2];
-
-	std::vector<complex_type> mFftOutputVertical;
-	std::vector<complex_type> mFftOutputHorizontal[2];
+	aligned_complex_type_ptr mFftInputVertical;
+	aligned_complex_type_ptr mFftInputHorizontal[2];
+	aligned_complex_type_ptr mFftOutputVertical;
+	aligned_complex_type_ptr mFftOutputHorizontal[2];
 
 	std::unique_ptr<struct FftGeneratorData> mFftGeneratorData;
 };

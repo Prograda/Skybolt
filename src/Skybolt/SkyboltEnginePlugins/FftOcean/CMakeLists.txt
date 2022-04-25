@@ -7,7 +7,7 @@ include_directories("../../")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package(muFFT)
+find_package(muFFT REQUIRED)
 include_directories(${muFFT_INCLUDE_DIR})
 
 find_package(cxxtimer)

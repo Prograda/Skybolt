@@ -21,6 +21,17 @@ struct FftGeneratorData
 	mufft_plan_2d* horizontalPlan[2];
 };
 
+FftOceanGenerator::aligned_complex_type_ptr FftOceanGenerator::allocateAlignedComplexType(size_t elementCount)
+{
+	return aligned_complex_type_ptr(
+		reinterpret_cast<aligned_complex_type*>(mufft_alloc(elementCount * sizeof(aligned_complex_type))));
+}
+
+void FftOceanGenerator::MufftArrayDeleter::operator() (aligned_complex_type* p) const
+{
+	mufft_free(p);
+}
+
 // http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.161.9102&rep=rep1&type=pdf
 FftOceanGenerator::FftOceanGenerator(const FftOceanGeneratorConfig& config) :
 	mRandom(boost::mt19937(config.seed), boost::random::normal_distribution<float>()),
@@ -35,13 +46,14 @@ FftOceanGenerator::FftOceanGenerator(const FftOceanGeneratorConfig& config) :
 	size_t size = config.textureSizePixels * config.textureSizePixels;
 	mHt0.resize(size);
 	mHt0Conj.resize(size);
-	mFftInputVertical.resize(size);
-	mFftInputHorizontal[0].resize(size);
-	mFftInputHorizontal[1].resize(size);
 
-	mFftOutputVertical.resize(size);
-	mFftOutputHorizontal[0].resize(size);
-	mFftOutputHorizontal[1].resize(size);
+	mFftInputVertical = allocateAlignedComplexType(size);
+	mFftInputHorizontal[0] = allocateAlignedComplexType(size);
+	mFftInputHorizontal[1] = allocateAlignedComplexType(size);
+
+	mFftOutputVertical = allocateAlignedComplexType(size);
+	mFftOutputHorizontal[0] = allocateAlignedComplexType(size);
+	mFftOutputHorizontal[1] = allocateAlignedComplexType(size);
 
 	calcHt0();
 
@@ -128,11 +140,11 @@ float FftOceanGenerator::calcPhillips(int n, int m) const
 	return val;
 }
 
-float OMEGA = 0.84; // sea state (inverse wave age)
+float OMEGA = 0.84f; // sea state (inverse wave age)
 
-const float cm = 0.23; // Eq 59
+const float cm = 0.23f; // Eq 59
 
-const float km = 370.0; // Eq 59
+const float km = 370.0f; // Eq 59
 
 float sqr(float x)
 {
@@ -141,7 +153,7 @@ float sqr(float x)
 
 float omega(float k)
 {
-	return sqrt(9.81 * k * (1.0 + sqr(k / km))); // Eq 24
+	return std::sqrt(9.81f * k * (1.0f + sqr(k / km))); // Eq 24
 }
 
 float omnispectrum = false;
@@ -157,7 +169,7 @@ float FftOceanGenerator::calcBruenton(int n, int m) const
 	float Omega = OMEGA;
 
 	// phase speed
-	float kLength = sqrt(k.x * k.x + k.y * k.y);
+	float kLength = std::sqrt(k.x * k.x + k.y * k.y);
 	float c = omega(kLength) / kLength;
 
 	if (kLength < 0.000001)
@@ -166,25 +178,25 @@ float FftOceanGenerator::calcBruenton(int n, int m) const
 	}
 
 	// spectral peak
-	float kp = 9.81 * sqr(Omega / U10); // after Eq 3
+	float kp = 9.81f * sqr(Omega / U10); // after Eq 3
 	float cp = omega(kp) / kp;
 
 	// friction velocity
-	float z0 = 3.7e-5 * sqr(U10) / 9.81 * pow(U10 / cp, 0.9f); // Eq 66
-	float u_star = 0.41 * U10 / log(10.0 / z0); // Eq 60
+	float z0 = 3.7e-5f * sqr(U10) / 9.81f * pow(U10 / cp, 0.9f); // Eq 66
+	float u_star = 0.41f * U10 / log(10.0f / z0); // Eq 60
 
-	float Lpm = exp(-5.0 / 4.0 * sqr(kp / kLength)); // after Eq 3
-	float gamma = Omega < 1.0 ? 1.7 : 1.7 + 6.0 * log(Omega); // after Eq 3 // log10 or log??
-	float sigma = 0.08 * (1.0 + 4.0 / pow(Omega, 3.0f)); // after Eq 3
-	float Gamma = exp(-1.0 / (2.0 * sqr(sigma)) * sqr(sqrt(kLength / kp) - 1.0));
+	float Lpm = exp(-5.0f / 4.0f * sqr(kp / kLength)); // after Eq 3
+	float gamma = Omega < 1.0f ? 1.7f : 1.7f + 6.0f * log(Omega); // after Eq 3 // log10 or log??
+	float sigma = 0.08f * (1.0f + 4.0f / pow(Omega, 3.0f)); // after Eq 3
+	float Gamma = exp(-1.0f / (2.0f * sqr(sigma)) * sqr(std::sqrt(kLength / kp) - 1.0f));
 	float Jp = pow(gamma, Gamma); // Eq 3
-	float Fp = Lpm * Jp * exp(-Omega / sqrt(10.0) * (sqrt(kLength / kp) - 1.0)); // Eq 32
-	float alphap = 0.006 * sqrt(Omega); // Eq 34
-	float Bl = 0.5 * alphap * cp / c * Fp; // Eq 31
+	float Fp = Lpm * Jp * exp(-Omega / std::sqrt(10.0f) * (std::sqrt(kLength / kp) - 1.0f)); // Eq 32
+	float alphap = 0.006f * std::sqrt(Omega); // Eq 34
+	float Bl = 0.5f * alphap * cp / c * Fp; // Eq 31
 
-	float alpham = 0.01 * (u_star < cm ? 1.0 + log(u_star / cm) : 1.0 + 3.0 * log(u_star / cm)); // Eq 44
-	float Fm = exp(-0.25 * sqr(kLength / km - 1.0)); // Eq 41
-	float Bh = 0.5 * alpham * cm / c * Fm * Lpm; // Eq 40 (fixed)
+	float alpham = 0.01f * (u_star < cm ? 1.0f + log(u_star / cm) : 1.0f + 3.0f * log(u_star / cm)); // Eq 44
+	float Fm = exp(-0.25f * sqr(kLength / km - 1.0f)); // Eq 41
+	float Bh = 0.5f * alpham * cm / c * Fm * Lpm; // Eq 40 (fixed)
 
 	float A = 1.f;
 
@@ -192,7 +204,7 @@ float FftOceanGenerator::calcBruenton(int n, int m) const
 		return A * (Bl + Bh) / (kLength * sqr(kLength)); // Eq 30
 	}
 
-	float a0 = log(2.0) / 4.0; float ap = 4.0; float am = 0.13 * u_star / cm; // Eq 59
+	float a0 = log(2.0f) / 4.0f; float ap = 4.0; float am = 0.13f * u_star / cm; // Eq 59
 	float Delta = tanh(a0 + ap * pow(c / cp, 2.5f) + am * pow(cm / c, 2.5f)); // Eq 57
 
 	float phi = atan2(k.y, k.x);
@@ -205,7 +217,7 @@ float FftOceanGenerator::calcBruenton(int n, int m) const
 		Bh *= 2.0;
 	}
 
-	return A * (Bl + Bh) * (1.0 + Delta * cos(2.0 * phi)) / (2.0 * math::piF() * sqr(sqr(kLength))); // Eq 67
+	return A * (Bl + Bh) * (1.0f + Delta * cos(2.0f * phi)) / (2.0f * math::piF() * sqr(sqr(kLength))); // Eq 67
 }
 
 FftOceanGenerator::complex_type FftOceanGenerator::generateRandomComplexGaussian()
@@ -218,16 +230,16 @@ FftOceanGenerator::complex_type FftOceanGenerator::generateRandomComplexGaussian
 
 void FftOceanGenerator::calcHt0()
 {
-	float dk = 2.0 * math::piF() / mTextureWorldSize;
+	float dk = 2.0f * math::piF() / mTextureWorldSize;
 
 	for (int m = 0; m < mTextureSizePixels; ++m)
 	{
 		for (int n = 0; n < mTextureSizePixels; ++n)
 		{
 			int index = m * mTextureSizePixels + n;
-			complex_type r = generateRandomComplexGaussian() / std::sqrtf(2);
-			mHt0[index] = r * glm::sqrt(calcBruenton(n, m) / 2.0f) * dk;
-			mHt0Conj[index] = std::conj(r * sqrt(calcBruenton(-n, -m) / 2.0f) * dk);
+			complex_type r = generateRandomComplexGaussian() / std::sqrt(2.f);
+			mHt0[index] = r * std::sqrt(calcBruenton(n, m) / 2.0f) * dk;
+			mHt0Conj[index] = std::conj(r * std::sqrt(calcBruenton(-n, -m) / 2.0f) * dk);
 		}
 	}
 }
@@ -306,24 +318,26 @@ void FftOceanGenerator::calculate(float t, std::vector<glm::vec3>& result)
 	for (int m = 0; m < mTextureSizePixels; ++m)
 	{
 		Simd4 kz = fromScalar(math::piF() * (2.0f * m - mTextureSizePixels) * mOneOnTextureWorldSize);
-		for (int ns = 0; ns < mTextureSizePixels; ns+=4)
+		for (int ns = 0; ns < mTextureSizePixels; ns+=4) // advance in blocks of 4 which are processed concurrently with simd4
 		{
 			Simd4 n(float(ns), float(ns + 1), float(ns + 2), float(ns + 3));
 			Simd4 kx = math::piF() * (2 * n - (float)mTextureSizePixels) * mOneOnTextureWorldSize;
 			Simd4 len = sqrt(kx * kx + kz * kz) + 0.0000001f; // add epsilon to prevent divide by zero
 			int index = m * mTextureSizePixels + ns;
 
-			complex_type_simd4 ht0, ht0Conj;
-			for (int i = 0; i < 4; ++i)
-			{
-				ht0._Val[0][i] = mHt0[index + i]._Val[0];
-				ht0._Val[1][i] = mHt0[index + i]._Val[1];
-				ht0Conj._Val[0][i] = mHt0Conj[index + i]._Val[0];
-				ht0Conj._Val[1][i] = mHt0Conj[index + i]._Val[1];
-			}
+			// Pack 4 array items at a time into simd4
+			complex_type_simd4 ht0(
+				{mHt0[index + 0].real(), mHt0[index + 1].real(), mHt0[index + 2].real(), mHt0[index + 3].real()},
+				{mHt0[index + 0].imag(), mHt0[index + 1].imag(), mHt0[index + 2].imag(), mHt0[index + 3].imag()});
 
+			complex_type_simd4 ht0Conj(
+				{mHt0Conj[index + 0].real(), mHt0Conj[index + 1].real(), mHt0Conj[index + 2].real(), mHt0Conj[index + 3].real()},
+				{mHt0Conj[index + 0].imag(), mHt0Conj[index + 1].imag(), mHt0Conj[index + 2].imag(), mHt0Conj[index + 3].imag()});
+
+			// Calculate dispersion with simd4 intrinsics
 			htVertical = ht(t, calcDispersion(kx, kz), ht0, ht0Conj);
 
+			// Unpack from simd4 to muFFT input
 			htHorizontalX = htVertical * complex_type_simd4(simd4Zero, -kx / len);
 			htHorizontalZ = htVertical * complex_type_simd4(simd4Zero, -kz / len);
 
@@ -337,9 +351,9 @@ void FftOceanGenerator::calculate(float t, std::vector<glm::vec3>& result)
 	}
 
 	// Run FFT
-	mufft_execute_plan_2d(mFftGeneratorData->verticalPlan, mFftOutputVertical.data(), mFftInputVertical.data());
-	mufft_execute_plan_2d(mFftGeneratorData->horizontalPlan[0], mFftOutputHorizontal[0].data(), mFftInputHorizontal[0].data());
-	mufft_execute_plan_2d(mFftGeneratorData->horizontalPlan[1], mFftOutputHorizontal[1].data(), mFftInputHorizontal[1].data());
+	mufft_execute_plan_2d(mFftGeneratorData->verticalPlan, mFftOutputVertical.get(), mFftInputVertical.get());
+	mufft_execute_plan_2d(mFftGeneratorData->horizontalPlan[0], mFftOutputHorizontal[0].get(), mFftInputHorizontal[0].get());
+	mufft_execute_plan_2d(mFftGeneratorData->horizontalPlan[1], mFftOutputHorizontal[1].get(), mFftInputHorizontal[1].get());
 	//std::cout << "time " << timer.count() << std::endl;
 
 	// Output results to vector displacement image
