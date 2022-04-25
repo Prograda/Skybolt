@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "SkyboltVis/VisObject.h"
+#include "SkyboltVis/DefaultRootNode.h"
 #include <osg/MatrixTransform>
 #include <osg/Texture2D>
 
@@ -26,7 +26,7 @@ struct LakesConfig
 	osg::ref_ptr<osg::StateSet> waterStateSet;
 };
 
-class LakesBatch : public VisObject
+class LakesBatch : public DefaultRootNode
 {
 public:
 	struct Uniforms
@@ -36,16 +36,10 @@ public:
 
 	LakesBatch(const Lakes& lakes, const LakesConfig& config);
 
-	//! Sinks heightmap under lakes
-	void sinkHeightmap(osg::Image& image);
-
-	osg::Node* _getNode() const { return mTransform; }
-
 protected:
 	void updatePreRender(const RenderContext& context) override;
 
 private:
-	osg::MatrixTransform* mTransform;
 	Uniforms mUniforms;
 };
 

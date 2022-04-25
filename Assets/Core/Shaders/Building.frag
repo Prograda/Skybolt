@@ -13,6 +13,7 @@
 #include "Brdfs/BlinnPhong.h"
 #include "Brdfs/Lambert.h"
 #include "Shadows/Shadows.h"
+#include "Util/Saturate.h"
 
 in vec3 texCoord;
 in vec3 normalWS;
@@ -58,7 +59,7 @@ void main()
 	vec3 viewDirection = -positionRelCamera / fragmentViewDistance;
 	color.rgb += visibleSunIrradiance * specularity * vec3(calcBlinnPhongSpecular(lightDirection, viewDirection, normalWS, shininess));
 
-	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;
-	
+	color.rgb = saturate(color.rgb * scattering.transmittance + scattering.skyRadianceToPoint); // clamp to avoid fireflies from specular
+
 	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }

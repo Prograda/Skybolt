@@ -34,6 +34,11 @@ void DefaultRootNode::setOrientation(const osg::Quat &orientation)
 	mTransform->setMatrix(mat);
 }
 
+void DefaultRootNode::setTransform(const osg::Matrix& m)
+{
+	mTransform->setMatrix(m);
+}
+
 void DefaultRootNode::setVisible(bool visible)
 {
 	visible ? mSwitch->setAllChildrenOn() : mSwitch->setAllChildrenOff();

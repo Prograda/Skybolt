@@ -93,6 +93,7 @@ osg::Shader* readShaderFile(osg::Shader::Type type, const std::string& filename)
 	std::string includeDirPath = std::filesystem::path(filename).parent_path().string();
 
 	osg::Shader* shader = readShaderFromString(type, source, includeDirPath);
+	shader->setName(filename);
 	shader->setFileName(filename);
 	return shader;
 }

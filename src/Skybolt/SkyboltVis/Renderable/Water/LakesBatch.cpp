@@ -126,8 +126,7 @@ osg::ref_ptr<osg::StateSet> createStateSet(const osg::ref_ptr<osg::Program>& pro
 	return ss;
 }
 
-LakesBatch::LakesBatch(const Lakes& lakes, const LakesConfig& config) :
-	mTransform(new osg::MatrixTransform)
+LakesBatch::LakesBatch(const Lakes& lakes, const LakesConfig& config)
 {
 	mUniforms.modelMatrix = new osg::Uniform("modelMatrix", osg::Matrixf());
 

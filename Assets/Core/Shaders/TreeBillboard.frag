@@ -50,11 +50,10 @@ void main()
 	
 	float fadeOut = fragmentViewDistance / 10000;
 	direct = mix(direct, 0.1, fadeOut);
-			   
 	
 	color.rgb = randomizeColor(color.rgb, perTreeUnitRandom);
 	color.rgb *= direct * scattering.sunIrradiance * lightVisibility
-			   + calcLambertAmbientLight(normal, calcGroundIrradiance(scattering.sunIrradiance, scattering.skyIrradiance), scattering.skyIrradiance, lightDirection) + ambientLightColor;	
+			   + calcLambertAmbientLight(normal, calcGroundIrradiance(scattering.sunIrradiance, scattering.skyIrradiance, lightDirection), scattering.skyIrradiance) + ambientLightColor;	
 			   
 
 	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;

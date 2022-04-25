@@ -18,8 +18,7 @@ float calcBlinnPhongSpecular(vec3 lightDirection, vec3 viewDirection, vec3 norma
 	// See http://www.thetenthplanet.de/archives/255
 	float normalizationFactor = (shininess + 8.0) * M_INV_8PI;
 	
-	float result = normalizationFactor * pow(NdotH, shininess);
-    return clamp(result, 0, 1); // clamp result to keep fireflies under control
+	return normalizationFactor * pow(NdotH, shininess);
 }
 
 #endif // BLINN_PHONG_H

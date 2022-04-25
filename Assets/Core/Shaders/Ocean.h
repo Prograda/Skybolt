@@ -11,8 +11,13 @@
 
 const vec3 shallowScatterColor = vec3(0.16, 0.2, 0.25);
 const vec3 deepScatterColor = vec3(0.04, 0.15, 0.47) * 0.098; // From Bruenton ocean demo
-const float oceanShininess = 128;
-const vec3 oceanSpecularColor = vec3(0.15);
+
+// Specular values calibrated from photos of Earth https://petapixel.com/2021/09/30/breathtaking-photos-of-earth-were-taken-from-even-higher-than-the-iss/
+const float oceanShininess = 150;
+const vec3 oceanSpecularColor = vec3(0.02);
+
+const float oceanMeshFadeoutStartDistance = 10000;
+const float oceanMeshFadeoutEndDistance = 40000;
 
 const float airIor = 1.0;
 const float waterIor = 1.333;

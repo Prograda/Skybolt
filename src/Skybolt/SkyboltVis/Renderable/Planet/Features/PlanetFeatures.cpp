@@ -30,7 +30,7 @@ namespace vis {
 
 struct LoadedVisObjects
 {
-	std::vector<VisObjectPtr> nodes[PlanetFeaturesParams::featureGroupsSize] = {};
+	std::vector<RootNodePtr> nodes[PlanetFeaturesParams::featureGroupsSize] = {};
 	sim::LatLon latLonOrigin;
 };
 
@@ -370,18 +370,14 @@ void PlanetFeatures::processLoadingQueue()
 
 				for (int i = 0; i < PlanetFeaturesParams::featureGroupsSize; ++i)
 				{
-					for (const VisObjectPtr& node : objects->nodes[i])
+					for (const RootNodePtr& node : objects->nodes[i])
 					{
-						osg::MatrixTransform* transform = dynamic_cast<osg::MatrixTransform*>(node->_getNode());
-						if (transform)
-						{
-							osg::Vec3d pos = llaToGeocentric(osg::Vec2d(objects->latLonOrigin.lat, objects->latLonOrigin.lon), 0, mPlanetRadius);
-							osg::Matrixd mat = osg::Matrixd::translate(pos);
-							mat.setRotate(latLonToGeocentricLtpOrientation(osg::Vec2d(objects->latLonOrigin.lat, objects->latLonOrigin.lon)));
+						osg::Vec3d pos = llaToGeocentric(osg::Vec2d(objects->latLonOrigin.lat, objects->latLonOrigin.lon), 0, mPlanetRadius);
+						osg::Matrixd mat = osg::Matrixd::translate(pos);
+						mat.setRotate(latLonToGeocentricLtpOrientation(osg::Vec2d(objects->latLonOrigin.lat, objects->latLonOrigin.lon)));
 
-							transform->setMatrix(mat);
-							mGroups[i]->addChild(transform);
-						}
+						node->setTransform(mat);
+						mGroups[i]->addChild(node->_getNode());
 					}
 				}
 

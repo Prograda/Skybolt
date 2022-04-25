@@ -24,8 +24,6 @@ class GpuForestTile : public DefaultRootNode
 public:
 	GpuForestTile(const osg::ref_ptr<osg::Texture2D>& heightMap, const osg::ref_ptr<osg::Texture2D>& attributeMap, const std::shared_ptr<BillboardForest>& forest, const osg::Vec2f& tileWorldSizeMeters);
 
-	osg::ref_ptr<osg::MatrixTransform> getTransform() const { return mTransform; }
-
 	void updatePreRender(const RenderContext& context) override;
 
 private:

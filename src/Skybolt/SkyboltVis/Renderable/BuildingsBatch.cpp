@@ -187,6 +187,7 @@ static osg::Geode* createBuildings(const Buildings& buildings, const BuildingTyp
 
     geometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
 	geometry->setComputeBoundingBoxCallback(createFixedBoundingBoxCallback(bounds));
+
     geode->addDrawable(geometry);
     return geode;
 }

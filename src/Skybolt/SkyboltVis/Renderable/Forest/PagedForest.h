@@ -30,8 +30,6 @@ public:
 
 	void update(const osg::Vec2f& cameraPosition);
 
-	osg::ref_ptr<osg::MatrixTransform> getTransform() const { return mTransform; }
-
 	void updatePreRender(const RenderContext& context) override;
 
 private:

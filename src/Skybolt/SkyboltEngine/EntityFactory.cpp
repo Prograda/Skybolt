@@ -39,6 +39,7 @@
 #include <SkyboltVis/OsgImageHelpers.h>
 #include <SkyboltVis/OsgStateSetHelpers.h>
 #include <SkyboltVis/OsgTextureHelpers.h>
+#include <SkyboltVis/RenderBinHelpers.h>
 #include <SkyboltVis/TextureCache.h>
 #include <SkyboltVis/Scene.h>
 #include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
@@ -672,20 +673,31 @@ const float moonDistance = sunDistance;
 const float sunDiameter = 2.0f * tan(skybolt::math::degToRadF() * 0.53f * 0.5f) * sunDistance;
 const float moonDiameter = 2.0f * tan(skybolt::math::degToRadF() * 0.52f * 0.5f) * moonDistance;
 
-EntityPtr EntityFactory::createSun() const
+static osg::ref_ptr<osg::StateSet> createCelestialBodyStateSet(const osg::ref_ptr<osg::Program>& program, const osg::ref_ptr<osg::Image>& image)
 {
 	osg::StateSet* ss = new osg::StateSet;
-	ss->setAttribute(mContext.programs->getRequiredProgram("sun"));
+	ss->setAttribute(program);
 	ss->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
 
 	osg::Depth* depth = new osg::Depth;
 	depth->setWriteMask(false);
 	ss->setAttributeAndModes(depth, osg::StateAttribute::ON);
 
-	osg::Texture2D* texture = new osg::Texture2D(osgDB::readImageFile("Environment/Space/SunDisc.png"));
+	osg::Texture2D* texture = new osg::Texture2D(image);
 	texture->setInternalFormat(vis::toSrgbInternalFormat(texture->getInternalFormat()));
 	ss->setTextureAttributeAndModes(0, texture);
 	ss->addUniform(vis::createUniformSampler2d("albedoSampler", 0));
+
+	vis::setRenderBin(*ss, vis::RenderBinId::CelestialBody);
+
+	return ss;
+}
+
+EntityPtr EntityFactory::createSun() const
+{
+	osg::ref_ptr<osg::StateSet> ss = createCelestialBodyStateSet(
+		mContext.programs->getRequiredProgram("sun"),
+		osgDB::readImageFile("Environment/Space/SunDisc.png"));
 
 	osg::ref_ptr<osg::BlendFunc> blendFunc = new osg::BlendFunc;
 	ss->setAttributeAndModes(blendFunc);
@@ -719,21 +731,12 @@ EntityPtr EntityFactory::createSun() const
 
 EntityPtr EntityFactory::createMoon() const
 {
-	osg::StateSet* ss = new osg::StateSet;
-	ss->setAttribute(mContext.programs->getRequiredProgram("moon"));
-	ss->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
-
-	osg::Depth* depth = new osg::Depth;
-	depth->setWriteMask(false);
-	ss->setAttributeAndModes(depth, osg::StateAttribute::ON);
+	osg::ref_ptr<osg::StateSet> ss = createCelestialBodyStateSet(
+		mContext.programs->getRequiredProgram("moon"),
+		osgDB::readImageFile("Environment/Space/MoonDisc.jpg"));
 
 	osg::Uniform* moonPhaseUniform = new osg::Uniform("moonPhase", 0.5f);
 	ss->addUniform(moonPhaseUniform);
-
-	osg::Texture2D* texture = new osg::Texture2D(vis::readImageWithCorrectOrientation("Environment/Space/MoonDisc.jpg"));
-	texture->setInternalFormat(vis::toSrgbInternalFormat(texture->getInternalFormat()));
-	ss->setTextureAttributeAndModes(0, texture);
-	ss->addUniform(vis::createUniformSampler2d("albedoSampler", 0));
 
 	EntityPtr object(new Entity());
 	object->addComponent(std::make_shared<Node>());

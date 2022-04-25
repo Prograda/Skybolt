@@ -8,6 +8,7 @@
 #define SHADOWS_H
 
 #include "Dither.h"
+#include "Util/Saturate.h"
 
 float sampleShadow(sampler2D shadowSampler, vec2 texCoord, float receiverDepth)
 {

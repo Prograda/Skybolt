@@ -27,7 +27,6 @@ in vec3 texCoord;
 in vec3 normalWS;
 in vec3 tangentWS;
 in float logZ;
-in vec3 sunIrradiance;
 in vec3 positionRelCamera;
 in vec3 shadowTexCoord;
 in AtmosphericScattering scattering;

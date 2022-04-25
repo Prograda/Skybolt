@@ -42,8 +42,6 @@ uniform samplerBuffer wakeParamsTexture;
 
 const float infinity = 1e10;
 const float normalMipmapBias = 1.0; // TODO: why is this needed?
-const float drawDistance = 80000;
-
 
 float nearestPointOnLine(vec2 lineP0, vec2 lineP1, vec2 point)
 {
@@ -222,7 +220,7 @@ void main(void)
 {
 	float viewDistance = length(positionRelCameraWS);
 #ifdef DISTANCE_CULL
-	if (viewDistance > drawDistance)
+	if (viewDistance > oceanMeshFadeoutEndDistance)
 	{
 		discard;
 		return;
@@ -301,8 +299,6 @@ void main(void)
 
 	foamMask = max(foamMask, calcWakeMask());
 
-	float fadeFactor = viewDistance / drawDistance;
-
 	vec3 foamColor = vec3(1.0);
 	float foamTexture = texture(foamSampler, wrappedNoiseCoord.xy*400).r;
 	float foamFraction = pow(foamTexture, 0.5 / (foamMask + 0.0001)) * smoothstep(0.0, 0.1, foamMask);
@@ -312,7 +308,7 @@ void main(void)
 	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;
 
 #ifdef DISTANCE_CULL
-	color.a = min(1.0, 1.5 - 1.5 * fadeFactor);
+	color.a = min(1.0, (oceanMeshFadeoutEndDistance - viewDistance) / (oceanMeshFadeoutEndDistance - oceanMeshFadeoutStartDistance));
 #else
 	color.a = 1.0;
 #endif

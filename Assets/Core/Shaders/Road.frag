@@ -12,10 +12,12 @@
 
 #include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
+#include "GroundIrradiance.h"
 #include "NormalMapping.h"
 #include "Brdfs/BlinnPhong.h"
 #include "Brdfs/Lambert.h"
 #include "Shadows/Shadows.h"
+#include "Util/Saturate.h"
 
 in vec3 texCoord;
 in vec3 normalWS;
@@ -57,7 +59,7 @@ void main()
 	
 	color.rgb *= calcLambertDirectionalLight(lightDirection, normalWS) * scattering.sunIrradiance * lightVisibility
 #ifdef ENABLE_ATMOSPHERE
-		+ calcLambertAmbientLight(normalWS, calcGroundIrradiance(scattering.sunIrradiance, scattering.skyIrradiance), scattering.skyIrradiance)
+		+ calcLambertAmbientLight(normalWS, calcGroundIrradiance(scattering.sunIrradiance, scattering.skyIrradiance, lightDirection), scattering.skyIrradiance)
 #endif
 		+ ambientLightColor;
 
@@ -69,6 +71,9 @@ void main()
 #ifdef ENABLE_ATMOSPHERE
 	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;
 #endif
+
+	color.rgb = saturate(color.rgb); // clamp to avoid fireflies from specular
+
 	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 
 #ifdef ENABLE_DEPTH_OFFSET

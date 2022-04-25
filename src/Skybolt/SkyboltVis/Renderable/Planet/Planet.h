@@ -100,11 +100,13 @@ public:
 
 public:
 	// RootNode Implementation
-	void setPosition(const osg::Vec3d &position) override;
-	void setOrientation(const osg::Quat &orientation) override;
+	void setPosition(const osg::Vec3d& position) override;
+	void setOrientation(const osg::Quat& orientation) override;
+	void setTransform(const osg::Matrix& m) override  { mTransform->setMatrix(m); }
 
 	osg::Vec3d getPosition() const override { return mTransform->getMatrix().getTrans(); }
 	osg::Quat getOrientation() const override { return mTransform->getMatrix().getRotate(); }
+	osg::Matrix getTransform() const override  { return mTransform->getMatrix(); }
 
 	osg::Node* _getNode() const override;
 

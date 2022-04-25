@@ -27,7 +27,7 @@ namespace vis {
 
 GpuForestTile::GpuForestTile(const osg::ref_ptr<osg::Texture2D>& heightMap, const osg::ref_ptr<osg::Texture2D>& attributeMap, const std::shared_ptr<BillboardForest>& forest, const osg::Vec2f& tileWorldSizeMeters)
 {
-	osg::StateSet* stateSet = getTransform()->getOrCreateStateSet();
+	osg::StateSet* stateSet = mTransform->getOrCreateStateSet();
 	stateSet->addUniform(new osg::Uniform("tileWorldSize", tileWorldSizeMeters));
 
 	int unit = 2;

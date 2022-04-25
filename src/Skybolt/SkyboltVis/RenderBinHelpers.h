@@ -13,7 +13,8 @@ namespace vis {
 
 enum class RenderBinId
 {
-	Stars = -2,
+	Stars = -3,
+	CelestialBody = -2,
 	Sky = -1
 };
 

@@ -103,7 +103,7 @@ PagedForest::PagedForest(px_sched::Scheduler& scheduler, const osg::ref_ptr<osg:
 	mPageSize = math::componentWiseDivide(bounds.size(), osg::Vec2f(mPageCount.x(), mPageCount.y()));
 
 	mModelMatrixUniform = new osg::Uniform("modelMatrix", osg::Matrixf());
-	getTransform()->getOrCreateStateSet()->addUniform(mModelMatrixUniform);
+	mTransform->getOrCreateStateSet()->addUniform(mModelMatrixUniform);
 
 	mPageGeneratorTask.reset(new PageGeneratorTask(attributeMap, programs, elevationProvider, bounds, converter, visRangeWorldUnits, mPageSize));
 }

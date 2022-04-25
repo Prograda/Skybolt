@@ -17,9 +17,11 @@ class RootNode : public VisObject
 public:
 	virtual void setPosition(const osg::Vec3d &position) = 0;
 	virtual void setOrientation(const osg::Quat &orientation) = 0;
+	virtual void setTransform(const osg::Matrix& m) = 0;
 
 	virtual osg::Vec3d getPosition() const = 0;
 	virtual osg::Quat getOrientation() const = 0;
+	virtual osg::Matrix getTransform() const = 0;
 };
 
 } // namespace vis

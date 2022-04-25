@@ -13,7 +13,6 @@
 #define THREE_PI 9.42477796077
 
 in vec3 texCoord;
-in float logZ;
 
 out vec4 color;
 
@@ -40,5 +39,4 @@ float bounceLightFromEarth = 0.005;
 void main()
 {
 	color = max(bounceLightFromEarth, lighting(texCoord.xy, moonPhase)) * texture(albedoSampler, texCoord.xy);
-	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }

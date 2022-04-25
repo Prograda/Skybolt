@@ -27,4 +27,4 @@ vec4 saturate(vec4 x)
 	return clamp(x, vec4(0), vec4(1));
 }
 
-#endif // define SATURATE_h
+#endif // define SATURATE_H
