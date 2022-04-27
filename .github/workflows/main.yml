@@ -34,6 +34,10 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         pip3 install conan
+    - name: Add conan remotes
+      run: |
+        conan config set general.revisions_enabled=1
+        conan remote add prograda-conan https://prograda.jfrog.io/artifactory/api/conan/prograda-conan
     - name: Enable C++11
       run: |
         conan profile new default --detect
@@ -43,7 +47,7 @@ jobs:
         export CONAN_SYSREQUIRES_MODE=enabled
         mkdir ${{env.depsDir}}
         cd ${{env.depsDir}}
-        conan install ${{github.workspace}} -o openscenegraph-mr:shared=True --build=missing
+        conan install ${{github.workspace}} -o openscenegraph-mr:shared=True --build=cxxtimer --build=px_sched --build=xsimd
     - name: Cmake build
       run: |
         mkdir ${{env.buildDir}}
