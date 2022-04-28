@@ -12,6 +12,8 @@
 #include <SkyboltCommon/Listenable.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
+#include <ostream>
+
 using namespace skybolt;
 
 namespace skybolt {
