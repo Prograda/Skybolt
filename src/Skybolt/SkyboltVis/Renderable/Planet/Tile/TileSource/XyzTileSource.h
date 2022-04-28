@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #pragma once
-#include "TileSource.h"
+#include "TileSourceWithMinMaxLevel.h"
 
 namespace skybolt {
 namespace vis {
@@ -25,9 +25,11 @@ struct XyzTileSourceConfig
 	};
 
 	YOrigin yOrigin = YOrigin::Top;
+
+	IntRangeInclusive levelRange;
 };
 
-class XyzTileSource : public TileSource
+class XyzTileSource : public TileSourceWithMinMaxLevel
 {
 public:
 	XyzTileSource(const XyzTileSourceConfig& config);

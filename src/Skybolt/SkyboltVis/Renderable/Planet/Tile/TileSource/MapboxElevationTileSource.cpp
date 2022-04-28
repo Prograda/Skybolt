@@ -15,7 +15,8 @@ using namespace skybolt;
 namespace skybolt {
 namespace vis {
 
-MapboxElevationTileSource::MapboxElevationTileSource(const MapboxElevationTileSourceConfig& config)
+MapboxElevationTileSource::MapboxElevationTileSource(const MapboxElevationTileSourceConfig& config) :
+	TileSourceWithMinMaxLevel(config.levelRange)
 {
 	XyzTileSourceConfig xyzConfig;
 	xyzConfig.urlTemplate = config.urlTemplate;

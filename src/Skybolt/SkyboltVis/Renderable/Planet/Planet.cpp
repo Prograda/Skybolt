@@ -488,10 +488,6 @@ Planet::Planet(const PlanetConfig& config) :
 		surfaceConfig.planetTileSources = config.planetTileSources;
 		surfaceConfig.oceanEnabled = config.waterEnabled;
 		surfaceConfig.cloudsTexture = config.cloudsTexture;
-		surfaceConfig.elevationMaxLodLevel = config.elevationMaxLodLevel;
-		surfaceConfig.albedoMaxLodLevel = config.albedoMaxLodLevel;
-		surfaceConfig.attributeMinLodLevel = config.attributeMinLodLevel;
-		surfaceConfig.attributeMaxLodLevel = config.attributeMaxLodLevel;
 		surfaceConfig.tileTexturesProvider = createSurfaceTileTexturesProvider(textureCache);
 
 		mPlanetSurface.reset(new PlanetSurface(surfaceConfig));

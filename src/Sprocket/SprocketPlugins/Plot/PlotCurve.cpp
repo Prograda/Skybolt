@@ -88,7 +88,7 @@ PlotCurve::PlotCurve(QwtPlotCurve* curve, const DataSeriesPtr& dataSeries, const
 
 	curve->setData(data);
 
-	mConnections.push_back(dataSeries->valuesAdded.connect([=](const IntRange& range) {
+	mConnections.push_back(dataSeries->valuesAdded.connect([=](const IntRangeInclusive& range) {
 		evalIfKeysPresent(keyX, keyY, [range, curve](const auto& dataX, const auto& dataY) {
 			for (int i = range.first; i <= range.last; ++i)
 			{
@@ -97,7 +97,7 @@ PlotCurve::PlotCurve(QwtPlotCurve* curve, const DataSeriesPtr& dataSeries, const
 		});
 	}));
 
-	mConnections.push_back(dataSeries->valuesChanged.connect([=](const IntRange& range) {
+	mConnections.push_back(dataSeries->valuesChanged.connect([=](const IntRangeInclusive& range) {
 		evalIfKeysPresent(keyX, keyY, [range, curve](const auto& dataX, const auto& dataY) {
 			for (int i = range.first; i <= range.last; ++i)
 			{
@@ -106,7 +106,7 @@ PlotCurve::PlotCurve(QwtPlotCurve* curve, const DataSeriesPtr& dataSeries, const
 		});
 	}));
 
-	mConnections.push_back(dataSeries->valuesRemoved.connect([=](const IntRange& range) {
+	mConnections.push_back(dataSeries->valuesRemoved.connect([=](const IntRangeInclusive& range) {
 		for (int i = range.first; i <= range.last; ++i)
 		{
 			static_cast<CurveData*>(curve->data())->remove(i);

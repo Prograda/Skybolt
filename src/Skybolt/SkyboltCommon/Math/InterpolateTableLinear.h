@@ -16,7 +16,7 @@ namespace math {
 
 struct InterpolationPoint
 {
-	IntRange bounds;
+	IntRangeClosedOpen bounds;
 	double weight; //!< In range [0 to 1]
 };
 

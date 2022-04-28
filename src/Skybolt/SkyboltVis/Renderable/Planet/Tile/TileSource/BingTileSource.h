@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #pragma once
-#include "TileSource.h"
+#include "TileSourceWithMinMaxLevel.h"
 
 namespace skybolt {
 namespace vis {
@@ -14,9 +14,10 @@ struct BingTileSourceConfig
 {
 	std::string url;
 	std::string apiKey;
+	IntRangeInclusive levelRange;
 };
 
-class BingTileSource : public TileSource
+class BingTileSource : public TileSourceWithMinMaxLevel
 {
 public:
 	BingTileSource(const BingTileSourceConfig& config);

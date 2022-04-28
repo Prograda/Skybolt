@@ -49,10 +49,6 @@ struct PlanetSurfaceConfig
 
 	GpuForestPtr gpuForest; //!< Can be null
 
-	int elevationMaxLodLevel = 1;
-	int albedoMaxLodLevel = 1;
-	int attributeMinLodLevel = 9;
-	int attributeMaxLodLevel = 9;
 	bool oceanEnabled = true;
 };
 

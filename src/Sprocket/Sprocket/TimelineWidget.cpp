@@ -21,7 +21,7 @@ class TimelineSlider : public QSlider
 public:
 	TimelineSlider() : QSlider(Qt::Horizontal) {}
 
-	void setBufferedRange(const IntRange& range)
+	void setBufferedRange(const IntRangeInclusive& range)
 	{
 		mBufferedRange = range;
 		update();
@@ -51,7 +51,7 @@ protected:
 	}
 
 private:
-	IntRange mBufferedRange;
+	IntRangeInclusive mBufferedRange;
 };
 
 TimelineWidget::TimelineWidget(QWidget* parent) :
@@ -111,7 +111,7 @@ void TimelineWidget::setBufferedRange(const TimeRange& range)
 {
 	mBufferedRange = range;
 
-	IntRange intRange(toSliderValue(range.start), toSliderValue(range.end));
+	IntRangeInclusive intRange(toSliderValue(range.start), toSliderValue(range.end));
 	mSlider->setBufferedRange(intRange);
 }
 
@@ -130,7 +130,7 @@ void TimelineWidget::rangeChanged(const TimeRange& range)
 	mDuration->setText(toTimeText(duration));
 
 	mSlider->setValue(toSliderValue(mSource->getTime()));
-	IntRange intRange(toSliderValue(mBufferedRange.start), toSliderValue(mBufferedRange.end));
+	IntRangeInclusive intRange(toSliderValue(mBufferedRange.start), toSliderValue(mBufferedRange.end));
 	mSlider->setBufferedRange(intRange);
 }
 

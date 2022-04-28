@@ -258,8 +258,8 @@ static void loadParticleSystem(Entity* entity, const EntityFactory::Context& con
 	emitterParams.emissionRate = json.at("emissionRate");
 	emitterParams.radius = json.at("radius");
 	emitterParams.positionable = entity->getFirstComponentRequired<Node>();
-	emitterParams.elevationAngle = DoubleRange(json.at("elevationAngleMin"), json.at("elevationAngleMax"));
-	emitterParams.speed = DoubleRange(json.at("speedMin"), json.at("speedMax"));
+	emitterParams.elevationAngle = DoubleRangeInclusive(json.at("elevationAngleMin"), json.at("elevationAngleMax"));
+	emitterParams.speed = DoubleRangeInclusive(json.at("speedMin"), json.at("speedMax"));
 	emitterParams.upDirection = readVector3(json.at("upDirection"));
 	emitterParams.random = std::make_shared<Random>(/* seed */ 0);
 
@@ -434,16 +434,16 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 		}
 	}
 	
+	int elevationMaxLodLevel;
 	const nlohmann::json& layers = json.at("surface");
 	{
 		nlohmann::json elevation = layers.at("elevation");
-		config.elevationMaxLodLevel = elevation.at("maxLevel");
 		config.planetTileSources.elevation = context
 			.tileSourceFactoryRegistry->getFactory(elevation.at("format"))(elevation);
+		elevationMaxLodLevel = elevation.at("maxLevel");
 	}
 	{
 		nlohmann::json albedo = layers.at("albedo");
-		config.albedoMaxLodLevel = albedo.at("maxLevel");
 		config.planetTileSources.albedo = context
 			.tileSourceFactoryRegistry->getFactory(albedo.at("format"))(albedo);
 	}
@@ -452,8 +452,6 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 	{
 		config.planetTileSources.attribute = context
 			.tileSourceFactoryRegistry->getFactory(it->at("format"))(*it);
-		config.attributeMinLodLevel = it->at("minLevel");
-		config.attributeMaxLodLevel = it->at("maxLevel");
 	}
 	it = layers.find("uniformDetail");
 	if (it != layers.end())
@@ -507,7 +505,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 			params.forestGeoVisibilityRange = it.value().at("treeVisibilityRangeMeters");
 			params.treesPerLinearMeter = it.value().at("treesPerLinearMeter");
 			params.minTileLodLevelToDisplayForest = it.value().at("minLevel");
-			params.maxTileLodLevelToDisplayForest = std::max(config.elevationMaxLodLevel, config.attributeMaxLodLevel);
+			params.maxTileLodLevelToDisplayForest = it.value().at("maxLevel");
 			config.forestParams = params;
 		}
 	}
@@ -529,7 +527,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 	entity->addComponent(visObjectsComponent);
 	visObjectsComponent->addObject(visObject);
 
-	auto altitudeProvider = std::make_shared<vis::TileAsyncPlanetAltitudeProvider>(context.scheduler, config.planetTileSources.elevation, config.elevationMaxLodLevel);
+	auto altitudeProvider = std::make_shared<vis::TileAsyncPlanetAltitudeProvider>(context.scheduler, config.planetTileSources.elevation, elevationMaxLodLevel);
 	auto planetComponent = std::make_shared<PlanetComponent>(planetRadius, hasOcean, altitudeProvider);
 	entity->addComponent(planetComponent);
 

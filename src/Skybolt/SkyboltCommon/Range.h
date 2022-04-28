@@ -10,13 +10,14 @@
 
 namespace skybolt {
 
+//! Represents a range [a, b]
 template <typename T>
-struct Range
+struct RangeInclusive
 {
-	Range(T first, T last) :
+	RangeInclusive(T first, T last) :
 		first(first), last(last) {}
 
-	Range() :
+	RangeInclusive() :
 		first(std::numeric_limits<T>::max()),
 		last(std::numeric_limits<T>::lowest())
 	{
@@ -27,11 +28,43 @@ struct Range
 		return last < first;
 	}
 
+	union {
+		T first;
+		T minimum;
+	};
+
+	union {
+		T last;
+		T maximum;
+	};
+};
+
+//! Represents a range [a, b)
+template <typename T>
+struct RangeClosedOpen
+{
+	RangeClosedOpen(T first, T last) :
+		first(first), last(last) {}
+
+	RangeClosedOpen() :
+		first(std::numeric_limits<T>::max()),
+		last(std::numeric_limits<T>::lowest())
+	{
+	}
+
+	bool isEmpty() const
+	{
+		return last <= first;
+	}
+
 	T first;
 	T last;
 };
 
-typedef Range<int> IntRange;
-typedef Range<double> DoubleRange;
+typedef RangeInclusive<int> IntRangeInclusive;
+typedef RangeClosedOpen<int> IntRangeClosedOpen;
+
+typedef RangeInclusive<double> DoubleRangeInclusive;
+typedef RangeClosedOpen<double> DoubleRangeClosedOpen;
 
 } // namespace skybolt

@@ -49,7 +49,8 @@ static std::string tileXYToQuadKey(int tileX, int tileY, int levelOfDetail)
 	return quadKey;
 }
 
-BingTileSource::BingTileSource(const BingTileSourceConfig& config)
+BingTileSource::BingTileSource(const BingTileSourceConfig& config) :
+	TileSourceWithMinMaxLevel(config.levelRange)
 {
 	httplib::Client cli(config.url.c_str());
 

@@ -8,6 +8,7 @@
 #include "HeightMap.h"
 #include "SkyboltVis/OsgGeocentric.h"
 #include "SkyboltVis/OsgMathHelpers.h"
+#include "SkyboltVis/Renderable/Planet/Tile/TileSource/TileSource.h"
 
 #include <SkyboltCommon/Math/MathUtility.h>
 
@@ -16,9 +17,21 @@ using namespace skybolt;
 namespace skybolt {
 namespace vis {
 
+static bool hasAnyChildren(const std::vector<TileSourcePtr>& tileSources, const QuadTreeTileKey& key)
+{
+	for (const auto& tileSource : tileSources)
+	{
+		if (tileSource->hasAnyChildren(key))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 bool PlanetSubdivisionPredicate::operator()(const Box2d& bounds, const QuadTreeTileKey& key)
 {
-	if (key.level >= maxLevel)
+	if (!hasAnyChildren(tileSources, key))
 	{
 		return false;
 	}

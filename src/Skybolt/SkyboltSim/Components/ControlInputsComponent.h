@@ -25,7 +25,7 @@ template <typename T>
 struct ControlInputT : public ControlInput
 {
 	T value;
-	Range<T> range;
+	RangeInclusive<T> range;
 };
 
 template <typename T>
@@ -48,10 +48,10 @@ using ControlInputFloatPtr = std::shared_ptr<ControlInputFloat>;
 using ControlInputVec2Ptr = std::shared_ptr<ControlInputVec2>;
 
 template <typename T>
-inline Range<T> unitRange() { return Range<T>(T(0), T(1)); }
+inline RangeInclusive<T> unitRange() { return RangeInclusive<T>(T(0), T(1)); }
 
 template <typename T>
-inline Range<T> posNegUnitRange() { return Range<T>(T(-1), T(1)); }
+inline RangeInclusive<T> posNegUnitRange() { return RangeInclusive<T>(T(-1), T(1)); }
 
 class ControlInputsComponent : public Component
 {
@@ -80,7 +80,7 @@ public:
 	}
 
 	template <typename T>
-	inline std::shared_ptr<ControlInputT<T>> createOrGet(const std::string& name, const T& initialValue, const Range<T>& range = unitRange<T>())
+	inline std::shared_ptr<ControlInputT<T>> createOrGet(const std::string& name, const T& initialValue, const RangeInclusive<T>& range = unitRange<T>())
 	{
 		auto& control = controls[name];
 		if (!control)

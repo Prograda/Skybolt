@@ -16,6 +16,7 @@ namespace skybolt {
 namespace vis {
 
 XyzTileSource::XyzTileSource(const XyzTileSourceConfig& config) :
+	TileSourceWithMinMaxLevel(config.levelRange),
 	mUrlTemplate(config.urlTemplate),
 	mYOrigin(config.yOrigin),
 	mApiKey(config.apiKey)

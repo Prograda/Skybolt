@@ -81,9 +81,9 @@ public:
 		VariantNodeData(type), data(data) {}
 
 	VectorType data;
-	skybolt::IntRange addedRange; // !< Indices in new vector that were added
-	skybolt::IntRange removedRange; //!< Indices in previous vector that were removed
-	skybolt::IntRange changedRange; // !< Indices in new vector that were changed
+	skybolt::IntRangeInclusive addedRange; // !< Indices in new vector that were added
+	skybolt::IntRangeInclusive removedRange; //!< Indices in previous vector that were removed
+	skybolt::IntRangeInclusive changedRange; // !< Indices in new vector that were changed
 };
 
 template <class VectorType, typename ValueType>

@@ -47,6 +47,16 @@ using namespace skybolt;
 namespace skybolt {
 namespace vis {
 
+std::vector<TileSourcePtr> getNonNullTileSources(const PlanetTileSources& sources)
+{
+	std::vector<TileSourcePtr> result = {sources.elevation, sources.albedo};
+	if (sources.attribute)
+	{
+		result.push_back(sources.attribute);
+	}
+	return result;
+}
+
 PlanetSurface::PlanetSurface(const PlanetSurfaceConfig& config) :
 	mRadius(config.radius),
 	mParentTransform(config.parentTransform),
@@ -76,7 +86,7 @@ PlanetSurface::PlanetSurface(const PlanetSurfaceConfig& config) :
 	ss->setAttributeAndModes(polygonMode, osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
 #endif
 	mPredicate = std::make_shared<PlanetSubdivisionPredicate>();
-	mPredicate->maxLevel = std::max(std::max(config.albedoMaxLodLevel, config.elevationMaxLodLevel), config.attributeMaxLodLevel);
+	mPredicate->tileSources = getNonNullTileSources(planetTileSources);
 	mPredicate->observerAltitude = 20;
 	mPredicate->observerLatLon = osg::Vec2(0, 0);
 	mPredicate->planetRadius = mRadius;
@@ -85,9 +95,6 @@ PlanetSurface::PlanetSurface(const PlanetSurfaceConfig& config) :
 	imageLoader->elevationLayer = planetTileSources.elevation;
 	imageLoader->attributeLayer = planetTileSources.attribute;
 	imageLoader->albedoLayer = planetTileSources.albedo;
-	imageLoader->maxElevationLod = config.elevationMaxLodLevel;
-	imageLoader->minAttributeLod = config.attributeMinLodLevel;
-	imageLoader->maxAttributeLod = config.attributeMaxLodLevel;
 
 	AsyncTileLoaderPtr loader(new ConcurrentAsyncTileLoader(imageLoader, config.scheduler));
 

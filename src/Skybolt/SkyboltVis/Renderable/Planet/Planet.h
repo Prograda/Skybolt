@@ -45,10 +45,6 @@ struct PlanetConfig
 	float innerRadius;
 	PlanetTileSources planetTileSources;
 	VisFactoryRegistry* visFactoryRegistry;
-	int elevationMaxLodLevel = 1;
-	int albedoMaxLodLevel = 1;
-	int attributeMinLodLevel = 9;
-	int attributeMaxLodLevel = 9;
 	bool waterEnabled = true;
 	std::optional<ShadowParams> shadowParams;
 	osg::ref_ptr<osg::Texture2D> cloudsTexture; //!< Set to null to disable clouds

@@ -16,9 +16,10 @@ struct MapboxElevationTileSourceConfig
 	//! E.g http://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token={key}
 	std::string urlTemplate;
 	std::string apiKey;
+	IntRangeInclusive levelRange;
 };
 
-class MapboxElevationTileSource : public TileSource
+class MapboxElevationTileSource : public TileSourceWithMinMaxLevel
 {
 public:
 	MapboxElevationTileSource(const MapboxElevationTileSourceConfig& config);

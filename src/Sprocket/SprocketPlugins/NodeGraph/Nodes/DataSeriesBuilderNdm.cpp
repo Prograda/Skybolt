@@ -76,9 +76,9 @@ std::shared_ptr<QtNodes::NodeData> DataSeriesBuilderNdm::eval(const NodeDataVect
 
 void DataSeriesBuilderNdm::updateVariable(const QtNodes::NodeData& input, DoubleVectorNodeData& output) const
 {
-	output.addedRange = IntRange();
-	output.changedRange = IntRange();
-	output.removedRange = IntRange();
+	output.addedRange = IntRangeInclusive();
+	output.changedRange = IntRangeInclusive();
+	output.removedRange = IntRangeInclusive();
 
 	if (mContext->timeSource->getTime() == mPrevTime) // updating another input at the same time. Needed because node graph is push instead of pull. TODO: can remove this if we change to a pull system.
 	{
@@ -87,7 +87,7 @@ void DataSeriesBuilderNdm::updateVariable(const QtNodes::NodeData& input, Double
 			output.data.back() = getDataOrDefault<DoubleNodeData>(&input);
 
 			int index = (int)output.data.size() - 1;
-			output.changedRange = IntRange(index, index);
+			output.changedRange = IntRangeInclusive(index, index);
 		}
 	}
 	else if (mContext->timeSource->getTime() > mPrevTime)
@@ -95,6 +95,6 @@ void DataSeriesBuilderNdm::updateVariable(const QtNodes::NodeData& input, Double
 		output.data.push_back(getDataOrDefault<DoubleNodeData>(&input));
 
 		int index = (int)output.data.size() - 1;
-		output.addedRange = IntRange(index, index);
+		output.addedRange = IntRangeInclusive(index, index);
 	}
 }

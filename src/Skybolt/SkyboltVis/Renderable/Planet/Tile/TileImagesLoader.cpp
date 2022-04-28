@@ -9,7 +9,7 @@
 namespace skybolt {
 namespace vis {
 
-TileImage TileImagesLoader::getOrCreateImage(const QuadTreeTileKey& requestedKey, size_t cacheIndex, Factory factory, int minLevel) const
+TileImage TileImagesLoader::getOrCreateImage(const QuadTreeTileKey& requestedKey, size_t cacheIndex, Factory factory) const
 {
 	TileCache& cache = mImageCache[cacheIndex];
 
@@ -33,7 +33,7 @@ TileImage TileImagesLoader::getOrCreateImage(const QuadTreeTileKey& requestedKey
 
 		int level = requestedKey.level;
 		QuadTreeTileKey key = requestedKey;
-		while (level >= minLevel)
+		while (level >= 0)
 		{
 			entry->image.image = factory(key);
 			if (entry->image.image)

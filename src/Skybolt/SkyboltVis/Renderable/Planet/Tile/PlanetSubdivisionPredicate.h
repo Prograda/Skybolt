@@ -21,10 +21,10 @@ struct PlanetSubdivisionPredicate : public QuadTreeSubdivisionPredicate
 
 	bool operator()(const Box2d& bounds, const skybolt::QuadTreeTileKey& key) override;
 
+	std::vector<TileSourcePtr> tileSources; //!< tileSources are queried to see if children exist at each level
 	osg::Vec2d observerLatLon;
 	double observerAltitude;
 	double planetRadius;
-	int maxLevel;
 
 private:
 	// TODO: handle longitude wrap around

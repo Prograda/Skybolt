@@ -89,7 +89,7 @@ protected:
 	}
 
 	template <class NodeDataType, typename DataType>
-	std::shared_ptr<QtNodes::NodeData> toNodeData(int outputIndex, const DataType& value, const skybolt::IntRange& dirtyRange) const
+	std::shared_ptr<QtNodes::NodeData> toNodeData(int outputIndex, const DataType& value, const skybolt::IntRangeInclusive& dirtyRange) const
 	{
 		auto result = std::make_shared<NodeDataType>(def->outputs[outputIndex].name, value);
 		result->dirtyRange = dirtyRange;

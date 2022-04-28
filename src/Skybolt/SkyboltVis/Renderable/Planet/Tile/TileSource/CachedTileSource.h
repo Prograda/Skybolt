@@ -19,6 +19,16 @@ public:
 
 	osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
 
+	bool hasAnyChildren(const skybolt::QuadTreeTileKey& key) const override
+	{
+		return mTileSource->hasAnyChildren(key);
+	}
+
+	std::optional<skybolt::QuadTreeTileKey> getHighestAvailableLevel(const skybolt::QuadTreeTileKey& key) const override
+	{
+		return mTileSource->getHighestAvailableLevel(key);
+	}
+
 private:
 	TileSourcePtr mTileSource;
 	std::string mCacheDirectory;

@@ -26,7 +26,7 @@ namespace vis {
 
 const int oceanFlagHeight = 32267; // height value used to flag that a pixel in the DTED heightmap is ocean. This is not the actual height of the ocean.
 
-static osg::Image* createDefaultImage()
+static osg::Image* createDefaultHeightImage()
 {
 	osg::Image* image = new osg::Image();
 	image->allocateImage(256, 256, 1, GL_LUMINANCE, GL_UNSIGNED_SHORT);
@@ -36,6 +36,15 @@ static osg::Image* createDefaultImage()
 	{
 		ptr[i] = oceanFlagHeight;
 	}
+	return image;
+}
+
+static osg::Image* createDefaultAlbedoImage()
+{
+	osg::Image* image = new osg::Image();
+	image->allocateImage(256, 256, 1, GL_RGB, GL_BYTE);
+	image->setInternalTextureFormat(GL_RGB8);
+	memset((char*)(image->getDataPointer()), 0, 3 * 256 * 256);
 	return image;
 }
 
@@ -88,20 +97,24 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 	cxxtimer::Timer timer;
 	timer.start();
 #endif
-	auto images = std::make_shared< PlanetTileImages>();
+	auto images = std::make_shared<PlanetTileImages>();
+
+	// Height map
 	{
-		QuadTreeTileKey elevationKey = createAncestorKey(key, std::min(maxElevationLod, key.level));
+		std::optional<QuadTreeTileKey> elevationKey = elevationLayer->getHighestAvailableLevel(key);
+		if (elevationKey)
+		{
+			images->heightMapImage = getOrCreateImage(*elevationKey, size_t(CacheIndex::Elevation), [this, cancelSupplier](const QuadTreeTileKey& key) {
+				osg::ref_ptr<osg::Image> image = elevationLayer->createImage(key, cancelSupplier);
 
-		images->heightMapImage = getOrCreateImage(elevationKey, size_t(CacheIndex::Elevation), [this, cancelSupplier](const QuadTreeTileKey& key) {
-			osg::ref_ptr<osg::Image> image = elevationLayer->createImage(key, cancelSupplier);
+				if (image)
+				{
+					image->setInternalTextureFormat(GL_R16);
+				}
 
-			if (image)
-			{
-				image->setInternalTextureFormat(GL_R16);
-			}
-
-			return image;
-		});
+				return image;
+			});
+		}
 
 #ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
 		std::cout << "Height," << key.level << "," << timer.count() << std::endl;
@@ -109,9 +122,9 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 		timer.start();
 #endif
 
-		static osg::ref_ptr<osg::Image> defaultImage = createDefaultImage();
-		static osg::ref_ptr<osg::Image> defaultNormalMap = createNormalmapFromHeightmap(*defaultImage, osg::Vec2(1,1));
-		static osg::ref_ptr<osg::Image> defaultLandMask = convertHeightmapToLandMask(*defaultImage);
+		static osg::ref_ptr<osg::Image> defaultHeightImage = createDefaultHeightImage();
+		static osg::ref_ptr<osg::Image> defaultNormalMap = createNormalmapFromHeightmap(*defaultHeightImage, osg::Vec2(1,1));
+		static osg::ref_ptr<osg::Image> defaultLandMask = convertHeightmapToLandMask(*defaultHeightImage);
 
 		osg::ref_ptr<osg::Image> heightImage = images->heightMapImage.image;
 		if (heightImage)
@@ -125,7 +138,7 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 			images->normalMapImage = createNormalmapFromHeightmap(*heightImage, texelWorldSize);
 
 			images->landMaskImage = getOrCreateImage(images->heightMapImage.key, size_t(CacheIndex::LandMask), [heightImage](const QuadTreeTileKey& key) {
-				if (heightImage == defaultImage)
+				if (heightImage == defaultHeightImage)
 				{
 					return defaultLandMask;
 				}
@@ -136,7 +149,7 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 		}
 		else
 		{
-			images->heightMapImage.image = defaultImage;
+			images->heightMapImage.image = defaultHeightImage;
 			images->normalMapImage = defaultNormalMap;
 		}
 
@@ -147,37 +160,51 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 #endif
 	}
 
-	images->albedoMapImage = getOrCreateImage(key, size_t(CacheIndex::Albedo), [this, cancelSupplier](const QuadTreeTileKey& key) {
-		osg::ref_ptr<osg::Image> image = albedoLayer->createImage(key, cancelSupplier);
-		return image;
-	});
+	// Albedo map
+	{
+		static osg::ref_ptr<osg::Image> defaultAlbedoImage = createDefaultAlbedoImage();
 
-#ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
-	std::cout << "Albedo," << key.level << "," << timer.count() << std::endl;
-	timer.reset();
-	timer.start();
-#endif
+		std::optional<QuadTreeTileKey> albedoKey = albedoLayer->getHighestAvailableLevel(key);
+		if (albedoKey)
+		{
+			images->albedoMapImage = getOrCreateImage(*albedoKey, size_t(CacheIndex::Albedo), [this, cancelSupplier](const QuadTreeTileKey& key) {
+				osg::ref_ptr<osg::Image> image = albedoLayer->createImage(key, cancelSupplier);
+				return image;
+			});
+		}
 
-	if (key.level >= minAttributeLod)
+		if (!images->albedoMapImage.image)
+		{
+			images->albedoMapImage.image = defaultAlbedoImage;
+		}
+
+	#ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
+		std::cout << "Albedo," << key.level << "," << timer.count() << std::endl;
+		timer.reset();
+		timer.start();
+	#endif
+	}
+
+	// Attribute map
 	{
 		if (attributeLayer)
 		{
-			QuadTreeTileKey attributeKey = createAncestorKey(key, std::min(maxAttributeLod, key.level));
+			std::optional<QuadTreeTileKey> attributeKey = attributeLayer->getHighestAvailableLevel(key);
 
-			images->attributeMapImage = getOrCreateImage(key, size_t(CacheIndex::Attribute), [this, cancelSupplier](const QuadTreeTileKey& key) {
+			images->attributeMapImage = getOrCreateImage(*attributeKey, size_t(CacheIndex::Attribute), [this, cancelSupplier](const QuadTreeTileKey& key) {
 				osg::ref_ptr<osg::Image> image = attributeLayer->createImage(key, cancelSupplier);
 				if (image)
 				{
 					image = convertAttributeMap(*image, getNlcdAttributeColors());
 				}
 				return image;
-			}, minAttributeLod);
+			});
 			if (!images->attributeMapImage->image)
 			{
 				images->attributeMapImage = std::nullopt;
 			}
 		}
-		else if (false) // Experimental. If enabled, attribute map will be generated from the albedo map, otherwise no attributes will be used.
+		else if (!images->attributeMapImage && false) // Experimental. If enabled, attribute map will be generated from the albedo map, otherwise no attributes will be used.
 		{
 			images->attributeMapImage = getOrCreateImage(key, size_t(CacheIndex::Attribute), [this, cancelSupplier, albedo = images->albedoMapImage.image](const QuadTreeTileKey& key) {
 				return convertToAttributeMap(*albedo);

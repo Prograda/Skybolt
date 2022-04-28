@@ -35,6 +35,11 @@ public:
 		return nullptr;
 	}
 
+	bool hasAnyChildren(const skybolt::QuadTreeTileKey& key) const override { return true; }
+
+	//! @returns the highest key with source data in the given key's ancestral hierarchy
+	std::optional<skybolt::QuadTreeTileKey> getHighestAvailableLevel(const skybolt::QuadTreeTileKey& key) const { return key; }
+
 	std::map<skybolt::QuadTreeTileKey, osg::ref_ptr<osg::Image>> images;
 	mutable std::vector<skybolt::QuadTreeTileKey> requests;
 };

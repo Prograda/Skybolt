@@ -48,8 +48,8 @@ public:
 		float emissionRate;
 		float radius;
 		Vector3 upDirection;
-		DoubleRange speed;
-		DoubleRange elevationAngle;
+		DoubleRangeInclusive speed;
+		DoubleRangeInclusive elevationAngle;
 		std::shared_ptr<Random> random;
 	};
 

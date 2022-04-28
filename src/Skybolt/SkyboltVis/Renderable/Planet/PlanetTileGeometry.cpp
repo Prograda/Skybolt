@@ -69,10 +69,11 @@ osg::Geometry* createPlanetTileGeometry(const osg::Vec3d& tileCenter, const Box2
 			uvBuffer->at(i) = uv;
 			++i;
 
+			// Add point to bounding box, with some vertical padding to ensure vertical bounds are large enough to account for height in heightmap.
+			// TODO: use actual tile vertical bounds.
+			pos = llaToGeocentric(latLon, 0, radius - 9000) - tileCenter; // lowest point
 			bounds.expandBy(pos);
-
-			// Ensure vertical bounds are large enough to account for height in heightmap
-			pos = llaToGeocentric(latLon, 0, radius + 9000) - tileCenter;
+			pos = llaToGeocentric(latLon, 0, radius + 9000) - tileCenter; // highest point
 			bounds.expandBy(pos);
 		}
 	}

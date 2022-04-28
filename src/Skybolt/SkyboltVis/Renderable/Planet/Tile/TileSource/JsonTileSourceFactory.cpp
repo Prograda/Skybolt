@@ -85,6 +85,13 @@ static JsonTileSourceFactory wrapAll(const JsonTileSourceFactoryRegistry& regist
 		registry.wrapWithProjectionSupport(factory));
 }
 
+static IntRangeInclusive readLevelRange(const nlohmann::json& json)
+{
+	int minLevel = readOptionalOrDefault(json, "minLevel", 0);
+	int maxLevel = json.at("maxLevel");
+	return IntRangeInclusive(minLevel, maxLevel);
+}
+
 void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)
 {
 	ApiKeys keys = registry.getApiKeys();
@@ -100,6 +107,7 @@ void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)
 		xyzConfig.urlTemplate = json.at("url");
 		xyzConfig.yOrigin = readOptionalOrDefault(json, "yTileOriginAtBottom", false) ? XyzTileSourceConfig::YOrigin::Bottom : XyzTileSourceConfig::YOrigin::Top;
 		xyzConfig.apiKey = apiKey;
+		xyzConfig.levelRange = readLevelRange(json);
 		return std::make_shared<XyzTileSource>(xyzConfig);
 	}));
 
@@ -107,6 +115,7 @@ void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)
 		BingTileSourceConfig bingConfig;
 		bingConfig.url = json.at("url");
 		bingConfig.apiKey = getApiKey(keys, "bing");
+		bingConfig.levelRange = readLevelRange(json);
 		return std::make_shared<BingTileSource>(bingConfig);
 	}));
 
@@ -114,6 +123,7 @@ void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)
 		MapboxElevationTileSourceConfig config;
 		config.urlTemplate = json.at("url");
 		config.apiKey = getApiKey(keys, "mapbox");
+		config.levelRange = readLevelRange(json);
 		return std::make_shared<MapboxElevationTileSource>(config);
 	}));
 }

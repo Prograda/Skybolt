@@ -29,9 +29,6 @@ public:
 	TileSourcePtr elevationLayer; //!< never null
 	TileSourcePtr attributeLayer; //!< can be null
 	TileSourcePtr albedoLayer; //!< never null
-	int maxElevationLod;
-	int minAttributeLod; //!< Load attribute tiles for lod levels of at least this
-	int maxAttributeLod;
 
 	enum class CacheIndex
 	{

@@ -16,9 +16,9 @@ struct DataSeries
 	typedef std::vector<double> DoubleVector;
 	std::map<std::string, DoubleVector> data;
 
-	boost::signals2::signal<void(skybolt::IntRange)> valuesAdded;
-	boost::signals2::signal<void(skybolt::IntRange)> valuesChanged;
-	boost::signals2::signal<void(skybolt::IntRange)> valuesRemoved;
+	boost::signals2::signal<void(skybolt::IntRangeInclusive)> valuesAdded;
+	boost::signals2::signal<void(skybolt::IntRangeInclusive)> valuesChanged;
+	boost::signals2::signal<void(skybolt::IntRangeInclusive)> valuesRemoved;
 	boost::signals2::signal<void(const std::string&)> keyAdded;
 	boost::signals2::signal<void(const std::string&)> keyRemoved;
 };
