@@ -399,8 +399,8 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 			const nlohmann::json& atmosphere = it.value();
 			
 			vis::BruentonAtmosphereConfig atmosphereConfig;
-			atmosphereConfig.bottomRadius = planetRadius;
-			atmosphereConfig.topRadius = planetRadius * 1.0094; // TODO: determine programatically from scale height
+			atmosphereConfig.bottomRadius = readOptionalOrDefault(atmosphere, "bottomRadius", planetRadius);
+			atmosphereConfig.topRadius = readOptionalOrDefault(atmosphere, "topRadius", planetRadius * 1.0094); // TODO: determine programatically from scale height
 
 			if (auto coefficient = readOptional<double>(atmosphere, "earthReyleighScatteringCoefficient"))
 			{
