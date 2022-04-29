@@ -33,7 +33,7 @@ void Model::setMaxRenderDistance(float distance)
 
 void Model::setVisibilityCategoryMask(uint32_t mask)
 {
-	mNode->setNodeMask(mask);
+	mTransform->setNodeMask(mask);
 }
 
 void Model::setVisible(bool visible)
