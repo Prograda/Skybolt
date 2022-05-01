@@ -7,15 +7,22 @@
 
 #pragma once
 
+#include "DisplaySettings.h"
 #include "Window.h"
 
 namespace skybolt {
 namespace vis {
 
+struct EmbeddedWindowConfig
+{
+	RectI rect;
+	DisplaySettings displaySettings;
+};
+
 class EmbeddedWindow : public Window
 {
 public:
-	EmbeddedWindow(int width, int height);
+	EmbeddedWindow(const EmbeddedWindowConfig& config);
 
 	void setWidth(int width);
 	void setHeight(int height);

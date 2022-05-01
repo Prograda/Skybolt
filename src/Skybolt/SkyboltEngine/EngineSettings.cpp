@@ -7,6 +7,7 @@
 #include "EngineSettings.h"
 #include "EngineCommandLineParser.h"
 #include <SkyboltCommon/OptionalUtility.h>
+#include <SkyboltCommon/Json/JsonHelpers.h>
 
 namespace skybolt {
 
@@ -16,6 +17,9 @@ nlohmann::json createDefaultEngineSettings()
 	"tileApiKeys": {
 		"bing": "",
 		"mapbox": ""
+	},
+	"display": {
+		"multiSampleCount": 4
 	},
 	"shadows": {
 		"enabled": true,
@@ -32,6 +36,17 @@ nlohmann::json readEngineSettings(const boost::program_options::variables_map& p
 		settings.update(newSettings);
 	});
 	return settings;
+}
+
+vis::DisplaySettings getDisplaySettingsFromEngineSettings(const nlohmann::json& engineSettings)
+{
+	vis::DisplaySettings s {};
+	if (const auto& it = engineSettings.find("display"); it != engineSettings.end())
+	{
+		const auto& j = it.value();
+		readOptionalToVar(j, "multiSampleCount", s.multiSampleCount);
+	}
+	return s;
 }
 
 } // namespace skybolt

@@ -34,6 +34,18 @@ boost::optional<T> readOptional(const nlohmann::json& j, const std::string& key)
 }
 
 template <typename T>
+bool readOptionalToVar(const nlohmann::json& j, const std::string& key, T& var)
+{
+	auto i = j.find(key);
+	if (i != j.end())
+	{
+		var = i.value().get<T>();
+		return true;
+	}
+	return false;
+}
+
+template <typename T>
 static std::map<std::string, T> readNameMap(const nlohmann::json& j, const std::string& key)
 {
 	std::map<std::string, std::string> result;

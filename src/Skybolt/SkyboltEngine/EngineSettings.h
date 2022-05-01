@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <SkyboltVis/Window/DisplaySettings.h>
 #include <boost/program_options/variables_map.hpp>
 #include <nlohmann/json.hpp>
 
@@ -13,5 +14,7 @@ namespace skybolt {
 
 nlohmann::json createDefaultEngineSettings();
 nlohmann::json readEngineSettings(const boost::program_options::variables_map& params);
+
+vis::DisplaySettings getDisplaySettingsFromEngineSettings(const nlohmann::json& j);
 
 } // namespace skybolt

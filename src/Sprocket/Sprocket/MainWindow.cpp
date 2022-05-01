@@ -67,6 +67,7 @@
 #include <SkyboltVis/RenderTarget/Viewport.h>
 #include <SkyboltVis/Shader/ShaderSourceFileChangeMonitor.h>
 #include <SkyboltVis/Window/CaptureScreenshot.h>
+#include <SkyboltVis/Window/DisplaySettings.h>
 #include <SkyboltVis/Window/Window.h>
 #include <SkyboltCommon/File/OsDirectories.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
@@ -331,7 +332,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	mEngineRoot = EngineRootFactory::create(enginePluginFactories, mEngineSettings);
 	mSimStepper = std::make_unique<SimStepper>(mEngineRoot->systemRegistry);
 
-	mOsgWidget = new OsgWidget();
+	mOsgWidget = new OsgWidget(getDisplaySettingsFromEngineSettings(mEngineSettings), this);
 	mRenderTarget = vis::createAndAddViewportToWindow(*mOsgWidget->getWindow(), mEngineRoot->programs.getRequiredProgram("compositeFinal"));
 	mRenderTarget->setScene(std::make_shared<vis::RenderTargetSceneAdapter>(mEngineRoot->scene));
 

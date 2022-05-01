@@ -10,10 +10,11 @@
 
 using namespace skybolt::vis;
 
-EmbeddedWindow::EmbeddedWindow(int width, int height)
+EmbeddedWindow::EmbeddedWindow(const EmbeddedWindowConfig& config) :
+	Window(config.displaySettings)
 {
-	osg::DisplaySettings::instance()->setNumMultiSamples(4);
-    mWindow = mViewer->setUpViewerAsEmbeddedInWindow(0, 0, width, height);
+	const auto& rect = config.rect;
+    mWindow = mViewer->setUpViewerAsEmbeddedInWindow(rect.x, rect.y, rect.width, rect.height);
 
 	mViewer->realize();
 	configureGraphicsState();

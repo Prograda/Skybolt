@@ -13,10 +13,22 @@
 #endif
 using namespace skybolt::vis;
 
-StandaloneWindow::StandaloneWindow(const RectI& rect)
+StandaloneWindowConfig createDefaultConfigWithRect(const RectI& rect)
 {
-	osg::DisplaySettings::instance()->setNumMultiSamples(4);
+	StandaloneWindowConfig c;
+	c.rect = rect;
+	return c;
+}
 
+StandaloneWindow::StandaloneWindow(const RectI& rect) :
+	StandaloneWindow(createDefaultConfigWithRect(rect))
+{
+}
+
+StandaloneWindow::StandaloneWindow(const StandaloneWindowConfig& config) :
+	Window(config.displaySettings)
+{
+	const auto& rect = config.rect;
     mViewer->setUpViewInWindow(rect.x, rect.y, rect.width, rect.height);
 	mViewer->realize();
 

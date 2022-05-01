@@ -18,7 +18,7 @@ class OsgWidget : public QOpenGLWidget
 {
 	Q_OBJECT
 public:
-	OsgWidget(QWidget* parent = 0);
+	OsgWidget(const skybolt::vis::DisplaySettings& displaySettings, QWidget* parent = 0);
 	virtual ~OsgWidget();
 
 	skybolt::vis::Window* getWindow() const;

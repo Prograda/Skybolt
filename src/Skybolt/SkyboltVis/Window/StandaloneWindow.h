@@ -6,15 +6,23 @@
 
 #pragma once
 
+#include "DisplaySettings.h"
 #include "Window.h"
 #include "SkyboltVis/Rect.h"
 
 namespace skybolt {
 namespace vis {
 
+struct StandaloneWindowConfig
+{
+	RectI rect;
+	DisplaySettings displaySettings;
+};
+
 class StandaloneWindow : public Window
 {
 public:
+	StandaloneWindow(const StandaloneWindowConfig& config);
 	StandaloneWindow(const RectI& rect);
 
 	virtual int getWidth() const;

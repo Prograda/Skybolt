@@ -19,7 +19,7 @@ namespace vis {
 class Window
 {
 public:
-	Window();
+	Window(const DisplaySettings& config);
 	~Window();
 
 	//! @returns false if window has been closed

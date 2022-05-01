@@ -17,6 +17,7 @@ using std::shared_ptr;
 class AsyncTileLoader;
 struct BuildingTypes;
 struct DetailMappingTechnique;
+struct DisplaySettings;
 class ElevationProvider;
 class LlaToNedConverter;
 class GpuForest;

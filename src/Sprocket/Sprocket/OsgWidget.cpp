@@ -33,12 +33,15 @@ public:
 	OsgWidget* widget;
 };
 
-OsgWidget::OsgWidget(QWidget* parent):
+OsgWidget::OsgWidget(const DisplaySettings& displaySettings, QWidget* parent):
 	QOpenGLWidget(parent)
 {
 	setFocusPolicy(Qt::StrongFocus);
 
-	mWindow.reset(new skybolt::vis::EmbeddedWindow(width(), height()));
+	EmbeddedWindowConfig config;
+	config.rect = RectI(0, 0, width(), height());
+	config.displaySettings = displaySettings;
+	mWindow.reset(new EmbeddedWindow(config));
 
 	auto camera = mWindow->getViewer().getCamera();
 	camera->setPreDrawCallback(new DrawCallback(this));

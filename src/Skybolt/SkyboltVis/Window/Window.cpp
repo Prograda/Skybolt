@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "Window.h"
+#include "DisplaySettings.h"
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/RenderTarget/RenderTarget.h"
 
@@ -27,9 +28,11 @@ USE_GRAPHICSWINDOW()
 
 using namespace skybolt::vis;
 
-Window::Window() :
+Window::Window(const DisplaySettings& settings) :
 	mViewer(new osgViewer::Viewer)
 {
+	osg::DisplaySettings::instance()->setNumMultiSamples(settings.multiSampleCount);
+
 	osg::setNotifyLevel(osg::WARN);
 	mViewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded); // TODO: Use multi-threaded?
 
