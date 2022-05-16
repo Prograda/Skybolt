@@ -69,7 +69,7 @@ float sampleCloudSkyOcclusionMaskAtCloudsUv(sampler2D cloudSampler, vec2 uv)
 #else
 	float coverage = max(0.0, cloudCoverageFraction*1.5-0.5);
 #endif
-	return mix(1.0, 0.1, coverage);
+	return mix(1.0, 0.3, coverage);
 }
 
 float sampleCloudSkyOcclusionMaskAtPositionRelPlanet(sampler2D cloudSampler, vec3 positionRelPlanet)
