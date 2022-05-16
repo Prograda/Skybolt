@@ -324,6 +324,12 @@ mat3 toTbnMatrix(vec3 normal)
 	return transpose(mat3(tangent, bitangent, -normal));
 }
 
+vec3 getNormalWithBasis(vec3 localNormal, vec3 basisNormal)
+{
+	mat3 tbn = toTbnMatrix(basisNormal);
+	return localNormal * tbn;
+}
+
 void main()
 {
 #ifdef CAST_SHADOWS
@@ -353,19 +359,17 @@ void main()
 	vec2 normalUv = texCoord.xy * heightMapUvScale + heightMapUvOffset;
 	
 	// Calculate normal
-	vec3 normal;
-	if (isWater)
+	vec3 normal = normalize(position_worldSpace - planetCenter);
+	if (!isWater)
 	{
-		normal = normalize(position_worldSpace - planetCenter);
-	}
-	else
-	{
-		normal = getTerrainNormalFromRG(texture(normalSampler, normalUv));
-		normal = vec3(normal.z, normal.x, -normal.y);
+		vec3 localTerrainNormal = getTerrainNormalFromRG(texture(normalSampler, normalUv));
+		localTerrainNormal = vec3(localTerrainNormal.z, localTerrainNormal.x, -localTerrainNormal.y);
+		
+		// TODO: can optimize by skipping basis adjustment if camera is close to earth's surface, since basis will be close to -z.
+		normal = getNormalWithBasis(localTerrainNormal, normal);
 		
 #ifdef ADD_NORMAL_FBM_NOISE
-		mat3 tbn = toTbnMatrix(normal);
-		normal = fbmNormal() * tbn;
+		normal = getNormalWithBasis(fbmNormal(), normal);
 #endif
 	}
 
