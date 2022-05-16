@@ -55,7 +55,12 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 	osg::Vec2f albedoImageScale, albedoImageOffset;
 	getTileTransformInParentSpace(key, textures.albedo.key.level, albedoImageScale, albedoImageOffset);
 
-	if (key.level >= 6) // TODO: automate this value
+	// highLodTransitionLevel is calculated with this ad-hoc rule which works well for most planets.
+	// TODO: since the main visual difference between low and high res terrain is that low res has no displacement,
+	// we should really calculate the transition based on the visible height range of the terrain.
+	int highLodTransitionLevel = std::max(0, int(glm::log2(float(mPlanetRadius)/500000.f)));
+
+	if (key.level >= highLodTransitionLevel)
 	{
 		// High LOD terrain
 		std::shared_ptr<TerrainConfig::PlanetTile> planetTile(new TerrainConfig::PlanetTile);
