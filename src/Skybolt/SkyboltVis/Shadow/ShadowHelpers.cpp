@@ -12,6 +12,8 @@ namespace vis {
 
 void addShadowMapsToStateSet(const ShadowMaps& shadowMaps, osg::StateSet& stateSet, int firstTextureUnitIndex)
 {
+	stateSet.setDefine("SHADOW_CASCADE_COUNT", std::to_string(shadowMaps.size()));
+
 	osg::Uniform* uniform = new osg::Uniform(osg::Uniform::SAMPLER_2D_SHADOW, "shadowSampler", (int)shadowMaps.size());
 	for (int i = 0; i < (int)shadowMaps.size(); ++i)
 	{

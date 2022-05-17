@@ -52,10 +52,10 @@ CascadedShadowMapGenerator::CascadedShadowMapGenerator(const CascadedShadowMapGe
 
 	for (int i = 0; i < cascadeCount; ++i)
 	{
-		ShadowMapGeneratorConfig config;
-		config.textureSize = config.textureSize;
-		config.shadowMapId = i;
-		mShadowMapGenerators.push_back(std::make_shared<ShadowMapGenerator>(config));
+		ShadowMapGeneratorConfig c;
+		c.textureSize = config.textureSize;
+		c.shadowMapId = i;
+		mShadowMapGenerators.push_back(std::make_shared<ShadowMapGenerator>(c));
 		mTextures.push_back(mShadowMapGenerators[i]->getTexture());
 
 	}

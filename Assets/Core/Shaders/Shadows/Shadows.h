@@ -7,7 +7,13 @@
 #ifndef SHADOWS_H
 #define SHADOWS_H
 
+#pragma import_defines ( SHADOW_CASCADE_COUNT )
+#ifndef SHADOW_CASCADE_COUNT
+#define SHADOW_CASCADE_COUNT 1
+#endif
+
 #include "Dither.h"
+#include "GlobalDefines.h"
 #include "Util/Saturate.h"
 
 float sampleShadow(sampler2D shadowSampler, vec2 texCoord, float receiverDepth)
@@ -23,14 +29,13 @@ float sampleShadow(sampler2DShadow shadowSampler, vec2 texCoord, float receiverD
 vec2 rotate(vec2 v, float a) {
 	float s = sin(a);
 	float c = cos(a);
-	mat2 m = mat2(c, -s, s, c);
-	return m * v;
+	return vec2(v.x*c - v.y*s, v.x*s + v.y*c);
 }
 
-float random(vec2 texCoord, float seed)
+float random(vec2 texCoord)
 {
-	float dot_product = dot(vec3(texCoord, seed), vec3(12.9898, 78.233,45.164));
-	return fract(sin(dot_product) * 43758.5453);
+	float dotProduct = dot(texCoord, vec2(12.9898, 78.233));
+	return fract(sin(dotProduct) * 43758.5453);
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_standard_multisample_quality_levels
@@ -122,12 +127,12 @@ float sampleShadowPcf8StandardSamplePattern(sampler2DShadow shadowSampler, vec2 
 
 // 'Optimized PCF' method used in The Witness.
 // Based on http://the-witness.net/news/2013/09/shadow-mapping-summary-part-1
-// See sample code here https://github.com/TheRealMJP/Shadows
+// See sample code https://github.com/TheRealMJP/Shadows
 // The method weights each PCF sample with a Gaussian curve which gives smoother
 // edges for the same number of samples compared with grid-based PCF.
 float sampleShadowOptimizedPcf(sampler2DShadow shadowSampler, vec2 texCoord, float receiverDepth)
 {
-	vec2 offsetScale = 1.0 / textureSize(shadowSampler, 0);
+	vec2 offsetScale = vec2(1.0) / textureSize(shadowSampler, 0);
 	
 	vec2 uv = texCoord * textureSize(shadowSampler, 0);
 	vec2 base_uv;
@@ -189,18 +194,62 @@ float sampleShadowOptimizedPcf(sampler2DShadow shadowSampler, vec2 texCoord, flo
 	sum += uw2 * vw2 * sampleShadow(shadowSampler, (base_uv + vec2(u2, v2)) * offsetScale, receiverDepth);
 
 	return sum * 1.0f / 144;
+#elif OPTIMIZED_PCF_FILTER_SIZE == 7
+	float uw0 = (5 * s - 6);
+	float uw1 = (11 * s - 28);
+	float uw2 = -(11 * s + 17);
+	float uw3 = -(5 * s + 1);
+
+	float u0 = (4 * s - 5) / uw0 - 3;
+	float u1 = (4 * s - 16) / uw1 - 1;
+	float u2 = -(7 * s + 5) / uw2 + 1;
+	float u3 = -s / uw3 + 3;
+
+	float vw0 = (5 * t - 6);
+	float vw1 = (11 * t - 28);
+	float vw2 = -(11 * t + 17);
+	float vw3 = -(5 * t + 1);
+
+	float v0 = (4 * t - 5) / vw0 - 3;
+	float v1 = (4 * t - 16) / vw1 - 1;
+	float v2 = -(7 * t + 5) / vw2 + 1;
+	float v3 = -t / vw3 + 3;
+
+	sum += uw0 * vw0 * sampleShadow(shadowSampler, (base_uv + vec2(u0, v0)) * offsetScale, receiverDepth);
+	sum += uw1 * vw0 * sampleShadow(shadowSampler, (base_uv + vec2(u1, v0)) * offsetScale, receiverDepth);
+	sum += uw2 * vw0 * sampleShadow(shadowSampler, (base_uv + vec2(u2, v0)) * offsetScale, receiverDepth);
+	sum += uw3 * vw0 * sampleShadow(shadowSampler, (base_uv + vec2(u3, v0)) * offsetScale, receiverDepth);
+
+	sum += uw0 * vw1 * sampleShadow(shadowSampler, (base_uv + vec2(u0, v1)) * offsetScale, receiverDepth);
+	sum += uw1 * vw1 * sampleShadow(shadowSampler, (base_uv + vec2(u1, v1)) * offsetScale, receiverDepth);
+	sum += uw2 * vw1 * sampleShadow(shadowSampler, (base_uv + vec2(u2, v1)) * offsetScale, receiverDepth);
+	sum += uw3 * vw1 * sampleShadow(shadowSampler, (base_uv + vec2(u3, v1)) * offsetScale, receiverDepth);
+
+	sum += uw0 * vw2 * sampleShadow(shadowSampler, (base_uv + vec2(u0, v2)) * offsetScale, receiverDepth);
+	sum += uw1 * vw2 * sampleShadow(shadowSampler, (base_uv + vec2(u1, v2)) * offsetScale, receiverDepth);
+	sum += uw2 * vw2 * sampleShadow(shadowSampler, (base_uv + vec2(u2, v2)) * offsetScale, receiverDepth);
+	sum += uw3 * vw2 * sampleShadow(shadowSampler, (base_uv + vec2(u3, v2)) * offsetScale, receiverDepth);
+
+	sum += uw0 * vw3 * sampleShadow(shadowSampler, (base_uv + vec2(u0, v3)) * offsetScale, receiverDepth);
+	sum += uw1 * vw3 * sampleShadow(shadowSampler, (base_uv + vec2(u1, v3)) * offsetScale, receiverDepth);
+	sum += uw2 * vw3 * sampleShadow(shadowSampler, (base_uv + vec2(u2, v3)) * offsetScale, receiverDepth);
+	sum += uw3 * vw3 * sampleShadow(shadowSampler, (base_uv + vec2(u3, v3)) * offsetScale, receiverDepth);
+
+	return sum * 1.0f / 2704;
 #endif
 }
 
 float sampleShadowPoisson16(sampler2DShadow shadowSampler, vec2 texCoord, float receiverDepth)
 {
-	vec2 offsetScale = 1.5 / textureSize(shadowSampler, 0);
+	vec2 offsetScale = 3.0 / textureSize(shadowSampler, 0);
+	
+	float theta = random(texCoord) * M_2PI;
 	
 	float result = 0.0f;
 	const int sampleCount = 16;
 	for (int i = 0; i < sampleCount; ++i)
 	{
-		vec2 offset = poissonDisc16[i];
+		vec2 offset = rotate(poissonDisc16[i], theta);
 		result += sampleShadow(shadowSampler, texCoord + offset * offsetScale, receiverDepth);
 	}
 
@@ -213,7 +262,6 @@ bool inTextureBounds(vec2 texCoord)
 	return max(v.x, v.y) < 0.5;
 }
 
-#define SHADOW_CASCADE_COUNT 4
 uniform sampler2DShadow shadowSampler[SHADOW_CASCADE_COUNT];
 
 uniform mat4 shadowProjectionMatrix0;
@@ -260,9 +308,9 @@ float sampleShadowCascadesAtTexCoord(vec2 shadowTexcoord, float receiverDepth, f
 			
 			float cascadeReceiverDepth = receiverDepth + cascadeShadowMatrixModifier[i].w;
 			cascadeReceiverDepth -= calcDepthBias(i, dotLN);
-			if (i == 0)
+			if (i < SHADOW_CASCADE_COUNT-1)
 			{
-				return sampleShadowOptimizedPcf(shadowSampler[i], cascadeTecoord.xy, cascadeReceiverDepth);
+				return sampleShadowPoisson16(shadowSampler[i], cascadeTecoord.xy, cascadeReceiverDepth);
 			}
 			else
 			{
