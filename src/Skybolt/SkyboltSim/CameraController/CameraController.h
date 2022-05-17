@@ -20,7 +20,7 @@ namespace sim {
 		{
 			static Input zero()
 			{
-				return {0,0,0,0,0,false};
+				return {0,0,0,0,0,false,false};
 			}
 
 			float forwardSpeed; //!< Range [-1, 1]
@@ -28,7 +28,8 @@ namespace sim {
 			float panSpeed; //!< Range [-1, 1]
 			float tiltSpeed; //!< Range [-1, 1]
 			float zoomSpeed; //!< Range [-1, 1]
-			bool modifierPressed;
+			bool modifier1Pressed;
+			bool modifier2Pressed;
 		};
 
 		CameraController(Entity* camera);

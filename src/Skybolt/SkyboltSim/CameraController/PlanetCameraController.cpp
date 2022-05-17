@@ -59,7 +59,7 @@ void PlanetCameraController::update(float dt)
 	float distFromSurface = exp(exponent * (1 - mZoom));
 
 	// Orientation control
-	if (mInput.modifierPressed)
+	if (mInput.modifier1Pressed)
 	{
 		mPitch -= pitchDelta;
 		mPitch = skybolt::math::clamp<float>(mPitch, 0, skybolt::math::halfPiF());

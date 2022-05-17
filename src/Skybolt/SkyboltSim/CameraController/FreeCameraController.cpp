@@ -32,7 +32,7 @@ void FreeCameraController::update(float dt)
 
 	mCameraComponent->getState().fovY = skybolt::math::lerp(mBaseFov, mBaseFov * 0.1f, mZoom);
 	
-	double speed = mInput.modifierPressed ? 10000.0 : 1000.0;
+	double speed = mInput.modifier1Pressed ? 10000.0 : (mInput.modifier2Pressed ? 100.0 : 1000.0);
 	Vector3 vel = Vector3(mInput.forwardSpeed, mInput.rightSpeed, 0.0f) * speed;
 
 	sim::Matrix3 ltpOrientation = geocentricToLtpOrientation(mNodeComponent->getPosition());

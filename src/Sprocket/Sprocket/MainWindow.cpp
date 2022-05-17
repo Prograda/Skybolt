@@ -220,7 +220,8 @@ public:
 		mInput.panSpeed /= dt;
 		mInput.tiltSpeed /= dt;
 		mInput.zoomSpeed /= dt;
-		mInput.modifierPressed = mInputPlatform->getInputDevicesOfType(InputDeviceTypeKeyboard)[0]->isButtonPressed(KC_LSHIFT);
+		mInput.modifier1Pressed = mInputPlatform->getInputDevicesOfType(InputDeviceTypeKeyboard)[0]->isButtonPressed(KC_LSHIFT);
+		mInput.modifier2Pressed = mInputPlatform->getInputDevicesOfType(InputDeviceTypeKeyboard)[0]->isButtonPressed(KC_LCONTROL);
 	}
 
 	CameraController::Input getInput() const
