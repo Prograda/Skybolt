@@ -11,14 +11,28 @@
 namespace skybolt {
 namespace vis {
 
-struct PerlinWorleyConfig
+struct FbmConfig
 {
-	int width;
-	int octaves;
-	float frequency;
+	float frequency = 8.0;
+	float amplitude = 0.5;
+
+	int octaveCount = 4;
+	float lacunarity = 2.0f;
+	float gain = 0.6f;
+
+	bool invert = false;
 };
 
-osg::ref_ptr<osg::Image> createPerlinWorleyTexture(const PerlinWorleyConfig& config);
+struct PerlinWorleyConfig
+{
+	int width = 128;
+	int perlinOctaves = 6;
+	float perlinFrequency = 8.0f;
+	FbmConfig worley;
+};
+
+osg::ref_ptr<osg::Image> createPerlinWorleyTexture2d(const PerlinWorleyConfig& config);
+osg::ref_ptr<osg::Image> createPerlinWorleyTexture3d(const PerlinWorleyConfig& config);
 
 } // namespace vis
 } // namespace skybolt

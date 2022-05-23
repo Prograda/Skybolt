@@ -65,5 +65,7 @@ osg::ref_ptr<osg::Image> readImageWithoutWarnings(const std::string& filename);
 //! @param coord is in pixel coordinates (not normalized)
 osg::Vec4f getColorBilinear(const osg::Image& image, const osg::Vec2f& coord);
 
+void normalize(osg::Image& image);
+
 } // namespace vis
 } // namespace skybolt

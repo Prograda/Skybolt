@@ -60,6 +60,8 @@ void raySphereIntersections(vec3 r0, vec3 rd, vec3 s0, float sr, out float t0, o
     if (det < 0.0)
 	{
         t0 = -1.0;
+		t1 = -1.0;
+		return;
     }
 	float sqrtDet = sqrt(det);
     t0 = (-b - sqrtDet) * 0.5;

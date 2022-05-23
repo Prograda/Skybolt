@@ -22,6 +22,11 @@ float remapNormalized(float originalValue, float originalMin, float originalMax)
 	return (originalValue - originalMin) / (originalMax - originalMin);
 }
 
+vec2 remapNormalized(vec2 originalValue, vec2 originalMin, vec2 originalMax)
+{
+	return (originalValue - originalMin) / (originalMax - originalMin);
+}
+
 vec3 remapNormalized(vec3 originalValue, vec3 originalMin, vec3 originalMax)
 {
 	return (originalValue - originalMin) / (originalMax - originalMin);

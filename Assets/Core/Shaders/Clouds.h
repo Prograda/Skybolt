@@ -39,60 +39,65 @@ vec2 cloudUvFromPosRelPlanet(vec3 positionRelPlanetPlanetAxes)
 
 float sampleCoverageDetail(sampler2D coverageDetailSampler, vec2 uv, float lod, out float cloudType)
 {
-	vec4 c = textureLod(coverageDetailSampler, uv.xy * vec2(300.0, 150.0), 4 * lod);
+	vec4 c = textureLod(coverageDetailSampler, uv.xy * vec2(300.0, 150.0), lod);
 	float coverageDetail = c.r;
-	cloudType = c.b * mix(c.g * c.g, 1.0, 0.5);
+	cloudType = c.b*c.b;
 	return coverageDetail;
 }
 
 float sampleBaseCloudCoverage(sampler2D cloudSampler, vec2 uv)
 {
 #ifdef USE_CLOUD_COVERAGE_MAP
-	return textureLod(cloudSampler, uv, 0).r * 1.3;
+	float c = max(0.0, textureLod(cloudSampler, uv, 0).r * 1.3 - 0.001);
+	return pow(c, 0.45); // apply fudge factor so that high detail cloud coverage matches map
 #else
-	float coverageFractionMultiplier = 0.7; // scale coverage fraction to give more user friendly results
-	return cloudCoverageFraction * coverageFractionMultiplier;
+	return cloudCoverageFraction;
 #endif
 }
 
-// Apply coverage detail map by remapping with the following behavior:
-//   Input coverage of 0 gives an output coverage of 0.
-//   Input coverage of 1 gives an output coverage of 1.
-//   Input coverage between 0 and 1 returns a color band within the detail map,
-//   where the band contains values of the expected output coverage amount.
-//   the band is sized using filterWidth to give a enough coverage variation to achieve smooth density changes.
-float coverageModulation(float base, float detail, float filterWidth)
+// Modulation a detail map by a coverage map. The modulation has the following behavior:
+//   * Input coverage of 0 gives an output of 0.
+//   * Input coverage of 1 gives an output of 1.
+//   * Input coverage between 0 and 1 remaps the color range of the detail map
+//     such that the mean output brightness equals coverage amount.
+// @param filterWidth [0, 1] controls the smoothness of the output,
+//    where 0 produces harsh edges and 1 smooths out the detail so much that 
+//    the input coverage signal is passed through unchanged.
+float coverageModulation(float coverage, float detail, float filterWidth)
 {
-	float f = 1.0 - base;
+	float f = 1.0 - coverage;
 	return clamp(remapNormalized(detail*(1.0-filterWidth)+filterWidth, f, f+filterWidth), 0.0, 1.0);
 }
 
-float calcCloudDensityLowRes(float coverageBase, float coverageDetail, float heightMultiplier, vec2 lod, float paddingMultiplier)
+vec2 coverageModulation(vec2 coverage, vec2 detail, vec2 filterWidth)
 {
-	float coverage = coverageBase * heightMultiplier;
-
-	float filterWidth = 0.4;
-	
-	// Eroding the low detail density by high detail textures results in reduction of cloud coverage.
-	// We need to multiply the resultant coverage by this factor to achive prescribed coverage value.
-	float erosionCompensation = 1.4;
-	return coverageModulation(min(1.0, coverage * paddingMultiplier), coverageDetail, mix(filterWidth, 1.0, lod.x));
+	vec2 f = vec2(1.0) - coverage;
+	return clamp(remapNormalized(detail*(vec2(1.0)-filterWidth)+filterWidth, f, f+filterWidth), vec2(0.0), vec2(1.0));
 }
 
-vec2 calcCloudDensityHighRes(float coverageBase, float coverageDetail, float heightMultiplier, vec2 lod)
+float cloudCoverageModulationFilterWidth = 0.6;
+
+float calcCloudDensityHull(float coverageBase, float coverageDetail, float heightMultiplier)
 {
 	float coverage = coverageBase * heightMultiplier;
+	return coverageModulation(coverage, coverageDetail, cloudCoverageModulationFilterWidth);
+}
 
-	float filterWidth = 0.4;
-	
+//! @return x component is the low-res density with equivelent average density to the expected post-erosion high res density.
+//!   This value is useful as a low res proxy for the high res density.
+//! @return y component is the low-res density pre-erosion by high res noise.
+//!   This value be useful for calculating the high res density by applying erosion.
+//! the final high res density by applying erosion to it.
+vec2 calcCloudDensityLowRes(float coverageBase, float coverageDetail, float heightMultiplier)
+{
+	vec2 coverage = vec2(coverageBase * heightMultiplier);
+
 	// Eroding the low detail density by high detail textures results in reduction of cloud coverage.
-	// We need to multiply the resultant coverage by this factor to achive prescribed coverage value.
-	float erosionCompensation = 1.4;
-	
-	vec2 result;
-	result.x = coverageModulation(min(1.0, coverage), coverageDetail, mix(filterWidth, 1.0, lod.x));
-	result.y = coverageModulation(min(1.0, coverage * erosionCompensation), coverageDetail, filterWidth);
-	return result;
+	// We need to subtract this amount from the low detail coverage to match the high detail result.
+	float erosionCompensation = 0.14;
+	coverage.x = max(0.0, coverage.x-erosionCompensation);
+
+	return coverageModulation(coverage, vec2(coverageDetail), vec2(cloudCoverageModulationFilterWidth));
 }
 
 #endif // CLOUDS_H

@@ -24,8 +24,28 @@ static int luminanceToUnsignedByte(float f)
 	return std::min(255, int(f * 256.f));
 }
 
-typedef std::function<glm::vec4(const glm::vec3&)> ColorAtPositionGetter;
-static void fillVolumeTexture(osg::Image& image, ColorAtPositionGetter getter, int channelCount = 1)
+typedef std::function<glm::vec4(const glm::vec2&)> ColorAtPositionGetter2d;
+static void fillTexture2d(osg::Image& image, ColorAtPositionGetter2d getter, int channelCount = 1)
+{
+	unsigned char* p = image.data();
+
+	for (int y = 0; y < image.t(); ++y)
+	{
+		for (int x = 0; x < image.s(); ++x)
+		{
+			glm::vec2 pos = glm::vec2(x, y) / float(image.s());
+
+			glm::vec4 c = getter(pos);
+			for (int i = 0; i < channelCount; ++i)
+			{
+				*p++ = luminanceToUnsignedByte(c[i]);
+			}
+		}
+	}
+}
+
+typedef std::function<glm::vec4(const glm::vec3&)> ColorAtPositionGetter3d;
+static void fillTexture3d(osg::Image& image, ColorAtPositionGetter3d getter, int channelCount = 1)
 {
 	unsigned char* p = image.data();
 
@@ -47,38 +67,60 @@ static void fillVolumeTexture(osg::Image& image, ColorAtPositionGetter getter, i
 	}
 }
 
-float createWorleyFbm(const glm::vec3& pos)
+float createWorleyFbm(const glm::vec3& pos, const FbmConfig& config)
 {
 	float worleyNoise = 0;
-	float frequency = 8.0;
-	float amplitude = 0.5;
-	for (int i = 0; i < 4; ++i)
+	float frequency = config.frequency;
+	float amplitude = config.amplitude;
+	for (int i = 0; i < config.octaveCount; ++i)
 	{
 		worleyNoise += amplitude * (1.0 - Tileable3dNoise::WorleyNoise(pos, frequency));
-		frequency *= 1.8f;
-		amplitude *= 0.6f;
+		frequency *= config.lacunarity;
+		amplitude *= config.gain;
 	}
 
-	return glm::clamp(worleyNoise - 0.2f, 0.0f, 1.0f);
+	worleyNoise -= 0.2f;
+
+	if (config.invert)
+	{
+		worleyNoise = 1.0f - worleyNoise;
+	}
+
+	return glm::clamp(worleyNoise, 0.0f, 1.0f);
 }
 
 float createPerlinWorley(const glm::vec3& pos, const PerlinWorleyConfig& config)
 {
-	float worleyNoise = createWorleyFbm(pos);
+	float worleyNoise = createWorleyFbm(pos, config.worley);
 
-	float perlinNoise = Tileable3dNoise::PerlinNoise(pos, config.frequency, config.octaves);
-	float perlWorlNoise = remap(perlinNoise, 0.5*(1.0 - worleyNoise), 1.0f, 0.0f, 1.0f);
+	float perlinNoise = Tileable3dNoise::PerlinNoise(pos, config.perlinFrequency, config.perlinOctaves);
+	float perlWorlNoise = remap(perlinNoise, 0.5*worleyNoise, 1.0f, 0.0f, 1.0f);
 	perlWorlNoise = glm::clamp(perlWorlNoise, 0.0f, 1.0f);
+
 	return perlWorlNoise;
 }
 
-osg::ref_ptr<osg::Image> createPerlinWorleyTexture(const PerlinWorleyConfig& config)
+osg::ref_ptr<osg::Image> createPerlinWorleyTexture2d(const PerlinWorleyConfig& config)
 {
 	osg::Image* image = new osg::Image;
 	image->allocateImage(config.width, config.width, config.width, GL_LUMINANCE, GL_UNSIGNED_BYTE);
 
-	fillVolumeTexture(*image, [=](const glm::vec3& pos) {
-		float c = 1.0 - createWorleyFbm(pos);
+	fillTexture2d(*image, [=](const glm::vec2& pos) {
+		float c = 1.0 - createWorleyFbm(glm::vec3(pos.x, pos.y, 0.f), config.worley);
+		//float c = createPerlinWorley(pos, config); // Use to modulate output by perlin
+		return glm::vec4(c, c, c, 1.0);
+	});
+
+	return image;
+}
+
+osg::ref_ptr<osg::Image> createPerlinWorleyTexture3d(const PerlinWorleyConfig& config)
+{
+	osg::Image* image = new osg::Image;
+	image->allocateImage(config.width, config.width, config.width, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+
+	fillTexture3d(*image, [=](const glm::vec3& pos) {
+		float c = 1.0 - createWorleyFbm(pos, config.worley);
 		//float c = createPerlinWorley(pos, config); // Use to modulate output by perlin
 		return glm::vec4(c, c, c, 1.0);
 	});

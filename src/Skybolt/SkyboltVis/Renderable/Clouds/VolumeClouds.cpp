@@ -20,6 +20,7 @@
 #include <osg/Texture2D>
 #include <osg/Texture3D>
 #include <osgDB/ReadFile>
+#include <osgDB/WriteFile>
 
 //#define WIREFRAME
 #ifdef WIREFRAME
@@ -77,16 +78,19 @@ static osg::StateSet* createStateSet(const osg::ref_ptr<osg::Program>& program, 
 	}
 
 	{
-		PerlinWorleyConfig config;
-		config.octaves = 6;
-		config.width = 128;
-		config.frequency = 8.0f;
-
 //#define GENERATE_VOLUME_TEXTURE
 //#define CONVERT_VOLUME_TEXTURE_FROM_LAYER_IMAGES
 #ifdef GENERATE_VOLUME_TEXTURE
-		osg::ref_ptr<osg::Image> image = createPerlinWorleyTexture(config);
-		writeTexture3d(*image, "Assets/Core/Environment/Cloud/CloudVolumeBase.png");
+		{
+			PerlinWorleyConfig config;
+			config.width = 128;
+			config.perlinOctaves = 6;
+			config.perlinFrequency = 8.0f;
+			config.worley.invert = true;
+
+			osg::ref_ptr<osg::Image> image = createPerlinWorleyTexture3d(config);
+			writeTexture3d(*image, "Assets/Core/Environment/Cloud/CloudVolumeBase.png");
+		}
 #else
 #ifdef CONVERT_VOLUME_TEXTURE_FROM_LAYER_IMAGES
 	osg::ref_ptr<osg::Image> image = readTexture3dFromSeparateFiles("D:/Programming/MyProjects/Skybolt/AssetsSource/Clouds/my3DTextureArray.", ".tga", 128);
@@ -95,10 +99,31 @@ static osg::StateSet* createStateSet(const osg::ref_ptr<osg::Program>& program, 
 		osg::ref_ptr<osg::Image> image = readTexture3d("Environment/Cloud/CloudVolumeBase.png");
 #endif
 #endif
+
+//#define GENERATE_COVERAGE_NOISE_TEXTURE
+#ifdef GENERATE_COVERAGE_NOISE_TEXTURE
+		{
+			PerlinWorleyConfig config;
+			config.width = 512;
+			config.perlinOctaves = 8;
+			config.perlinFrequency = 4.0f;
+			config.worley.octaveCount = 4;
+			config.worley.frequency = 16.0f;
+			config.worley.lacunarity = 2.0f;
+			config.worley.amplitude = 0.15;
+			config.worley.gain = 0.9;
+			config.worley.invert = true;
+
+			osg::ref_ptr<osg::Image> image = createPerlinWorleyTexture2d(config);
+			normalize(*image);
+			osgDB::writeImageFile(*image, "CloudNoise.png");
+		}
+#endif
+
 		static osg::ref_ptr<osg::Texture3D> texture = createTexture3D(image);
 
 		stateSet->setTextureAttributeAndModes(unit, texture);
-		stateSet->addUniform(createUniformSampler3d("baseNoiseSampler", unit++));
+		stateSet->addUniform(createUniformSampler3d("noiseVolumeSampler", unit++));
 	}
 
 	return stateSet;
@@ -167,7 +192,7 @@ VolumeClouds::VolumeClouds(const VolumeCloudsConfig& config)
 #ifdef COMPOSITE_CLOUDS
 	// TODO: fit to window dimensions
 	int width = 512;
-	int height = 512;
+	int height = 256;
 	mColorTexture = createCloudColorTexture(width, height);
 	osg::ref_ptr<osg::Texture2D> depthTexture = createCloudDepthTexture(width, height);
 	
