@@ -12,6 +12,21 @@
 #include "AtmosphericScattering.h"
 #include "CloudShadows.h"
 
+RadianceSpectrum GetSkyRadianceToPointWithCloudOcclusion(
+	Position camera, Position point, Direction lightDirection, float cloudOcclusionMask, out DimensionlessSpectrum transmittance)
+{
+	vec3 cameraToPointDir = point - camera;
+	float cameraToPointDistance = length(cameraToPointDir);
+	cameraToPointDir /= cameraToPointDistance;
+
+	// Fade out occlusion with distance to simulate increased inscattering as distance increases
+	// due larger un-occluded portion of view ray
+	cloudOcclusionMask = mix(cloudOcclusionMask, 1.0, min(1.0, cameraToPointDistance/500000));
+
+	float shadowLength = 0.0;
+	return cloudOcclusionMask * GetSkyRadianceToPoint(camera, point, cameraToPointDir, shadowLength, lightDirection, transmittance);
+}
+
 struct AtmosphericScattering
 {
 	vec3 skyRadianceToPoint;
@@ -28,8 +43,6 @@ AtmosphericScattering calcAtmosphericScattering(
 
 	AtmosphericScattering OUT;
 	
-	float shadowLength = 0.0; // length of shadowed part of view ray
-	OUT.skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, positionRelPlanet, shadowLength, lightDirection, OUT.transmittance);
 	OUT.sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet, lightDirection, OUT.skyIrradiance);
 	
 	// Adjust scattering based on cloud coverage.
@@ -38,14 +51,14 @@ AtmosphericScattering calcAtmosphericScattering(
 	vec2 mask = sampleCloudShadowAndSkyOcclusionMaskAtPositionRelPlanet(cloudSampler, positionRelPlanet, lightDirection);
 	float shadowMask = mask.x;
 	float occlusionMask = mask.y;
-	
-	const float hemisphereFraction = 0.5; // ignore the fraction of the irradiance that is scattered back up
-	float cloudTransmission = occlusionMask;
-	vec3 overcastSkyIrradiance = (OUT.sunIrradiance + OUT.skyIrradiance) * hemisphereFraction * cloudTransmission;
 
+	float shadowLength = 0.0; // length of shadowed part of view ray
+	OUT.skyRadianceToPoint = GetSkyRadianceToPointWithCloudOcclusion(cameraPositionRelPlanet, positionRelPlanet, lightDirection, occlusionMask, OUT.transmittance);
 	OUT.sunIrradiance *= shadowMask;
-	OUT.skyIrradiance = mix(overcastSkyIrradiance, OUT.skyIrradiance, occlusionMask);
-	OUT.skyRadianceToPoint *= occlusionMask;
+	OUT.skyIrradiance *= occlusionMask;
+#else
+	float shadowLength = 0.0;
+	OUT.skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, positionRelPlanet, shadowLength, lightDirection, OUT.transmittance);
 #endif
 	
 	return OUT;

@@ -65,7 +65,7 @@ float sampleCloudSkyOcclusionMaskAtCloudsUv(sampler2D cloudSampler, vec2 uv)
 {
 #ifdef USE_CLOUD_COVERAGE_MAP
 	const int lod = 4; // use a lower res lod to get an average of occlusion in the area
-	float coverage = clamp(1.4 * (textureLod(cloudSampler, uv, lod).r) - 0.1, 0.0, 1.0);
+	float coverage = clamp(textureLod(cloudSampler, uv, lod).r * 1.3 - 0.001, 0.0, 1.0);
 #else
 	float coverage = max(0.0, cloudCoverageFraction*1.5-0.5);
 #endif

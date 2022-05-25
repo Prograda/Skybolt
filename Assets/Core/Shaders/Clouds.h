@@ -48,7 +48,7 @@ float sampleCoverageDetail(sampler2D coverageDetailSampler, vec2 uv, float lod, 
 float sampleBaseCloudCoverage(sampler2D cloudSampler, vec2 uv)
 {
 #ifdef USE_CLOUD_COVERAGE_MAP
-	float c = max(0.0, textureLod(cloudSampler, uv, 0).r * 1.3 - 0.001);
+	float c = clamp(textureLod(cloudSampler, uv, 0).r * 1.3 - 0.001, 0.0, 1.0);
 	return pow(c, 0.45); // apply fudge factor so that high detail cloud coverage matches map
 #else
 	return cloudCoverageFraction;

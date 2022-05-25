@@ -476,14 +476,14 @@ void main()
 			// Apply 'aerial perspective'
 			vec3 transmittance;
 			vec3 cloudFrontPositionRelPlanet = cameraPositionRelPlanet + meanCloudFrontDistance * rayDir;
-			vec3 skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, cloudFrontPositionRelPlanet, 0, lightDirection, transmittance);
 
 			// Decrease inscattering as a function of sky occlusion due to clouds.
 			// This curve is a fudge, but gives plausible looking results.
 			float cloudSkyOcclusion = sampleCloudSkyOcclusionMaskAtCloudsUv(globalAlphaSampler, cloudsUv);
 			float heightFraction = clamp((cameraAltitude - cloudLayerMinHeight) / (cloudLayerMaxHeight - cloudLayerMinHeight), 0, 1);
-			skyRadianceToPoint *= mix(min(1.0, cloudSkyOcclusion*2), 1.0, heightFraction);
-
+			cloudSkyOcclusion = mix(cloudSkyOcclusion, 1.0, heightFraction);
+			vec3 skyRadianceToPoint = GetSkyRadianceToPointWithCloudOcclusion(cameraPositionRelPlanet, cloudFrontPositionRelPlanet, lightDirection, cloudSkyOcclusion, transmittance);
+			
 			// Blend between no aerial perspective for 0 density and full aerial for 1 density.
 			// This curve is a fudge, but gives plausible looking results.
 			float weight = min(1.0, colorOut.a * colorOut.a * colorOut.a);
