@@ -11,7 +11,7 @@ namespace vis {
 
 void setRenderBin(osg::StateSet& stateSet, RenderBinId bin)
 {
-	stateSet.setRenderBinDetails(int(bin), "RenderBin");
+	stateSet.setRenderBinDetails(int(bin), (bin == RenderBinId::OsgTransparentBin) ? "DepthSortedBin" : "RenderBin");
 }
 
 } // namespace vis

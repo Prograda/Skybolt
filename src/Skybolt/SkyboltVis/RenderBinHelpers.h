@@ -15,7 +15,10 @@ enum class RenderBinId
 {
 	Stars = -3,
 	CelestialBody = -2,
-	Sky = -1
+	Sky = -1,
+	OsgOpaqueBin = 0,  // Bin used by OSG's OPAQUE_BIN rendering hint
+	Clouds = 9,
+	OsgTransparentBin = 10 // Bin used by OSG's TRANSPARENT_BIN rendering hint
 };
 
 void setRenderBin(osg::StateSet& stateSet, RenderBinId bin);

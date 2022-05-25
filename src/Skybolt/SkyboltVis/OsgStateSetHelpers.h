@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "RenderBinHelpers.h"
 #include <osg/Uniform>
 
 namespace skybolt {
@@ -62,7 +63,7 @@ enum class TransparencyMode
 	Classic // source.rgb * source.a + destination.rgb * (1 - source.a)
 };
 
-void makeStateSetTransparent(osg::StateSet& stateSet, TransparencyMode transparencyMode);
+void makeStateSetTransparent(osg::StateSet& stateSet, TransparencyMode transparencyMode, RenderBinId renderBinId = RenderBinId::OsgTransparentBin);
 
 } // namespace vis
 } // namespace skybolt

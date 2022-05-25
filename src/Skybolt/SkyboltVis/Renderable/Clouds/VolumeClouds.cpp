@@ -201,7 +201,7 @@ VolumeClouds::VolumeClouds(const VolumeCloudsConfig& config)
 	mTransform->addChild(camera);
 
 	osg::StateSet* texturedQuadStateSet = createTexturedQuadStateSet(config.compositorProgram, mColorTexture, depthTexture);
-	makeStateSetTransparent(*texturedQuadStateSet, vis::TransparencyMode::PremultipliedAlpha);
+	makeStateSetTransparent(*texturedQuadStateSet, vis::TransparencyMode::PremultipliedAlpha, RenderBinId::Clouds);
 
 	mGeode->setStateSet(texturedQuadStateSet);
 #else

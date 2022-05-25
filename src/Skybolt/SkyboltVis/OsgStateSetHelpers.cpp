@@ -14,14 +14,14 @@
 namespace skybolt {
 namespace vis {
 
-void makeStateSetTransparent(osg::StateSet& stateSet, TransparencyMode transparencyMode)
+void makeStateSetTransparent(osg::StateSet& stateSet, TransparencyMode transparencyMode, RenderBinId renderBinId)
 {
 	stateSet.setAttributeAndModes(new osg::BlendEquation(osg::BlendEquation::FUNC_ADD, osg::BlendEquation::FUNC_ADD));
 
 	osg::BlendFunc::BlendFuncMode sourceMode = (transparencyMode == TransparencyMode::PremultipliedAlpha) ? osg::BlendFunc::ONE : osg::BlendFunc::SRC_ALPHA;
 	stateSet.setAttributeAndModes(new osg::BlendFunc(sourceMode, osg::BlendFunc::ONE_MINUS_SRC_ALPHA));
 
-	stateSet.setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+	setRenderBin(stateSet, renderBinId);
 
 	osg::Depth* depth = new osg::Depth;
 	depth->setWriteMask(false);
