@@ -254,6 +254,10 @@ static void loadVisualCamera(Entity* entity, const EntityFactory::Context& conte
 
 static void loadParticleSystem(Entity* entity, const EntityFactory::Context& context, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
+	NearestPlanetProvider nearestPlanetProvider = [world = context.simWorld] (const Vector3& position) {
+		return findNearestEntityWithComponent<sim::PlanetComponent>(world->getEntities(), position);
+	};
+
 	ParticleEmitter::Params emitterParams;
 	emitterParams.emissionRate = json.at("emissionRate");
 	emitterParams.radius = json.at("radius");
@@ -262,6 +266,10 @@ static void loadParticleSystem(Entity* entity, const EntityFactory::Context& con
 	emitterParams.speed = DoubleRangeInclusive(json.at("speedMin"), json.at("speedMax"));
 	emitterParams.upDirection = readVector3(json.at("upDirection"));
 	emitterParams.random = std::make_shared<Random>(/* seed */ 0);
+	emitterParams.temperatureDegreesCelcius = readOptionalOrDefault(json, "initialTemperatureDegreesCelcius", 0.0);
+	emitterParams.zeroAtmosphericDensityAlpha = readOptionalOrDefault(json, "zeroAtmosphericDensityAlpha", 1.0);
+	emitterParams.earthSeaLevelAtmosphericDensityAlpha = readOptionalOrDefault(json, "earthSeaLevelAtmosphericDensityAlpha", 1.0);
+	emitterParams.nearestPlanetProvider = nearestPlanetProvider;
 
 	double lifetime = json.at("lifetime");
 
@@ -269,9 +277,8 @@ static void loadParticleSystem(Entity* entity, const EntityFactory::Context& con
 	integratorParams.lifetime = lifetime;
 	integratorParams.radiusLinearGrowthPerSecond = json.at("radiusLinearGrowthPerSecond");
 	integratorParams.atmosphericSlowdownFactor = json.at("atmosphericSlowdownFactor");
-	integratorParams.nearestPlanetProvider = [world = context.simWorld] (const Vector3& position) {
-		return findNearestEntityWithComponent<sim::PlanetComponent>(world->getEntities(), position);
-	};
+	integratorParams.heatTransferCoefficent = readOptional<float>(json, "heatTransferCoefficent");
+	integratorParams.nearestPlanetProvider = nearestPlanetProvider;
 
 	auto particleSystem = std::make_shared<ParticleSystem>(ParticleSystem::Operations({
 		std::make_shared<ParticleIntegrator>(integratorParams), // integrate before emission ensure new particles emitted at end of time step

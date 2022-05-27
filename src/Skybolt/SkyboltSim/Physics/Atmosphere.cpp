@@ -25,7 +25,7 @@ Atmosphere::Atmosphere(double tempSeaLevel, double pressureSeaLevel,
     m_exponent = g * molarMass / (m_universalGasConst * tempLapsRate);
 }
 
-double Atmosphere::getDensity(double altitude)
+double Atmosphere::getDensity(double altitude) const
 {
 	double p = m_pressureSeaLevel * (pow(std::max(double(0.0), double(1.0) - m_lapseRateOnTemp * altitude), m_exponent));
 	double T = m_tempSeaLevel - m_tempLapsRate * altitude;

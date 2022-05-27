@@ -28,7 +28,7 @@ private:
 	osg::ref_ptr<osg::Geometry> mGeometry;
 	osg::ref_ptr<osg::DrawArrays> mDrawArrays;
 	osg::ref_ptr<osg::Vec3Array> mParticleVertices;
-	osg::ref_ptr<osg::Vec3Array> mParticleUvs;
+	osg::ref_ptr<osg::Vec4Array> mParticleUvs;
 };
 
 } // namespace vis

@@ -20,7 +20,7 @@ Particles::Particles(const osg::ref_ptr<osg::Program>& program, const osg::ref_p
 	mGeometry(new osg::Geometry()),
 	mDrawArrays(new osg::DrawArrays()),
 	mParticleVertices(new osg::Vec3Array()),
-	mParticleUvs(new osg::Vec3Array())
+	mParticleUvs(new osg::Vec4Array())
 {
 	mGeometry->addPrimitiveSet(mDrawArrays);
 	configureDrawable(*mGeometry);
@@ -62,7 +62,7 @@ void Particles::setParticles(const std::vector<sim::Particle>& particles, const 
 		for (int j = 0; j < 4; ++j)
 		{
 			mParticleVertices->push_back(pos);
-			mParticleUvs->push_back(osg::Vec3(radius, particle.alpha, rotation));
+			mParticleUvs->push_back(osg::Vec4(radius, particle.alpha, rotation, particle.temperatureDegreesCelcius));
 		}
 
 		++i;

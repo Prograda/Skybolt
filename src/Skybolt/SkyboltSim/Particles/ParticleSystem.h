@@ -30,6 +30,7 @@ struct Particle
 	float age = 0;
 	float initialAlpha = 1;
 	float alpha = 1;
+	float temperatureDegreesCelcius = 0;
 };
 
 class ParticleSystemOperation
@@ -38,6 +39,8 @@ public:
 	virtual ~ParticleSystemOperation() {}
 	virtual void update(float dt, std::vector<Particle>& particles) = 0;
 };
+
+using NearestPlanetProvider = std::function<sim::Entity*(const sim::Vector3& position)>;
 
 class ParticleEmitter : public ParticleSystemOperation
 {
@@ -50,7 +53,12 @@ public:
 		Vector3 upDirection;
 		DoubleRangeInclusive speed;
 		DoubleRangeInclusive elevationAngle;
+		float temperatureDegreesCelcius;
+		float zeroAtmosphericDensityAlpha;
+		float earthSeaLevelAtmosphericDensityAlpha;
+
 		std::shared_ptr<Random> random;
+		NearestPlanetProvider nearestPlanetProvider;
 	};
 
 	ParticleEmitter(const Params& params);
@@ -71,7 +79,9 @@ public:
 	virtual Particle createParticle(const Vector3& emitterVelocity, float timeOffset) const;
 
 private:
+	std::optional<sim::Vector3> getEmitterPositionInPlanetSpace() const;
 	Vector3 calculateParticleVelocityRelEmitter() const;
+	float getAtmosphericDensity() const; // kg / m^3
 
 private:
 	const Params mParams;
@@ -103,7 +113,8 @@ public:
 		float radiusLinearGrowthPerSecond;
 		float lifetime;
 		float atmosphericSlowdownFactor;
-		std::function<sim::Entity*(const sim::Vector3& position)> nearestPlanetProvider;
+		std::optional<float> heatTransferCoefficent;
+		NearestPlanetProvider nearestPlanetProvider;
 	};
 
 	ParticleIntegrator(const Params& params);

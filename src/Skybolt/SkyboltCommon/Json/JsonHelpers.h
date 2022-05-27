@@ -7,7 +7,7 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace skybolt {
 
@@ -23,14 +23,14 @@ T readOptionalOrDefault(const nlohmann::json& j, const std::string& key, const T
 }
 
 template <typename T>
-boost::optional<T> readOptional(const nlohmann::json& j, const std::string& key)
+std::optional<T> readOptional(const nlohmann::json& j, const std::string& key)
 {
 	auto i = j.find(key);
 	if (i != j.end())
 	{
 		return i.value().get<T>();
 	}
-	return boost::none;
+	return std::nullopt;
 }
 
 template <typename T>
@@ -75,6 +75,17 @@ static std::vector<T> readOptionalVector(const nlohmann::json& j, const std::str
 		return r;
 	}
 	return defaultValue;
+}
+
+template <typename T, typename ReaderT>
+static boost::optional<T> readOptionalChild(const nlohmann::json& j, const std::string& name, const ReaderT& r)
+{
+	auto item = j.find(name);
+	if (item != j.end())
+	{
+		return r(item.value());
+	}
+	return {};
 }
 
 } // namespace skybolt

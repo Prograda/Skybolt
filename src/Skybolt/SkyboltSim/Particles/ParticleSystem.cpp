@@ -46,18 +46,28 @@ void ParticleEmitter::update(float dt, std::vector<Particle>& particles)
 	}
 }
 
+static const Atmosphere& getAtmosphere()
+{
+	static Atmosphere atmosphere = createEarthAtmosphere(); // TODO: get atmosphere specific to planet
+	return atmosphere;
+}
+
 int ParticleEmitter::mNextParticleId = 0;
 
 Particle ParticleEmitter::createParticle(const Vector3& emitterVelocity, float timeOffset) const
 {
+	float density = getAtmosphericDensity();
+	float alpha = glm::mix(mParams.zeroAtmosphericDensityAlpha, mParams.earthSeaLevelAtmosphericDensityAlpha, density / 1.225);
+
 	Vector3 velocityRelEmitter = calculateParticleVelocityRelEmitter();
 	Particle particle;
 	particle.guid = mNextParticleId++;
 	particle.position = mParams.positionable->getPosition() + velocityRelEmitter * double(timeOffset);
-	particle.velocity = emitterVelocity +velocityRelEmitter;
+	particle.velocity = emitterVelocity + velocityRelEmitter;
 	particle.radius = mParams.radius;
-	particle.initialAlpha = 1.0f * mEmissionAlphaMultiplier;
+	particle.initialAlpha = alpha * mEmissionAlphaMultiplier;
 	particle.alpha = particle.initialAlpha;
+	particle.temperatureDegreesCelcius = mParams.temperatureDegreesCelcius;
 	return particle;
 }
 
@@ -76,6 +86,25 @@ Vector3 ParticleEmitter::calculateParticleVelocityRelEmitter() const
 	);
 	
 	return mParams.positionable->getOrientation() * (mOrientation * velocity);
+}
+
+std::optional<sim::Vector3> ParticleEmitter::getEmitterPositionInPlanetSpace() const
+{
+	sim::Vector3 position = mParams.positionable->getPosition();
+	sim::Entity* planet = mParams.nearestPlanetProvider(position);
+	if (planet)
+	{
+		glm::dmat4 planetTransform = getTransform(*planet).value_or(math::dmat4Identity());
+		glm::dmat4 invPlanetTransform = glm::inverse(planetTransform);
+		return invPlanetTransform * glm::dvec4(position, 1.0);
+	}
+	return std::nullopt;
+}
+
+float ParticleEmitter::getAtmosphericDensity() const
+{
+	auto emitterPositionPlanetSpace = getEmitterPositionInPlanetSpace();
+	return emitterPositionPlanetSpace ? getAtmosphere().getDensity(glm::length(*emitterPositionPlanetSpace) - earthRadius()) : 0.0f;
 }
 
 void ParticleKiller::update(float dt, std::vector<Particle>& particles)
@@ -130,13 +159,12 @@ void ParticleIntegrator::update(float dt, std::vector<Particle>& particles)
 
 		mPrevPlanetTransform = planetTransform;
 
-		static Atmosphere atmosphere = createEarthAtmosphere(); // TODO: get atmosphere specific to planet
-		double density = atmosphere.getDensity(glm::length(particlePositionPlanetSpace) - earthRadius());
+		double density = getAtmosphere().getDensity(glm::length(particlePositionPlanetSpace) - earthRadius());
 
 		velocityDamping = std::exp(-mParams.atmosphericSlowdownFactor * density * dt);
 	}
 
-	// Integrate particle motion
+	// Integrate particle state
 	for (auto& particle : particles)
 	{
 		if (windVelocity)
@@ -148,6 +176,11 @@ void ParticleIntegrator::update(float dt, std::vector<Particle>& particles)
 		particle.position += particle.velocity * dtD;
 		particle.radius += mParams.radiusLinearGrowthPerSecond * dt;
 		particle.alpha = glm::mix(particle.initialAlpha, 0.0f, particle.age / mParams.lifetime);
+
+		if (mParams.heatTransferCoefficent)
+		{
+			particle.temperatureDegreesCelcius *= std::exp(-dt * mParams.heatTransferCoefficent.value());
+		}
 	}
 }
 

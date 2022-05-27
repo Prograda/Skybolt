@@ -18,7 +18,7 @@ public:
     Atmosphere(double tempSeaLevel, double pressureSeaLevel, double tempLapsRate,
 		double g, double molarMass);
 
-	double getDensity(double altitude);
+	double getDensity(double altitude) const;
 
 private:
 	double m_lapseRateOnTemp; // L / T0

@@ -12,9 +12,12 @@
 #pragma import_defines ( CAST_SHADOWS )
 
 in vec2 texCoord;
+in vec2 normalViewSpaceXY;
+in vec3 emissionColor;
 in float alpha;
 in float logZ;
 in vec3 positionRelCamera;
+in vec3 lightDirectionViewSpace;
 in AtmosphericScattering scattering;
 out vec4 color;
 
@@ -35,11 +38,17 @@ void main()
 	}
 	return;
 #endif
+	vec3 normalViewSpace = vec3(normalViewSpaceXY, sqrt(1.0 - dot(normalViewSpaceXY, normalViewSpaceXY)));
+	float dotNL = dot(lightDirectionViewSpace, normalViewSpace);
+	float halfLambert = max(0.0, (dotNL * 0.8 + 0.2)) / M_PI;
 
-	float dotNL = dot(lightDirection, normalize(positionRelCamera));
-	float inscatteringMultiplier = 6;	
-	color.rgb *= inscatteringMultiplier * watooHenyeyGreenstein(dotNL) * (scattering.sunIrradiance + scattering.skyIrradiance)
-		+ ambientLightColor;
+	float dotVL = dot(lightDirection, normalize(positionRelCamera));
+	float hg = henyeyGreenstein(dotVL, 0.2);
 	
+	float softness = 0.5; // blend between lambert and HG BRDFs
+	color.rgb = mix(halfLambert, hg, softness) * (scattering.sunIrradiance + scattering.skyIrradiance)
+		+ emissionColor
+		+ ambientLightColor;
+
 	gl_FragDepth = logarithmicZ_fragmentShader(logZ);
 }
