@@ -106,6 +106,7 @@ write_basic_package_version_file(
 
 install(
 	EXPORT SkyboltTargets
+	NAMESPACE Skybolt::
     DESTINATION cmake
 )
 
