@@ -21,6 +21,7 @@ osg::ref_ptr<osg::Image> readTexture3d(const std::string& filename);
 
 osg::ref_ptr<osg::Image> readTexture3dFromSeparateFiles(const std::string& filenamePrefix, const std::string& extension, int depth);
 
+osg::ref_ptr<osg::Texture2D> createSrgbTexture(const osg::ref_ptr<osg::Image>& image);
 osg::ref_ptr<osg::Texture2D> createTilingSrgbTexture(const osg::ref_ptr<osg::Image>& image);
 
 } // namespace vis

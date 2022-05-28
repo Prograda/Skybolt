@@ -16,6 +16,13 @@ namespace vis {
 struct ModelConfig
 {
 	osg::ref_ptr<osg::Node> node;
+
+	static ModelConfig ofNode(const osg::ref_ptr<osg::Node>& node)
+	{
+		ModelConfig c;
+		c.node = node;
+		return c;
+	}
 };
 
 class Model : public DefaultRootNode
@@ -40,6 +47,7 @@ protected:
 
 private:
 	osg::Uniform* mModelMatrix;
+	osg::Uniform* mModelViewMatrix;
 	bool mVisible = true;
 };
 

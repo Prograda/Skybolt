@@ -4,22 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#pragma once
-
-#include <osg/Vec3>
-
-#include <stddef.h> // for size_t
+#include "OsgMathHelpers.h"
 
 namespace skybolt {
 namespace math {
 
-template <typename T>
-constexpr size_t componentCount(const T& v)
+void getOrthonormalBasis(const osg::Vec3f &normal, osg::Vec3f &tangent, osg::Vec3f &binormal)
 {
-	return T::num_components;
+	float d = normal * osg::Vec3f(0, 1, 0);
+	if (d > -0.95f && d < 0.95f)
+		binormal = normal ^ osg::Vec3f(0, 1, 0);
+	else
+		binormal = normal ^ osg::Vec3f(0, 0, 1);
+	binormal.normalize();
+	tangent = binormal ^ normal;
 }
-
-void getOrthonormalBasis(const osg::Vec3f &normal, osg::Vec3f &tangent, osg::Vec3f &binormal);
 
 } // namespace math
 } // namespace skybolt

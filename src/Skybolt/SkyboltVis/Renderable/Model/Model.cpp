@@ -7,6 +7,7 @@
 
 #include "Model.h"
 #include "SkyboltVis/RenderContext.h"
+#include "SkyboltVis/Camera.h"
 #include <assert.h>
 
 using namespace skybolt::vis;
@@ -17,8 +18,12 @@ Model::Model(const ModelConfig &config) :
 	assert(mNode);
 
 	mTransform->addChild(mNode);
+
 	mModelMatrix = new osg::Uniform("modelMatrix", osg::Matrixf());
 	mTransform->getOrCreateStateSet()->addUniform(mModelMatrix);
+
+	mModelViewMatrix = new osg::Uniform("modelViewMatrix", osg::Matrixf());
+	mTransform->getOrCreateStateSet()->addUniform(mModelViewMatrix);
 }
 
 Model::~Model()
@@ -60,4 +65,5 @@ void Model::updatePreRender(const RenderContext& context)
 
 	mTransform->getOrCreateStateSet()->setDefine("ENABLE_ATMOSPHERE", inAtmosphere);
 	mModelMatrix->set(mTransform->getWorldMatrices().front());
+	mModelViewMatrix->set(mTransform->getWorldMatrices().front() * context.camera.getViewMatrix());
 }

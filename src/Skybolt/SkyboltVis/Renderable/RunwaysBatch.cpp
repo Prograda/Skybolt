@@ -8,6 +8,7 @@
 #include "OsgGeometryHelpers.h"
 #include "OsgImageHelpers.h"
 #include "OsgStateSetHelpers.h"
+#include "OsgTextureHelpers.h"
 #include "VisibilityCategory.h"
 
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -432,10 +433,7 @@ RunwaysBatch::RunwaysBatch(const Runways& runways, const osg::ref_ptr<osg::Progr
 {
 	static FontAtlas atlas = createFontAtlas("0123456789LCR");
 
-	osg::Texture2D* surfaceTexture = new osg::Texture2D(readImageWithCorrectOrientation("Environment/Concrete/Asphalt010_2K_Color.jpg"));
-	surfaceTexture->setInternalFormat(toSrgbInternalFormat(surfaceTexture->getInternalFormat()));
-	surfaceTexture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
-	surfaceTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+	osg::ref_ptr<osg::Texture2D> surfaceTexture = vis::createTilingSrgbTexture(readImageWithCorrectOrientation("Environment/Concrete/Asphalt010_2K_Color.jpg"));
 
 	osg::Geode* geode = createRunways(runways, surfaceProgram, textProgram, surfaceTexture, atlas);
 	mUniforms.modelMatrix = new osg::Uniform("modelMatrix", osg::Matrixf());

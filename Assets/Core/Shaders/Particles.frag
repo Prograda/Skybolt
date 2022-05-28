@@ -8,6 +8,7 @@
 #include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
 #include "Brdfs/HenyeyGreenstein.h"
+#include "Util/Srgb.h"
 
 #pragma import_defines ( CAST_SHADOWS )
 
@@ -24,11 +25,19 @@ out vec4 color;
 uniform sampler2D albedoSampler;
 uniform vec3 lightDirection;
 uniform vec3 ambientLightColor;
-uniform vec3 cameraUpDirection;
+
+const float multiScatterBrightnessFake = 1.5;
 
 void main()
 {
 	color = texture(albedoSampler, texCoord.xy);
+	
+// Convert alpha to linear since it was authored in sRGB (i.e in photoshop)
+#define CONVERT_ALPHA_TO_LINEAR
+#ifdef CONVERT_ALPHA_TO_LINEAR
+	color.a = srgbToLinear(color.a);
+#endif
+
 	color.a *= alpha;
 	
 #ifdef CAST_SHADOWS
@@ -45,8 +54,8 @@ void main()
 	float dotVL = dot(lightDirection, normalize(positionRelCamera));
 	float hg = henyeyGreenstein(dotVL, 0.2);
 	
-	float softness = 0.5; // blend between lambert and HG BRDFs
-	color.rgb = mix(halfLambert, hg, softness) * (scattering.sunIrradiance + scattering.skyIrradiance)
+	color.rgb *=
+		mix(halfLambert, hg, 0.5) * (scattering.sunIrradiance + scattering.skyIrradiance) * multiScatterBrightnessFake
 		+ emissionColor
 		+ ambientLightColor;
 

@@ -40,11 +40,14 @@ vec2 rotate(vec2 v, float a)
 
 vec3 colorAtTemperatureDegreesCelcius(float temperature)
 {
+	// This function is not physically based, but looks plausible
 	// Scale so objects are black around 500 deg and white around 2000 deg
     float t = max(0.0, (temperature - 500.0) * 0.0013);
 	
-    // From https://www.shadertoy.com/view/lsf3RH
-    return vec3( t, pow(max(t,0.),2.)*0.4, pow(max(t,0.),3.)*0.15);
+    return 5 * vec3(
+		pow(t, 1.5),
+		pow(t, 2.5) * 0.4,
+		pow(t, 3.5) * 0.15);
 }
 
 void main()
@@ -60,7 +63,7 @@ void main()
 	float rotationAngle = osg_MultiTexCoord0.z;
 	offset = rotate(offset, rotationAngle);
 
-	normalViewSpaceXY = offset * 0.75;
+	normalViewSpaceXY = offset * 0.8;
 	
 	// Scale
 	offset *= osg_MultiTexCoord0.xx;

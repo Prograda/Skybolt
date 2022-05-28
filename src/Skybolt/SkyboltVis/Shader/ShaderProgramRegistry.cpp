@@ -26,13 +26,13 @@ using ShaderProgramSourceFilesRegistry = std::map<std::string, ShaderProgramSour
 static ShaderProgramSourceFilesRegistry createShaderProgramSourceFilesRegistry()
 {
 	return {
+		{ "beams", {
+			{ osg::Shader::VERTEX, "Shaders/Beams.vert" },
+			{ osg::Shader::FRAGMENT, "Shaders/Beams.frag" }
+		}},
 		{ "cloud", {
 			{ osg::Shader::VERTEX, "Shaders/BillboardCloud.vert" },
 			{ osg::Shader::FRAGMENT, "Shaders/BillboardCloud.frag" }
-		}},
-		{ "glass", {
-			{ osg::Shader::VERTEX, "Shaders/SimpleTextured.vert" },
-			{ osg::Shader::FRAGMENT, "Shaders/Glass.frag" }
 		}},
 		{ "compositeClouds", {
 			{ osg::Shader::VERTEX, "Shaders/ScreenQuad.vert" },
@@ -41,6 +41,10 @@ static ShaderProgramSourceFilesRegistry createShaderProgramSourceFilesRegistry()
 		{ "compositeFinal", {
 			{ osg::Shader::VERTEX, "Shaders/ScreenQuad.vert" },
 			{ osg::Shader::FRAGMENT, "Shaders/CompositeFinal.frag" }
+		}},
+		{ "glass", {
+			{ osg::Shader::VERTEX, "Shaders/SimpleTextured.vert" },
+			{ osg::Shader::FRAGMENT, "Shaders/Glass.frag" }
 		}},
 		{ "model", {
 			{ osg::Shader::VERTEX, "Shaders/SimpleTextured.vert" },

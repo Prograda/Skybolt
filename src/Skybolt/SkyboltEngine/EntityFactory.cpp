@@ -688,8 +688,7 @@ static osg::ref_ptr<osg::StateSet> createCelestialBodyStateSet(const osg::ref_pt
 	depth->setWriteMask(false);
 	ss->setAttributeAndModes(depth, osg::StateAttribute::ON);
 
-	osg::Texture2D* texture = new osg::Texture2D(image);
-	texture->setInternalFormat(vis::toSrgbInternalFormat(texture->getInternalFormat()));
+	osg::ref_ptr<osg::Texture2D> texture = vis::createSrgbTexture(image);
 	ss->setTextureAttributeAndModes(0, texture);
 	ss->addUniform(vis::createUniformSampler2d("albedoSampler", 0));
 

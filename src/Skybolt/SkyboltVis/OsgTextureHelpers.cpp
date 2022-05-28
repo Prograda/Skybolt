@@ -78,14 +78,23 @@ osg::ref_ptr<osg::Image> readTexture3dFromSeparateFiles(const std::string& filen
 	return dstImage;
 }
 
+osg::ref_ptr<osg::Texture2D> createSrgbTexture(const osg::ref_ptr<osg::Image>& image)
+{
+	// Set the SRGB format for the image before creating the texture, so that the image format matches the texture.
+	// DDS textures do not display correctly if the image format does not match the texture format.
+	image->setInternalTextureFormat(toSrgbInternalFormat(image->getInternalTextureFormat()));
+
+	osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
+	texture->setFilter(osg::Texture::FilterParameter::MIN_FILTER, osg::Texture::FilterMode::LINEAR_MIPMAP_LINEAR);
+	texture->setFilter(osg::Texture::FilterParameter::MAG_FILTER, osg::Texture::FilterMode::LINEAR);
+	return texture;
+}
+
 osg::ref_ptr<osg::Texture2D> createTilingSrgbTexture(const osg::ref_ptr<osg::Image>& image)
 {
-	osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
-	texture->setInternalFormat(toSrgbInternalFormat(texture->getInternalFormat()));
+	osg::ref_ptr<osg::Texture2D> texture = createSrgbTexture(image);
 	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
 	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
-	texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR_MIPMAP_LINEAR);
-	texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
 	return texture;
 }
 

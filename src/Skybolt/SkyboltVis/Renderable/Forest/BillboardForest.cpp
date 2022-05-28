@@ -9,6 +9,7 @@
 #include "SkyboltVis/OsgStateSetHelpers.h"
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/OsgGeometryHelpers.h"
+#include "SkyboltVis/OsgTextureHelpers.h"
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -64,8 +65,7 @@ osg::StateSet* createStateSet(osg::ref_ptr<osg::Program> program, const Uniforms
 	ss->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
 
 	// TODO: get rid of static and cache the texture to share for every BillboardForest instance. Try to put the TBO part in a subgraph that's different for each page, and share the rest in a common parent. See https://github.com/openscenegraph/OpenSceneGraph/blob/master/examples/osgforest/osgforest.cpp
-	static osg::ref_ptr<osg::Texture2D> albedoTexture = new osg::Texture2D(readImageWithCorrectOrientation("Environment/Forest/spruceAtlas_side_albedo.tga"));
-	albedoTexture->setInternalFormat(toSrgbInternalFormat(albedoTexture->getInternalFormat()));
+	static osg::ref_ptr<osg::Texture2D> albedoTexture = createSrgbTexture(readImageWithCorrectOrientation("Environment/Forest/spruceAtlas_side_albedo.tga"));
 	albedoTexture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
 	albedoTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
 	ss->setTextureAttributeAndModes(0, albedoTexture, osg::StateAttribute::ON);

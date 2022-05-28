@@ -8,17 +8,9 @@
 #define TONE_MAPPING_H
 
 #include "ColorTemperature.h"
+#include "Util/Srgb.h"
 
 #pragma import_defines ( CONVERT_OUTPUT_TO_SRGB )
-
-vec3 linearToSrgb(vec3 linearRGB)
-{
-    bvec3 cutoff = lessThan(linearRGB, vec3(0.0031308));
-    vec3 higher = vec3(1.055)*pow(linearRGB, vec3(1.0/2.4)) - vec3(0.055);
-    vec3 lower = linearRGB * vec3(12.92);
-
-    return mix(higher, lower, cutoff);
-}
 
 vec3 getOutputAsSrgb(vec3 color)
 {

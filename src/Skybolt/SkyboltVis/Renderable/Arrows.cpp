@@ -7,6 +7,7 @@
 
 #include "Arrows.h"
 #include "SkyboltVis/OsgGeometryHelpers.h"
+#include "SkyboltVis/OsgMathHelpers.h"
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -24,17 +25,6 @@ Arrows::Arrows(const Params& params) :
 Arrows::~Arrows()
 {
 	mSwitch->removeChild(mGeode);
-}
-
-void getOrthonormalBasis(const osg::Vec3f &normal, osg::Vec3f &tangent, osg::Vec3f &binormal)
-{
-	float d = normal * osg::Vec3f(0, 1, 0);
-	if (d > -0.95f && d < 0.95f)
-		binormal = normal ^ osg::Vec3f(0, 1, 0);
-	else
-		binormal = normal ^ osg::Vec3f(0, 0, 1);
-	binormal.normalize();
-	tangent = binormal ^ normal;
 }
 
 const float arrowHeadNormalScale = 0.1f;
@@ -67,7 +57,7 @@ void Arrows::setSegments(const std::vector<Vec3Segment>& segments)
 			const float arrowHeadTangentLength = arrowHeadNormalLength * 0.5f;
 
 			osg::Vec3f tangent, bitangent;
-			getOrthonormalBasis(normal, tangent, bitangent);
+			math::getOrthonormalBasis(normal, tangent, bitangent);
 			
 			for (int i = 0; i < 4; ++i)
 			{

@@ -62,6 +62,7 @@ private:
 	osg::Uniform* mCameraRightDirectionUniform;
 	osg::Uniform* mViewMatrixUniform;
 	osg::Uniform* mViewProjectionMatrixUniform;
+	osg::Uniform* mProjectionMatrixUniform;
 	osg::Uniform* mLightDirectionUniform;
 	osg::Uniform* mDirectLightColorUniform;
 	osg::Uniform* mAmbientLightColorUniform;

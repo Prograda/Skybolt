@@ -48,6 +48,9 @@ Scene::Scene() :
 	mViewProjectionMatrixUniform = new osg::Uniform("viewProjectionMatrix", osg::Matrixf());
 	ss->addUniform(mViewProjectionMatrixUniform);
 
+	mProjectionMatrixUniform = new osg::Uniform("projectionMatrix", osg::Matrixf());
+	ss->addUniform(mProjectionMatrixUniform);
+
 	mLightDirectionUniform = new osg::Uniform("lightDirection", osg::Vec3f(0, 0, -1));
 	ss->addUniform(mLightDirectionUniform);
 
@@ -85,6 +88,7 @@ void Scene::updatePreRender(const RenderContext& context)
 	osg::Matrixf viewProj = camera.getViewMatrix() * camera.getProjectionMatrix();
 	osg::Matrixf viewProjInv = osg::Matrix::inverse(viewProj);
 	mViewProjectionMatrixUniform->set(viewProj);
+	mProjectionMatrixUniform->set(camera.getProjectionMatrix());
 
 	mLightDirectionUniform->set(-getPrimaryLightDirection());
 

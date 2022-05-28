@@ -9,6 +9,7 @@
 #include "OsgImageHelpers.h"
 #include "OsgStateSetHelpers.h"
 #include "SkyboltVis/earcutOsg.h"
+#include "SkyboltVis/OsgTextureHelpers.h"
 #include <SkyboltVis/VisibilityCategory.h>
 #include "SkyboltVis/Renderable/Planet/Terrain.h"
 #include <SkyboltCommon/Math/IntersectionUtility.h>
@@ -205,10 +206,7 @@ static osg::Geode* createRoads(const Roads& roads)
 
 static osg::ref_ptr<osg::Texture2D> createRoadTexture(const std::string& filename)
 {
-	osg::Texture2D* texture = new osg::Texture2D(readImageWithCorrectOrientation(filename));
-	texture->setInternalFormat(toSrgbInternalFormat(texture->getInternalFormat()));
-	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
-	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+	osg::ref_ptr<osg::Texture2D> texture = vis::createTilingSrgbTexture(readImageWithCorrectOrientation(filename));
 	texture->setMaxAnisotropy(8.f);
 	return texture;
 }
