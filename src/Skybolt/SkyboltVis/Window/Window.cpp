@@ -7,6 +7,7 @@
 #include "Window.h"
 #include "DisplaySettings.h"
 #include "SkyboltVis/Camera.h"
+#include "SkyboltVis/OsgLogHandler.h"
 #include "SkyboltVis/RenderTarget/RenderTarget.h"
 
 #include <boost/foreach.hpp>
@@ -31,6 +32,8 @@ using namespace skybolt::vis;
 Window::Window(const DisplaySettings& settings) :
 	mViewer(new osgViewer::Viewer)
 {
+	forwardOsgLogToBoost();
+
 	osg::DisplaySettings::instance()->setNumMultiSamples(settings.multiSampleCount);
 
 	osg::setNotifyLevel(osg::WARN);
