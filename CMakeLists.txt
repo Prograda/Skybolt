@@ -6,7 +6,7 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0")
 endif()
 
 project(Skybolt)
-set(PACKAGE_VERSION 1.3.0)
+set(PACKAGE_VERSION 1.3.1)
 
 enable_testing()
 
