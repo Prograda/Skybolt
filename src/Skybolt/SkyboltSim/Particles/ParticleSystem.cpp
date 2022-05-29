@@ -134,6 +134,7 @@ void ParticleIntegrator::update(float dt, std::vector<Particle>& particles)
 {
 	if (particles.empty())
 	{
+		mPrevPlanetTransform = std::nullopt;
 		return;
 	}
 
