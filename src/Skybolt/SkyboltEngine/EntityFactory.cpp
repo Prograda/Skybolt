@@ -449,12 +449,18 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 			.tileSourceFactoryRegistry->getFactory(elevation.at("format"))(elevation);
 		elevationMaxLodLevel = elevation.at("maxLevel");
 	}
+	auto it = layers.find("landMask");
+	if (it != layers.end())
+	{
+		config.planetTileSources.landMask = context
+			.tileSourceFactoryRegistry->getFactory(it->at("format"))(*it);
+	}
 	{
 		nlohmann::json albedo = layers.at("albedo");
 		config.planetTileSources.albedo = context
 			.tileSourceFactoryRegistry->getFactory(albedo.at("format"))(albedo);
 	}
-	auto it = layers.find("attribute");
+	it = layers.find("attribute");
 	if (it != layers.end())
 	{
 		config.planetTileSources.attribute = context

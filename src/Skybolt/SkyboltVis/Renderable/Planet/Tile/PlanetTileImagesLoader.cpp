@@ -24,7 +24,8 @@ using namespace skybolt;
 namespace skybolt {
 namespace vis {
 
-const int oceanFlagHeight = 32267; // height value used to flag that a pixel in the DTED heightmap is ocean. This is not the actual height of the ocean.
+//const int oceanFlagHeight = 32267; // height value used to flag that a pixel in the DTED heightmap is ocean. This is not the actual height of the ocean.
+const int oceanFlagHeight = 32767; // height value of ocean in mapbox tiles
 
 static osg::Image* createDefaultHeightImage()
 {
@@ -51,15 +52,15 @@ static osg::Image* createDefaultAlbedoImage()
 static osg::Image* convertHeightmapToLandMask(const osg::Image& src)
 {
 	osg::Image* dst = new osg::Image;
-	dst->allocateImage(src.s(), src.t(), 1, GL_RED, GL_UNSIGNED_BYTE);
-	dst->setInternalTextureFormat(GL_R8);
+	dst->allocateImage(src.s(), src.t(), 1, GL_ALPHA, GL_UNSIGNED_BYTE);
+	dst->setInternalTextureFormat(GL_ALPHA8);
 
 	uint16_t* pSrc = (uint16_t*)src.data();
 	unsigned char* pDst = (unsigned char*)dst->data();
 	size_t size = src.s() * src.t();
 	for (size_t i = 0; i < size; ++i)
 	{
-		pDst[i] = (pSrc[i] == oceanFlagHeight) ? 0 : 255;
+		pDst[i] = (pSrc[i] <= oceanFlagHeight) ? 0 : 255;
 	}
 
 	return dst;
@@ -99,6 +100,10 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 #endif
 	auto images = std::make_shared<PlanetTileImages>();
 
+	static osg::ref_ptr<osg::Image> defaultHeightImage = createDefaultHeightImage();
+	static osg::ref_ptr<osg::Image> defaultNormalMap = createNormalmapFromHeightmap(*defaultHeightImage, osg::Vec2(1,1));
+	static osg::ref_ptr<osg::Image> defaultLandMask = convertHeightmapToLandMask(*defaultHeightImage);
+
 	// Height map
 	{
 		std::optional<QuadTreeTileKey> elevationKey = elevationLayer->getHighestAvailableLevel(key);
@@ -116,19 +121,9 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 			});
 		}
 
-#ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
-		std::cout << "Height," << key.level << "," << timer.count() << std::endl;
-		timer.reset();
-		timer.start();
-#endif
-
-		static osg::ref_ptr<osg::Image> defaultHeightImage = createDefaultHeightImage();
-		static osg::ref_ptr<osg::Image> defaultNormalMap = createNormalmapFromHeightmap(*defaultHeightImage, osg::Vec2(1,1));
-		static osg::ref_ptr<osg::Image> defaultLandMask = convertHeightmapToLandMask(*defaultHeightImage);
-
-		osg::ref_ptr<osg::Image> heightImage = images->heightMapImage.image;
-		if (heightImage)
+		if (images->heightMapImage.image)
 		{
+			osg::ref_ptr<osg::Image> heightImage = images->heightMapImage.image;
 			auto bounds = getKeyLonLatBounds<osg::Vec2>(images->heightMapImage.key);
 			osg::Vec2 heightImageLonLatDelta = bounds.size();
 			osg::Vec2 texelWorldSize = osg::Vec2f(
@@ -136,8 +131,30 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 				heightImageLonLatDelta.y() * mPlanetRadius / heightImage->t()
 			);
 			images->normalMapImage = createNormalmapFromHeightmap(*heightImage, texelWorldSize);
+		}
+		else
+		{
+			images->heightMapImage.image = defaultHeightImage;
+			images->normalMapImage = defaultNormalMap;
+		}
 
-			images->landMaskImage = getOrCreateImage(images->heightMapImage.key, size_t(CacheIndex::LandMask), [heightImage](const QuadTreeTileKey& key) {
+#ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
+		std::cout << "Height," << key.level << "," << timer.count() << std::endl;
+		timer.reset();
+		timer.start();
+#endif
+	}
+
+	// Land mask
+	{
+		osg::ref_ptr<osg::Image> heightImage = images->heightMapImage.image;
+		images->landMaskImage = getOrCreateImage(images->heightMapImage.key, size_t(CacheIndex::LandMask), [this, heightImage, cancelSupplier](const QuadTreeTileKey& key) {
+			if (landMaskLayer)
+			{
+				return landMaskLayer->createImage(key, cancelSupplier);
+			}
+			else
+			{
 				if (heightImage == defaultHeightImage)
 				{
 					return defaultLandMask;
@@ -145,12 +162,12 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 				osg::ref_ptr<osg::Image> image = convertHeightmapToLandMask(*heightImage);
 				//fillBathymetryInHeightmap(*heightImage); // TODO: Remove this hack of modifying the heightImage in the factory for the land mask.
 				return image;
-			}).image;
-		}
-		else
+			}
+		}).image;
+
+		if (!images->landMaskImage)
 		{
-			images->heightMapImage.image = defaultHeightImage;
-			images->normalMapImage = defaultNormalMap;
+			images->landMaskImage = defaultLandMask;
 		}
 
 #ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING

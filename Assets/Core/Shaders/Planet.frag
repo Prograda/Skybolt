@@ -46,7 +46,7 @@ void main()
 	vec3 visibleSunIrradiance = scattering.sunIrradiance;
 	
 #ifdef ENABLE_OCEAN
-	float landMask = texture(landMaskSampler, geoTexCoord.xy * heightScale + heightOffset).r;
+	float landMask = texture(landMaskSampler, geoTexCoord.xy * heightScale + heightOffset).a;
 	vec3 albedo = mix(waterColor, color.rgb, landMask);
 	vec3 specularReflectance = oceanSpecularColor * (1.0 - landMask) * calcBlinnPhongSpecular(lightDirection, viewDirection, normal, oceanShininess) * visibleSunIrradiance;
 #else

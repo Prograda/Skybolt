@@ -31,6 +31,7 @@ typedef std::map<skybolt::QuadTreeTileKey, osg::ref_ptr<osg::Image>> TileImageMa
 struct PlanetTileSources
 {
 	TileSourcePtr elevation;
+	TileSourcePtr landMask; //!< optional
 	TileSourcePtr albedo;
 	TileSourcePtr attribute; //!< optional
 };

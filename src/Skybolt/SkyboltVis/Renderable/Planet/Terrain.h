@@ -64,6 +64,7 @@ struct TerrainConfig
 
 	osg::ref_ptr<osg::Texture2D> heightMap;
 	osg::ref_ptr<osg::Texture2D> normalMap;
+	osg::ref_ptr<osg::Texture2D> landMask;
 	osg::ref_ptr<osg::Texture2D> overallAlbedoMap;
 	osg::ref_ptr<osg::Texture2D> attributeMap;
 

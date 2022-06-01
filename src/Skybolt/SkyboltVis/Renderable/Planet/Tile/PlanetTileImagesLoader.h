@@ -27,8 +27,9 @@ class PlanetTileImagesLoader : public TileImagesLoader
 {
 public:
 	TileSourcePtr elevationLayer; //!< never null
-	TileSourcePtr attributeLayer; //!< can be null
+	TileSourcePtr landMaskLayer; //!< if null, land mask is auto generated from elevation
 	TileSourcePtr albedoLayer; //!< never null
+	TileSourcePtr attributeLayer; //!< if null, attributes are not used
 
 	enum class CacheIndex
 	{

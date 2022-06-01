@@ -104,7 +104,7 @@ std::optional<sim::Vector3> ParticleEmitter::getEmitterPositionInPlanetSpace() c
 float ParticleEmitter::getAtmosphericDensity() const
 {
 	auto emitterPositionPlanetSpace = getEmitterPositionInPlanetSpace();
-	return emitterPositionPlanetSpace ? getAtmosphere().getDensity(glm::length(*emitterPositionPlanetSpace) - earthRadius()) : 0.0f;
+	return emitterPositionPlanetSpace ? float(getAtmosphere().getDensity(glm::length(*emitterPositionPlanetSpace) - earthRadius())) : 0.0f;
 }
 
 void ParticleKiller::update(float dt, std::vector<Particle>& particles)

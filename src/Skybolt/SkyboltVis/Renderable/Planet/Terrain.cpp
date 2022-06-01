@@ -108,6 +108,10 @@ static void setupTerrainStateSet(osg::StateSet& ss, const TerrainConfig& config)
 		ss.setTextureAttributeAndModes(unit, config.normalMap);
 		ss.addUniform(createUniformSampler2d("normalSampler", unit++));
 	}
+	{
+		ss.setTextureAttributeAndModes(unit, config.landMask);
+		ss.addUniform(createUniformSampler2d("landMaskSampler", unit++));
+	}
 
 	ss.setTextureAttributeAndModes(unit, config.overallAlbedoMap);
 	ss.addUniform(createUniformSampler2d("overallAlbedoSampler", unit++));
