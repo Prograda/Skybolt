@@ -14,7 +14,7 @@ ${JSBSIM_LIBRARIES}
 ws2_32
 )
 
-add_library(${TARGET_NAME} SHARED ${SrcFiles})
+add_library(${TARGET_NAME} ${SKYBOLT_PLUGINS_LIBRARY_TYPE} ${SrcFiles})
 
 target_link_libraries (${TARGET_NAME} ${LIBS})
 

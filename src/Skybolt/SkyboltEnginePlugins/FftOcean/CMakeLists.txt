@@ -22,7 +22,7 @@ set(LIBS
 
 add_definitions(-D_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING) # disable deprecation warning for xsimd
 
-add_library(${TARGET_NAME} SHARED ${SrcFiles})
+add_library(${TARGET_NAME} ${SKYBOLT_PLUGINS_LIBRARY_TYPE} ${SrcFiles})
 
 target_link_libraries (${TARGET_NAME} ${LIBS})
 

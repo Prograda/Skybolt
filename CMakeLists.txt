@@ -22,6 +22,13 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+OPTION(SKYBOLT_PLUGINS_STATIC_BUILD "Build skybolt plugins as static libraries" OFF)
+if (SKYBOLT_PLUGINS_STATIC_BUILD)
+	set (SKYBOLT_PLUGINS_LIBRARY_TYPE STATIC)
+else()
+	set (SKYBOLT_PLUGINS_LIBRARY_TYPE SHARED)
+endif()
+
 # Allow user to overwrite install path.
 # Solution from https://stackoverflow.com/questions/39481958/setting-cmake-install-prefix-from-cmakelists-txt-file
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

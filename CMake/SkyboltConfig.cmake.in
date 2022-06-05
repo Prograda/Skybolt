@@ -11,6 +11,12 @@ find_dependency(httplib)
 find_dependency(nlohmann_json)
 find_dependency(px_sched)
 
+if (@SKYBOLT_PLUGINS_STATIC_BUILD@)
+	if (@BUILD_FFT_OCEAN_PLUGIN@)
+		find_dependency(xsimd)
+	endif()
+endif()
+
 # Transitive dependencies of OpenSceneGraph
 find_dependency(BZip2)
 find_dependency(Brotli)

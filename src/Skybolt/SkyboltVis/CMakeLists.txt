@@ -31,8 +31,8 @@ find_package(earcut REQUIRED)
 find_package(httplib REQUIRED)
 find_package(px_sched REQUIRED)
 
-OPTION(USE_DELL_XPS_RTT_FIX "Use Dell XPS Render To Texture Fix")
-if (USE_DELL_XPS_RTT_FIX)
+OPTION(SKYBOLT_USE_DELL_XPS_RTT_FIX "Workaround for render-to-texture driver bug on Dell XPS")
+if (SKYBOLT_USE_DELL_XPS_RTT_FIX)
 	add_definitions(-USE_DELL_XPS_RTT_FIX)
 endif()
 

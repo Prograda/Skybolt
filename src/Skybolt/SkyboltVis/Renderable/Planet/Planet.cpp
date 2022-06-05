@@ -534,7 +534,7 @@ Planet::Planet(const PlanetConfig& config) :
 				osg::Vec2f pos(0.2 + 0.4*i, 0.7);
 				osg::Vec2f size(0.3, 0.3);
 				BoundingBox2f box(pos, pos + size);
-				ScreenQuad* quad = new ScreenQuad(createTexturedQuadStateSet(config.programs->hudGeometry, stateSetConfig.waveFoamMaskTexture[i]), box);
+				ScreenQuad* quad = new ScreenQuad(createTexturedQuadStateSet(config.programs->getRequiredProgram("hudGeometry"), stateSetConfig.waveHeightTexture[i]), box);
 				mScene->addObject(quad);
 #endif
 			}
@@ -834,10 +834,10 @@ void Planet::updatePreRender(const RenderContext& context)
 	osg::Vec3f position = getPosition();
 	mPlanetCenterUniform->set(position);
 
-	osg::Matrixf planetMatrix;
-	getOrientation().get(planetMatrix);
-	planetMatrix = osg::Matrixf::inverse(planetMatrix);
-	mPlanetMatrixInvUniform->set(planetMatrix);
+	osg::Matrixf planetMatrixInv;
+	getOrientation().get(planetMatrixInv);
+	planetMatrixInv = osg::Matrixf::inverse(planetMatrixInv);
+	mPlanetMatrixInvUniform->set(planetMatrixInv);
 
 	mPlanetSurface->updatePreRender(context);
 	if (mPlanetFeatures)

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include <SkyboltEngine/Plugin/Plugin.h>
+#include "FftOceanPlugin.h"
 #include "FftOceanWaveHeightTextureGenerator.h"
 
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -24,33 +24,26 @@ public:
 	}
 };
 
-class FftOceanPlugin : public Plugin
+FftOceanPlugin::FftOceanPlugin(const PluginConfig& config) :
+	mVisFactoryRegistry(config.visFactoryRegistry)
 {
-public:
-	FftOceanPlugin(const PluginConfig& config) :
-		mVisFactoryRegistry(config.visFactoryRegistry)
-	{
-		(*mVisFactoryRegistry)[vis::VisFactoryType::WaveHeightTextureGenerator] = std::make_shared<FftOceanWaveHeightTextureGeneratorFactory>();
-	}
+	(*mVisFactoryRegistry)[vis::VisFactoryType::WaveHeightTextureGenerator] = std::make_shared<FftOceanWaveHeightTextureGeneratorFactory>();
+}
 
-	~FftOceanPlugin()
-	{
-		mVisFactoryRegistry->erase(vis::VisFactoryType::WaveHeightTextureGenerator);
-	}
-
-private:
-	vis::VisFactoryRegistryPtr mVisFactoryRegistry;
-};
+FftOceanPlugin::~FftOceanPlugin()
+{
+	mVisFactoryRegistry->erase(vis::VisFactoryType::WaveHeightTextureGenerator);
+}
 
 namespace plugins {
 
-	std::shared_ptr<Plugin> createEnginePlugin(const PluginConfig& config)
+	std::shared_ptr<Plugin> createFftOceanPlugin(const PluginConfig& config)
 	{
 		return std::make_shared<FftOceanPlugin>(config);
 	}
 
 	BOOST_DLL_ALIAS(
-		plugins::createEnginePlugin,
+		plugins::createFftOceanPlugin,
 		createEnginePlugin
 	)
 }

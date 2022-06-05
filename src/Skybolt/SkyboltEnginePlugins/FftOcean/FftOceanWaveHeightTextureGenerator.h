@@ -35,6 +35,7 @@ public:
 		mGenerator.reset(new FftOceanGenerator(config));
 
 		osg::Image* image = new osg::Image();
+		image->setDataVariance(osg::Image::DYNAMIC);
 		image->allocateImage(config.textureSizePixels, config.textureSizePixels, 1, GL_RGB, GL_FLOAT);
 		image->setInternalTextureFormat(GL_RGB32F_ARB);
 
