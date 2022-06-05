@@ -31,18 +31,26 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 
 		boost::filesystem::path boostPath(path.string());
 
-		dll::shared_library lib(boostPath, dll::load_mode::default_mode);
-		if (lib.has(PluginT::factorySymbolName()))
+		try
 		{
-			std::function<CreatePluginFunction> creator = boost::dll::import_alias<CreatePluginFunction>(
-				boostPath,
-				PluginT::factorySymbolName(),
-				dll::load_mode::default_mode
+			dll::shared_library lib(boostPath, dll::load_mode::default_mode);
+			if (lib.has(PluginT::factorySymbolName()))
+			{
+				std::function<CreatePluginFunction> creator = boost::dll::import_alias<CreatePluginFunction>(
+					boostPath,
+					PluginT::factorySymbolName(),
+					dll::load_mode::default_mode
 				);
 
-			BOOST_LOG_TRIVIAL(info) << "Loaded plugin: " << boostPath.leaf().string();
 
-			result.push_back([=](const PluginConfigT& config) { return creator(config); });
+				BOOST_LOG_TRIVIAL(info) << "Loaded plugin: " << boostPath.leaf().string();
+
+				result.push_back([=](const PluginConfigT& config) { return creator(config); });
+			}
+		}
+		catch (const std::exception& e)
+		{
+			throw std::runtime_error("Error loading plugin '" + path.string() + "': " + e.what());
 		}
 	}
 
