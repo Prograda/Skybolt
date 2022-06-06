@@ -855,21 +855,25 @@ void Planet::updatePreRender(const RenderContext& context)
 
 	if (mWaveHeightTextureGenerator)
 	{
-		double loopPeriod = 1000; // TODO: Seamless looping
-		double timeSeconds = std::fmod(julianDateSeconds, loopPeriod);
-		
-		if (mWaveHeightTextureGenerator->update(timeSeconds))
+		double altitude = (getPosition() - context.camera.getPosition()).length() - mInnerRadius;
+		if (altitude < 40000) // TODO: ensure this value matches oceanMeshFadeoutEndDistance in Ocean.h shader file
 		{
-			for (const auto& generator : mWaterSurfaceGpuTextureGenerators)
+			double loopPeriod = 1000; // TODO: Seamless looping
+			double timeSeconds = std::fmod(julianDateSeconds, loopPeriod);
+		
+			if (mWaveHeightTextureGenerator->update(timeSeconds))
 			{
-				generator->requestRender();
-			}
+				for (const auto& generator : mWaterSurfaceGpuTextureGenerators)
+				{
+					generator->requestRender();
+				}
 
-			for (int i = 0; i < CascadedWaveHeightTextureGenerator::numCascades; ++i)
-			{
-				mWaveFoamMaskGenerator[i]->advanceTime(timeSeconds);
-				mWaterStateSet->setFoamTexture(i, mWaveFoamMaskGenerator[i]->getOutputTexture());
-				mWaveFoamMaskGenerator[i]->swapBuffers();
+				for (int i = 0; i < CascadedWaveHeightTextureGenerator::numCascades; ++i)
+				{
+					mWaveFoamMaskGenerator[i]->advanceTime(timeSeconds);
+					mWaterStateSet->setFoamTexture(i, mWaveFoamMaskGenerator[i]->getOutputTexture());
+					mWaveFoamMaskGenerator[i]->swapBuffers();
+				}
 			}
 		}
 	}
