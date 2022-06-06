@@ -3,15 +3,17 @@ import os
 
 class SkyboltConan(ConanFile):
     name = "skybolt"
-    version = "1.3.1"
+    version = "1.3.2"
     settings = "os", "compiler", "arch", "build_type"
     options = {
 		"shared": [True, False],
-		"enableFftOcean": [True, False]
+		"enableFftOcean": [True, False],
+		"shared_plugins": [True, False] # Build plugins as shared libraries
 	}
     default_options = {
         "shared": False,
-        "enableFftOcean": True
+        "enableFftOcean": True,
+		"shared_plugins": True
     }
     generators = ["cmake_paths", "cmake_find_package", "virtualrunenv"]
     exports = "Conan/*"
@@ -54,6 +56,7 @@ class SkyboltConan(ConanFile):
 
         cmake.definitions["Boost_STATIC_LIBS"] = str(not self.options["boost"].shared)
         cmake.definitions["OSG_STATIC_LIBS"] = str(not self.options["openscenegraph-mr"].shared)
+        cmake.definitions["SKYBOLT_PLUGINS_STATIC_BUILD"] = str(not self.options.shared_plugins)
 
         if self.options.enableFftOcean == True:
             cmake.definitions["BUILD_FFT_OCEAN_PLUGIN"] = "true"
@@ -70,3 +73,6 @@ class SkyboltConan(ConanFile):
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.names["cmake_find_package"] = "Skybolt"
         self.cpp_info.libs = ["AircraftHud", "MapAttributesConverter", "SkyboltCommon", "SkyboltEngine", "SkyboltSim", "SkyboltVis"]
+		
+        if self.options.enableFftOcean and not self.options.shared_plugins:
+            self.cpp_info.libs.append("FftOcean")
