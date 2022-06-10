@@ -41,9 +41,9 @@ AtmosphericScattering calcAtmosphericScattering(
     vec3 lightDirection,
 	sampler2D cloudSampler) {
 
-	AtmosphericScattering OUT;
+	AtmosphericScattering S;
 	
-	OUT.sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet, lightDirection, OUT.skyIrradiance);
+	S.sunIrradiance = GetSunAndSkyIrradiance(positionRelPlanet, lightDirection, S.skyIrradiance);
 	
 	// Adjust scattering based on cloud coverage.
 	// Heaver cloud coverage decreases irradiance and inscattering.
@@ -53,15 +53,15 @@ AtmosphericScattering calcAtmosphericScattering(
 	float occlusionMask = mask.y;
 
 	float shadowLength = 0.0; // length of shadowed part of view ray
-	OUT.skyRadianceToPoint = GetSkyRadianceToPointWithCloudOcclusion(cameraPositionRelPlanet, positionRelPlanet, lightDirection, occlusionMask, OUT.transmittance);
-	OUT.sunIrradiance *= shadowMask;
-	OUT.skyIrradiance *= occlusionMask;
+	S.skyRadianceToPoint = GetSkyRadianceToPointWithCloudOcclusion(cameraPositionRelPlanet, positionRelPlanet, lightDirection, occlusionMask, S.transmittance);
+	S.sunIrradiance *= shadowMask;
+	S.skyIrradiance *= occlusionMask;
 #else
 	float shadowLength = 0.0;
-	OUT.skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, positionRelPlanet, shadowLength, lightDirection, OUT.transmittance);
+	S.skyRadianceToPoint = GetSkyRadianceToPoint(cameraPositionRelPlanet, positionRelPlanet, shadowLength, lightDirection, S.transmittance);
 #endif
 	
-	return OUT;
+	return S;
 }
 
 #endif // ATMOSPHERIC_SCATTERING_WITH_CLOUDS_H
