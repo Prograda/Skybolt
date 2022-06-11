@@ -245,6 +245,7 @@ PlanetFeatures::~PlanetFeatures()
 	for (const LoadingItemPtr& item : mLoadingQueue)
 	{
 		item->cancel = true;
+		CALL_LISTENERS(featureLoadDequeued());
 	}
 	mScheduler->waitFor(mLoadingTaskSync);
 
@@ -313,6 +314,7 @@ void PlanetFeatures::loadTile(VisFeatureTile& tile)
 			LoadingItemPtr loadingItem(new LoadingItem);
 			loadingItem->tile = &tile;
 			mLoadingQueue.push_back(loadingItem);
+			CALL_LISTENERS(featureLoadEnqueued());
 
 			mScheduler->run([=]()
 			{
@@ -394,6 +396,7 @@ void PlanetFeatures::processLoadingQueue()
 		if (erase)
 		{
 			mLoadingQueue.erase(mLoadingQueue.begin() + i);
+			CALL_LISTENERS(featureLoadDequeued());
 		}
 		else
 		{

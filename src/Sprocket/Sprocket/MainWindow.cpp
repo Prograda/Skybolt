@@ -626,15 +626,21 @@ void MainWindow::update()
 	mWorldTreeWidget->update();
 
 	QString status;
-	if (engineRoot->stats.tileLoadQueueSize)
+	if (engineRoot->stats.terrainTileLoadQueueSize)
 	{
-		status += "Loading tiles: " + QString::number(engineRoot->stats.tileLoadQueueSize);
+		status += "Loading terrain tiles: " + QString::number(engineRoot->stats.terrainTileLoadQueueSize);
+		status = addSeparator(status);
+	}
+
+	if (engineRoot->stats.featureTileLoadQueueSize)
+	{
+		status += "Loading feature tiles: " + QString::number(engineRoot->stats.featureTileLoadQueueSize);
+		status = addSeparator(status);
 	}
 
 	uint32_t activeTasks = engineRoot->scheduler->active_threads();
 	if (activeTasks)
 	{
-		status = addSeparator(status);
 		status += "Processing tasks: " + QString::number(activeTasks);
 	}
 	statusBar()->showMessage(status);
@@ -1128,8 +1134,6 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 void MainWindow::captureImage()
 {
-	//mOsgWidget->makeCurrent();
-	//vis::captureScreenshot(*mOsgWidget->getWindow(), "test.png");
 	mOsgWidget->setFixedWidth(1920);
 	mOsgWidget->setFixedHeight(1080);
 
@@ -1145,7 +1149,7 @@ void MainWindow::captureImage()
 			bool fullyLoadEachFrameBeforeProgressing = false;
 			if (fullyLoadEachFrameBeforeProgressing)
 			{
-				while (mEngineRoot->stats.tileLoadQueueSize > 0)
+				while (mEngineRoot->stats.terrainTileLoadQueueSize > 0)
 				{
 					using namespace std::chrono_literals;
 					std::this_thread::sleep_for(1ms);

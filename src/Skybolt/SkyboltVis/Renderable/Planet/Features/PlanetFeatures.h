@@ -11,6 +11,7 @@
 #include "SkyboltVis/Renderable/Water/LakesBatch.h"
 #include "SkyboltVis/Shadow/ShadowHelpers.h"
 
+#include <SkyboltCommon/Listenable.h>
 #include <SkyboltCommon/File/FileLocator.h>
 #include <SkyboltCommon/Math/QuadTree.h>
 #include <px_sched/px_sched.h>
@@ -42,7 +43,14 @@ struct PlanetFeaturesParams
 	osg::Group* groups[featureGroupsSize];
 };
 
-class PlanetFeatures
+struct PlanetFeaturesListener
+{
+	virtual ~PlanetFeaturesListener() = default;
+	virtual void featureLoadEnqueued() {}
+	virtual void featureLoadDequeued() {}
+};
+
+class PlanetFeatures : public skybolt::Listenable<PlanetFeaturesListener>
 {
 public:
 	PlanetFeatures(const PlanetFeaturesParams& params);
@@ -51,6 +59,8 @@ public:
 	void onSurfaceTileAdded(const skybolt::QuadTreeTileKey& key);
 
 	void updatePreRender(const RenderContext& context);
+
+	std::size_t getLoadQueueSize() const { return mLoadingQueue.size(); }
 
 private:
 	void loadTile(VisFeatureTile& tile);

@@ -66,6 +66,7 @@ public:
 	~Planet();
 
 	PlanetSurface* getSurface() const { return mPlanetSurface.get(); }
+	PlanetFeatures* getPlanetFeatures() const { return mPlanetFeatures.get(); }
 
 	void setJulianDate(double date)
 	{

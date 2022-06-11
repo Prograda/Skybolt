@@ -9,36 +9,47 @@
 #include <osgViewer/ViewerEventHandlers>
 #include <osgDB/WriteFile>
 
+#include <filesystem>
+
 namespace skybolt {
 namespace vis {
 
-struct MyFinalDrawCallback : public osg::Camera::DrawCallback
+class WriteToFile : public osgViewer::ScreenCaptureHandler::CaptureOperation
 {
-	void operator() (osg::RenderInfo& renderInfo) const override
+public:
+    WriteToFile(const std::string& filename) :
+		mFilename(filename)
 	{
-		auto viewport = renderInfo.getCurrentCamera()->getViewport();
-		osg::ref_ptr<osg::Image> image = new osg::Image();
-		//image->readPixels(0, 0, viewport->width(), viewport->height(), GL_RGBA, GL_UNSIGNED_BYTE);
-		image->readImageFromCurrentTexture(renderInfo.getContextID(), false);
-		osgDB::writeImageFile(*image, "test.png");
 	}
+
+    void operator() (const osg::Image& image, const unsigned int context_id) override
+	{
+		osgDB::writeImageFile(image, mFilename);
+	}
+
+protected:
+    const std::string mFilename;
 };
 
 void captureScreenshot(Window& window, const std::string& filename)
 {
-	osg::ref_ptr<osgViewer::ScreenCaptureHandler::WriteToFile> writeToFile = new osgViewer::ScreenCaptureHandler::WriteToFile(filename, ".png");
+	// Create directory if it does not already exist
+	std::filesystem::path path(filename);
+	if (!std::filesystem::exists(path.parent_path()))
+	{
+		std::filesystem::create_directories(path.parent_path());
+	}
+
+	// Capture
+	osg::ref_ptr<WriteToFile> writeToFile = new WriteToFile(filename);
 	osg::ref_ptr<osgViewer::ScreenCaptureHandler> screenCaptureHandler = new osgViewer::ScreenCaptureHandler(writeToFile);
 
 	osgViewer::Viewer& viewer = window.getViewer();
 
-	osg::ref_ptr<MyFinalDrawCallback> callback = new MyFinalDrawCallback();
-
-	//screenCaptureHandler->setFramesToCapture(1);
-	//screenCaptureHandler->captureNextFrame(*viewer);
-	viewer.getCamera()->addFinalDrawCallback(callback);
+	screenCaptureHandler->setFramesToCapture(1);
+	screenCaptureHandler->captureNextFrame(viewer);
 	window.render();
-	viewer.getCamera()->removeFinalDrawCallback(callback);
-	//screenCaptureHandler->stopCapture();
+	screenCaptureHandler->stopCapture();
 }
 
 } // namespace vis

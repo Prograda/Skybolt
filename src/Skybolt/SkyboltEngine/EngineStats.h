@@ -11,7 +11,8 @@ namespace skybolt {
 
 struct EngineStats
 {
-	size_t tileLoadQueueSize = 0;
+	size_t terrainTileLoadQueueSize = 0;
+	size_t featureTileLoadQueueSize = 0;
 };
 
 } // namespace skybolt

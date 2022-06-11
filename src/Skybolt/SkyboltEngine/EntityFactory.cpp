@@ -51,6 +51,7 @@
 #include <SkyboltVis/Renderable/Planet/Planet.h>
 #include <SkyboltVis/Renderable/Planet/Terrain.h>
 #include <SkyboltVis/Renderable/Planet/Features/BuildingTypes.h>
+#include <SkyboltVis/Renderable/Planet/Features/PlanetFeatures.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 #include <SkyboltVis/Renderable/Stars/Starfield.h>
 #include <SkyboltVis/Renderable/Model/Model.h>
@@ -299,44 +300,59 @@ static void loadParticleSystem(Entity* entity, const EntityFactory::Context& con
 	simVisBindingComponent->bindings.push_back(binding);
 }
 
-struct PlanetStatsUpdater : vis::PlanetSurfaceListener, vis::QuadTreeTileLoaderListener, sim::Component
+struct PlanetStatsUpdater : vis::PlanetFeaturesListener, vis::QuadTreeTileLoaderListener, sim::Component
 {
-	PlanetStatsUpdater(EngineStats* stats, vis::PlanetSurface* surface)
-		: mStats(stats), mSurface(surface)
+	PlanetStatsUpdater(EngineStats* stats, vis::Planet* planet)
+		: mStats(stats), mPlanet(planet)
 	{
-		mSurface->addListener(this);
-		mSurface->getTileLoaderListenable()->addListener(this);
+		planet->getSurface()->getTileLoaderListenable()->addListener(this);
+		planet->getPlanetFeatures()->addListener(this);
 	}
 
 	~PlanetStatsUpdater()
 	{
-		mSurface->getTileLoaderListenable()->removeListener(this);
-		mSurface->removeListener(this);
-		mStats->tileLoadQueueSize -= mOwnTilesLoading;
+		mPlanet->getPlanetFeatures()->removeListener(this);
+		mPlanet->getSurface()->getTileLoaderListenable()->removeListener(this);
+
+		mStats->terrainTileLoadQueueSize -= mOwnTilesLoading;
+		mStats->featureTileLoadQueueSize -= mOwnFeaturesLoading;
 	}
 
 	void tileLoadRequested() override
 	{
-		++mStats->tileLoadQueueSize;
+		++mStats->terrainTileLoadQueueSize;
 		++mOwnTilesLoading;
 	}
 
 	void tileLoaded() override
 	{
-		--mStats->tileLoadQueueSize;
+		--mStats->terrainTileLoadQueueSize;
 		--mOwnTilesLoading;
 	}
 
 	void tileLoadCanceled() override
 	{
-		--mStats->tileLoadQueueSize;
+		--mStats->terrainTileLoadQueueSize;
 		--mOwnTilesLoading;
+	}
+
+	void featureLoadEnqueued() override
+	{
+		++mStats->featureTileLoadQueueSize;
+		++mOwnFeaturesLoading;
+	}
+
+	void featureLoadDequeued() override
+	{
+		--mStats->featureTileLoadQueueSize;
+		--mOwnFeaturesLoading;
 	}
 
 private:
 	EngineStats* mStats;
-	vis::PlanetSurface* mSurface;
+	vis::Planet* mPlanet;
 	size_t mOwnTilesLoading = 0;
+	size_t mOwnFeaturesLoading = 0;
 };
 
 static osg::ref_ptr<osg::Texture2D> createCloudTexture(const std::string& filepath)
@@ -546,7 +562,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 
 	entity->addComponent(ComponentPtr(new NameComponent("Earth", context.namedObjectRegistry, entity)));
 
-	std::shared_ptr<PlanetStatsUpdater> statsUpdater = std::make_shared<PlanetStatsUpdater>(context.stats, static_cast<vis::Planet*>(visObject.get())->getSurface());
+	std::shared_ptr<PlanetStatsUpdater> statsUpdater = std::make_shared<PlanetStatsUpdater>(context.stats, static_cast<vis::Planet*>(visObject.get()));
 	entity->addComponent(statsUpdater);
 }
 

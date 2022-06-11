@@ -26,6 +26,7 @@
 #include <SkyboltVis/Rect.h>
 #include <SkyboltVis/RenderTarget/RenderTargetSceneAdapter.h>
 #include <SkyboltVis/RenderTarget/ViewportHelpers.h>
+#include <SkyboltVis/Window/CaptureScreenshot.h>
 #include <SkyboltVis/Window/StandaloneWindow.h>
 
 #include <pybind11/pybind11.h>
@@ -125,15 +126,18 @@ static bool stepOnceAndRenderUntilDone(EngineRoot& engineRoot, vis::Window& wind
 	args.dtWallClock = dtWallClock;
 	stepper.step(args);
 
-	bool result = window.render();
-	while (engineRoot.stats.tileLoadQueueSize > 0)
+	// Keep rendering until the last render does not have any outstanding loading tasks.
+	// Note we render first and then check (do, while) because a render may spawn additional tasks.
+	do
 	{
-		result = window.render();
+		if (!window.render())
+		{
+			return false;
+		}
 	}
-	// Render a second time in case something finished loading before we checked the queue size.
-	// FIXME: Make 'done' detection more robust.
-	result = window.render();
-	return result;
+	while (engineRoot.stats.terrainTileLoadQueueSize > 0 || engineRoot.stats.featureTileLoadQueueSize > 0);
+
+	return true;
 }
 
 PYBIND11_MODULE(skybolt, m) {
@@ -144,9 +148,16 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_readwrite("y", &Vector3::y)
 		.def_readwrite("z", &Vector3::z)
 		.def(py::self + py::self)
+		.def(py::self - py::self)
+		.def(py::self * py::self)
+		.def(py::self / py::self)
 		.def(py::self += py::self)
+		.def(py::self -= py::self)
 		.def(py::self *= double())
-		.def(double() * py::self);
+		.def(py::self /= double())
+		.def(double() * py::self)
+		.def(py::self * double())
+		.def(py::self / double());
 
 	py::class_<Quaternion>(m, "Quaternion")
 		.def(py::init())
@@ -154,7 +165,8 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_readwrite("x", &Quaternion::x)
 		.def_readwrite("y", &Quaternion::y)
 		.def_readwrite("z", &Quaternion::z)
-		.def_readwrite("w", &Quaternion::w);
+		.def_readwrite("w", &Quaternion::w)
+		.def(py::self * Vector3());
 
 	py::class_<LatLon>(m, "LatLon")
 		.def(py::init())
@@ -262,9 +274,13 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("createEntity", &EntityFactory::createEntity, py::return_value_policy::reference,
 			py::arg("templateName"), py::arg("name") = "", py::arg("position") = math::dvec3Zero(), py::arg("orientation") = math::dquatIdentity());
 
+	py::class_<Scenario>(m, "Scenario")
+		.def_readwrite("startJulianDate", &Scenario::startJulianDate);
+
 	py::class_<EngineRoot>(m, "EngineRoot")
 		.def_property_readonly("world", [](const EngineRoot& r) {return r.simWorld.get(); }, py::return_value_policy::reference_internal)
-		.def_property_readonly("entityFactory", [](const EngineRoot& r) {return r.entityFactory.get(); }, py::return_value_policy::reference_internal);
+		.def_property_readonly("entityFactory", [](const EngineRoot& r) {return r.entityFactory.get(); }, py::return_value_policy::reference_internal)
+		.def_property_readonly("scenario", [](const EngineRoot& r) {return &r.scenario; }, py::return_value_policy::reference_internal);
 
 	py::class_<vis::Window>(m, "Window");
 
@@ -285,4 +301,5 @@ PYBIND11_MODULE(skybolt, m) {
 	m.def("cross", &crossFunc);
 	m.def("normalize", &normalizeFunc);
 	m.def("quaternionFromEuler", py::overload_cast<const Vector3&>(&math::quatFromEuler));
+	m.def("captureScreenshot", [](vis::Window& window, const std::string& filename) { return vis::captureScreenshot(window, filename); });
 }
