@@ -34,7 +34,13 @@ class XyzTileSource : public TileSourceWithMinMaxLevel
 public:
 	XyzTileSource(const XyzTileSourceConfig& config);
 
+	//! @return true if images can be loaded from URL
+	bool validate() const;
+
 	osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
+
+private:
+	std::string toUrl(const skybolt::QuadTreeTileKey& key) const;
 
 private:
 	std::string mUrlTemplate;

@@ -23,6 +23,7 @@ MapboxElevationTileSource::MapboxElevationTileSource(const MapboxElevationTileSo
 	xyzConfig.yOrigin = XyzTileSourceConfig::YOrigin::Top;
 	xyzConfig.apiKey = config.apiKey;
 	m_source = std::make_unique<XyzTileSource>(xyzConfig);
+	m_source->validate();
 }
 
 osg::ref_ptr<osg::Image> MapboxElevationTileSource::createImage(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const

@@ -108,7 +108,9 @@ void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)
 		xyzConfig.yOrigin = readOptionalOrDefault(json, "yTileOriginAtBottom", false) ? XyzTileSourceConfig::YOrigin::Bottom : XyzTileSourceConfig::YOrigin::Top;
 		xyzConfig.apiKey = apiKey;
 		xyzConfig.levelRange = readLevelRange(json);
-		return std::make_shared<XyzTileSource>(xyzConfig);
+		auto source = std::make_shared<XyzTileSource>(xyzConfig);
+		source->validate();
+		return source;
 	}));
 
 	registry.addFactory("bing", wrapAll(registry, [keys] (const nlohmann::json& json) {
