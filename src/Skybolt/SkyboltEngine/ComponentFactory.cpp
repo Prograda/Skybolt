@@ -19,7 +19,7 @@
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Components/ControlInputsComponent.h>
-#include <SkyboltSim/Components/DummyDynamicBodyComponent.h>
+#include <SkyboltSim/Components/SimpleDynamicBodyComponent.h>
 #include <SkyboltSim/Components/FuselageComponent.h>
 #include <SkyboltSim/Components/JetTurbineComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
@@ -193,7 +193,13 @@ static sim::ComponentPtr loadNode(Entity* entity, const ComponentFactoryContext&
 
 static sim::ComponentPtr loadDynamicBody(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
-	return std::make_shared<DummyDynamicBodyComponent>();
+	Node* node = entity->getFirstComponentRequired<Node>().get();
+	Real mass = json.at("mass");
+	Vector3 momentOfInertia = readOptionalVector3(json, "momentOfInertia");
+
+	auto component = std::make_shared<SimpleDynamicBodyComponent>(node, mass, momentOfInertia);
+	component->setCenterOfMass(readOptionalVector3(json, "centerOfMass"));
+	return component;
 }
 
 static sim::ComponentPtr loadAttachment(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)

@@ -40,6 +40,7 @@ public:
 	virtual void setMass(Real mass) = 0;
 	virtual Real getMass() const = 0;
 
+	//! relPosition is in body axes
 	virtual void setCenterOfMass(const Vector3& relPosition) = 0;
 
 	//! Apply force at center of mass. Force is in world axes.
