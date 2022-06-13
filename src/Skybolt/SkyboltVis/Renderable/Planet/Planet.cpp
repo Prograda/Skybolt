@@ -331,15 +331,6 @@ static osg::ref_ptr<osg::Texture2D> createNonSrgbTextureWithoutMipmaps(const osg
 	return texture;
 }
 
-static osg::ref_ptr<osg::Texture2D> createSrgbTextureWithClampToEdge(const osg::ref_ptr<osg::Image>& image)
-{
-	osg::ref_ptr<osg::Texture2D> texture = vis::createSrgbTexture(image);
-	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
-	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
-	texture->setMaxAnisotropy(8);
-	return texture;
-}
-
 static OsgTileFactory::TileTextures createSurfaceTileTextures(TileTextureCache& cache, const PlanetTileImages& images)
 {
 	// We create some of these textures with mip-mapping disabled when it's not needed.

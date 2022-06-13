@@ -629,18 +629,18 @@ void MainWindow::update()
 	if (engineRoot->stats.terrainTileLoadQueueSize)
 	{
 		status += "Loading terrain tiles: " + QString::number(engineRoot->stats.terrainTileLoadQueueSize);
-		status = addSeparator(status);
 	}
 
 	if (engineRoot->stats.featureTileLoadQueueSize)
 	{
-		status += "Loading feature tiles: " + QString::number(engineRoot->stats.featureTileLoadQueueSize);
 		status = addSeparator(status);
+		status += "Loading feature tiles: " + QString::number(engineRoot->stats.featureTileLoadQueueSize);
 	}
 
 	uint32_t activeTasks = engineRoot->scheduler->active_threads();
 	if (activeTasks)
 	{
+		status = addSeparator(status);
 		status += "Processing tasks: " + QString::number(activeTasks);
 	}
 	statusBar()->showMessage(status);
