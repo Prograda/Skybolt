@@ -86,7 +86,7 @@ osg::StateSet* createStateSet(osg::ref_ptr<osg::Program> program, const Uniforms
 	osg::TextureBuffer* treeParamsTexture = new osg::TextureBuffer;
 	treeParamsTexture->setImage(treeParamsImage);
 	treeParamsTexture->setInternalFormat(GL_RGBA32F_ARB);
-	ss->setTextureAttributeAndModes(1, treeParamsTexture, osg::StateAttribute::ON);
+	ss->setTextureAttribute(1, treeParamsTexture, osg::StateAttribute::ON);
 
 	ss->addUniform(createUniformSampler2d("albedoSampler", 0));
 	ss->addUniform(createUniformSamplerTbo("treeParamsSampler", 1));

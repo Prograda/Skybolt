@@ -68,7 +68,7 @@ Starfield::Starfield(const StarfieldConfig& config)
 	osg::TextureBuffer* paramsTexture = new osg::TextureBuffer;
 	paramsTexture->setImage(paramsImage);
 	paramsTexture->setInternalFormat(GL_RGBA32F_ARB);
-	ss->setTextureAttributeAndModes(0, paramsTexture, osg::StateAttribute::ON);
+	ss->setTextureAttribute(0, paramsTexture, osg::StateAttribute::ON);
 
 	ss->addUniform(createUniformSamplerTbo("paramsSampler", 0));
 }

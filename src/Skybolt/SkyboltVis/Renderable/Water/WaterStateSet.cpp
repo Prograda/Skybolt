@@ -77,8 +77,8 @@ WaterStateSet::WaterStateSet(const WaterStateSetConfig& config)
 		setTextureAttributeAndModes(i++, config.waveFoamMaskTexture[1], osg::StateAttribute::ON);
 	}
 	setTextureAttributeAndModes(i++, foamTexture, osg::StateAttribute::ON);
-	setTextureAttributeAndModes(i++, wakeHashMapTexture, osg::StateAttribute::ON);
-	setTextureAttributeAndModes(i++, wakeParamsTexture, osg::StateAttribute::ON);
+	setTextureAttribute(i++, wakeHashMapTexture, osg::StateAttribute::ON);
+	setTextureAttribute(i++, wakeParamsTexture, osg::StateAttribute::ON);
 
 	i = 0;
 	addUniform(createArrayOfUniformSampler2d("heightSamplers", i, config.waveTextureCount));
