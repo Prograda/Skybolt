@@ -148,8 +148,8 @@ static osg::ref_ptr<osg::Texture2D> createCloudDepthTexture(int width, int heigh
 	osg::ref_ptr<osg::Texture2D> texture = createRenderTexture(width, height);
 	texture->setResizeNonPowerOfTwoHint(false);
 	texture->setInternalFormat(GL_R32F);
-	texture->setFilter(osg::Texture2D::FilterParameter::MIN_FILTER, osg::Texture2D::FilterMode::NEAREST);
-	texture->setFilter(osg::Texture2D::FilterParameter::MAG_FILTER, osg::Texture2D::FilterMode::NEAREST);
+	texture->setFilter(osg::Texture2D::FilterParameter::MIN_FILTER, osg::Texture2D::FilterMode::LINEAR);
+	texture->setFilter(osg::Texture2D::FilterParameter::MAG_FILTER, osg::Texture2D::FilterMode::LINEAR);
 	texture->setNumMipmapLevels(0);
 	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
 	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
