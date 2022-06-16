@@ -134,7 +134,6 @@ LakesBatch::LakesBatch(const Lakes& lakes, const LakesConfig& config)
 	geode->setStateSet(createStateSet(config.program, mUniforms));
 
 	mTransform->setStateSet(config.waterStateSet);
-	mTransform->setNodeMask(~vis::VisibilityCategory::shadowCaster);
 	mTransform->addChild(geode);
 }
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "SkyboltVis/RenderTarget/RenderOperation.h"
 #include <osg/Camera>
 #include <osg/Group>
 #include <osg/Program>
@@ -20,7 +21,7 @@ struct ShadowMapGeneratorConfig
 	int shadowMapId = 0;
 };
 
-class ShadowMapGenerator
+class ShadowMapGenerator : public RenderOperation
 {
 public:
 	ShadowMapGenerator(const ShadowMapGeneratorConfig& config);
@@ -35,9 +36,16 @@ public:
 	void configureShadowReceiverStateSet(osg::StateSet& ss);
 
 	osg::ref_ptr<osg::Texture2D> getTexture() const { return mTexture; }
-	osg::ref_ptr<osg::Camera> getCamera() const { return mCamera; }
+
+	void setScene(const osg::ref_ptr<osg::Node>& scene);
 
 	osg::Matrix getShadowProjectionMatrix() const;
+
+public: // RenderOperation interface
+	std::vector<osg::ref_ptr<osg::Texture>> getOutputTextures() const override
+	{
+		return { mTexture };
+	}
 
 private:
 	osg::ref_ptr<osg::Texture2D> mTexture;

@@ -47,15 +47,18 @@ ShadowMapGenerator::ShadowMapGenerator(const ShadowMapGeneratorConfig& config)
 	mTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
 
 	mCamera = new osg::Camera;
-	mCamera->setClearColor(osg::Vec4(1.0, 1.0, 1.0, 1.0));
-	mCamera->setClearMask(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	mCamera->setClearDepth(1.0);
+	mCamera->setClearMask(GL_DEPTH_BUFFER_BIT);
 	mCamera->setComputeNearFarMode(osg::Camera::DO_NOT_COMPUTE_NEAR_FAR);
 	mCamera->setViewport(0, 0, mTexture->getTextureWidth(), mTexture->getTextureHeight());
 	mCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 	mCamera->setRenderOrder(osg::Camera::PRE_RENDER);
 	mCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
+	mCamera->detach(osg::Camera::COLOR_BUFFER);
 	mCamera->attach(osg::Camera::DEPTH_BUFFER, mTexture);
 	mCamera->setCullMask(VisibilityCategory::shadowCaster); // Only render shadow casters
+
+	addChild(mCamera);
 
 	setRadiusWorldSpace(mRadiusWorldSpace);
 
@@ -135,6 +138,12 @@ void ShadowMapGenerator::update(const osg::Vec3& shadowCameraPosition, const osg
 void ShadowMapGenerator::configureShadowReceiverStateSet(osg::StateSet& ss)
 {
 	ss.addUniform(mShadowProjectionMatrixUniform);
+}
+
+void ShadowMapGenerator::setScene(const osg::ref_ptr<osg::Node>& scene)
+{
+	mCamera->removeChild(0, mCamera->getNumChildren());
+	mCamera->addChild(scene);
 }
 
 osg::Matrix ShadowMapGenerator::getShadowProjectionMatrix() const

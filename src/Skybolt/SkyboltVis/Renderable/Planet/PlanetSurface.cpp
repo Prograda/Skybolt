@@ -14,6 +14,7 @@
 #include "SkyboltVis/RenderContext.h"
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/Scene.h"
+#include "SkyboltVis/VisibilityCategory.h"
 #include "SkyboltVis/Renderable/Forest/GpuForestTile.h"
 #include "SkyboltVis/Renderable/Forest/PagedForest.h"
 #include "SkyboltVis/Renderable/Planet/Tile/ConcurrentAsyncTileLoader.h"
@@ -65,6 +66,8 @@ PlanetSurface::PlanetSurface(const PlanetSurfaceConfig& config) :
 	mGpuForest(config.gpuForest),
 	mGroup(new osg::Group)
 {
+	mGroup->setNodeMask(vis::VisibilityCategory::defaultCategories);
+
 	auto planetTileSources = config.planetTileSources;
 	assert(planetTileSources.albedo);
 	assert(planetTileSources.elevation);

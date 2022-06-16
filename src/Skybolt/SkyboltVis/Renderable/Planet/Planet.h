@@ -40,6 +40,7 @@ struct PlanetConfig
 	px_sched::Scheduler* scheduler;
 	const ShaderPrograms* programs;
 	Scene* scene;
+	RenderOperationPipelinePtr renderOperationPipeline;
 	BuildingTypesPtr buildingTypes; //!< optional
 	sim::LatLon latLonOrigin;
 	float innerRadius;
@@ -65,8 +66,9 @@ public:
 	Planet(const PlanetConfig& config);
 	~Planet();
 
-	PlanetSurface* getSurface() const { return mPlanetSurface.get(); }
-	PlanetFeatures* getPlanetFeatures() const { return mPlanetFeatures.get(); }
+	PlanetSurface* getSurface() const { return mPlanetSurface.get(); } //!< Never returns null
+
+	PlanetFeatures* getPlanetFeatures() const { return mPlanetFeatures.get(); } //!< May return null
 
 	void setJulianDate(double date)
 	{
@@ -111,12 +113,8 @@ public:
 	void updatePreRender(const RenderContext& context) override;
 
 private:
-	void addTextureGeneratorToSceneGraph(const osg::ref_ptr<GpuTextureGenerator>& generator);
-	void removeTextureGeneratorFromSceneGraph(const osg::ref_ptr<GpuTextureGenerator>& generator);
-
-private:
-	sim::World* mWorld;
 	Scene* mScene;
+	RenderOperationPipelinePtr mRenderOperationPipeline;
 
 	osg::ref_ptr<WaterStateSet> mWaterStateSet;
 	OceanPtr mOcean;
@@ -129,11 +127,11 @@ private:
 
 	std::unique_ptr<PlanetSurface> mPlanetSurface;
 	std::unique_ptr<PlanetSky> mPlanetSky;
-	std::unique_ptr<PlanetFeatures> mPlanetFeatures;
+	std::unique_ptr<PlanetFeatures> mPlanetFeatures; //!< Can be null
 	std::unique_ptr<VolumeClouds> mVolumeClouds;
-	std::unique_ptr<class WaveFoamMaskGenerator> mWaveFoamMaskGenerator[WaterStateSetConfig::waveTextureCount];
 	std::unique_ptr<class CascadedShadowMapGenerator> mShadowMapGenerator;
-	std::unique_ptr<class BruentonAtmosphere> mAtmosphere;
+	osg::ref_ptr<class WaveFoamMaskGenerator> mWaveFoamMaskGenerator[WaterStateSetConfig::waveTextureCount];
+	osg::ref_ptr<class BruentonAtmosphere> mAtmosphere;
 
 	osg::Uniform* mPlanetCenterUniform;
 	osg::Uniform* mPlanetMatrixInvUniform;
@@ -143,7 +141,6 @@ private:
 	osg::ref_ptr<osg::Group> mPlanetGroup;
 	osg::ref_ptr<osg::MatrixTransform> mTransform;
 	osg::ref_ptr<osg::Group> mShadowSceneGroup;
-	osg::ref_ptr<osg::Group> mForestGroup; //!< Null if no forests
 	std::unique_ptr<MyPlanetSurfaceListener> mPlanetSurfaceListener;
 	double mJulianDate = 0;
 	osg::Uniform* mCloudDisplacementMetersUniform;

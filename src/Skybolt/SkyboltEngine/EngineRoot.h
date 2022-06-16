@@ -47,6 +47,7 @@ public:
 	std::unique_ptr<px_sched::Scheduler> scheduler;
 	vis::ShaderPrograms programs;
 	vis::ScenePtr scene;
+	vis::RenderOperationPipelinePtr renderOperationPipeline;
 	file::FileLocator fileLocator;
 	JulianDateProvider julianDateProvider;
 	std::unique_ptr<sim::World> simWorld;

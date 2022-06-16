@@ -6,8 +6,9 @@
 
 
 #include "Model.h"
-#include "SkyboltVis/RenderContext.h"
 #include "SkyboltVis/Camera.h"
+#include "SkyboltVis/RenderContext.h"
+#include "SkyboltVis/VisibilityCategory.h"
 #include <assert.h>
 
 using namespace skybolt::vis;
@@ -17,6 +18,7 @@ Model::Model(const ModelConfig &config) :
 {
 	assert(mNode);
 
+	mTransform->setNodeMask(vis::VisibilityCategory::defaultCategories | vis::VisibilityCategory::shadowCaster);
 	mTransform->addChild(mNode);
 
 	mModelMatrix = new osg::Uniform("modelMatrix", osg::Matrixf());

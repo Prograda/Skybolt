@@ -17,10 +17,10 @@
 namespace skybolt {
 namespace vis {
 
-class Scene : public VisObject
+class Scene
 {
 public:
-	Scene();
+	Scene(const osg::ref_ptr<osg::StateSet>& stateSet);
 	~Scene();
 
 	// @param object can be added to multiple scenes
@@ -43,15 +43,13 @@ public:
 
 	const osg::Vec3& getWrappedNoiseOrigin() const {return mWrappedNoiseOrigin;}
 
-	osg::Group* _getGroup() const {return mGroup;} //!< Node under the root containing the scene objects
+	osg::Group* _getGeometryGroup() const {return mClipNode;}
 
-public: // VisObject interface
 	void updatePreRender(const RenderContext& context);
-	osg::Node* _getNode() const override {return mClipNode;} //!< The root node
 
 private:
 	std::vector<VisObject*> mObjects;
-	osg::ref_ptr<osg::Group> mGroup;
+	osg::ref_ptr<osg::Group> mGeometryGroup;
 	osg::ref_ptr<osg::ClipNode> mClipNode;
 	Light* mPrimaryLight;
 	Planet* mPrimaryPlanet;

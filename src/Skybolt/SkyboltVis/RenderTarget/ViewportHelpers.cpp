@@ -11,6 +11,9 @@
 #include "SkyboltVis/Rect.h"
 #include "SkyboltVis/RenderContext.h"
 #include "SkyboltVis/Renderable/ScreenQuad.h"
+#include "SkyboltVis/RenderTarget/RenderOperationOrder.h"
+#include "SkyboltVis/RenderTarget/RenderOperationPipelineVisualizer.h"
+#include "SkyboltVis/Shader/ShaderProgramRegistry.h"
 #include "SkyboltVis/Window/Window.h"
 
 #include <osg/Camera>
@@ -45,7 +48,7 @@ private:
 	std::shared_ptr<ScreenQuad> mQuad;
 };
 
-osg::ref_ptr<RenderTarget> createAndAddViewportToWindow(Window& window, const osg::ref_ptr<osg::Program>& compositorProgram)
+osg::ref_ptr<RenderTarget> createAndAddViewportToWindow(Window& window, const RenderOperationPipelinePtr& rop, const osg::ref_ptr<osg::Program>& compositorProgram)
 {
 	osg::ref_ptr<Viewport> viewport = new Viewport();
 	viewport->setScene(std::make_shared<ScreenQuadRenderTarget>(createFullscreenQuad(compositorProgram)));
@@ -62,9 +65,35 @@ osg::ref_ptr<RenderTarget> createAndAddViewportToWindow(Window& window, const os
 	config.multisampleSampleCount = osg::DisplaySettings::instance()->getNumMultiSamples();
 
 	osg::ref_ptr<RenderTexture> texture = new RenderTexture(config);
-	window.addRenderTarget(texture, RectF(0, 0, 1, 1));
-	window.addRenderTarget(viewport, RectF(0, 0, 1, 1));
+	texture->setRect(createWindowRectIProvider(&window));
+	viewport->setRect(createWindowRectIProvider(&window));
+
+	rop->addOperation(texture, (int)RenderOperationOrder::MainPass);
+	rop->addOperation(viewport, (int)RenderOperationOrder::FinalComposite);
+	window.setRenderOperationPipeline(rop);
+
 	return texture;
+}
+
+void addPipelineVisualization(const RenderOperationPipelinePtr& rop, const ShaderPrograms& registry)
+{
+	rop->addOperation(new RenderOperationPipelineVisualizer(rop.get(), registry.getRequiredProgram("hudGeometry")), (int)RenderOperationOrder::Hud);
+}
+
+RectIProvider createWindowRectIProvider(const Window* window)
+{
+	return [window] {
+		return RectI(0, 0, window->getWidth(), window->getHeight());
+	};
+}
+
+RectIProvider createWindowRegionRectIProvider(const Window* window, const RectF& rect)
+{
+	return [window, rect] {
+		int w = window->getWidth();
+		int h = window->getHeight();
+		return RectI(rect.x * w, rect.y * h, rect.width * w, rect.height * h);
+	};
 }
 
 } // namespace vis

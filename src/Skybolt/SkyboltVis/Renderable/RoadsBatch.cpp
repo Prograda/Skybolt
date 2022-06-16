@@ -243,7 +243,6 @@ RoadsBatch::RoadsBatch(const Roads& roads, const osg::ref_ptr<osg::Program>& pro
 	}
 
 	geode->setStateSet(stateSet);
-	mTransform->setNodeMask(~vis::VisibilityCategory::shadowCaster);
 	mTransform->addChild(geode);
 }
 
@@ -315,7 +314,6 @@ RoadsBatch::RoadsBatch(const PolyRegions& regions, const osg::ref_ptr<osg::Progr
 	}
 
 	geode->setStateSet(stateSet);
-	mTransform->setNodeMask(~vis::VisibilityCategory::shadowCaster);
 	mTransform->addChild(geode);
 }
 

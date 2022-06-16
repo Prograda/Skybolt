@@ -13,6 +13,7 @@
 #include <SkyboltVis/TextureCache.h>
 #include <SkyboltVis/Renderable/Model/ModelFactory.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
+#include <SkyboltVis/RenderTarget/RenderOperationPipeline.h>
 #include <SkyboltCommon/File/FileUtility.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
@@ -104,6 +105,7 @@ static int determineThreadCountFromHardwareAndUserLimits()
 EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	mPluginFactories(config.pluginFactories),
 	scheduler(new px_sched::Scheduler),
+	renderOperationPipeline(std::make_shared<vis::RenderOperationPipeline>()),
 	fileLocator(locateFile),
 	simWorld(std::make_unique<sim::World>()),
 	namedObjectRegistry(std::make_shared<sim::NamedObjectRegistry>())
@@ -155,7 +157,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	}
 
 	programs = vis::createShaderPrograms();
-	scene.reset(new vis::Scene);
+	scene.reset(new vis::Scene(renderOperationPipeline->getRootNode()->getOrCreateStateSet()));
 
 	Scenario* scenarioPtr = &scenario;
 	julianDateProvider = [=]() {
@@ -183,6 +185,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	context.stats = &stats;
 	context.visFactoryRegistry = visFactoryRegistry;
 	context.tileSourceFactoryRegistry = tileSourceFactoryRegistry;
+	context.renderOperationPipeline = renderOperationPipeline;
 	context.modelFactory = createModelFactory(programs);
 	context.fileLocator = locateFile;
 	context.assetPackagePaths = mAssetPackagePaths;

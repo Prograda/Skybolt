@@ -11,10 +11,12 @@
 #include "SkyboltVis/RenderContext.h"
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/Light.h"
+#include "SkyboltVis/MatrixHelpers.h"
+#include "SkyboltVis/OsgStateSetHelpers.h"
 #include "SkyboltVis/Scene.h"
+#include "SkyboltVis/VisibilityCategory.h"
 #include "SkyboltVis/RenderTarget/RenderTexture.h"
 #include "SkyboltVis/Shader/ShaderProgramRegistry.h"
-#include "SkyboltVis/Window/Window.h"
 #include "SkyboltVis/TextureGenerator/GpuTextureGenerator.h"
 #include "SkyboltVis/TextureGenerator/GpuTextureGeneratorStateSets.h"
 #include "SkyboltVis/Renderable/Atmosphere/Bruneton/BruentonAtmosphere.h"
@@ -29,9 +31,10 @@
 #include "SkyboltVis/Renderable/Water/ReflectionCameraController.h"
 #include "SkyboltVis/Renderable/Water/Ocean.h"
 #include "SkyboltVis/Renderable/Water/WaveHeightTextureGenerator.h"
+#include "SkyboltVis/RenderTarget/RenderOperationOrder.h"
 #include "SkyboltVis/Shadow/CascadedShadowMapGenerator.h"
-#include "SkyboltVis/MatrixHelpers.h"
-#include "SkyboltVis/OsgStateSetHelpers.h"
+#include "SkyboltVis/Shadow/ShadowMapGenerator.h"
+#include "SkyboltVis/RenderTarget/RenderOperationPipeline.h"
 
 #include <SkyboltSim/Physics/Astronomy.h>
 
@@ -70,15 +73,6 @@ static osg::ref_ptr<osg::Texture2D> createReflectionTexture(int textureWidth, in
 	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
 
 	return texture;
-}
-
-static osg::StateSet* createTexturedQuadStateSet(osg::ref_ptr<osg::Program> program, osg::ref_ptr<osg::Texture> texture)
-{
-	osg::StateSet* stateSet = new osg::StateSet();
-	stateSet->setAttributeAndModes(program, osg::StateAttribute::ON);
-	stateSet->setTextureAttributeAndModes(0, texture, osg::StateAttribute::ON);
-	stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
-	return stateSet;
 }
 
 static osg::StateSet* createSkyToEnvironmentMapStateSet(osg::ref_ptr<osg::Program> program)
@@ -236,14 +230,13 @@ struct WaveFoamMaskGeneratorConfig
 	osg::ref_ptr<osg::Texture2D> waveVectorDisplacementTexture;
 	osg::Vec2f textureWorldSize;
 	osg::Vec2i textureSizePixels;
-	osg::Group* parent;
 };
 
 //! Generates a foam mask texture from a wave vector displacement texture.
 //! There are two output buffers which are ping-ponged so that the output from the previous
 //! frame can be used as an input to the next. In this way, the foam can be made to fade out
 //! slowly over time.
-class WaveFoamMaskGenerator
+class WaveFoamMaskGenerator : public RenderOperation
 {
 public:
 	WaveFoamMaskGenerator(const WaveFoamMaskGeneratorConfig& config) :
@@ -265,7 +258,7 @@ public:
 			mSwitch->addChild(mGenerator[i], i == 0);
 		}
 
-		config.parent->addChild(mSwitch);
+		addChild(mSwitch);
 
 		mFoamMaskSubtractionAmountUniform = new osg::Uniform("foamMaskSubtractionAmount", 0.0f);
 		mSwitch->getOrCreateStateSet()->addUniform(mFoamMaskSubtractionAmountUniform);
@@ -300,12 +293,17 @@ public:
 		}
 		mFoamMaskSubtractionAmountUniform->set(amount);
 
-		mGenerator[mIndex]->requestRender();
+		mGenerator[mIndex]->requestRegenerate();
 	}
 
 	osg::ref_ptr<osg::Texture2D> getOutputTexture() const
 	{
 		return mOutputTexture[mIndex];
+	}
+
+	std::vector<osg::ref_ptr<osg::Texture>> getOutputTextures() const override
+	{
+		return { mOutputTexture[0], mOutputTexture[1] };
 	}
 
 private:
@@ -380,20 +378,23 @@ static std::function<GpuForestTileTextures(const TileImages&)> createGpuForestTi
 
 Planet::Planet(const PlanetConfig& config) :
 	mScene(config.scene),
+	mRenderOperationPipeline(config.renderOperationPipeline),
 	mInnerRadius(config.innerRadius),
 	mPlanetGroup(new osg::Group),
 	mTransform(new osg::MatrixTransform),
 	mShadowSceneGroup(new osg::Group),
 	mPlanetSurfaceListener(new MyPlanetSurfaceListener(this))
 {
+	assert(mRenderOperationPipeline);
+
 	mPlanetGroup->addChild(mTransform);
 
 	if (config.atmosphereConfig)
 	{
 		mAtmosphereScaleHeight = config.atmosphereConfig->rayleighScaleHeight;
 
-		mAtmosphere = std::make_unique<BruentonAtmosphere>(*config.atmosphereConfig);
-		mScene->addObject(mAtmosphere.get());
+		mAtmosphere = osg::ref_ptr<BruentonAtmosphere>(new BruentonAtmosphere(*config.atmosphereConfig));
+		mRenderOperationPipeline->addOperation(mAtmosphere, (int)RenderOperationOrder::PrecomputeAtmosphere);
 
 		mTransform->getOrCreateStateSet()->setDefine("ENABLE_ATMOSPHERE");
 
@@ -406,7 +407,7 @@ Planet::Planet(const PlanetConfig& config) :
 
 	// Global uniforms, to be shared for everything in scene
 	{
-		osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
+		osg::StateSet* ss = mRenderOperationPipeline->getRootNode()->getOrCreateStateSet();
 		mPlanetCenterUniform = new osg::Uniform("planetCenter", osg::Vec3f(0, 0, 0));
 		ss->addUniform(mPlanetCenterUniform);
 
@@ -427,10 +428,10 @@ Planet::Planet(const PlanetConfig& config) :
 	// Create sky environment sphere
 	osg::ref_ptr<osg::Texture2D> environmentTexture = createEnvironmentTexture(128, 128);
 	mEnvironmentMapGpuTextureGenerator = new GpuTextureGenerator(environmentTexture, createSkyToEnvironmentMapStateSet(config.programs->getRequiredProgram("skyToEnvironmentMap")), /* generateMipMaps */ true);
-	addTextureGeneratorToSceneGraph(mEnvironmentMapGpuTextureGenerator);
+	mRenderOperationPipeline->addOperation(mEnvironmentMapGpuTextureGenerator, (int)RenderOperationOrder::EnvironmentMap);
 
 	{
-		osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
+		osg::StateSet* ss = mRenderOperationPipeline->getRootNode()->getOrCreateStateSet();
 		ss->setTextureAttributeAndModes((int)GlobalSamplerUnit::EnvironmentProbe, environmentTexture, osg::StateAttribute::ON);
 		ss->addUniform(createUniformSampler2d("environmentSampler", (int)GlobalSamplerUnit::EnvironmentProbe));
 	}
@@ -452,18 +453,18 @@ Planet::Planet(const PlanetConfig& config) :
 		GpuForestPtr forest;
 		if (config.forestParams)
 		{
-			mForestGroup = new osg::Group();
+			osg::ref_ptr<osg::Group> forestGroup = new osg::Group();
 
 			vis::GpuForestConfig forestConfig;
 			forestConfig.forestParams = *config.forestParams;
-			forestConfig.parentGroup = mForestGroup;
+			forestConfig.parentGroup = forestGroup;
 			forestConfig.parentTransform = mTransform;
 			forestConfig.planetRadius = mInnerRadius;
 			forestConfig.tileTexturesProvider = createGpuForestTileTexturesProvider(textureCache);
 			forestConfig.programs = config.programs;
 			forest = std::make_shared<vis::GpuForest>(forestConfig);
 
-			mPlanetGroup->addChild(mForestGroup);
+			mPlanetGroup->addChild(forestGroup);
 		}
 
 		PlanetSurfaceConfig surfaceConfig;
@@ -508,26 +509,17 @@ Planet::Planet(const PlanetConfig& config) :
 				stateSetConfig.waveNormalTexture[i] = createNormalTexture(width, height);
 				osg::ref_ptr<GpuTextureGenerator> generator = new GpuTextureGenerator(stateSetConfig.waveNormalTexture[i], createVectorDisplacementToNormalMapStateSet(config.programs->getRequiredProgram("vectorDisplacementToNormal"), stateSetConfig.waveHeightTexture[i], textureWorldSize), generateMipMaps);
 				mWaterSurfaceGpuTextureGenerators.push_back(generator);
-				addTextureGeneratorToSceneGraph(generator);
+				mRenderOperationPipeline->addOperation(generator, (int)RenderOperationOrder::WaterNormalMap);
 
 				WaveFoamMaskGeneratorConfig generatorConfig;
 				generatorConfig.program = config.programs->getRequiredProgram("waveFoamMaskGenerator");
 				generatorConfig.textureSizePixels = osg::Vec2i(width, height);
 				generatorConfig.textureWorldSize = textureWorldSize;
 				generatorConfig.waveVectorDisplacementTexture = stateSetConfig.waveHeightTexture[i];
-				generatorConfig.parent = mScene->_getGroup();
-				mWaveFoamMaskGenerator[i].reset(new WaveFoamMaskGenerator(generatorConfig));
+				mWaveFoamMaskGenerator[i] = new WaveFoamMaskGenerator(generatorConfig);
 				stateSetConfig.waveFoamMaskTexture[i] = mWaveFoamMaskGenerator[i]->getOutputTexture();
 
-
-//#define OCEAN_TEXTURE_DEBUG_VIS
-#ifdef OCEAN_TEXTURE_DEBUG_VIS
-				osg::Vec2f pos(0.2 + 0.4*i, 0.7);
-				osg::Vec2f size(0.3, 0.3);
-				BoundingBox2f box(pos, pos + size);
-				ScreenQuad* quad = new ScreenQuad(createTexturedQuadStateSet(config.programs->getRequiredProgram("hudGeometry"), stateSetConfig.waveHeightTexture[i]), box);
-				mScene->addObject(quad);
-#endif
+				mRenderOperationPipeline->addOperation(mWaveFoamMaskGenerator[i], (int)RenderOperationOrder::WaterFoamMap);
 			}
 
 			mWaterStateSet = new WaterStateSet(stateSetConfig);
@@ -539,24 +531,6 @@ Planet::Planet(const PlanetConfig& config) :
 			oceanConfig.oceanProgram = config.programs->getRequiredProgram("ocean");
 			oceanConfig.waterStateSet = mWaterStateSet;
 
-//#define ENVIRONMENT_MAP_TEXTURE_DEBUG_VIZ
-#ifdef ENVIRONMENT_MAP_TEXTURE_DEBUG_VIZ
-			osg::Vec2f pos(0.2, 0.7);
-			osg::Vec2f size(0.3, 0.3);
-			BoundingBox2f box(pos, pos + size);
-			ScreenQuad* quad = new ScreenQuad(createTexturedQuadStateSet(config.programs->getRequiredProgram("hudGeometry"), environmentTexture), box);
-			mScene->addObject(quad); // TODO: we should add these debug textures to the hud group instead of the scene so they're rendered after tonemapping
-#endif
-
-//#define ATMOSPHERIC_SCATTERING_DEBUG_VIZ
-#ifdef ATMOSPHERIC_SCATTERING_DEBUG_VIZ
-			osg::Vec2f pos(0.2, 0.7);
-			osg::Vec2f size(0.3, 0.3);
-			BoundingBox2f box(pos, pos + size);
-			ScreenQuad* quad = new ScreenQuad(createTexturedQuadStateSet(config.programs->getRequiredProgram("hudGeometry"), mAtmosphere->getTransmittanceTexture()), box);
-			mScene->addObject(quad);
-#endif
-
 			mOcean.reset(new Ocean(oceanConfig));
 			mOcean->setPosition(osg::Vec3f(0, 0, 0));
 			mScene->addObject(mOcean.get());
@@ -564,6 +538,7 @@ Planet::Planet(const PlanetConfig& config) :
 	}
 
 	osg::ref_ptr<osg::Group> nonBuildingFeaturesGroup = new osg::Group();
+	nonBuildingFeaturesGroup->setNodeMask(vis::VisibilityCategory::defaultCategories);
 	mTransform->addChild(nonBuildingFeaturesGroup);
 
 	osg::ref_ptr<osg::Group> buildingsGroup = new osg::Group();
@@ -613,7 +588,7 @@ Planet::Planet(const PlanetConfig& config) :
 		setCloudsVisible(true);
 		setCloudCoverageFraction(std::nullopt);
 
-		osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
+		osg::StateSet* ss = mRenderOperationPipeline->getRootNode()->getOrCreateStateSet();
 		ss->setTextureAttributeAndModes((int)GlobalSamplerUnit::GlobalCloudAlpha, config.cloudsTexture);
 		ss->addUniform(createUniformSampler2d("cloudSampler", (int)GlobalSamplerUnit::GlobalCloudAlpha));
 
@@ -624,15 +599,6 @@ Planet::Planet(const PlanetConfig& config) :
 			ss->setTextureAttributeAndModes((int)GlobalSamplerUnit::CloudDetail2d, texture);
 			ss->addUniform(createUniformSampler2d("coverageDetailSampler2", (int)GlobalSamplerUnit::CloudDetail2d));
 		}
-
-//#define CLOUDS_TEXTURE
-#ifdef CLOUDS_TEXTURE
-		osg::Vec2f pos(0.2, 0.7);
-		osg::Vec2f size(0.3, 0.3);
-		BoundingBox2f box(pos, pos + size);
-		ScreenQuad* quad = new ScreenQuad(createTexturedQuadStateSet(config.programs->hudGeometry, mVolumeClouds->getColorTexture()), box);
-		mScene->addObject(quad);
-#endif
 	}
 
 	// Shadows
@@ -644,29 +610,20 @@ Planet::Planet(const PlanetConfig& config) :
 		mShadowMapGenerator = std::make_unique<CascadedShadowMapGenerator>(c);
 
 		{
-			osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
+			osg::StateSet* ss = mRenderOperationPipeline->getRootNode()->getOrCreateStateSet();
 			ss->setDefine("ENABLE_SHADOWS");
 		}
 
 		mShadowSceneGroup->getOrCreateStateSet()->setDefine("CAST_SHADOWS");
 
-		mShadowSceneGroup->addChild(mScene->_getGroup());
-		for (int i = 0; i < mShadowMapGenerator->getCascadeCount(); ++i)
+		mShadowSceneGroup->addChild(mScene->_getGeometryGroup());
+		for (const auto& generator : mShadowMapGenerator->getGenerators())
 		{
-			mShadowMapGenerator->getCamera(i)->addChild(mShadowSceneGroup);
-			mScene->_getGroup()->getParent(0)->addChild(mShadowMapGenerator->getCamera(i));
+			generator->setScene(mShadowSceneGroup);
+			mRenderOperationPipeline->addOperation(generator, (int)RenderOperationOrder::ShadowMap);
 		}
 
-		if (false) // debug shadows
-		{
-			osg::Vec2f pos(0.2, 0.7);
-			osg::Vec2f size(0.3, 0.3);
-			BoundingBox2f box(pos, pos + size);
-			ScreenQuad* quad = new ScreenQuad(createTexturedQuadStateSet(config.programs->getRequiredProgram("hudGeometry"), mShadowMapGenerator->getTextures()[0]), box);
-			mScene->addObject(quad);
-		}
-
-		osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
+		osg::StateSet* ss = mScene->_getGeometryGroup()->getOrCreateStateSet();
 		mShadowMapGenerator->configureShadowReceiverStateSet(*ss);
 		addShadowMapsToStateSet(mShadowMapGenerator->getTextures(), *ss, int(GlobalSamplerUnit::ShadowCascade0));
 	}
@@ -676,16 +633,22 @@ Planet::~Planet()
 {
 	if (mShadowMapGenerator)
 	{
-		for (int i = 0; i < mShadowMapGenerator->getCascadeCount(); ++i)
+		for (const auto& generator : mShadowMapGenerator->getGenerators())
 		{
-			mScene->_getGroup()->removeChild(mShadowMapGenerator->getCamera(i));
+			mRenderOperationPipeline->removeOperation(generator);
 		}
 	}
 
-	removeTextureGeneratorFromSceneGraph(mEnvironmentMapGpuTextureGenerator);
+	mRenderOperationPipeline->removeOperation(mEnvironmentMapGpuTextureGenerator);
+
 	for (const auto& generator : mWaterSurfaceGpuTextureGenerators)
 	{
-		removeTextureGeneratorFromSceneGraph(generator);
+		mRenderOperationPipeline->removeOperation(generator);
+	}
+
+	for (const auto& generator : mWaveFoamMaskGenerator)
+	{
+		mRenderOperationPipeline->removeOperation(generator);
 	}
 
 	if (mOcean)
@@ -695,17 +658,12 @@ Planet::~Planet()
 
 	if (mAtmosphere)
 	{
-		mScene->removeObject(mAtmosphere.get());
+		mRenderOperationPipeline->removeOperation(mAtmosphere);
 	}
 
 	if (mPlanetSky)
 	{
 		mScene->removeObject(mPlanetSky.get());
-	}
-
-	if (mForestGroup)
-	{
-		mScene->_getGroup()->removeChild(mForestGroup);
 	}
 
 	setCloudsVisible(false);
@@ -718,7 +676,7 @@ void Planet::setCloudsVisible(bool visible)
 {
 	if (mVolumeClouds)
 	{
-		osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
+		osg::StateSet* ss = mRenderOperationPipeline->getRootNode()->getOrCreateStateSet();
 		if (visible && !mCloudsVisible)
 		{
 			mScene->addObject(mVolumeClouds.get());
@@ -736,7 +694,7 @@ void Planet::setCloudsVisible(bool visible)
 void Planet::setCloudCoverageFraction(std::optional<float> cloudCoverageFraction)
 {
 	mCloudCoverageFraction = cloudCoverageFraction;
-	osg::StateSet* ss = mScene->_getGroup()->getOrCreateStateSet();
+	osg::StateSet* ss = mRenderOperationPipeline->getRootNode()->getOrCreateStateSet();
 	if (cloudCoverageFraction)
 	{
 		mCloudCoverageFractionUniform->set(*cloudCoverageFraction);
@@ -778,16 +736,6 @@ void Planet::setOrientation(const osg::Quat &orientation)
 osg::Node* Planet::_getNode() const
 {
 	return mPlanetGroup.get();
-}
-
-void Planet::addTextureGeneratorToSceneGraph(const osg::ref_ptr<GpuTextureGenerator>& generator)
-{
-	mScene->_getGroup()->addChild(generator);
-}
-
-void Planet::removeTextureGeneratorFromSceneGraph(const osg::ref_ptr<GpuTextureGenerator>& generator)
-{
-	generator->getParent(0)->removeChild(generator);
 }
 
 static osg::Quat getOrientationFromAzEl(const AzEl& azEl)
@@ -834,7 +782,7 @@ void Planet::updatePreRender(const RenderContext& context)
 	if (mPlanetFeatures)
 		mPlanetFeatures->updatePreRender(context);
 
-	mEnvironmentMapGpuTextureGenerator->requestRender();
+	mEnvironmentMapGpuTextureGenerator->requestRegenerate();
 
 	double julianDateSeconds = mJulianDate * 24.0 * 60.0 * 60.0;
 	// Move clouds
@@ -856,7 +804,7 @@ void Planet::updatePreRender(const RenderContext& context)
 			{
 				for (const auto& generator : mWaterSurfaceGpuTextureGenerators)
 				{
-					generator->requestRender();
+					generator->requestRegenerate();
 				}
 
 				for (int i = 0; i < CascadedWaveHeightTextureGenerator::numCascades; ++i)

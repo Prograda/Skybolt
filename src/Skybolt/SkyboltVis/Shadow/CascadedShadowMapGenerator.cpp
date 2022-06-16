@@ -55,9 +55,9 @@ CascadedShadowMapGenerator::CascadedShadowMapGenerator(const CascadedShadowMapGe
 		ShadowMapGeneratorConfig c;
 		c.textureSize = config.textureSize;
 		c.shadowMapId = i;
-		mShadowMapGenerators.push_back(std::make_shared<ShadowMapGenerator>(c));
-		mTextures.push_back(mShadowMapGenerators[i]->getTexture());
-
+		osg::ref_ptr<ShadowMapGenerator> generator = new ShadowMapGenerator(c);
+		mTextures.push_back(generator->getTexture());
+		mShadowMapGenerators.push_back(generator);
 	}
 
 	mCascadeTexelDepthSizesUniform = osg::ref_ptr<osg::Uniform>(new osg::Uniform("cascadeTexelDepthSizes", osg::Vec4f(0,0,0,0)));
@@ -102,6 +102,14 @@ void CascadedShadowMapGenerator::update(const vis::Camera& viewCamera, const osg
 		cascadeTexelSizes[i] = 2.0f * generator->getRadiusWorldSpace() / (generator->getTexture()->getTextureWidth() * generator->getDepthRangeWorldSpace());
 	}
 	mCascadeTexelDepthSizesUniform->set(cascadeTexelSizes);
+}
+
+void CascadedShadowMapGenerator::setScene(const osg::ref_ptr<osg::Node>& scene)
+{
+	for (const auto& generator : mShadowMapGenerators)
+	{
+		generator->setScene(scene);
+	}
 }
 
 osg::Vec4 CascadedShadowMapGenerator::calculateCascadeToCascadeTransform(const osg::Matrix m0, const osg::Matrix m1)
@@ -162,11 +170,6 @@ void CascadedShadowMapGenerator::configureShadowReceiverStateSet(osg::StateSet& 
 	ss.addUniform(mCascadeShadowMatrixModifierUniform);
 	ss.addUniform(mCascadeTexelDepthSizesUniform);
 	ss.addUniform(mMaxShadowViewDistance);
-}
-
-osg::ref_ptr<osg::Camera> CascadedShadowMapGenerator::getCamera(int cascadeIndex) const
-{
-	return mShadowMapGenerators[cascadeIndex]->getCamera();
 }
 
 } // namespace vis

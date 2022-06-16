@@ -9,6 +9,7 @@
 
 #include "DisplaySettings.h"
 #include "Window.h"
+#include "SkyboltVis/Rect.h"
 
 namespace skybolt {
 namespace vis {

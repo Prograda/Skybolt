@@ -174,7 +174,7 @@ Mouse: Pan camera
 		auto entityInputSystem = std::make_shared<EntityInputSystem>(axes);
 		engineRoot->systemRegistry->push_back(entityInputSystem);
 
-		osg::ref_ptr<osg::Camera> overlayCamera = window->getRenderTargets()[1].target->getOsgCamera();
+		osg::ref_ptr<osg::Camera> overlayCamera = getFinalRenderTarget(*window)->getOsgCamera();
 		auto hudSystem = std::make_shared<HudSystem>(overlayCamera, [&] { return getVisCamera(*simCamera)->getFovY(); });
 		engineRoot->systemRegistry->push_back(hudSystem);
 
@@ -189,7 +189,7 @@ Mouse: Pan camera
 		auto helpDisplayToggleEventListener = std::make_shared<HelpDisplayToggleEventListener>(helpDisplaySystem);
 		inputPlatform->getEventEmitter()->addEventListener<KeyEvent>(helpDisplayToggleEventListener.get());
 
-//#define SHOW_STATS
+#define SHOW_STATS
 #ifdef SHOW_STATS
 		engineRoot->systemRegistry->push_back(std::make_shared<StatsDisplaySystem>(*window));
 #endif

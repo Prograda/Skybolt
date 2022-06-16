@@ -42,6 +42,11 @@ public:
 public: // RenderTarget interface
 	void updatePreRender() override;
 
+	std::vector<osg::ref_ptr<osg::Texture>> getOutputTextures() const override
+	{
+		return { mTexture };
+	}
+
 private:
 	osg::ref_ptr<osg::Texture> mTexture;
 	TextureFactory mColorTextureFactory;

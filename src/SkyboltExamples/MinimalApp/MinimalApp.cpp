@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 		std::unique_ptr<vis::StandaloneWindow> window = createWindow();
 		osg::ref_ptr<vis::RenderTarget> viewport = createAndAddViewportToWindowWithEngine(*window, *engineRoot);
 		viewport->setCamera(getVisCamera(*simCamera));
-
+		addPipelineVisualization(engineRoot->renderOperationPipeline, engineRoot->programs);
 		// Create input
 		auto inputPlatform = std::make_shared<InputPlatformOsg>(window->getViewerPtr());
 		std::vector<LogicalAxisPtr> axes = CameraInputSystem::createDefaultAxes(*inputPlatform);

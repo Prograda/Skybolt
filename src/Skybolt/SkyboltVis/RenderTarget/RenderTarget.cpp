@@ -12,40 +12,21 @@
 namespace skybolt {
 namespace vis {
 
-class RenderTargetNodeCallback : public osg::NodeCallback
-{
-public:
-	RenderTargetNodeCallback(RenderTarget* target) : target(target) {}
-	void operator()(osg::Node* node, osg::NodeVisitor* nv)
-	{
-		target->updatePreRender();
-	}
-
-private:
-	RenderTarget* target;
-};
-
 RenderTarget::RenderTarget(const osg::ref_ptr<osg::Camera>& osgCamera) :
 	mOsgCamera(osgCamera),
 	mViewport(new osg::Viewport)
 {
 	assert(mOsgCamera);
-	setUpdateCallback(new RenderTargetNodeCallback(this));
+	mOsgCamera->setViewport(mViewport);
+	mRect = FixedRectIProvider(RectI(0, 0, mViewport->width(), mViewport->height()));
 
 	mFarClipDistanceUniform = new osg::Uniform("farClipDistance", 1e5f);
 	mOsgCamera->getOrCreateStateSet()->addUniform(mFarClipDistanceUniform);
 }
 
-void RenderTarget::setRect(const RectI& rect)
+void RenderTarget::setRect(const RectIProvider& rect)
 {
-	osg::StateSet* ss = mOsgCamera->getOrCreateStateSet();
-	mRcpWindowSizeInPixelsUniform = new osg::Uniform("rcpWindowSizeInPixels", osg::Vec2f(0, 0));
-	ss->addUniform(mRcpWindowSizeInPixelsUniform);
-
-	mRcpWindowSizeInPixelsUniform->set(osg::Vec2f(1.0f / rect.width, 1.0f / rect.height));
-
-	mViewport->setViewport(rect.x, rect.y, rect.width, rect.height);
-	mOsgCamera->setViewport(mViewport);
+	mRect = rect;
 }
 
 void RenderTarget::setCamera(const CameraPtr& camera)
@@ -70,6 +51,14 @@ void RenderTarget::setScene(const std::shared_ptr<Scene>& scene)
 
 void RenderTarget::updatePreRender()
 {
+	RectI rect = mRect();
+
+	osg::StateSet* ss = mOsgCamera->getOrCreateStateSet();
+	mRcpWindowSizeInPixelsUniform = new osg::Uniform("rcpWindowSizeInPixels", osg::Vec2f(1.0f / rect.width, 1.0f / rect.height));
+	ss->addUniform(mRcpWindowSizeInPixelsUniform);
+
+	mViewport->setViewport(rect.x, rect.y, rect.width, rect.height);
+
 	if (mCamera && mScene)
 	{
 		mCamera->setAspectRatio((float)mViewport->width() / (float)mViewport->height());

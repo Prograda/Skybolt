@@ -28,7 +28,6 @@ RenderTexture::RenderTexture(const RenderTextureConfig& config) :
 	mOsgCamera->setClearColor(osg::Vec4(0, 0, 0, 0));
 
 	mOsgCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	mOsgCamera->setViewport(0, 0, 400, 300);
 	mOsgCamera->setRenderOrder(osg::Camera::PRE_RENDER);
 	mOsgCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
 
@@ -41,6 +40,8 @@ RenderTexture::~RenderTexture()
 
 void RenderTexture::updatePreRender()
 {
+	RenderTarget::updatePreRender();
+
 	int width = mOsgCamera->getViewport()->width();
 	int height = mOsgCamera->getViewport()->height();
 
@@ -58,10 +59,7 @@ void RenderTexture::updatePreRender()
 			mOsgCamera->attach(osg::Camera::DEPTH_BUFFER, texture);
 			depthTextureCreated(texture);
 		}
-		mOsgCamera->setViewport(0, 0, width, height);
 	}
-
-	RenderTarget::updatePreRender();
 }
 
 TextureFactory createTextureFactory(GLint internalFormat)

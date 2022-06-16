@@ -20,5 +20,4 @@ Viewport::Viewport() :
 	mOsgCamera->setClearColor(osg::Vec4(0, 0, 0, 0));
 
 	addChild(mOsgCamera);
-	setRect(RectI(0, 0, 600, 400));
 }

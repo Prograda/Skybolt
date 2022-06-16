@@ -28,6 +28,7 @@ public:
 };
 
 GpuTextureGenerator::GpuTextureGenerator(const osg::ref_ptr<osg::Texture2D>& texture, const osg::ref_ptr<osg::StateSet>& stateSet, bool generateMipMaps) :
+	mTexture(texture),
 	mActive(true)
 {
 	mCamera = new osg::Camera;
@@ -58,7 +59,7 @@ GpuTextureGenerator::~GpuTextureGenerator()
 	removeChild(mCamera);
 }
 
-void GpuTextureGenerator::requestRender()
+void GpuTextureGenerator::requestRegenerate()
 {
 	if (!mActive)
 	{

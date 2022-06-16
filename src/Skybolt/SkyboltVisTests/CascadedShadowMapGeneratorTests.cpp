@@ -8,6 +8,7 @@
 #include <catch2/catch.hpp>
 #include <SkyboltCommon/NumericComparison.h>
 #include <SkyboltVis/Shadow/CascadedShadowMapGenerator.h>
+#include <SkyboltVis/Shadow/ShadowMapGenerator.h>
 
 using namespace skybolt::vis;
 using namespace osg;

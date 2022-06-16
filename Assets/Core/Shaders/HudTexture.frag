@@ -5,14 +5,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #version 330 core
-#include "ToneMapping.h"
 
 in vec3 texCoord;
+
 uniform sampler2D tex;
 
 out vec4 color;
 
 void main()
 {
-	color = texture2D(tex, texCoord.xy);
+	color = texture(tex, texCoord.xy);
 }

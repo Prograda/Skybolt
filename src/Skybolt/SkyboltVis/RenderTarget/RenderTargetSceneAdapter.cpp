@@ -22,7 +22,7 @@ void RenderTargetSceneAdapter::updatePreRender(const Camera& camera)
 
 osg::ref_ptr<osg::Node> RenderTargetSceneAdapter::getNode()
 {
-	return m_scene->_getNode();
+	return m_scene->_getGeometryGroup();
 }
 
 } // namespace vis

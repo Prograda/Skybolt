@@ -334,8 +334,10 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	mSimStepper = std::make_unique<SimStepper>(mEngineRoot->systemRegistry);
 
 	mOsgWidget = new OsgWidget(getDisplaySettingsFromEngineSettings(mEngineSettings), this);
-	mRenderTarget = vis::createAndAddViewportToWindow(*mOsgWidget->getWindow(), mEngineRoot->programs.getRequiredProgram("compositeFinal"));
+	mRenderTarget = vis::createAndAddViewportToWindow(*mOsgWidget->getWindow(), mEngineRoot->renderOperationPipeline, mEngineRoot->programs.getRequiredProgram("compositeFinal"));
 	mRenderTarget->setScene(std::make_shared<vis::RenderTargetSceneAdapter>(mEngineRoot->scene));
+
+	addPipelineVisualization(mEngineRoot->renderOperationPipeline, mEngineRoot->programs);
 
 	mStatsDisplaySystem = std::make_shared<StatsDisplaySystem>(*mOsgWidget->getWindow());
 	mStatsDisplaySystem->setVisible(false);
@@ -367,14 +369,14 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 
 	Scenario& scenario = mEngineRoot->scenario;
 
-	mVisNameLabels.reset(new VisNameLabels(world, mEngineRoot->scene->_getGroup(), mEngineRoot->programs));
+	mVisNameLabels.reset(new VisNameLabels(world, mEngineRoot->scene->_getGeometryGroup(), mEngineRoot->programs));
 
 	osg::ref_ptr<osg::Program> unlitColoredProgram = mEngineRoot->programs.getRequiredProgram("unlitColored");
 
 	{
 		vis::Polyline::Params params;
 		params.program = unlitColoredProgram;
-		mVisOrbits.reset(new VisOrbits(world, mEngineRoot->scene->_getGroup(), params, mEngineRoot->julianDateProvider));
+		mVisOrbits.reset(new VisOrbits(world, mEngineRoot->scene->_getGeometryGroup(), params, mEngineRoot->julianDateProvider));
 	}
 	
 	{

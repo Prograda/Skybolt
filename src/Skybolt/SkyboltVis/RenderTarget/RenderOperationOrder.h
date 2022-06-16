@@ -7,20 +7,25 @@
 
 #pragma once
 
-#include "RenderTarget.h"
-#include "SkyboltVis/Rect.h"
-#include "SkyboltVis/RenderContext.h"
+#include "SkyboltVis/SkyboltVisFwd.h"
 
 #include <osg/Camera>
-#include <osgViewer/Viewer>
+#include <osg/Group>
 
 namespace skybolt {
 namespace vis {
 
-class Viewport : public RenderTarget
+enum class RenderOperationOrder
 {
-public:
-	Viewport();
+	PrecomputeAtmosphere,
+	EnvironmentMap,
+	WaterNormalMap,
+	WaterFoamMap,
+	ShadowMap,
+	Clouds,
+	MainPass,
+	FinalComposite,
+	Hud
 };
 
 } // namespace vis

@@ -6,6 +6,7 @@
 
 
 #include "SkyboltVis/DefaultRootNode.h"
+#include "SkyboltVis/VisibilityCategory.h"
 
 using namespace skybolt::vis;
 
@@ -14,6 +15,7 @@ DefaultRootNode::DefaultRootNode() :
 	mTransform(new osg::MatrixTransform)
 {
 	mSwitch->addChild(mTransform);
+	mTransform->setNodeMask(vis::VisibilityCategory::defaultCategories);
 }
 
 DefaultRootNode::~DefaultRootNode()

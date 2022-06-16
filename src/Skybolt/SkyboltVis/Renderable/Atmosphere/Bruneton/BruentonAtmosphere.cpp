@@ -64,8 +64,7 @@ constexpr double kSolarIrradiance[48] = {
 // realistic, but was used in the original implementation).
 constexpr double kConstantSolarIrradiance = 1.5;
 
-BruentonAtmosphere::BruentonAtmosphere(const BruentonAtmosphereConfig& config) :
-	mGroup(new osg::Group())
+BruentonAtmosphere::BruentonAtmosphere(const BruentonAtmosphereConfig& config)
 {
 	// Values from http://www.iup.uni-bremen.de/gruppen/molspec/databases/
 	// referencespectra/o3spectra2011/index.html for 233K, summed and averaged in
@@ -132,7 +131,7 @@ BruentonAtmosphere::BruentonAtmosphere(const BruentonAtmosphereConfig& config) :
 	generatorConfig.maxSunZenithAngle = (generatorConfig.useHalfPrecision ? 102.0 : 120.0) * math::degToRadD();
 
 	mGenerator = osg::ref_ptr<BruentonAtmosphereGenerator>(new BruentonAtmosphereGenerator(generatorConfig));
-	mGroup->addChild(mGenerator);
+	addChild(mGenerator);
 
 	osg::Vec3 rgbWavelengths(atmosphere::Model::kLambdaR, atmosphere::Model::kLambdaG, atmosphere::Model::kLambdaB);
 
@@ -152,7 +151,7 @@ BruentonAtmosphere::~BruentonAtmosphere()
 {
 	if (mGenerator)
 	{
-		mGroup->removeChild(mGenerator.get());
+		removeChild(mGenerator.get());
 	}
 }
 
@@ -186,19 +185,29 @@ osg::Vec3f BruentonAtmosphere::getSolarIrradiance()
 
 const osg::ref_ptr<osg::Texture>& BruentonAtmosphere::getTransmittanceTexture() const
 {
-	return mGenerator->getTransmittanceTexture();
+	return mTransmittanceTexture;
 }
 
 const osg::ref_ptr<osg::Texture>& BruentonAtmosphere::getScatteringTexture() const
 {
-	return mGenerator->getScatteringTexture();
+	return mScatteringTexture;
 }
 
-void BruentonAtmosphere::updatePreRender(const RenderContext& context)
+const osg::ref_ptr<osg::Texture>& BruentonAtmosphere::getIrradianceTexture() const
+{
+	return mIrradianceTexture;
+}
+
+std::vector<osg::ref_ptr<osg::Texture>> BruentonAtmosphere::getOutputTextures() const
+{
+	return { mTransmittanceTexture, mScatteringTexture, mIrradianceTexture };
+}
+
+void BruentonAtmosphere::updatePreRender()
 {
 	if (mGenerated && mGenerator)
 	{
-		osg::StateSet& stateSet = *mGroup->getParent(0)->getOrCreateStateSet(); // FIXME: Setting the parent's state is a hack.
+		osg::StateSet& stateSet = *getParent(0)->getOrCreateStateSet(); // FIXME: Setting the parent's state is a hack.
 		stateSet.setTextureAttributeAndModes((int)GlobalSamplerUnit::Transmittance, mGenerator->getTransmittanceTexture());
 		stateSet.addUniform(createUniformSampler2d("transmittance_texture", (int)GlobalSamplerUnit::Transmittance));
 
@@ -213,7 +222,11 @@ void BruentonAtmosphere::updatePreRender(const RenderContext& context)
 			stateSet.addUniform(uniform);
 		}
 
-		mGroup->removeChild(mGenerator.get());
+		mTransmittanceTexture = mGenerator->getTransmittanceTexture();
+		mScatteringTexture = mGenerator->getScatteringTexture();
+		mIrradianceTexture = mGenerator->getIrradianceTexture();
+
+		removeChild(mGenerator.get());
 		mGenerator = nullptr;
 	}
 	mGenerated = true;

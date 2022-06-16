@@ -84,7 +84,6 @@ Ocean::Ocean(const OceanConfig& config)
 	mGrid->setStateSet(createStateSet(config, mUniforms));
 
 	mTransform->setStateSet(config.waterStateSet);
-	mTransform->setNodeMask(~vis::VisibilityCategory::shadowCaster);
     mTransform->addChild(mGrid);
 
 	setPosition(osg::Vec3f(0,0,0));

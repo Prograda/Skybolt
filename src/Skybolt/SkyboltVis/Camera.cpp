@@ -22,7 +22,7 @@ Camera::Camera(float aspectRatio) :
 	mFovY(0.5f),
 	mNear(1),
 	mFar(1e6),
-	mCullMask(~vis::VisibilityCategory::shadowCaster)
+	mCullMask(~0)
 {
 	setPosition(osg::Vec3f());
 	setOrientation(osg::Quat());

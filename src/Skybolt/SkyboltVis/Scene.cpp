@@ -17,16 +17,15 @@
 
 using namespace skybolt::vis;
 
-Scene::Scene() :
-	mGroup(new osg::Group),
+Scene::Scene(const osg::ref_ptr<osg::StateSet>& ss) :
 	mClipNode(new osg::ClipNode),
+	mGeometryGroup(new osg::Group),
 	mPrimaryLight(nullptr),
 	mPrimaryPlanet(nullptr),
 	mWrappedNoisePeriod(10000.f)
 {
-	mClipNode->addChild(mGroup);
+	mClipNode->addChild(mGeometryGroup);
 
-	osg::StateSet* ss = mGroup->getOrCreateStateSet();
 	mCameraPositionUniform = new osg::Uniform("cameraPosition", osg::Vec3f(0, 0, 0));
 	ss->addUniform(mCameraPositionUniform);
 
@@ -119,7 +118,7 @@ void Scene::updatePreRender(const RenderContext& context)
 void Scene::addObject(VisObject* object)
 {
 	mObjects.push_back(object);
-	mGroup->addChild(object->_getNode());
+	mGeometryGroup->addChild(object->_getNode());
 
 	if (Light* light = dynamic_cast<Light*>(object))
 	{
@@ -138,7 +137,7 @@ void Scene::removeObject(VisObject* object)
 	else if (object == mPrimaryPlanet)
 		mPrimaryPlanet = 0;
 
-	mGroup->removeChild(object->_getNode());
+	mGeometryGroup->removeChild(object->_getNode());
 	skybolt::VectorUtility::eraseFirst(mObjects, object);
 }
 

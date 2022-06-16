@@ -7,6 +7,7 @@
 #include "StatsDisplaySystem.h"
 #include "SkyboltEngine/VisHud.h"
 #include <SkyboltVis/Scene.h>
+#include <SkyboltVis/RenderTarget/RenderTarget.h>
 #include <SkyboltVis/Window/Window.h>
 #include <osgViewer/Viewer>
 
@@ -15,7 +16,7 @@ namespace skybolt {
 StatsDisplaySystem::StatsDisplaySystem(const vis::Window& window)
 {
 	osgViewer::Viewer& viewer = window.getViewer();
-	mCamera = window.getRenderTargets().back().target->getOsgCamera();
+	mCamera = getFinalRenderTarget(window)->getOsgCamera();
 
 	mViewerStats = viewer.getStats();
 	mCameraStats = viewer.getCamera()->getStats();

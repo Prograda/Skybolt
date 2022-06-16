@@ -8,6 +8,7 @@
 #include "earcutOsg.h"
 #include "OsgGeometryHelpers.h"
 #include "OsgStateSetHelpers.h"
+#include "VisibilityCategory.h"
 #include "Renderable/Planet/Features/BuildingTypes.h"
 
 #include <SkyboltCommon/Random.h>
@@ -206,6 +207,8 @@ static osg::ref_ptr<osg::StateSet> createStateSet(const osg::ref_ptr<osg::Progra
 
 BuildingsBatch::BuildingsBatch(const Buildings& buildings, const osg::ref_ptr<osg::Program>& program, const BuildingTypesPtr& buildingTypes)
 {
+	mTransform->setNodeMask(vis::VisibilityCategory::defaultCategories | vis::VisibilityCategory::shadowCaster);
+
 	osg::Geode* geode = createBuildings(buildings, *buildingTypes);
 	mUniforms.modelMatrix = new osg::Uniform("modelMatrix", osg::Matrixf());
 	geode->setStateSet(createStateSet(program, buildingTypes->texture, mUniforms));
