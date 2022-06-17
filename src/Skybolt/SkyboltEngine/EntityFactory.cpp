@@ -306,12 +306,20 @@ struct PlanetStatsUpdater : vis::PlanetFeaturesListener, vis::QuadTreeTileLoader
 		: mStats(stats), mPlanet(planet)
 	{
 		planet->getSurface()->getTileLoaderListenable()->addListener(this);
-		planet->getPlanetFeatures()->addListener(this);
+
+		if (planet->getPlanetFeatures())
+		{
+			planet->getPlanetFeatures()->addListener(this);
+		}
 	}
 
 	~PlanetStatsUpdater()
 	{
-		mPlanet->getPlanetFeatures()->removeListener(this);
+		if (mPlanet->getPlanetFeatures())
+		{
+			mPlanet->getPlanetFeatures()->removeListener(this);
+		}
+
 		mPlanet->getSurface()->getTileLoaderListenable()->removeListener(this);
 
 		mStats->terrainTileLoadQueueSize -= mOwnTilesLoading;
