@@ -199,9 +199,5 @@ Terrain::~Terrain()
 	mTransform->removeChild(mNode);
 }
 
-void Terrain::updatePreRender(const RenderContext& context)
-{
-}
-
 } // namespace vis
 } // namespace skybolt

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "SkyboltVis/RenderTarget/RenderOperation.h"
+#include "SkyboltVis/RenderOperation/RenderOperation.h"
 #include <osg/Camera>
 #include <osg/Group>
 #include <osg/Program>

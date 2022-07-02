@@ -167,7 +167,7 @@ static sim::LatLon toLatLon(const osg::Vec2d& latLon)
 	return sim::LatLon(latLon.x(), latLon.y());
 }
 
-void PlanetSurface::updatePreRender(const RenderContext& context)
+void PlanetSurface::updatePreRender(const CameraRenderContext& context)
 {
 	osg::Vec3d geocentricPos = context.camera.getPosition() * osg::Matrix::inverse(mParentTransform->getMatrix());
 

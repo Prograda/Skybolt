@@ -7,17 +7,14 @@
 #include "HelpDisplaySystem.h"
 #include "SkyboltEngine/VisHud.h"
 #include <SkyboltVis/Scene.h>
-#include <SkyboltVis/RenderTarget/RenderTarget.h>
+#include <SkyboltVis/RenderOperation/RenderTarget.h>
 #include <SkyboltVis/Window/Window.h>
-#include <osgViewer/Viewer>
 
 namespace skybolt {
 
-HelpDisplaySystem::HelpDisplaySystem(const vis::Window& window)
+HelpDisplaySystem::HelpDisplaySystem(const osg::ref_ptr<osg::Camera>& camera) :
+	mCamera(camera)
 {
-	osgViewer::Viewer& viewer = window.getViewer();
-	mCamera = getFinalRenderTarget(window)->getOsgCamera();
-
 	mHud = osg::ref_ptr<VisHud>(new VisHud());
 	mCamera->addChild(mHud);
 }

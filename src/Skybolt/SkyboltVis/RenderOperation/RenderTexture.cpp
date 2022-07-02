@@ -17,7 +17,7 @@ namespace vis {
 
 RenderTexture::RenderTexture(const RenderTextureConfig& config) :
 	RenderTarget(new osg::Camera),
-	mColorTextureFactory(config.colorTextureFactory),
+	mColorTextureFactories(config.colorTextureFactories),
 	mDepthTextureFactory(config.depthTextureFactory),
 	mMultisampleSampleCount(config.multisampleSampleCount)
 {
@@ -27,48 +27,71 @@ RenderTexture::RenderTexture(const RenderTextureConfig& config) :
 	mOsgCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 	mOsgCamera->setClearColor(osg::Vec4(0, 0, 0, 0));
 
-	mOsgCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if (config.clear)
+	{
+		mOsgCamera->setClearMask(mDepthTextureFactory ? (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) : GL_COLOR_BUFFER_BIT);
+	}
+	else
+	{
+		mOsgCamera->setClearMask(0);
+	}
 	mOsgCamera->setRenderOrder(osg::Camera::PRE_RENDER);
 	mOsgCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
 
-	addChild(mOsgCamera);
+	if (!mDepthTextureFactory)
+	{
+		// Ensure there is no depth buffer attached, otherwise we can't write to 3d texture layers.
+		// OSG tries to automatically add a depth buffer for historical reasons, because
+		// old drivers requred it. It's no longer needed. See https://groups.google.com/g/osg-users/c/_MksKA4Dmb4
+		mOsgCamera->detach(osg::Camera::DEPTH_BUFFER);
+
+		// Set implicit color buffer attachment, which prevents OSG from automatically adding a
+		// depth buffer if one is not attached.
+		mOsgCamera->setImplicitBufferAttachmentMask(osg::Camera::IMPLICIT_COLOR_BUFFER_ATTACHMENT);
+	}
 }
 
 RenderTexture::~RenderTexture()
 {
 }
 
-void RenderTexture::updatePreRender()
+void RenderTexture::updatePreRender(const RenderContext& renderContext)
 {
-	RenderTarget::updatePreRender();
+	RenderTarget::updatePreRender(renderContext);
 
 	int width = mOsgCamera->getViewport()->width();
 	int height = mOsgCamera->getViewport()->height();
 
-	if (!mTexture || mTexture->getTextureWidth() != width || mTexture->getTextureHeight() != height)
+	if (mColorTextures.empty() || mColorTextures.front()->getTextureWidth() != width || mColorTextures.front()->getTextureHeight() != height)
 	{
 		mOsgCamera->setRenderingCache(nullptr); // Clear the cache so that attachments will update to use new textures
 
-		mTexture = mColorTextureFactory(osg::Vec2i(width, height));
-		mOsgCamera->attach(osg::Camera::COLOR_BUFFER, mTexture, 0, 0, false, mMultisampleSampleCount);
-		colorTextureCreated(mTexture);
+		int i = 0;
+		mColorTextures.resize(mColorTextureFactories.size());
+		for (const auto& factory : mColorTextureFactories)
+		{
+			mColorTextures[i] = factory(osg::Vec2i(width, height));
+			mOsgCamera->attach(osg::Camera::BufferComponent(osg::Camera::COLOR_BUFFER0 + i), mColorTextures[i], 0, 0, false, mMultisampleSampleCount);
+			++i;
+		}
 
 		if (mDepthTextureFactory)
 		{
 			auto texture = (*mDepthTextureFactory)(osg::Vec2i(width, height));
 			mOsgCamera->attach(osg::Camera::DEPTH_BUFFER, texture);
-			depthTextureCreated(texture);
 		}
 	}
 }
 
-TextureFactory createTextureFactory(GLint internalFormat)
+TextureFactory createScreenTextureFactory(GLint internalFormat)
 {
 	return [internalFormat](const osg::Vec2i& size) {
 		osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D();
 		texture->setTextureSize(size.x(), size.y());
 		texture->setResizeNonPowerOfTwoHint(false);
 		texture->setInternalFormat(internalFormat);
+		texture->setNumMipmapLevels(0);
+		texture->setUseHardwareMipMapGeneration(false);
 		texture->setFilter(osg::Texture2D::FilterParameter::MIN_FILTER, osg::Texture2D::FilterMode::LINEAR);
 		texture->setFilter(osg::Texture2D::FilterParameter::MAG_FILTER, osg::Texture2D::FilterMode::LINEAR);
 		texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);

@@ -137,7 +137,7 @@ LakesBatch::LakesBatch(const Lakes& lakes, const LakesConfig& config)
 	mTransform->addChild(geode);
 }
 
-void LakesBatch::updatePreRender(const RenderContext& context)
+void LakesBatch::updatePreRender(const CameraRenderContext& context)
 {
 	mUniforms.modelMatrix->set(mTransform->getWorldMatrices().front());
 }

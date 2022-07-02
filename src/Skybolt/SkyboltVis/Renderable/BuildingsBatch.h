@@ -32,7 +32,7 @@ public:
 	BuildingsBatch(const Buildings& buildings, const osg::ref_ptr<osg::Program>& program, const BuildingTypesPtr& buildingTypes);
 
 protected:
-	void updatePreRender(const RenderContext& context);
+	void updatePreRender(const CameraRenderContext& context) override;
 
 private:
 	Uniforms mUniforms;

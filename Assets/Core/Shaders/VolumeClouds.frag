@@ -318,10 +318,10 @@ vec4 evaluateGlobalLowResColor(vec2 cloudsUv, vec3 irradiance, float rayFar)
 {
 	// Calculate texture LOD level.
 	// There is a singularity when the U coordinate wraps from 1 to 0, which we avoid by querying LOD
-	// at U and fract(U) and taking the minimum. We also tried Tarini's method (https://www.shadertoy.com/view/7sSGWG) which alleviated the seam but did not completely remove it.
+	// at U and fract(U-epsilon) and taking the minimum. We also tried Tarini's method (https://www.shadertoy.com/view/7sSGWG) which alleviated the seam but did not completely remove it.
 	vec2 lod2d = textureQueryLod(globalAlphaSampler, cloudsUv.xy);
 	float lod = max(lod2d.x, lod2d.y);
-	lod2d = textureQueryLod(globalAlphaSampler, vec2(fract(cloudsUv.x), 0));
+	lod2d = textureQueryLod(globalAlphaSampler, vec2(fract(cloudsUv.x-0.01), cloudsUv.y));
 	lod = min(lod, max(lod2d.x, lod2d.y));
 
 	float alpha = textureLod(globalAlphaSampler, cloudsUv, lod).r;

@@ -30,7 +30,7 @@ public:
 
 	void update(const osg::Vec2f& cameraPosition);
 
-	void updatePreRender(const RenderContext& context) override;
+	void updatePreRender(const CameraRenderContext& context) override;
 
 private:
 	void asyncCreatePage(const osg::Vec2i& pageId);

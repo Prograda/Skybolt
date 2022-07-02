@@ -7,6 +7,8 @@
 #ifndef GROUND_IRRADIANCE_H
 #define GROUND_IRRADIANCE_H
 
+#include "GlobalDefines.h"
+
 uniform float groundIrradianceMultiplier;
 
 const vec3 groundAlbedo = vec3(0.3f);

@@ -39,7 +39,7 @@ public:
 	void setOrientation(const osg::Quat& orientation) {}; //!< Has no effect
 
 private:
-	void updatePreRender(const RenderContext& context);
+	void updatePreRender(const CameraRenderContext& context);
 
 private:
 	Uniforms mUniforms;

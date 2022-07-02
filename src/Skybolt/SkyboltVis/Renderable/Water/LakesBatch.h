@@ -37,7 +37,7 @@ public:
 	LakesBatch(const Lakes& lakes, const LakesConfig& config);
 
 protected:
-	void updatePreRender(const RenderContext& context) override;
+	void updatePreRender(const CameraRenderContext& context) override;
 
 private:
 	Uniforms mUniforms;

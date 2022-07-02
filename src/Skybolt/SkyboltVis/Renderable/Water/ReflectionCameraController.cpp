@@ -6,15 +6,14 @@
 
 #include "ReflectionCameraController.h"
 #include "SkyboltVis/Camera.h"
-#include "SkyboltVis/RenderTarget/RenderTargetSceneAdapter.h"
-#include "SkyboltVis/RenderTarget/RenderTexture.h"
+#include "SkyboltVis/RenderOperation/RenderTexture.h"
 
 using namespace skybolt::vis;
 
 static RenderTextureConfig createRenderTextureConfig(const TextureFactory& factory)
 {
 	RenderTextureConfig config;
-	config.colorTextureFactory = factory;
+	config.colorTextureFactories = { factory };
 	return config;
 }
 
@@ -26,7 +25,7 @@ ReflectionCameraController::ReflectionCameraController(const ReflectionCameraCon
 	mTarget(new RenderTexture(createRenderTextureConfig(config.reflectionTextureFactory)))
 {
 	mTarget->setCamera(mReflectionCamera);
-	mTarget->setScene(std::make_shared<RenderTargetSceneAdapter>(mReflectionScene));
+	mTarget->setScene(mReflectionScene->getBucketGroup(Scene::Bucket::Default));
 
 	mClipPlane->setClipPlaneNum(0);
 
@@ -37,7 +36,7 @@ ReflectionCameraController::ReflectionCameraController(const ReflectionCameraCon
 
 ReflectionCameraController::~ReflectionCameraController()
 {
-	mReflectionScene->removeClipPlane(mClipPlane);
+	// TODO: reenable mReflectionScene->removeClipPlane(mClipPlane);
 }
 
 void ReflectionCameraController::update(const Camera& referenceCamera)

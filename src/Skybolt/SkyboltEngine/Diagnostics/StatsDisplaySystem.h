@@ -14,12 +14,17 @@
 #include <osg/ref_ptr>
 #include <osg/Stats>
 
+namespace osgViewer {
+	class Viewer;
+}
+
 namespace skybolt {
 
 class StatsDisplaySystem : public sim::System
 {
 public:
-	StatsDisplaySystem(const vis::Window& window);
+	//! Displays the viewer's stats on the given camera
+	StatsDisplaySystem(osgViewer::Viewer* viewer, const osg::ref_ptr<osg::Camera>& camera);
 	~StatsDisplaySystem();
 
 	void setVisible(bool visible);
@@ -27,10 +32,10 @@ public:
 	void updatePostDynamics(const System::StepArgs& args) override;
 
 private:
+	osg::ref_ptr<osg::Camera> mCamera;
 	osg::Stats* mViewerStats;
 	osg::Stats* mCameraStats;
 	osg::ref_ptr<class VisHud> mStatsHud;
-	osg::ref_ptr<osg::Camera> mCamera;
 };
 
 } // namespace skybolt

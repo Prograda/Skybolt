@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 
-#include "RenderOperationPipeline.h"
+#include "RenderOperationSequence.h"
 
 #include <osg/Texture>
 
@@ -14,18 +14,18 @@
 namespace skybolt {
 namespace vis {
 
-RenderOperationPipeline::RenderOperationPipeline() :
+RenderOperationSequence::RenderOperationSequence() :
 	mRootNode(new osg::Group())
 {
 }
 
-void RenderOperationPipeline::addOperation(const osg::ref_ptr<RenderOperation>& operation, int priority)
+void RenderOperationSequence::addOperation(const osg::ref_ptr<RenderOperation>& operation, int priority)
 {
 	mOperations.insert(std::make_pair(priority, operation));
 	updateOsgGroup();
 }
 
-void RenderOperationPipeline::removeOperation(const osg::ref_ptr<RenderOperation>& operation)
+void RenderOperationSequence::removeOperation(const osg::ref_ptr<RenderOperation>& operation)
 {
 	for (auto i = mOperations.begin(); i != mOperations.end(); ++i)
 	{
@@ -38,15 +38,15 @@ void RenderOperationPipeline::removeOperation(const osg::ref_ptr<RenderOperation
 	}
 }
 
-void RenderOperationPipeline::updatePreRender()
+void RenderOperationSequence::updatePreRender(const RenderContext& context)
 {
 	for (const auto& [priority, operation] : mOperations)
 	{
-		operation->updatePreRender();
+		operation->updatePreRender(context);
 	}
 }
 
-void RenderOperationPipeline::updateOsgGroup()
+void RenderOperationSequence::updateOsgGroup()
 {
 	mRootNode->removeChildren(0, mRootNode->getNumChildren());
 	
@@ -54,6 +54,18 @@ void RenderOperationPipeline::updateOsgGroup()
 	{
 		mRootNode->addChild(operation);
 	}
+}
+
+std::vector<osg::ref_ptr<osg::Texture>> RenderOperationSequence::getOutputTextures() const
+{
+	std::vector<osg::ref_ptr<osg::Texture>> textures;
+	
+	for (const auto& [priority, operation] : mOperations)
+	{
+		const auto& operationTextures = operation->getOutputTextures();
+		textures.insert(textures.end(), operationTextures.begin(), operationTextures.end());
+	}
+	return textures;
 }
 
 } // namespace vis

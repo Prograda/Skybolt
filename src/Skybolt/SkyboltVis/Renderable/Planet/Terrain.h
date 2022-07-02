@@ -88,8 +88,6 @@ public:
 
 	osg::Node* getTerrainNode() const { return mNode; }
 
-	void updatePreRender(const RenderContext& context);
-
 private:
 	osg::Node* mNode;
 };

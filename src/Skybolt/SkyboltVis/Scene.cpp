@@ -13,18 +13,20 @@
 #include "Renderable/Planet/Planet.h"
 #include <SkyboltCommon/VectorUtility.h>
 
-#include <osg/ClipNode>
-
 using namespace skybolt::vis;
 
 Scene::Scene(const osg::ref_ptr<osg::StateSet>& ss) :
-	mClipNode(new osg::ClipNode),
-	mGeometryGroup(new osg::Group),
+	mStateSet(ss),
 	mPrimaryLight(nullptr),
 	mPrimaryPlanet(nullptr),
 	mWrappedNoisePeriod(10000.f)
 {
-	mClipNode->addChild(mGeometryGroup);
+	assert(mStateSet);
+
+	for (int i = 0; i < (int)Bucket::BucketCount; ++i)
+	{
+		mBucketGroups.push_back(new osg::Group);
+	}
 
 	mCameraPositionUniform = new osg::Uniform("cameraPosition", osg::Vec3f(0, 0, 0));
 	ss->addUniform(mCameraPositionUniform);
@@ -40,6 +42,9 @@ Scene::Scene(const osg::ref_ptr<osg::StateSet>& ss) :
 
 	mCameraRightDirectionUniform = new osg::Uniform("cameraRightDirection", osg::Vec3f(0, 0, 0));
 	ss->addUniform(mCameraRightDirectionUniform);
+
+	mFarClipDistanceUniform = new osg::Uniform("farClipDistance", 1e5f);
+	ss->addUniform(mFarClipDistanceUniform);
 
 	mViewMatrixUniform = new osg::Uniform("viewMatrix", osg::Matrixf());
 	ss->addUniform(mViewMatrixUniform);
@@ -68,10 +73,9 @@ Scene::Scene(const osg::ref_ptr<osg::StateSet>& ss) :
 	ss->addUniform(mGroundIrradianceMultiplierUniform);
 }
 
-Scene::~Scene()
-{}
+Scene::~Scene() = default;
 
-void Scene::updatePreRender(const RenderContext& context)
+void Scene::updatePreRender(const CameraRenderContext& context)
 {
 	mCameraPositionUniform->set(osg::Vec3f(context.camera.getPosition()));
 	mViewCameraPositionUniform->set(osg::Vec3f(context.camera.getPosition()));
@@ -79,6 +83,7 @@ void Scene::updatePreRender(const RenderContext& context)
 	mCameraCenterDirectionUniform->set(context.camera.getOrientation() * osg::Vec3f(1, 0, 0));
 	mCameraUpDirectionUniform->set(context.camera.getOrientation() * osg::Vec3f(0, 0, -1));
 	mCameraRightDirectionUniform->set(context.camera.getOrientation() * osg::Vec3f(0, 1, 0));
+	mFarClipDistanceUniform->set(context.camera.getFarClipDistance());
 
 	const auto& camera = context.camera;
 
@@ -101,59 +106,56 @@ void Scene::updatePreRender(const RenderContext& context)
 			float altitude = float((context.camera.getPosition() - mPrimaryPlanet->getPosition()).length()) - planetRadius;
 			multiplier = glm::clamp(glm::mix(1.f, 0.f, altitude / planetRadius), 0.f, 1.f);
 		}
+
 		mGroundIrradianceMultiplierUniform->set(multiplier);
 	}
 
-	for (VisObject* object : mObjects)
-	{
-		object->updatePostSceneUpdate();
-	}
-
-	for (VisObject* object : mObjects)
+	for (auto& [object, bucket] : mObjects)
 	{
 		object->updatePreRender(context);
 	}
 }
 
-void Scene::addObject(VisObject* object)
+void Scene::addObject(const VisObjectPtr& object, Bucket bucket)
 {
-	mObjects.push_back(object);
-	mGeometryGroup->addChild(object->_getNode());
+	assert(mObjects.find(object) == mObjects.end());
+	mObjects[object] = bucket;
+	mBucketGroups[(int)bucket]->addChild(object->_getNode());
 
-	if (Light* light = dynamic_cast<Light*>(object))
+	if (Light* light = dynamic_cast<Light*>(object.get()))
 	{
 		mPrimaryLight = light;
 	}
-	else if (Planet* planet = dynamic_cast<Planet*>(object))
+	else if (Planet* planet = dynamic_cast<Planet*>(object.get()))
 	{
 		mPrimaryPlanet = planet;
 	}
 }
 
-void Scene::removeObject(VisObject* object)
+void Scene::removeObject(const VisObjectPtr& object)
 {
-	if (object == mPrimaryLight)
+	if (object.get() == mPrimaryLight)
 		mPrimaryLight = 0;
-	else if (object == mPrimaryPlanet)
+	else if (object.get() == mPrimaryPlanet)
 		mPrimaryPlanet = 0;
 
-	mGeometryGroup->removeChild(object->_getNode());
-	skybolt::VectorUtility::eraseFirst(mObjects, object);
-}
-
-void Scene::addClipPlane(osg::ClipPlane* plane)
-{
-	mClipNode->addClipPlane(plane);
-}
-
-void Scene::removeClipPlane(osg::ClipPlane* plane)
-{
-	mClipNode->removeClipPlane(plane);
+	auto i = mObjects.find(object);
+	if (i != mObjects.end())
+	{
+		mBucketGroups[(int)i->second]->removeChild(object->_getNode());
+		mObjects.erase(i);
+	}
 }
 
 float Scene::calcAtmosphericDensity(const osg::Vec3f& position) const
 {
 	return mPrimaryPlanet ? mPrimaryPlanet->calcAtmosphericDensity(position) : 0.0f;
+}
+
+osg::Group* Scene::getBucketGroup(Bucket bucket) const
+{
+	assert((std::size_t)bucket < mBucketGroups.size());
+	return mBucketGroups[(int)bucket];
 }
 
 osg::Vec3f Scene::getPrimaryLightDirection() const

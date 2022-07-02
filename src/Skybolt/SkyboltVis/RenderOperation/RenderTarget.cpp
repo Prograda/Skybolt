@@ -14,17 +14,15 @@ namespace vis {
 
 RenderTarget::RenderTarget(const osg::ref_ptr<osg::Camera>& osgCamera) :
 	mOsgCamera(osgCamera),
-	mViewport(new osg::Viewport)
+	mViewport(new osg::Viewport),
+	mRect(0, 0, 1, 1)
 {
 	assert(mOsgCamera);
 	mOsgCamera->setViewport(mViewport);
-	mRect = FixedRectIProvider(RectI(0, 0, mViewport->width(), mViewport->height()));
-
-	mFarClipDistanceUniform = new osg::Uniform("farClipDistance", 1e5f);
-	mOsgCamera->getOrCreateStateSet()->addUniform(mFarClipDistanceUniform);
+	addChild(mOsgCamera);
 }
 
-void RenderTarget::setRect(const RectIProvider& rect)
+void RenderTarget::setRelativeRect(const RectF& rect)
 {
 	mRect = rect;
 }
@@ -34,24 +32,28 @@ void RenderTarget::setCamera(const CameraPtr& camera)
 	mCamera = camera;
 }
 
-void RenderTarget::setScene(const std::shared_ptr<Scene>& scene)
+void RenderTarget::setScene(const osg::ref_ptr<osg::Node>& scene)
 {
 	if (mScene)
 	{
-		mOsgCamera->removeChild(mScene->getNode());
+		mOsgCamera->removeChild(mScene);
 	}
 
 	mScene = scene;
 
 	if (scene)
 	{
-		mOsgCamera->addChild(scene->getNode());
+		mOsgCamera->addChild(scene);
 	}
 }
 
-void RenderTarget::updatePreRender()
+void RenderTarget::updatePreRender(const RenderContext& context)
 {
-	RectI rect = mRect();
+	RectF rect(
+		mRect.x * context.targetDimensions.x(),
+		mRect.y * context.targetDimensions.y(),
+		mRect.width * context.targetDimensions.x(),
+		mRect.height * context.targetDimensions.y());
 
 	osg::StateSet* ss = mOsgCamera->getOrCreateStateSet();
 	mRcpWindowSizeInPixelsUniform = new osg::Uniform("rcpWindowSizeInPixels", osg::Vec2f(1.0f / rect.width, 1.0f / rect.height));
@@ -59,14 +61,23 @@ void RenderTarget::updatePreRender()
 
 	mViewport->setViewport(rect.x, rect.y, rect.width, rect.height);
 
-	if (mCamera && mScene)
+	if (mCamera)
 	{
-		mCamera->setAspectRatio((float)mViewport->width() / (float)mViewport->height());
-		mCamera->updateOsgCameraGeometry(*mOsgCamera);
-		mScene->updatePreRender(*mCamera);
+		mCamera->setAspectRatio((float)context.targetDimensions.x() / (float)context.targetDimensions.y());
 
-		mFarClipDistanceUniform->set(mCamera->getFarClipDistance());
+		mCamera->updateOsgCameraGeometry(*mOsgCamera);
 	}
+}
+
+osg::ref_ptr<RenderTarget> createDefaultRenderTarget()
+{
+	osg::ref_ptr<osg::Camera> camera = new osg::Camera();
+	camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+	camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+	camera->setCullingMode(osg::CullSettings::VIEW_FRUSTUM_SIDES_CULLING);
+	camera->setClearColor(osg::Vec4(0, 0, 0, 0));
+
+	return new RenderTarget(camera);
 }
 
 } // namespace vis

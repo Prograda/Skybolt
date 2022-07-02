@@ -12,7 +12,6 @@
 #include "SkyboltVis/OsgStateSetHelpers.h"
 #include "SkyboltVis/OsgTextureHelpers.h"
 #include "SkyboltVis/RenderContext.h"
-#include "SkyboltVis/TextureGenerator/TextureGeneratorCameraFactory.h"
 
 #include <osg/CullFace>
 #include <osg/Geode>
@@ -129,46 +128,6 @@ static osg::StateSet* createStateSet(const osg::ref_ptr<osg::Program>& program, 
 	return stateSet;
 }
 
-static osg::ref_ptr<osg::Texture2D> createCloudColorTexture(int width, int height)
-{
-	osg::ref_ptr<osg::Texture2D> texture = createRenderTexture(width, height);
-	texture->setResizeNonPowerOfTwoHint(false);
-	texture->setInternalFormat(GL_RGBA);
-	texture->setFilter(osg::Texture2D::FilterParameter::MIN_FILTER, osg::Texture2D::FilterMode::LINEAR);
-	texture->setFilter(osg::Texture2D::FilterParameter::MAG_FILTER, osg::Texture2D::FilterMode::LINEAR);
-	texture->setNumMipmapLevels(0);
-	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
-	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
-
-	return texture;
-}
-
-static osg::ref_ptr<osg::Texture2D> createCloudDepthTexture(int width, int height)
-{
-	osg::ref_ptr<osg::Texture2D> texture = createRenderTexture(width, height);
-	texture->setResizeNonPowerOfTwoHint(false);
-	texture->setInternalFormat(GL_R32F);
-	texture->setFilter(osg::Texture2D::FilterParameter::MIN_FILTER, osg::Texture2D::FilterMode::LINEAR);
-	texture->setFilter(osg::Texture2D::FilterParameter::MAG_FILTER, osg::Texture2D::FilterMode::LINEAR);
-	texture->setNumMipmapLevels(0);
-	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
-	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
-
-	return texture;
-}
-
-static osg::StateSet* createTexturedQuadStateSet(osg::ref_ptr<osg::Program> program, osg::ref_ptr<osg::Texture2D> colorTexture, osg::ref_ptr<osg::Texture2D> depthTexture)
-{
-	osg::StateSet* stateSet = new osg::StateSet();
-	stateSet->setAttributeAndModes(program, osg::StateAttribute::ON);
-	stateSet->setTextureAttributeAndModes(0, colorTexture, osg::StateAttribute::ON);
-	stateSet->setTextureAttributeAndModes(1, depthTexture, osg::StateAttribute::ON);
-	stateSet->addUniform(createUniformSampler2d("colorTexture", 0));
-	stateSet->addUniform(createUniformSampler2d("depthTexture", 1));
-	stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
-	return stateSet;
-}
-
 VolumeClouds::VolumeClouds(const VolumeCloudsConfig& config)
 {
 	mGeode = new osg::Geode();
@@ -187,37 +146,15 @@ VolumeClouds::VolumeClouds(const VolumeCloudsConfig& config)
 
 	static osg::ref_ptr<osg::Geometry> quad = createQuadWithUvs(BoundingBox2f(pos, size), QuadUpDirectionY);
 	quad->setCullingActive(false);
-
-#define COMPOSITE_CLOUDS
-#ifdef COMPOSITE_CLOUDS
-	// TODO: fit to window dimensions
-	int width = 512;
-	int height = 256;
-	mColorTexture = createCloudColorTexture(width, height);
-	osg::ref_ptr<osg::Texture2D> depthTexture = createCloudDepthTexture(width, height);
-	
-	TextureGeneratorCameraFactory factory;
-	osg::ref_ptr<osg::Camera> camera = factory.createCameraWithQuad({ mColorTexture, depthTexture }, stateSet, /* clear */ false);
-	mTransform->addChild(camera);
-
-	osg::StateSet* texturedQuadStateSet = createTexturedQuadStateSet(config.compositorProgram, mColorTexture, depthTexture);
-	makeStateSetTransparent(*texturedQuadStateSet, vis::TransparencyMode::PremultipliedAlpha, RenderBinId::Clouds);
-
-	mGeode->setStateSet(texturedQuadStateSet);
-#else
-	makeStateSetTransparent(*stateSet, vis::TransparencyMode::PremultipliedAlpha);
-	mGeode->setStateSet(stateSet);
-#endif
-	mGeode->addDrawable(quad);
-	mTransform->addChild(mGeode);
+	quad->setStateSet(stateSet);
+	mTransform->addChild(quad);
 }
 
 VolumeClouds::~VolumeClouds()
 {
-	mTransform->removeChild(mGeode);
 }
 
-void VolumeClouds::updatePreRender(const RenderContext& context)
+void VolumeClouds::updatePreRender(const CameraRenderContext& context)
 {
 	osg::Matrixf modelMatrix = mTransform->getWorldMatrices().front();
 	mUniforms.modelMatrixUniform->set(modelMatrix);

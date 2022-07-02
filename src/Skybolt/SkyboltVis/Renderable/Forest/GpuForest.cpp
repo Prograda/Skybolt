@@ -182,7 +182,7 @@ GpuForest::ForestTile GpuForest::createForestTile(const QuadTreeTileKey& key, co
 	return result;
 }
 
-void GpuForest::updatePreRender(const RenderContext& context)
+void GpuForest::updatePreRender(const CameraRenderContext& context)
 {
 	for (const auto& [key, tile] : mForestTiles)
 	{

@@ -62,9 +62,9 @@
 #include <SkyboltVis/Scene.h>
 #include <SkyboltVis/Renderable/Planet/Planet.h>
 #include <SkyboltVis/Renderable/Arrows.h>
-#include <SkyboltVis/RenderTarget/RenderTargetSceneAdapter.h>
-#include <SkyboltVis/RenderTarget/ViewportHelpers.h>
-#include <SkyboltVis/RenderTarget/Viewport.h>
+#include <SkyboltVis/RenderOperation/DefaultRenderCameraViewport.h>
+#include <SkyboltVis/RenderOperation/RenderOperationUtil.h>
+#include <SkyboltVis/RenderOperation/RenderTarget.h>
 #include <SkyboltVis/Shader/ShaderSourceFileChangeMonitor.h>
 #include <SkyboltVis/Window/CaptureScreenshot.h>
 #include <SkyboltVis/Window/DisplaySettings.h>
@@ -334,12 +334,17 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	mSimStepper = std::make_unique<SimStepper>(mEngineRoot->systemRegistry);
 
 	mOsgWidget = new OsgWidget(getDisplaySettingsFromEngineSettings(mEngineSettings), this);
-	mRenderTarget = vis::createAndAddViewportToWindow(*mOsgWidget->getWindow(), mEngineRoot->renderOperationPipeline, mEngineRoot->programs.getRequiredProgram("compositeFinal"));
-	mRenderTarget->setScene(std::make_shared<vis::RenderTargetSceneAdapter>(mEngineRoot->scene));
 
-	addPipelineVisualization(mEngineRoot->renderOperationPipeline, mEngineRoot->programs);
+	mViewport = new vis::DefaultRenderCameraViewport([&]{
+		vis::DefaultRenderCameraViewportConfig c;
+		c.scene = mEngineRoot->scene;
+		c.programs = &mEngineRoot->programs;
+		c.shadowParams = getShadowParams(mEngineRoot->engineSettings);
+		return c;
+	}());
+	mOsgWidget->getWindow()->getRenderOperationSequence().addOperation(mViewport);
 
-	mStatsDisplaySystem = std::make_shared<StatsDisplaySystem>(*mOsgWidget->getWindow());
+	mStatsDisplaySystem = std::make_shared<StatsDisplaySystem>(&mOsgWidget->getWindow()->getViewer(), mViewport->getFinalRenderTarget()->getOsgCamera());
 	mStatsDisplaySystem->setVisible(false);
 	mEngineRoot->systemRegistry->push_back(mStatsDisplaySystem);
 
@@ -361,6 +366,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	QObject::connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
 	QObject::connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(exit()));
 	QObject::connect(ui->actionShowViewportStats, &QAction::triggered, this, [this](bool visible) {mStatsDisplaySystem->setVisible(visible); });
+	QObject::connect(ui->actionShowViewportTextures, SIGNAL(triggered(bool)), this, SLOT(setViewportTextureDisplayEnabled(bool)));
 	QObject::connect(ui->actionCaptureImage, SIGNAL(triggered()), this, SLOT(captureImage()));
 	QObject::connect(ui->actionSettings, SIGNAL(triggered()), this, SLOT(editEngineSettings()));
 	QObject::connect(ui->actionLiveShaderEditing, SIGNAL(triggered(bool)), this, SLOT(setLiveShaderEditingEnabled(bool)));
@@ -369,23 +375,24 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 
 	Scenario& scenario = mEngineRoot->scenario;
 
-	mVisNameLabels.reset(new VisNameLabels(world, mEngineRoot->scene->_getGeometryGroup(), mEngineRoot->programs));
+	auto group = mEngineRoot->scene->getBucketGroup(vis::Scene::Bucket::Default);
+	mVisNameLabels.reset(new VisNameLabels(world, group, mEngineRoot->programs));
 
 	osg::ref_ptr<osg::Program> unlitColoredProgram = mEngineRoot->programs.getRequiredProgram("unlitColored");
 
 	{
 		vis::Polyline::Params params;
 		params.program = unlitColoredProgram;
-		mVisOrbits.reset(new VisOrbits(world, mEngineRoot->scene->_getGeometryGroup(), params, mEngineRoot->julianDateProvider));
+		mVisOrbits.reset(new VisOrbits(world, group, params, mEngineRoot->julianDateProvider));
 	}
 	
 	{
 		vis::Arrows::Params params;
 		params.program = unlitColoredProgram;
 
-		mArrows.reset(new vis::Arrows(params));
-		mEngineRoot->scene->addObject(mArrows.get());
-		mForcesVisBinding.reset(new ForcesVisBinding(world, mArrows));
+		auto arrows = std::make_shared<vis::Arrows>(params);
+		mEngineRoot->scene->addObject(arrows);
+		mForcesVisBinding.reset(new ForcesVisBinding(world, arrows));
 	}
 
 	mToolWindowManager = new QToolWindowManager(this);
@@ -521,7 +528,6 @@ MainWindow::~MainWindow()
 	mForcesVisBinding.reset();
 	mVisNameLabels.reset();
 	mVisOrbits.reset();
-	mArrows.reset();
 
 	mPlugins.clear();
 
@@ -1100,7 +1106,7 @@ void MainWindow::setCamera(const sim::EntityPtr& simCamera)
 			}
 		}
 		mCameraControllerWidget->setCameraControllerSelector(selector);
-		mRenderTarget->setCamera(visCamera);
+		mViewport->setCamera(visCamera);
 
 		mCameraCombo->setCurrentText(simCamera ? QString::fromStdString(getName(*simCamera)) : "");
 	}
@@ -1180,6 +1186,19 @@ void MainWindow::editEngineSettings()
 		settingsFilename = editor.getSettingsFilename();
 		mSettings.setValue(settingsFilenameKey, settingsFilename);
 		writeJsonFile(editor.getJson(), settingsFilename.toStdString());
+	}
+}
+
+void MainWindow::setViewportTextureDisplayEnabled(bool enabled)
+{
+	if (enabled && !mRenderOperationVisualization)
+	{
+		mRenderOperationVisualization = vis::createRenderOperationVisualization(mViewport, mEngineRoot->programs);
+		mOsgWidget->getWindow()->getRenderOperationSequence().addOperation(mRenderOperationVisualization);
+	}
+	else if (!enabled && mRenderOperationVisualization)
+	{
+		mOsgWidget->getWindow()->getRenderOperationSequence().removeOperation(mRenderOperationVisualization);
 	}
 }
 

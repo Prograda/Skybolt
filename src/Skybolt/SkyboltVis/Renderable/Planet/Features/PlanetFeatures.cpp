@@ -289,7 +289,7 @@ void PlanetFeatures::onSurfaceTileAdded(const QuadTreeTileKey& key)
 	}
 }
 
-void PlanetFeatures::updatePreRender(const RenderContext& context)
+void PlanetFeatures::updatePreRender(const CameraRenderContext& context)
 {
 	processLoadingQueue();
 
@@ -405,7 +405,7 @@ void PlanetFeatures::processLoadingQueue()
 	}
 }
 
-void PlanetFeatures::updatePreRender(LoadedVisObjects& objects, const RenderContext& context) const
+void PlanetFeatures::updatePreRender(LoadedVisObjects& objects, const CameraRenderContext& context) const
 {
 	for (int i = 0; i < PlanetFeaturesParams::featureGroupsSize; ++i)
 	{

@@ -25,7 +25,7 @@ public:
 	void setUpDirection(const osg::Vec3f& dir);
 
 protected:
-	void updatePreRender(const RenderContext& context);
+	void updatePreRender(const CameraRenderContext& context);
 
 private:
 	osg::Vec3f mUpDirection;

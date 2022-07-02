@@ -11,10 +11,10 @@
 namespace skybolt {
 namespace vis {
 
-class DrawCallback : public osg::Camera::DrawCallback
+class GpuTextureGeneratorDrawCallback : public osg::Camera::DrawCallback
 {
 public:
-	DrawCallback(GpuTextureGenerator* generator) : generator(generator) {}
+	GpuTextureGeneratorDrawCallback(GpuTextureGenerator* generator) : generator(generator) {}
 	void operator() (const osg::Camera &) const
 	{
 		if (generator->mActive)
@@ -49,7 +49,7 @@ GpuTextureGenerator::GpuTextureGenerator(const osg::ref_ptr<osg::Texture2D>& tex
 		texture->setNumMipmapLevels(mipMapCount);
 	}
 
-	mCamera->setPostDrawCallback(new DrawCallback(this)); // osg::Camera takes ownership of the callback by storing it as a ref_ptr
+	mCamera->setPostDrawCallback(new GpuTextureGeneratorDrawCallback(this)); // osg::Camera takes ownership of the callback by storing it as a ref_ptr
 
 	addChild(mCamera);
 }

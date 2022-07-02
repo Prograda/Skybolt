@@ -16,13 +16,13 @@
 namespace skybolt {
 namespace vis {
 
-class RenderOperationPipeline
+class RenderOperationSequence : public RenderOperation
 {
 public:
-	RenderOperationPipeline();
+	RenderOperationSequence();
 
 	//! @param priority is the relative priority in which to perform the operation. Lower numbers are performed first.
-	void addOperation(const osg::ref_ptr<RenderOperation>& operation, int priority);
+	void addOperation(const osg::ref_ptr<RenderOperation>& operation, int priority = 0);
 	void removeOperation(const osg::ref_ptr<RenderOperation>& operation);
 
 	using Priority = int;
@@ -30,9 +30,13 @@ public:
 
 	const RenderOperationsOrder& getOperations() const { return mOperations; }
 
-	void updatePreRender();
-
 	const osg::ref_ptr<osg::Group>& getRootNode() const { return mRootNode; }
+
+public: // RenderOperation interface
+
+	void updatePreRender(const RenderContext& context) override;
+
+	std::vector<osg::ref_ptr<osg::Texture>> getOutputTextures() const override;
 
 private:
 	void updateOsgGroup();

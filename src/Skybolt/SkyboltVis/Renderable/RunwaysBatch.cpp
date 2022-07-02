@@ -442,7 +442,7 @@ RunwaysBatch::RunwaysBatch(const Runways& runways, const osg::ref_ptr<osg::Progr
 	mTransform->addChild(geode);
 }
 
-void RunwaysBatch::updatePreRender(const RenderContext& context)
+void RunwaysBatch::updatePreRender(const CameraRenderContext& context)
 {
 	mUniforms.modelMatrix->set(mTransform->getWorldMatrices().front());
 }

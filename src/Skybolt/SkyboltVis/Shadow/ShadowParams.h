@@ -4,28 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-
 #pragma once
 
-#include "SkyboltVis/SkyboltVisFwd.h"
-
-#include <osg/Camera>
-#include <osg/Group>
+#include <vector>
 
 namespace skybolt {
 namespace vis {
 
-enum class RenderOperationOrder
+struct ShadowParams
 {
-	PrecomputeAtmosphere,
-	EnvironmentMap,
-	WaterNormalMap,
-	WaterFoamMap,
-	ShadowMap,
-	Clouds,
-	MainPass,
-	FinalComposite,
-	Hud
+	int textureSize;
+	std::vector<float> cascadeBoundingDistances;
 };
 
 } // namespace vis

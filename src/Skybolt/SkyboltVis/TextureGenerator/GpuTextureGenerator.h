@@ -8,7 +8,7 @@
 
 #include "SkyboltVis/SkyboltVisFwd.h"
 #include "SkyboltVis/Renderable/ScreenQuad.h"
-#include "SkyboltVis/RenderTarget/RenderOperation.h"
+#include "SkyboltVis/RenderOperation/RenderOperation.h"
 
 #include <osg/Texture2D>
 
@@ -34,7 +34,7 @@ private:
 	std::unique_ptr<ScreenQuad> mQuad;
 	bool mActive;
 
-	friend class DrawCallback;
+	friend class GpuTextureGeneratorDrawCallback;
 };
 
 } // namespace vis

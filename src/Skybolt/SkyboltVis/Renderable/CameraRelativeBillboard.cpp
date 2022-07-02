@@ -27,7 +27,7 @@ CameraRelativeBillboard::CameraRelativeBillboard(const osg::ref_ptr<osg::StateSe
 	mTransform->addChild(geometry);
 }
 
-void CameraRelativeBillboard::updatePreRender(const RenderContext& context)
+void CameraRelativeBillboard::updatePreRender(const CameraRenderContext& context)
 {
 	osg::Vec3f pos = context.camera.getPosition() + getOrientation() * osg::Vec3f(mDistance, 0, 0);
 	DefaultRootNode::setPosition(pos);

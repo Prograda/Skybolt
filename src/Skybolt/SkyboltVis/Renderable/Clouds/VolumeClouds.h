@@ -16,7 +16,6 @@ namespace vis {
 struct VolumeCloudsConfig
 {
 	osg::ref_ptr<osg::Program> program;
-	osg::ref_ptr<osg::Program> compositorProgram;
 	float innerCloudLayerRadius;
 	float outerCloudLayerRadius;
 	osg::ref_ptr<osg::Texture2D> cloudsTexture;
@@ -26,10 +25,7 @@ class VolumeClouds : public DefaultRootNode
 {
 public:
 	VolumeClouds(const VolumeCloudsConfig& config);
-	
 	~VolumeClouds();
-
-	osg::ref_ptr<osg::Texture2D> getColorTexture() const { return mColorTexture; }
 
 	struct Uniforms
 	{
@@ -40,13 +36,11 @@ public:
 		osg::Uniform* bottomRightDir;
 	};
 
-private:
-	void updatePreRender(const RenderContext& context) override;
+	void updatePreRender(const CameraRenderContext& context) override;
 
 private:
 	osg::ref_ptr<osg::Geode> mGeode;
 	Uniforms mUniforms;
-	osg::ref_ptr<osg::Texture2D> mColorTexture;
 };
 
 } // namespace vis

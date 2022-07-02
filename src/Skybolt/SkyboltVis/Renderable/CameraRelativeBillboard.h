@@ -21,7 +21,7 @@ public:
 	virtual void setPosition(const osg::Vec3d &position) override {} // has no effect
 
 protected:
-	void updatePreRender(const RenderContext& context);
+	void updatePreRender(const CameraRenderContext& context);
 
 private:
 	float mDistance;

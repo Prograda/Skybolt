@@ -25,6 +25,7 @@ class CascadedShadowMapGenerator
 public:
 	CascadedShadowMapGenerator(const CascadedShadowMapGeneratorConfig& config);
 
+	//! @param lightDirection is the direction to the light
 	void update(const vis::Camera& viewCamera, const osg::Vec3& lightDirection, const osg::Vec3& wrappedNoiseOrigin);
 
 	void configureShadowReceiverStateSet(osg::StateSet& ss);

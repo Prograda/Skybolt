@@ -54,7 +54,7 @@ public:
 	static void replaceAttribute(const Roads& roads, osg::Image& image, const Box2f& imageWorldBounds, int attributeToReplace, int attributeToReplaceWith);
 
 protected:
-	void updatePreRender(const RenderContext& context) override;
+	void updatePreRender(const CameraRenderContext& context) override;
 
 private:
 	Uniforms mUniforms;

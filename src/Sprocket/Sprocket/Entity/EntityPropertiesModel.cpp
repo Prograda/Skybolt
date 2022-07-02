@@ -13,6 +13,7 @@
 #include <SkyboltSim/Entity.h>
 #include <SkyboltVis/Renderable/Planet/Planet.h>
 #include <SkyboltVis/Renderable/Planet/PlanetSurface.h>
+#include <SkyboltVis/Renderable/Water/WaterMaterial.h>
 #include <QVector3D>
 
 using namespace skybolt;
@@ -120,11 +121,17 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 			addProperty(createVariantProperty("waveHeight", 0.0),
 				// Updater
 				[this, planet](QtProperty& property) {
-					static_cast<VariantProperty&>(property).setValue(planet->getWaveHeight());
+					if (const auto& material = planet->getWaterMaterial(); material)
+					{
+						static_cast<VariantProperty&>(property).setValue(material->getWaveHeight());
+					}
 				},
 				// Applier
 				[this, planet](QtProperty& property) {
-					planet->setWaveHeight(static_cast<VariantProperty&>(property).value.toFloat());
+					if (const auto& material = planet->getWaterMaterial(); material)
+					{
+						material->setWaveHeight(static_cast<VariantProperty&>(property).value.toFloat());
+					}
 				}
 			);
 		}

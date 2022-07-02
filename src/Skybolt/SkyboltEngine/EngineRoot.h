@@ -47,7 +47,6 @@ public:
 	std::unique_ptr<px_sched::Scheduler> scheduler;
 	vis::ShaderPrograms programs;
 	vis::ScenePtr scene;
-	vis::RenderOperationPipelinePtr renderOperationPipeline;
 	file::FileLocator fileLocator;
 	JulianDateProvider julianDateProvider;
 	std::unique_ptr<sim::World> simWorld;
@@ -57,6 +56,7 @@ public:
 	EngineStats stats;
 	Scenario scenario;
 	sim::SystemRegistryPtr systemRegistry;
+	nlohmann::json engineSettings;
 };
 
 file::Path locateFile(const std::string& filename, file::FileLocatorMode mode);

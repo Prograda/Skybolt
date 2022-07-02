@@ -7,21 +7,17 @@
 
 #pragma once
 
-#include "RenderTarget.h"
-#include "SkyboltVis/Rect.h"
-#include "SkyboltVis/RenderContext.h"
+#include "SkyboltVis/SkyboltVisFwd.h"
 
-#include <osg/Camera>
-#include <osgViewer/Viewer>
+#include <osg/ref_ptr>
+#include <functional>
 
 namespace skybolt {
 namespace vis {
 
-class Viewport : public RenderTarget
-{
-public:
-	Viewport();
-};
+osg::ref_ptr<RenderOperation> createRenderOperationVisualization(const osg::ref_ptr<RenderOperation>& rop, const ShaderPrograms& registry);
+
+osg::ref_ptr<RenderOperation> createRenderOperationFunction(std::function<void(const RenderContext&)> func);
 
 } // namespace vis
 } // namespace skybolt

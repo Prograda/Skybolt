@@ -20,8 +20,7 @@ public:
 	VisObject();
 	virtual ~VisObject();
 
-	virtual void updatePostSceneUpdate() {}
-	virtual void updatePreRender(const RenderContext& context) {};
+	virtual void updatePreRender(const CameraRenderContext& context) {};
 
 	virtual void setVisibilityCategoryMask(uint32_t mask) {};
 	virtual void setVisible(bool visible) {};

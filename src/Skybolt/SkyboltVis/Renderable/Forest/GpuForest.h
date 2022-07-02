@@ -48,7 +48,7 @@ public:
 
 	void updateFromTree(const QuadTreeTileLoader::LoadedTileTree& tree);
 
-	void updatePreRender(const RenderContext& context);
+	void updatePreRender(const CameraRenderContext& context);
 
 private:
 	struct ForestTile

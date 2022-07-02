@@ -8,6 +8,7 @@
 #pragma once
 
 #include "SkyboltVisFwd.h"
+#include <osg/Vec2i>
 #include <osg/Vec3>
 
 namespace skybolt {
@@ -15,7 +16,12 @@ namespace vis {
 
 struct RenderContext
 {
-	explicit RenderContext(const Camera& camera) : camera(camera) {}
+	osg::Vec2i targetDimensions; //!< Size of the render target in pixels
+};
+
+struct CameraRenderContext : public RenderContext
+{
+	explicit CameraRenderContext(const Camera& camera) : camera(camera) {}
 
 	const Camera& camera;
 	osg::Vec3f lightDirection; //!< Direction to light

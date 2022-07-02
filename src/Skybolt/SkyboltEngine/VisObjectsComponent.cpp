@@ -13,7 +13,7 @@ VisObjectsComponent::~VisObjectsComponent()
 {
 	for (const vis::VisObjectPtr& object : objects)
 	{
-		scene->removeObject(object.get());
+		scene->removeObject(object);
 	}
 }
 
@@ -21,7 +21,7 @@ void VisObjectsComponent::addObject(const vis::VisObjectPtr& object, bool addToS
 {
 	if (addToScene)
 	{
-		scene->addObject(object.get());
+		scene->addObject(object);
 	}
 	objects.push_back(object);
 }

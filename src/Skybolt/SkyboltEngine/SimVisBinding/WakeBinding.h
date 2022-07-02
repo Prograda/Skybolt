@@ -7,7 +7,7 @@
 #pragma once
 
 #include "SimVisBinding.h"
-#include <SkyboltVis/Renderable/Water/WaterStateSet.h>
+#include <SkyboltVis/Renderable/Water/WaterMaterial.h>
 
 namespace skybolt {
 
@@ -26,7 +26,7 @@ struct Wake
 class WakeBinding : public SimVisBinding
 {
 public:
-	WakeBinding(const sim::World* simWorld, const osg::ref_ptr<vis::WaterStateSet>& waterStateSet);
+	WakeBinding(const sim::World* simWorld, const osg::ref_ptr<vis::WaterMaterial>& waterMaterial);
 
 public:
 	// SimVisBinding interface
@@ -34,7 +34,7 @@ public:
 
 private:
 	const sim::World* mWorld;
-	osg::ref_ptr<vis::WaterStateSet> mWaterStateSet;
+	osg::ref_ptr<vis::WaterMaterial> mWaterMaterial;
 };
 
 } // namespace skybolt

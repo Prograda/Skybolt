@@ -8,13 +8,13 @@
 #include <ExamplesCommon/HudSystem.h>
 #include <ExamplesCommon/HelpDisplaySystem.h>
 #include <ExamplesCommon/HelpDisplayToggleEventListener.h>
-#include <ExamplesCommon/WindowUtility.h>
 
 #include <SkyboltEngine/CameraInputSystem.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EntityFactory.h>
+#include <SkyboltEngine/WindowUtil.h>
 #include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltEngine/Input/InputPlatformOsg.h>
 #include <SkyboltEngine/Input/InputSystem.h>
@@ -35,8 +35,8 @@
 
 #include <SkyboltVis/Camera.h>
 #include <SkyboltVis/Scene.h>
-#include <SkyboltVis/RenderTarget/Viewport.h>
-#include <SkyboltVis/RenderTarget/ViewportHelpers.h>
+#include <SkyboltVis/RenderOperation/RenderCameraViewport.h>
+#include <SkyboltVis/RenderOperation/RenderTarget.h>
 #include <SkyboltVis/Window/StandaloneWindow.h>
 
 #include <SkyboltCommon/Exception.h>
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 
 		// Attach camera to window
 		std::unique_ptr<vis::StandaloneWindow> window = createWindow();
-		osg::ref_ptr<vis::RenderTarget> viewport = createAndAddViewportToWindowWithEngine(*window, *engineRoot);
+		osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindowWithEngine(*window, *engineRoot);
 		viewport->setCamera(getVisCamera(*simCamera));
 
 		// Create input
@@ -167,14 +167,14 @@ H: Toggle help message
 Mouse: Pan camera
 )";
 
-		auto helpDisplaySystem = std::make_shared<HelpDisplaySystem>(*window);
+		osg::ref_ptr<osg::Camera> overlayCamera = viewport->getFinalRenderTarget()->getOsgCamera();
+		auto helpDisplaySystem = std::make_shared<HelpDisplaySystem>(overlayCamera);
 		helpDisplaySystem->setMessage(helpMessage);
 		engineRoot->systemRegistry->push_back(helpDisplaySystem);
 
 		auto entityInputSystem = std::make_shared<EntityInputSystem>(axes);
 		engineRoot->systemRegistry->push_back(entityInputSystem);
 
-		osg::ref_ptr<osg::Camera> overlayCamera = getFinalRenderTarget(*window)->getOsgCamera();
 		auto hudSystem = std::make_shared<HudSystem>(overlayCamera, [&] { return getVisCamera(*simCamera)->getFovY(); });
 		engineRoot->systemRegistry->push_back(hudSystem);
 
@@ -189,9 +189,9 @@ Mouse: Pan camera
 		auto helpDisplayToggleEventListener = std::make_shared<HelpDisplayToggleEventListener>(helpDisplaySystem);
 		inputPlatform->getEventEmitter()->addEventListener<KeyEvent>(helpDisplayToggleEventListener.get());
 
-#define SHOW_STATS
+//#define SHOW_STATS
 #ifdef SHOW_STATS
-		engineRoot->systemRegistry->push_back(std::make_shared<StatsDisplaySystem>(*window));
+		engineRoot->systemRegistry->push_back(std::make_shared<StatsDisplaySystem>(&window->getViewer(), overlayCamera));
 #endif
 
 		// Create entities

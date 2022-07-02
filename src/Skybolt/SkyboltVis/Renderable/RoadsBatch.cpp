@@ -317,7 +317,7 @@ RoadsBatch::RoadsBatch(const PolyRegions& regions, const osg::ref_ptr<osg::Progr
 	mTransform->addChild(geode);
 }
 
-void RoadsBatch::updatePreRender(const RenderContext& context)
+void RoadsBatch::updatePreRender(const CameraRenderContext& context)
 {
 	mUniforms.modelMatrix->set(mTransform->getWorldMatrices().front());
 }

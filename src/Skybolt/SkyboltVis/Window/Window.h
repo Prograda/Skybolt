@@ -8,7 +8,7 @@
 #pragma once
 
 #include "SkyboltVis/SkyboltVisFwd.h"
-#include "SkyboltVis/RenderTarget/RenderOperationPipeline.h"
+#include "SkyboltVis/RenderOperation/RenderOperationSequence.h"
 
 #include <osgViewer/Viewer>
 #include <set>
@@ -31,28 +31,20 @@ public:
 	osgViewer::Viewer& getViewer() const { return *mViewer; }
 	std::weak_ptr<osgViewer::Viewer> getViewerPtr() const {return mViewer;}
 
-	void setRenderOperationPipeline(const RenderOperationPipelinePtr& renderOperationPipeline);
-	RenderOperationPipelinePtr& getRenderOperationPipeline() { return mRenderOperationPipeline; }
-	const RenderOperationPipelinePtr& getRenderOperationPipeline() const { return mRenderOperationPipeline; }
+	RenderOperationSequence& getRenderOperationSequence() { return *mRenderOperationSequence; }
+	const RenderOperationSequence& getRenderOperationSequence() const { return *mRenderOperationSequence; }
 
 protected:
 	void configureGraphicsState();
-	osg::Group* getSceneGraphRoot() const;
 
 protected:
 	std::shared_ptr<osgViewer::Viewer> mViewer;
 
 private:
 	osg::ref_ptr<osg::Group> mRootGroup;
-	RenderOperationPipelinePtr mRenderOperationPipeline;
-	CameraPtr mCamera;
+	std::unique_ptr<RenderOperationSequence> mRenderOperationSequence;
 	osg::Uniform* mScreenSizePixelsUniform;
-
-	std::vector<osg::ref_ptr<RenderOperation>> mOperations;
 };
-
-//! @return the RenderTarget representing the final frame output 
-osg::ref_ptr<RenderTarget> getFinalRenderTarget(const Window& window);
 
 } // namespace vis
 } // namespace skybolt

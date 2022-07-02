@@ -69,15 +69,21 @@
     <property name="title">
      <string>View</string>
     </property>
-    <addaction name="actionShowViewportStats"/>
    </widget>
+    <widget class="QMenu" name="menuDeveloper">
+      <property name="title">
+        <string>Developer</string>
+      </property>
+      <addaction name="actionShowViewportStats"/>
+      <addaction name="actionShowViewportTextures"/>
+      <addaction name="actionLiveShaderEditing"/>
+    </widget>
    <widget class="QMenu" name="menuTools">
      <property name="title">
        <string>Tools</string>
      </property>
      <addaction name="actionCaptureImage"/>
      <addaction name="actionSettings"/>
-     <addaction name="actionLiveShaderEditing"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -87,6 +93,7 @@
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
+   <addaction name="menuDeveloper"/>
    <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -120,6 +127,14 @@
    <action name="actionShowViewportStats">
      <property name="text">
        <string>Viewport Stats</string>
+     </property>
+     <property name="checkable">
+       <bool>true</bool>
+     </property>
+   </action>
+   <action name="actionShowViewportTextures">
+     <property name="text">
+       <string>Viewport Textures</string>
      </property>
      <property name="checkable">
        <bool>true</bool>

@@ -57,6 +57,7 @@ private slots:
 	void exit();
 	void captureImage();
 	void editEngineSettings();
+	void setViewportTextureDisplayEnabled(bool enabled);
 	void setLiveShaderEditingEnabled(bool enabled);
 
 	void toolWindowActionToggled(bool state);
@@ -113,8 +114,6 @@ private:
 	std::shared_ptr<skybolt::InputPlatform> mInputPlatform;
 	std::unique_ptr<class ViewportInput> mViewportInput;
 
-	skybolt::vis::ArrowsPtr mArrows;
-
 	PropertyEditor* mPropertiesEditor = nullptr;
 	QComboBox* mCameraCombo;
 	class CameraControllerWidget* mCameraControllerWidget;
@@ -136,7 +135,8 @@ private:
 
 	std::vector<EditorPluginPtr> mPlugins;
 
-	osg::ref_ptr<skybolt::vis::RenderTarget> mRenderTarget;
+	osg::ref_ptr<skybolt::vis::RenderCameraViewport> mViewport;
+	osg::ref_ptr<skybolt::vis::RenderOperation> mRenderOperationVisualization;
 
 	skybolt::sim::Entity* mSelectedEntity = nullptr;
 };

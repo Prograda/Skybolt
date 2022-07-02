@@ -17,15 +17,14 @@ class Program;
 namespace skybolt {
 namespace vis {
 
-//! Represents a piece of work to be performed during render
-class RenderOperationPipelineVisualizer : public RenderOperation
+class RenderOperationVisualizer : public RenderOperation
 {
 public:
-	RenderOperationPipelineVisualizer(RenderOperationPipeline* pipeline, const osg::ref_ptr<osg::Program>& program);
-	void updatePreRender() override;
+	RenderOperationVisualizer(const osg::ref_ptr<RenderOperation>& renderOperation, const osg::ref_ptr<osg::Program>& program);
+	void updatePreRender(const RenderContext& renderContext) override;
 
 private:
-	RenderOperationPipeline* mPipeline;
+	osg::ref_ptr<RenderOperation> mRenderOperation;
 	osg::ref_ptr<osg::Program> mProgram;
 	osg::ref_ptr<osg::Camera> mCamera;
 

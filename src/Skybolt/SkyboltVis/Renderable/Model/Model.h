@@ -40,7 +40,7 @@ public:
 	bool isVisible() const override { return mVisible; }
 
 private:
-	void updatePreRender(const RenderContext& context) override;
+	void updatePreRender(const CameraRenderContext& context) override;
 
 protected:
 	osg::Node* mNode;

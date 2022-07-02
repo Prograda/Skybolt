@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "RenderOperationPipelineVisualizer.h"
+#include "RenderOperationVisualizer.h"
 
 #include "OsgStateSetHelpers.h"
-#include "RenderOperationPipeline.h"
+#include "RenderOperationSequence.h"
 #include "Renderable/ScreenQuad.h"
 
 #include <osg/Camera>
@@ -19,12 +19,12 @@
 namespace skybolt {
 namespace vis {
 
-RenderOperationPipelineVisualizer::RenderOperationPipelineVisualizer(RenderOperationPipeline* pipeline, const osg::ref_ptr<osg::Program>& program) :
-	mPipeline(pipeline),
+RenderOperationVisualizer::RenderOperationVisualizer(const osg::ref_ptr<RenderOperation>& renderOperation, const osg::ref_ptr<osg::Program>& program) :
+	mRenderOperation(renderOperation),
 	mProgram(program),
 	mCamera(new osg::Camera)
 {
-	assert(mPipeline);
+	assert(mRenderOperation);
 	assert(mProgram);
 
 	mCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
@@ -53,15 +53,9 @@ static osg::StateSet* createTexturedQuadStateSet(osg::ref_ptr<osg::Program> prog
 	return stateSet;
 }
 
-void RenderOperationPipelineVisualizer::updatePreRender()
+void RenderOperationVisualizer::updatePreRender(const RenderContext& renderContext)
 {
-	std::vector<osg::ref_ptr<osg::Texture>> textures;
-	
-	for (const auto& operation : mPipeline->getOperations())
-	{
-		const auto& operationTextures = operation.second->getOutputTextures();
-		textures.insert(textures.end(), operationTextures.begin(), operationTextures.end());
-	}
+	std::vector<osg::ref_ptr<osg::Texture>> textures = mRenderOperation->getOutputTextures();
 
 	if (textures != mPrevTextures)
 	{
@@ -90,7 +84,7 @@ void RenderOperationPipelineVisualizer::updatePreRender()
 				mScreenQuads.push_back(quad);
 
 				++x;
-				if (x > rowCount)
+				if (x >= rowCount)
 				{
 					x = 0;
 					++y;

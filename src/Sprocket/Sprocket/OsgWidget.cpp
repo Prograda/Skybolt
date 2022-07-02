@@ -5,14 +5,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "OsgWidget.h"
-#include <SkyboltEngine/Input/InputPlatform.h>
-
-#include <SkyboltVis/Camera.h>
-#include <SkyboltVis/Rect.h>
-#include <SkyboltVis/Scene.h>
-#include <SkyboltVis/RenderTarget/RenderTargetSceneAdapter.h>
-#include <SkyboltVis/RenderTarget/Viewport.h>
-#include <SkyboltVis/RenderTarget/ViewportHelpers.h>
 #include <SkyboltVis/Window/EmbeddedWindow.h>
 
 #include <QKeyEvent>

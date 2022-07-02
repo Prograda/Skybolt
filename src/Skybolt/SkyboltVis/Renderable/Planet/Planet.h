@@ -14,7 +14,6 @@
 #include "SkyboltVis/Renderable/Clouds/VolumeClouds.h"
 #include "SkyboltVis/Renderable/Planet/Features/PlanetFeaturesSource.h"
 #include "SkyboltVis/Renderable/Forest/GpuForest.h"
-#include "SkyboltVis/Renderable/Water/WaterStateSet.h"
 
 #include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltSim/Spatial/LatLon.h>
@@ -29,25 +28,17 @@
 namespace skybolt {
 namespace vis {
 
-struct ShadowParams
-{
-	int textureSize;
-	std::vector<float> cascadeBoundingDistances;
-};
-
 struct PlanetConfig
 {
 	px_sched::Scheduler* scheduler;
 	const ShaderPrograms* programs;
 	Scene* scene;
-	RenderOperationPipelinePtr renderOperationPipeline;
 	BuildingTypesPtr buildingTypes; //!< optional
 	sim::LatLon latLonOrigin;
 	float innerRadius;
 	PlanetTileSources planetTileSources;
 	VisFactoryRegistry* visFactoryRegistry;
 	bool waterEnabled = true;
-	std::optional<ShadowParams> shadowParams;
 	osg::ref_ptr<osg::Texture2D> cloudsTexture; //!< Set to null to disable clouds
 	boost::optional<BruentonAtmosphereConfig> atmosphereConfig;
 	file::FileLocator fileLocator;
@@ -57,7 +48,10 @@ struct PlanetConfig
 	DetailMappingTechniquePtr detailMappingTechnique;
 };
 
+class BruentonAtmosphere;
 class MyPlanetSurfaceListener;
+class ReflectionCameraController;
+class WaterMaterial;
 
 class Planet : public RootNode
 {
@@ -69,6 +63,10 @@ public:
 	PlanetSurface* getSurface() const { return mPlanetSurface.get(); } //!< Never returns null
 
 	PlanetFeatures* getPlanetFeatures() const { return mPlanetFeatures.get(); } //!< May return null
+
+	osg::ref_ptr<BruentonAtmosphere> getAtmosphere() const; //!< May return null
+
+	osg::ref_ptr<WaterMaterial> getWaterMaterial() const; //!< May return null
 
 	void setJulianDate(double date)
 	{
@@ -82,16 +80,6 @@ public:
 	//! If not set, coverage will be governed by cloud texture.
 	void setCloudCoverageFraction(std::optional<float> cloudCoverageFraction);
 	std::optional<float> getCloudCoverageFraction() const { return mCloudCoverageFraction; }
-
-	float getWaveHeight() const;
-
-	void setWaveHeight(float height);
-
-	//! Can return null
-	osg::ref_ptr<WaterStateSet> getWaterStateSet() const
-	{
-		return mWaterStateSet;
-	}
 
 	float calcAtmosphericDensity(const osg::Vec3f& position) const;
 
@@ -109,29 +97,19 @@ public:
 
 	osg::Node* _getNode() const override;
 
-	void updatePostSceneUpdate() override;
-	void updatePreRender(const RenderContext& context) override;
+	void updatePreRender(const CameraRenderContext& context) override;
 
 private:
 	Scene* mScene;
-	RenderOperationPipelinePtr mRenderOperationPipeline;
-
-	osg::ref_ptr<WaterStateSet> mWaterStateSet;
+	osg::ref_ptr<WaterMaterial> mWaterMaterial;
 	OceanPtr mOcean;
-	std::unique_ptr <class ReflectionCameraController> mReflectionCameraController;
+	std::unique_ptr <ReflectionCameraController> mReflectionCameraController;
 	
-	std::unique_ptr<class CascadedWaveHeightTextureGenerator> mWaveHeightTextureGenerator;
-
-	osg::ref_ptr<GpuTextureGenerator> mEnvironmentMapGpuTextureGenerator;
-	std::vector<osg::ref_ptr<GpuTextureGenerator>> mWaterSurfaceGpuTextureGenerators; //!< stored in execution order
-
 	std::unique_ptr<PlanetSurface> mPlanetSurface;
-	std::unique_ptr<PlanetSky> mPlanetSky;
+	std::shared_ptr<PlanetSky> mPlanetSky;
 	std::unique_ptr<PlanetFeatures> mPlanetFeatures; //!< Can be null
-	std::unique_ptr<VolumeClouds> mVolumeClouds;
-	std::unique_ptr<class CascadedShadowMapGenerator> mShadowMapGenerator;
-	osg::ref_ptr<class WaveFoamMaskGenerator> mWaveFoamMaskGenerator[WaterStateSetConfig::waveTextureCount];
-	osg::ref_ptr<class BruentonAtmosphere> mAtmosphere;
+	VolumeCloudsPtr mVolumeClouds;
+	osg::ref_ptr<BruentonAtmosphere> mAtmosphere;
 
 	osg::Uniform* mPlanetCenterUniform;
 	osg::Uniform* mPlanetMatrixInvUniform;

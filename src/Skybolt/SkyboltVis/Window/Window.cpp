@@ -8,7 +8,8 @@
 #include "DisplaySettings.h"
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/OsgLogHandler.h"
-#include "SkyboltVis/RenderTarget/RenderTarget.h"
+#include "SkyboltVis/RenderContext.h"
+#include "SkyboltVis/RenderOperation/RenderTarget.h"
 
 #include <boost/foreach.hpp>
 
@@ -32,8 +33,11 @@ namespace vis {
 
 Window::Window(const DisplaySettings& settings) :
 	mViewer(new osgViewer::Viewer),
-	mRootGroup(new osg::Group)
+	mRootGroup(new osg::Group),
+	mRenderOperationSequence(std::make_unique<RenderOperationSequence>())
 {
+	mRootGroup->addChild(mRenderOperationSequence->getRootNode());
+
 	forwardOsgLogToBoost();
 
 	osg::DisplaySettings::instance()->setNumMultiSamples(settings.multiSampleCount);
@@ -61,31 +65,13 @@ bool Window::render()
 {
 	mScreenSizePixelsUniform->set(osg::Vec2f(getWidth(), getHeight()));
 
-	mRenderOperationPipeline->updatePreRender();
+	RenderContext context;
+	context.targetDimensions = osg::Vec2i(getWidth(), getHeight());
+	mRenderOperationSequence->updatePreRender(context);
 
 	mViewer->frame();
 
 	return !mViewer->done();
-}
-
-osg::Group* Window::getSceneGraphRoot() const
-{
-	return mViewer->getSceneData()->asGroup();
-}
-
-void Window::setRenderOperationPipeline(const RenderOperationPipelinePtr& renderOperationPipeline)
-{
-	if (mRenderOperationPipeline)
-	{
-		mRootGroup->removeChild(mRenderOperationPipeline->getRootNode());
-	}
-	
-	mRenderOperationPipeline = renderOperationPipeline;
-	
-	if (mRenderOperationPipeline)
-	{
-		mRootGroup->addChild(mRenderOperationPipeline->getRootNode());
-	}
 }
 
 void Window::configureGraphicsState()
@@ -104,20 +90,6 @@ void Window::configureGraphicsState()
 	// Disable GL error checking because it is expensive (measured about 13% performance hit compared with osg::State::ONCE_PER_FRAME).
 	// Enable to debug OpenGL.
 	state->setCheckForGLErrors(osg::State::NEVER_CHECK_GL_ERRORS);
-}
-
-osg::ref_ptr<RenderTarget> getFinalRenderTarget(const Window& window)
-{
-	const auto& operations = window.getRenderOperationPipeline()->getOperations();
-
-	for (auto i = operations.rbegin(); i != operations.rend(); --i)
-	{
-		if (RenderTarget* target = dynamic_cast<RenderTarget*>(i->second.get()); target)
-		{
-			return target;
-		}
-	}
-	return nullptr;
 }
 
 } // namespace vis

@@ -48,7 +48,7 @@ GpuForestTile::GpuForestTile(const osg::ref_ptr<osg::Texture2D>& heightMap, cons
 	stateSet->addUniform(mModelMatrixUniform);
 }
 
-void GpuForestTile::updatePreRender(const RenderContext& context)
+void GpuForestTile::updatePreRender(const CameraRenderContext& context)
 {
 	osg::Matrix modelMatrix = mTransform->getWorldMatrices().front();
 	mModelMatrixUniform->set(modelMatrix);

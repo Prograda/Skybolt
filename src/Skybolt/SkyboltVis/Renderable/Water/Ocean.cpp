@@ -99,7 +99,7 @@ void Ocean::setPosition(const osg::Vec3f& position)
 	mUniforms.waterHeight->set(float(-position.z()));
 }
 
-void Ocean::updatePreRender(const RenderContext& context)
+void Ocean::updatePreRender(const CameraRenderContext& context)
 {
 	const Camera& camera = context.camera;
 	// Update uniforms

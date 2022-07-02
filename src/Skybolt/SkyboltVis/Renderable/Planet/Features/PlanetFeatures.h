@@ -58,7 +58,7 @@ public:
 
 	void onSurfaceTileAdded(const skybolt::QuadTreeTileKey& key);
 
-	void updatePreRender(const RenderContext& context);
+	void updatePreRender(const CameraRenderContext& context);
 
 	std::size_t getLoadQueueSize() const { return mLoadingQueue.size(); }
 
@@ -69,7 +69,7 @@ private:
 private:
 	void processLoadingQueue();
 
-	void updatePreRender(LoadedVisObjects& objects, const RenderContext& context) const;
+	void updatePreRender(LoadedVisObjects& objects, const CameraRenderContext& context) const;
 	void unload(LoadedVisObjects& objects) const;
 
 private:

@@ -20,7 +20,7 @@ namespace vis {
 class RenderOperation : public osg::Group
 {
 public:
-	virtual void updatePreRender() {};
+	virtual void updatePreRender(const RenderContext& renderContext) {};
 
 	virtual std::vector<osg::ref_ptr<osg::Texture>> getOutputTextures() const { return {}; };
 

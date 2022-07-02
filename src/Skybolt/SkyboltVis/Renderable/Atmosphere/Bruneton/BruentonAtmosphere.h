@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "SkyboltVis/RenderTarget/RenderOperation.h"
+#include "SkyboltVis/VisObject.h"
 #include <osg/Group>
 #include <osg/Texture2D>
 #include <functional>
@@ -47,8 +47,9 @@ struct BruentonAtmosphereConfig
 	bool useEarthOzone = true;
 };
 
-class BruentonAtmosphere : public RenderOperation
+class BruentonAtmosphere : public osg::Group
 {
+	friend class BruentonAtmosphereDrawCallback;
 public:
 	BruentonAtmosphere(const BruentonAtmosphereConfig& config);
 	~BruentonAtmosphere();
@@ -57,22 +58,18 @@ public:
 	const osg::ref_ptr<osg::Texture>& getScatteringTexture() const;
 	const osg::ref_ptr<osg::Texture>& getIrradianceTexture() const;
 
+	osg::ref_ptr<osg::StateSet> getStateSet() const { return mStateSet; }
+
 	static osg::Vec3f getSolarIrradiance();
 
-public:
-	std::vector<osg::ref_ptr<osg::Texture>> getOutputTextures() const override;
-
-protected:
-	void updatePreRender() override;
-
 private:
+	osg::ref_ptr<osg::StateSet> mStateSet;
 	osg::ref_ptr<BruentonAtmosphereGenerator> mGenerator;
 	std::vector<osg::ref_ptr<osg::Uniform>> mUniforms;
 
 	osg::ref_ptr<osg::Texture> mTransmittanceTexture;
 	osg::ref_ptr<osg::Texture> mScatteringTexture;
 	osg::ref_ptr<osg::Texture> mIrradianceTexture;
-	bool mGenerated = false;
 };
 
 } // namespace vis

@@ -237,7 +237,7 @@ osg::Vec2i PagedForest::getPageId(const osg::Vec2f& position) const
 					  int((position.y() - mBounds.minimum.y()) / mPageSize.y()));
 }
 
-void PagedForest::updatePreRender(const RenderContext& context)
+void PagedForest::updatePreRender(const CameraRenderContext& context)
 {
 	osg::Matrix modelMatrix = mTransform->getWorldMatrices().front();
 	mModelMatrixUniform->set(modelMatrix);

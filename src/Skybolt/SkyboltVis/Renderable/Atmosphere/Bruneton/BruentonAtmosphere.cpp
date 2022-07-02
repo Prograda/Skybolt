@@ -11,6 +11,7 @@
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltVis/Renderable/Atmosphere/Bruneton/ThirdParty/model.h>
 
+#include <osg/Camera>
 #include <osg/StateSet>
 #include <assert.h>
 
@@ -64,7 +65,20 @@ constexpr double kSolarIrradiance[48] = {
 // realistic, but was used in the original implementation).
 constexpr double kConstantSolarIrradiance = 1.5;
 
-BruentonAtmosphere::BruentonAtmosphere(const BruentonAtmosphereConfig& config)
+class BruentonAtmosphereDrawCallback : public osg::Camera::DrawCallback
+{
+public:
+	BruentonAtmosphereDrawCallback(BruentonAtmosphere* atmosphere) : atmosphere(atmosphere) {}
+	void operator() (const osg::Camera &) const override
+	{
+		atmosphere->removeChild(atmosphere->mGenerator);
+	}
+
+	BruentonAtmosphere* atmosphere;
+};
+
+BruentonAtmosphere::BruentonAtmosphere(const BruentonAtmosphereConfig& config) :
+	mStateSet(new osg::StateSet)
 {
 	// Values from http://www.iup.uni-bremen.de/gruppen/molspec/databases/
 	// referencespectra/o3spectra2011/index.html for 233K, summed and averaged in
@@ -131,6 +145,10 @@ BruentonAtmosphere::BruentonAtmosphere(const BruentonAtmosphereConfig& config)
 	generatorConfig.maxSunZenithAngle = (generatorConfig.useHalfPrecision ? 102.0 : 120.0) * math::degToRadD();
 
 	mGenerator = osg::ref_ptr<BruentonAtmosphereGenerator>(new BruentonAtmosphereGenerator(generatorConfig));
+	// TODO: find a better way to determine when the textures have been generated so we can remove them from the scene graph as we only need to generate them once.
+	// For now we just get a callback when a camera in the subgraph draws.
+	mGenerator->getChild(0)->asGroup()->getChild(0)->asCamera()->addPostDrawCallback(new BruentonAtmosphereDrawCallback(this)); // osg::Camera takes ownership of the callback by storing it as a ref_ptr
+
 	addChild(mGenerator);
 
 	osg::Vec3 rgbWavelengths(atmosphere::Model::kLambdaR, atmosphere::Model::kLambdaG, atmosphere::Model::kLambdaB);
@@ -145,6 +163,24 @@ BruentonAtmosphere::BruentonAtmosphere(const BruentonAtmosphereConfig& config)
 		new osg::Uniform("mie_phase_function_g", float(generatorConfig.miePhaseFunctionG)),
 		new osg::Uniform("mu_s_min", float(std::cos(generatorConfig.maxSunZenithAngle)))
 	};
+
+	mStateSet->setTextureAttributeAndModes((int)GlobalSamplerUnit::Transmittance, mGenerator->getTransmittanceTexture());
+	mStateSet->addUniform(createUniformSampler2d("transmittance_texture", (int)GlobalSamplerUnit::Transmittance));
+
+	mStateSet->setTextureAttributeAndModes((int)GlobalSamplerUnit::Scattering, mGenerator->getScatteringTexture());
+	mStateSet->addUniform(createUniformSampler3d("scattering_texture", (int)GlobalSamplerUnit::Scattering));
+
+	mStateSet->setTextureAttributeAndModes((int)GlobalSamplerUnit::Irradiance, mGenerator->getIrradianceTexture());
+	mStateSet->addUniform(createUniformSampler2d("irradiance_texture", (int)GlobalSamplerUnit::Irradiance));
+
+	for (const auto& uniform : mUniforms)
+	{
+		mStateSet->addUniform(uniform);
+	}
+
+	mTransmittanceTexture = mGenerator->getTransmittanceTexture();
+	mScatteringTexture = mGenerator->getScatteringTexture();
+	mIrradianceTexture = mGenerator->getIrradianceTexture();
 }
 
 BruentonAtmosphere::~BruentonAtmosphere()
@@ -196,40 +232,6 @@ const osg::ref_ptr<osg::Texture>& BruentonAtmosphere::getScatteringTexture() con
 const osg::ref_ptr<osg::Texture>& BruentonAtmosphere::getIrradianceTexture() const
 {
 	return mIrradianceTexture;
-}
-
-std::vector<osg::ref_ptr<osg::Texture>> BruentonAtmosphere::getOutputTextures() const
-{
-	return { mTransmittanceTexture, mScatteringTexture, mIrradianceTexture };
-}
-
-void BruentonAtmosphere::updatePreRender()
-{
-	if (mGenerated && mGenerator)
-	{
-		osg::StateSet& stateSet = *getParent(0)->getOrCreateStateSet(); // FIXME: Setting the parent's state is a hack.
-		stateSet.setTextureAttributeAndModes((int)GlobalSamplerUnit::Transmittance, mGenerator->getTransmittanceTexture());
-		stateSet.addUniform(createUniformSampler2d("transmittance_texture", (int)GlobalSamplerUnit::Transmittance));
-
-		stateSet.setTextureAttributeAndModes((int)GlobalSamplerUnit::Scattering, mGenerator->getScatteringTexture());
-		stateSet.addUniform(createUniformSampler3d("scattering_texture", (int)GlobalSamplerUnit::Scattering));
-
-		stateSet.setTextureAttributeAndModes((int)GlobalSamplerUnit::Irradiance, mGenerator->getIrradianceTexture());
-		stateSet.addUniform(createUniformSampler2d("irradiance_texture", (int)GlobalSamplerUnit::Irradiance));
-
-		for (const auto& uniform : mUniforms)
-		{
-			stateSet.addUniform(uniform);
-		}
-
-		mTransmittanceTexture = mGenerator->getTransmittanceTexture();
-		mScatteringTexture = mGenerator->getScatteringTexture();
-		mIrradianceTexture = mGenerator->getIrradianceTexture();
-
-		removeChild(mGenerator.get());
-		mGenerator = nullptr;
-	}
-	mGenerated = true;
 }
 
 } // namespace vis

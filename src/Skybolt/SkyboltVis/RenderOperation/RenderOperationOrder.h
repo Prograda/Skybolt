@@ -8,8 +8,6 @@
 #pragma once
 
 #include "SkyboltVis/SkyboltVisFwd.h"
-#include "SkyboltVis/RenderContext.h"
-#include "SkyboltVis/RenderTarget/RenderTarget.h"
 
 #include <osg/Camera>
 #include <osg/Group>
@@ -17,17 +15,17 @@
 namespace skybolt {
 namespace vis {
 
-class RenderTargetSceneAdapter : public RenderTarget::Scene
+enum class RenderOperationOrder
 {
-public:
-	RenderTargetSceneAdapter(const ScenePtr& scene) : m_scene(scene) {}
-	~RenderTargetSceneAdapter() override {}
-	void updatePreRender(const Camera& camera) override;
-
-	osg::ref_ptr<osg::Node> getNode() override;
-
-private:
-	ScenePtr m_scene;
+	PrepareScene,
+	PrecomputeAtmosphere,
+	EnvironmentMap,
+	WaterMaterial,
+	ShadowMap,
+	Clouds,
+	MainPass,
+	FinalComposite,
+	Hud
 };
 
 } // namespace vis

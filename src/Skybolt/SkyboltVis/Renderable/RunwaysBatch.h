@@ -34,7 +34,7 @@ public:
 	RunwaysBatch(const Runways& runways, const osg::ref_ptr<osg::Program>& surfaceProgram, const osg::ref_ptr<osg::Program>& textProgram);
 
 protected:
-	void updatePreRender(const RenderContext& context);
+	void updatePreRender(const CameraRenderContext& context) override;
 
 private:
 	Uniforms mUniforms;

@@ -19,7 +19,7 @@ namespace skybolt {
 class HelpDisplaySystem : public sim::System
 {
 public:
-	HelpDisplaySystem(const vis::Window& window);
+	HelpDisplaySystem(const osg::ref_ptr<osg::Camera>& camera);
 	~HelpDisplaySystem();
 
 	void setMessage(const std::string& message);

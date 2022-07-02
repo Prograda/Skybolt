@@ -30,7 +30,7 @@ Billboard::~Billboard()
 {
 }
 
-void Billboard::updatePreRender(const RenderContext& context)
+void Billboard::updatePreRender(const CameraRenderContext& context)
 {
 	osg::Vec3f N = context.camera.getPosition() - getPosition();
 	N.normalize();

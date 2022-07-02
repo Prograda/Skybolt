@@ -36,6 +36,5 @@ protected:
 
 private:
 	std::unique_ptr<skybolt::vis::EmbeddedWindow> mWindow;
-	osg::ref_ptr<skybolt::vis::RenderTarget> mRenderTarget;
 	osg::ref_ptr<osg::Camera::DrawCallback> mDrawCallback;
 };

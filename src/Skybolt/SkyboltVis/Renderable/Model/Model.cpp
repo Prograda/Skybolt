@@ -59,7 +59,7 @@ void Model::setVisible(bool visible)
 	}
 }
 
-void Model::updatePreRender(const RenderContext& context)
+void Model::updatePreRender(const CameraRenderContext& context)
 {
 	// Disable atmospheric shading if atmospheric density is too low because it causes rendering artifacts,
 	// and atmospheric scattering is not very visible at high altitude.

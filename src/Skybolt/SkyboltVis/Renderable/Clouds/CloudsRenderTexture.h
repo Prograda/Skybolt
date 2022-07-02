@@ -6,13 +6,14 @@
 
 #pragma once
 
-#include <SkyboltEngine/SkyboltEngineFwd.h>
-#include <SkyboltVis/SkyboltVisFwd.h>
-
-#include <osg/ref_ptr>
+#include "SkyboltVis/RenderOperation/RenderTexture.h"
+#include <osg/PrimitiveSet>
+#include <osg/Texture2D>
 
 namespace skybolt {
+namespace vis {
 
-osg::ref_ptr<vis::RenderTarget> createAndAddViewportToWindowWithEngine(vis::Window& window, const EngineRoot& engineRoot);
+osg::ref_ptr<RenderTexture> createCloudsRenderTexture(const ScenePtr& scene);
 
+} // namespace vis
 } // namespace skybolt

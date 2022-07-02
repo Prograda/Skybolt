@@ -24,7 +24,7 @@ public:
 	~Starfield();
 
 private:
-	void updatePreRender(const RenderContext& context);
+	void updatePreRender(const CameraRenderContext& context);
 
 private:
 	osg::Geode* mGeode;

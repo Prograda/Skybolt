@@ -8,11 +8,6 @@
 #include <SkyboltVis/OsgStateSetHelpers.h>
 #include <SkyboltVis/TextureGenerator/CompositingPipelineFactory.h>
 
-#include <osg/BlendEquation>
-#include <osg/BlendFunc>
-#include <osg/Camera>
-#include <osg/Capability>
-
 using namespace atmosphere;
 
 namespace skybolt {

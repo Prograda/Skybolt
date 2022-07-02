@@ -215,7 +215,7 @@ BuildingsBatch::BuildingsBatch(const Buildings& buildings, const osg::ref_ptr<os
 	mTransform->addChild(geode);
 }
 
-void BuildingsBatch::updatePreRender(const RenderContext& context)
+void BuildingsBatch::updatePreRender(const CameraRenderContext& context)
 {
 	mUniforms.modelMatrix->set(mTransform->getWorldMatrices().front());
 }

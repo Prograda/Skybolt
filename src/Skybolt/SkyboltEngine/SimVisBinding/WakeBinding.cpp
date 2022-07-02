@@ -18,12 +18,12 @@
 
 namespace skybolt {
 
-WakeBinding::WakeBinding(const sim::World* simWorld, const osg::ref_ptr<vis::WaterStateSet>& waterStateSet) :
+WakeBinding::WakeBinding(const sim::World* simWorld, const osg::ref_ptr<vis::WaterMaterial>& waterMaterial) :
 	mWorld(simWorld),
-	mWaterStateSet(waterStateSet)
+	mWaterMaterial(waterMaterial)
 {
 	assert(mWorld);
-	assert(mWaterStateSet);
+	assert(mWaterMaterial);
 }
 
 const float wakeLength = 700;
@@ -76,7 +76,7 @@ void WakeBinding::syncVis(const GeocentricToNedConverter& converter)
 		}
 	}
 
-	mWaterStateSet->setWakes(wakes);
+	mWaterMaterial->setWakes(wakes);
 }
 
 } // namespace skybolt

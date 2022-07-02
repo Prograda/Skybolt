@@ -78,7 +78,7 @@ Starfield::~Starfield()
 	mTransform->removeChild(mGeode);
 }
 
-void Starfield::updatePreRender(const RenderContext& context)
+void Starfield::updatePreRender(const CameraRenderContext& context)
 {
 	setPosition(context.camera.getPosition());
 

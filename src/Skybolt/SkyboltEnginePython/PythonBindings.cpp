@@ -7,6 +7,7 @@
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EntityFactory.h>
+#include <SkyboltEngine/WindowUtil.h>
 #include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
 #include <SkyboltSim/Entity.h>
@@ -24,8 +25,8 @@
 #include <SkyboltSim/System/SimStepper.h>
 
 #include <SkyboltVis/Rect.h>
-#include <SkyboltVis/RenderTarget/RenderTargetSceneAdapter.h>
-#include <SkyboltVis/RenderTarget/ViewportHelpers.h>
+#include <SkyboltVis/RenderOperation/DefaultRenderCameraViewport.h>
+#include <SkyboltVis/RenderOperation/RenderOperationSequence.h>
 #include <SkyboltVis/Window/CaptureScreenshot.h>
 #include <SkyboltVis/Window/StandaloneWindow.h>
 
@@ -96,15 +97,13 @@ static Vector3 normalizeFunc(const Vector3& v)
 
 static bool attachCameraToWindowWithEngine(sim::Entity& camera, vis::Window& window, EngineRoot& engineRoot)
 {
-	auto viewport = createAndAddViewportToWindow(window, engineRoot.renderOperationPipeline, engineRoot.programs.getRequiredProgram("compositeFinal"));
-	viewport->setScene(std::make_shared<vis::RenderTargetSceneAdapter>(engineRoot.scene));
 	vis::CameraPtr visCamera = getVisCamera(camera);
 	if (visCamera)
 	{
+		const auto& viewport = createAndAddViewportToWindowWithEngine(window, engineRoot);
 		viewport->setCamera(visCamera);
 		return true;
 	}
-
 	return false;
 }
 

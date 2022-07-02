@@ -67,7 +67,7 @@ public:
 	PlanetSurface(const PlanetSurfaceConfig& config);
 	~PlanetSurface();
 
-	void updatePreRender(const RenderContext& context);
+	void updatePreRender(const CameraRenderContext& context);
 
 	skybolt::Listenable<QuadTreeTileLoaderListener>* getTileLoaderListenable() const { return mTileSource.get(); }
 

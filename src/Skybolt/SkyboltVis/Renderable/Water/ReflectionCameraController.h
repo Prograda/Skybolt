@@ -8,7 +8,7 @@
 
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/Scene.h"
-#include "SkyboltVis/RenderTarget/RenderTexture.h"
+#include "SkyboltVis/RenderOperation/RenderTexture.h"
 
 #include <osg/ClipPlane>
 #include <osg/Texture2D>
