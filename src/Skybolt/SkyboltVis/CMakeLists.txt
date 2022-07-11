@@ -13,10 +13,12 @@ if (OSG_STATIC_LIBS)
 	set(OSG_STATIC_LINK_PLUGIN_NAMES
 		osgdb_bmp
 		osgdb_curl
-		osgdb_jpeg
-		osgdb_freetype
 		osgdb_dds
+		osgdb_freetype
+		osgdb_jpeg
+		osgdb_osg
 		osgdb_png
+		osgdb_serializers_osg
 		osgdb_tga
 	)
 endif()

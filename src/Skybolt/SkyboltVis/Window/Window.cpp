@@ -24,6 +24,9 @@ USE_OSGPLUGIN(jpeg)
 USE_OSGPLUGIN(png)
 USE_OSGPLUGIN(tga)
 
+USE_OSGPLUGIN(osg2)
+USE_SERIALIZER_WRAPPER_LIBRARY(osg)
+
 // include the platform specific GraphicsWindow implementation
 USE_GRAPHICSWINDOW()
 #endif
