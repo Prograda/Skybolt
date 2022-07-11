@@ -36,8 +36,7 @@ public:
 	//! Apply torque. Torque is in world axes.
 	void applyTorque(const Vector3& torque) override;
 
-	void updatePreDynamicsSubstep(TimeReal dtSubstep) override;
-	void updatePostDynamics(TimeReal dt, TimeReal dtWallClock) override;
+	void updateDynamicsSubstep(TimeReal dtSubstep) override;
 
 	virtual void setCollisionsEnabled(bool enabled) override {}
 
@@ -57,6 +56,8 @@ private:
 
 	Vector3 mTotalForce = math::dvec3Zero(); //!< World space
 	Vector3 mTotalTorque = math::dvec3Zero(); //!< World space
+
+	std::vector<AppliedForce> mCurrentForces; //!< For visualization purposes. Used to populate mForces in base class.
 };
 
 } // namespace sim

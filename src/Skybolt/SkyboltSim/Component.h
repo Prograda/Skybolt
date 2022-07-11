@@ -20,6 +20,7 @@ public:
 	// TODO: these update hooks should be made more generic. Components should register when they want to be updated.
 	virtual void updatePreDynamics(TimeReal dt, TimeReal dtWallClock) {};
 	virtual void updatePreDynamicsSubstep(TimeReal dtSubstep) {}
+	virtual void updateDynamicsSubstep(TimeReal dtSubstep) {}
 	virtual void updatePostDynamicsSubstep(TimeReal dtSubstep) {}
 	virtual void updatePostDynamics(TimeReal dt, TimeReal dtWallClock) {};
 	virtual void updateAttachments(TimeReal dt, TimeReal dtWallClock) {};

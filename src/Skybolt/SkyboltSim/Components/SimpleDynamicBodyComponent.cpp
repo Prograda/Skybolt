@@ -22,11 +22,13 @@ SimpleDynamicBodyComponent::SimpleDynamicBodyComponent(Node* node, Real mass, co
 void SimpleDynamicBodyComponent::applyCentralForce(const Vector3& force)
 {
 	mTotalForce += force;
+	mCurrentForces.push_back(AppliedForce({math::dvec3Zero(), force}));
 }
 
 void SimpleDynamicBodyComponent::applyForce(const Vector3& force, const Vector3& relPosition)
 {
 	mTotalForce += force;
+	mCurrentForces.push_back(AppliedForce({relPosition, force}));
 
 	Vector3 offset = relPosition - mNode->getOrientation() * mCenterOfMass;
 	mTotalTorque += cross(offset, force);
@@ -37,11 +39,12 @@ void SimpleDynamicBodyComponent::applyTorque(const Vector3& torque)
 	mTotalTorque += torque;
 }
 
-void SimpleDynamicBodyComponent::updatePreDynamicsSubstep(TimeReal dtSubstep)
+void SimpleDynamicBodyComponent::updateDynamicsSubstep(TimeReal dtSubstep)
 {
 	double dt = (double)dtSubstep;
 	double halfDt2 = dt * dt * 0.5;
-	// integrate using velocity-verlet https://en.wikipedia.org/wiki/Verlet_integration
+
+	// Integrate linear dynamics using velocity-verlet https://en.wikipedia.org/wiki/Verlet_integration
 	if (mMass > 0)
 	{
 		Vector3 acceleration = mTotalForce / (double)mMass;
@@ -49,6 +52,7 @@ void SimpleDynamicBodyComponent::updatePreDynamicsSubstep(TimeReal dtSubstep)
 		mLinearVelocity += acceleration * dt;
 	}
 
+	// Integrate angular dynamics using velocity-verlet
 	if (mMomentOfInertia != math::dvec3Zero())
 	{
 		Quaternion ori = mNode->getOrientation();
@@ -69,12 +73,13 @@ void SimpleDynamicBodyComponent::updatePreDynamicsSubstep(TimeReal dtSubstep)
 
 		mAngularVelocity += angularAcceleration * dt;
 	}
-}
 
-void SimpleDynamicBodyComponent::updatePostDynamics(TimeReal dt, TimeReal dtWallClock)
-{
+	// Reset accumulated forces and torques
 	mTotalForce = math::dvec3Zero();
 	mTotalTorque = math::dvec3Zero();
+	
+	std::swap(mCurrentForces, mForces);
+	mCurrentForces.clear();
 }
 
 } // namespace sim

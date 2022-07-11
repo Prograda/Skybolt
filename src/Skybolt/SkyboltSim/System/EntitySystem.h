@@ -20,6 +20,8 @@ public:
 
 	void updatePreDynamics(const StepArgs& args) override;
 	void updatePreDynamicsSubstep(double dtSubstep) override;
+	void updateDynamicsSubstep(double dtSubstep) override;
+	void updatePostDynamicsSubstep(double dtSubstep) override;
 	void updatePostDynamics(const StepArgs& args) override;
 
 private:

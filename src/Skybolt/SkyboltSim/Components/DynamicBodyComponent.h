@@ -43,16 +43,17 @@ public:
 	//! relPosition is in body axes
 	virtual void setCenterOfMass(const Vector3& relPosition) = 0;
 
-	//! Apply force at center of mass. Force is in world axes.
+	//! Apply force at center of mass during the next dynamics substep. Force is in world axes.
 	virtual void applyCentralForce(const Vector3& force) = 0;
 
+	//! Apply force at relative position during the next dynamics substep. 
 	//! Force and relPosition are in world axes
 	virtual void applyForce(const Vector3& force, const Vector3& relPosition) = 0;
 
-	//! Apply torque. Torque is in world axes.
+	//! Apply torque during the next dynamics substep. Torque is in world axes.
 	virtual void applyTorque(const Vector3& torque) = 0;
 
-	//! @returns forces applied during the most recent dynamics step.
+	//! @returns forces applied during the most recent dynamics substep.
 	//! Used for visualisation purposes.
 	const std::vector<AppliedForce>& getForces() const { return mForces; }
 

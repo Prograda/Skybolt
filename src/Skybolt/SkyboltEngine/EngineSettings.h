@@ -9,7 +9,9 @@
 #include <SkyboltVis/Shadow/ShadowParams.h>
 #include <SkyboltVis/Window/DisplaySettings.h>
 #include <boost/program_options/variables_map.hpp>
+
 #include <nlohmann/json.hpp>
+#include <optional>
 
 namespace skybolt {
 
