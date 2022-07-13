@@ -156,8 +156,8 @@ void QuadTreeTileLoader::update()
 	}
 
 	// Issue new load/unloads
-	traveseToLoadAndUnload(mAsyncTree->leftTree, mAsyncTree->leftTree.getRoot(), false);
-	traveseToLoadAndUnload(mAsyncTree->rightTree, mAsyncTree->rightTree.getRoot(), false);
+	traveseToLoadAndUnload(mAsyncTree->leftTree, mAsyncTree->leftTree.getRoot());
+	traveseToLoadAndUnload(mAsyncTree->rightTree, mAsyncTree->rightTree.getRoot());
 
 	// Tick the async loader
 	mAsyncTileLoader->update();
@@ -169,41 +169,39 @@ void QuadTreeTileLoader::update()
 	}
 }
 
-void QuadTreeTileLoader::traveseToLoadAndUnload(QuadTree<AsyncQuadTreeTile>& tree, AsyncQuadTreeTile& tile, bool parentIsSufficient)
+void QuadTreeTileLoader::traveseToLoadAndUnload(QuadTree<AsyncQuadTreeTile>& tree, AsyncQuadTreeTile& tile)
 {
-	bool sufficient = !(*mSubdivisionPredicate)(tile.bounds, tile.key);
-
 	auto state = tile.getState();
-
-	// Load tile if it should be loaded and isn't currently
-	bool shouldBeLoaded = !parentIsSufficient;
-	if (shouldBeLoaded)
+	if (state == AsyncQuadTreeTile::State::NotLoaded)
 	{
-		if (state == AsyncQuadTreeTile::State::NotLoaded)
-		{
-			loadTile(tile);
-		}
+		loadTile(tile);
 	}
-	else if (state != AsyncQuadTreeTile::State::Loaded) // cancel loading if tile should not be loaded
+	if (state != AsyncQuadTreeTile::State::Loaded)
 	{
-		tile.requestCancelLoad();
+		return;
 	}
 
-	if (state == AsyncQuadTreeTile::State::Loaded)
+	bool shouldSubdivide = (*mSubdivisionPredicate)(tile.bounds, tile.key, *tile.getData());
+
+	if (shouldSubdivide)
 	{
-		// If tile is loaded and not sufficiently detailed, subdivide it
-		if (!sufficient)
+		if (!tile.hasChildren()) // subdivide if not currently subdivided
 		{
-			if (!tile.hasChildren())
-				tree.subdivide(tile);
-		}
-		else // tile is loaded and detailed enough. Merge any children.
-		{
-			if (tile.hasChildren())
-				tree.merge(tile);
+			tree.subdivide(tile);
+			for (int c = 0; c < 4; ++c)
+			{
+				loadTile(*tile.children[c]);
+			}
 		}
 	}
-
+	else
+	{
+		if (tile.hasChildren())  // tile should not be subdivided. Merge children.
+		{
+			// All tile loads the subtree will be cancelled as a result of the merge,
+			tree.merge(tile);
+		}
+	}
 
 	// Continue traversing to children
 	if (tile.hasChildren())
@@ -211,7 +209,7 @@ void QuadTreeTileLoader::traveseToLoadAndUnload(QuadTree<AsyncQuadTreeTile>& tre
 		for (int i = 0; i < 4; ++i)
 		{
 			AsyncQuadTreeTile& child = *tile.children[i];
-			traveseToLoadAndUnload(tree, child, sufficient);
+			traveseToLoadAndUnload(tree, child);
 		}
 	}
 }
@@ -262,7 +260,7 @@ void QuadTreeTileLoader::loadTile(AsyncQuadTreeTile& tile)
 {
 	assert(tile.getState() == AsyncQuadTreeTile::State::NotLoaded);
 
-	if (mLoadQueue.size() > 32)
+	if (mLoadQueue.size() > 32) // throttle loading to maintain reasonable realtime performance
 		return;
 
 	tile.progressCallback = std::make_shared<TileProgressCallback>();

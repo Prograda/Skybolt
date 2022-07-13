@@ -8,6 +8,9 @@
 #include "SkyboltVis/OsgBox2.h"
 #include "SkyboltVis/OsgImageHelpers.h"
 #include "SkyboltVis/OsgMathHelpers.h"
+#include "SkyboltVis/OsgTextureHelpers.h"
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationBounds.h"
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 
 #include <httplib/httplib.h>
@@ -87,6 +90,8 @@ osg::ref_ptr<osg::Image> SphericalMercatorToPlateCarreeTileSource::createImage(c
 	GLenum pixelFormat;
 	GLenum type;
 	std::map<osg::Vec2i, osg::ref_ptr<osg::Image>> tiles;
+	std::optional<HeightMapElevationBounds> bounds;
+	std::optional<HeightMapElevationRerange> rerange;
 	for (int y = tilesBounds.minimum.y(); y <= tilesBounds.maximum.y(); ++y)
 	{
 		for (int x = tilesBounds.minimum.x(); x <= tilesBounds.maximum.x(); ++x)
@@ -100,6 +105,35 @@ osg::ref_ptr<osg::Image> SphericalMercatorToPlateCarreeTileSource::createImage(c
 				tiles[osg::Vec2i(x, y)] = image;
 				pixelFormat = image->getPixelFormat();
 				type = image->getDataType();
+
+				std::optional<HeightMapElevationBounds> thisTileBounds = getHeightMapElevationBounds(*image);
+				if (thisTileBounds)
+				{
+					if (!bounds)
+					{
+						bounds = thisTileBounds;
+					}
+					else
+					{
+						expand(*bounds, *thisTileBounds);
+					}
+				}
+
+				std::optional<HeightMapElevationRerange> thisTileRerange = getHeightMapElevationRerange(*image);
+				if (thisTileRerange)
+				{
+					if (!rerange)
+					{
+						rerange = thisTileRerange;
+					}
+					else
+					{
+						if (*rerange != *thisTileRerange)
+						{
+							throw std::runtime_error("Source tiles have inconsistant elevation ranges");
+						}
+					}
+				}
 			}
 			else
 			{
@@ -117,6 +151,12 @@ osg::ref_ptr<osg::Image> SphericalMercatorToPlateCarreeTileSource::createImage(c
 	// Composite the Spherical Mercator tiles into a single Plate Carree tile and return it.
 	osg::ref_ptr<osg::Image> composite(new osg::Image);
 	composite->allocateImage(256, 256, 1, pixelFormat, type);
+
+	if (isHeightMapDataFormat(*composite))
+	{
+		composite->setInternalTextureFormat(getHeightMapInternalTextureFormat());
+	}
+
 	osg::Vec2d size = keyBounds.size();
 	for (int y = 0; y < 256; ++y)
 	{
@@ -133,6 +173,17 @@ osg::ref_ptr<osg::Image> SphericalMercatorToPlateCarreeTileSource::createImage(c
 			}
 		}
 	}
+
+	if (bounds)
+	{
+		setHeightMapElevationBounds(*composite, *bounds);
+	}
+
+	if (rerange)
+	{
+		setHeightMapElevationRerange(*composite, *rerange);
+	}
+
 	return composite;
 }
 

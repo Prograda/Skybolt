@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <catch2/catch.hpp>
-#include <SkyboltVis/ElevationProvider/HeightmapElevationProvider.h>
+#include <SkyboltVis/ElevationProvider/HeightMapElevationProvider.h>
 #include <SkyboltCommon/NumericComparison.h>
 
 using namespace skybolt;
@@ -16,8 +16,10 @@ static float heightFunction(float x, float y)
 	return x * 2 + y;
 }
 
-TEST_CASE("Test HeightmapElevationProvider returns correct elevations")
+TEST_CASE("Test HeightMapElevationProvider returns correct elevations")
 {
+	HeightMapElevationRerange rerange = rerangeElevationFromUInt16WithElevationBounds(-100, 100);
+
 	osg::ref_ptr<osg::Image> image = new osg::Image;
 	image->allocateImage(4, 4, 1, GL_LUMINANCE, GL_UNSIGNED_SHORT);
 	
@@ -27,15 +29,15 @@ TEST_CASE("Test HeightmapElevationProvider returns correct elevations")
 		for (int x = 0; x < 4; ++x)
 		{
 			float elevation = heightFunction(x, y);
-			p[x + y * 4] = floatToHeightmapValue(elevation);
+			p[x + y * 4] = getColorValueForElevation(rerange, elevation);
 		}
 	}
 
 	Box2f bounds(osg::Vec2f(1, 2), osg::Vec2f(1+2, 2+4));
 
-	HeightmapElevationProvider provider(image, bounds);
+	HeightMapElevationProvider provider(image, rerange, bounds);
 
-	const float epsilon = 1e-7f;
+	const float epsilon = 0.01;
 
 	// Check height at opposite corners
 	CHECK(provider.get(1, 2) == Approx(0).margin(epsilon));

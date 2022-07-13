@@ -6,6 +6,7 @@
 
 #include "CachedTileSource.h"
 #include "SkyboltVis/OsgImageHelpers.h"
+#include "SkyboltVis/OsgTextureHelpers.h"
 
 #include <osgDB/WriteFile>
 
@@ -24,11 +25,27 @@ CachedTileSource::CachedTileSource(const TileSourcePtr& tileSource, const std::s
 osg::ref_ptr<osg::Image> CachedTileSource::createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
 {
 	std::string imageDirectory = mCacheDirectory + "/" + std::to_string(key.level) + "/" + std::to_string(key.x) + "/";
-	std::string filename = imageDirectory + std::to_string(key.y) + ".png";
+	std::string filename = imageDirectory + std::to_string(key.y) + "." + mTileSource->getCacheFileFormat();
+
+	const bool supportUserData = (mTileSource->getCacheFileFormat() == "pngx");
 
 	if (std::filesystem::exists(filename))
 	{
-		osg::ref_ptr<osg::Image> image = readImageWithoutWarnings(filename);
+		osg::ref_ptr<osg::Image> image;
+		if (supportUserData)
+		{
+			std::ifstream f(filename.c_str(), std::ios::binary);
+			image = readImageWithUserData(f, "png");
+			f.close();
+		}
+		else
+		{
+			image = readImageWithoutWarnings(filename);
+		}
+		if (isHeightMapDataFormat(*image))
+		{
+			image->setInternalTextureFormat(getHeightMapInternalTextureFormat());
+		}
 		return image;
 	}
 	else
@@ -37,7 +54,17 @@ osg::ref_ptr<osg::Image> CachedTileSource::createImage(const skybolt::QuadTreeTi
 		if (image)
 		{
 			std::filesystem::create_directories(imageDirectory);
-			osgDB::writeImageFile(*image, filename);
+
+			if (supportUserData)
+			{
+				std::ofstream f(filename.c_str(), std::ios::binary);
+				writeImageWithUserData(*image, f, "png");
+				f.close();
+			}
+			else
+			{
+				osgDB::writeImageFile(*image, filename);
+			}
 		}
 		return image;
 	}

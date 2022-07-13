@@ -7,8 +7,8 @@
 #include "OsgImageHelpers.h"
 #include "OsgMathHelpers.h"
 #include <SkyboltCommon/Math/MathUtility.h>
-#include "SkyboltVis/Renderable/Planet/Tile/HeightMap.h"
 #include <osg/Texture>
+#include <osg/UserDataContainer>
 #include <osgDB/ReadFile>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string.hpp>
@@ -48,38 +48,6 @@ osg::Vec4f averageSrgbColor(const osg::Image& image, float alphaRejectionThresho
 	color /= pixels;
 
 	return linearToSrgb(color);
-}
-
-osg::ref_ptr<osg::Image> loadRawImage16bit(const std::string& filename, int width, int height)
-{
-	std::ifstream f(filename, std::ios::in | std::ios::binary);
-	if (!f.is_open())
-		throw skybolt::Exception("Unable to open file: " + filename);
-
-	osg::Image* image = new osg::Image;
-	image->allocateImage(width, height, 1, GL_LUMINANCE, GL_UNSIGNED_SHORT);
-	image->setInternalTextureFormat(GL_R16);
-
-	size_t elementCount = width * height;
-	size_t sizeBytes = elementCount * 2;
-	f.read((char*)image->data(), sizeBytes);
-
-	// Post process
-	char* p = (char*)image->data();
-	for (int i = 0; i < elementCount; ++i)
-	{
-		// Convert from big to little endian
-		//std::swap(*p, *(p + 1));
-
-		// Offset sea level
-		uint16_t& value = *(uint16_t*)p;
-		value += getHeightmapSeaLevelValueInt();
-
-		p += 2;
-	}
-
-	f.close();
-	return image;
 }
 
 GLuint toSrgbInternalFormat(GLuint format)
@@ -142,6 +110,44 @@ osg::ref_ptr<osg::Image> readImageWithoutWarnings(const std::string& filename)
 	osgDB::ReaderWriter::ReadResult rr = osgDB::Registry::instance()->readImage(filename, osgDB::Registry::instance()->getOptions());
 	if (rr.validImage()) return osg::ref_ptr<osg::Image>(rr.getImage());
 	return nullptr;
+}
+
+osg::ref_ptr<osg::Image> readImageWithUserData(std::istream& s, const std::string& extension)
+{
+	osg::ref_ptr<osg::Image> image;
+	{
+		osg::ref_ptr<osgDB::ReaderWriter> reader = osgDB::Registry::instance()->getReaderWriterForExtension(extension);
+		image = reader->readImage(s).takeImage();
+	}
+	if (image && !s.eof())
+	{
+		auto reader = osgDB::Registry::instance()->getReaderWriterForExtension("osgb");
+		osgDB::ReaderWriter::ReadResult result = reader->readObject(s);
+		image->setUserDataContainer(result.takeObject()->asUserDataContainer());
+	}
+	return image;
+}
+
+bool writeImageWithUserData(const osg::Image& image, std::ostream& s, const std::string& extension)
+{
+	{
+		osg::ref_ptr<osgDB::ReaderWriter> writer = osgDB::Registry::instance()->getReaderWriterForExtension(extension);
+		osgDB::ReaderWriter::WriteResult res = writer->writeImage(image, s);
+		if (res.error())
+		{
+			return false;
+		}
+	}
+	if (image.getUserDataContainer())
+	{
+		auto writer = osgDB::Registry::instance()->getReaderWriterForExtension("osgb");
+		osgDB::ReaderWriter::WriteResult res = writer->writeObject(*image.getUserDataContainer(), s);
+		if (res.error())
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 osg::Vec4f getColorBilinear(const osg::Image& image, const osg::Vec2f& coord)
@@ -227,6 +233,11 @@ void normalize(osg::Image& image)
 			}
 		}
 	}
+}
+
+bool isHeightMapDataFormat(const osg::Image& image)
+{
+	return image.getPixelFormat() == GL_LUMINANCE && image.getDataType() == GL_UNSIGNED_SHORT;
 }
 
 } // namespace vis

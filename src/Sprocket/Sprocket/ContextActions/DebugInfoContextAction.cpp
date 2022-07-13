@@ -21,7 +21,7 @@ bool DebugInfoContextAction::handles(const Entity& entity) const
 
 void DebugInfoContextAction::execute(Entity& entity) const
 {
-	int level = 12;
+	int level = 14;
 	LatLonAlt position = toLatLonAlt(GeocentricPosition(*getPosition(entity))).position;
 	auto key = getKeyAtLevelIntersectingLonLatPoint<osg::Vec2>(level, osg::Vec2(position.lon, position.lat));
 

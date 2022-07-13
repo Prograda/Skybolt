@@ -19,7 +19,7 @@ struct PlanetSubdivisionPredicate : public QuadTreeSubdivisionPredicate
 {
 	~PlanetSubdivisionPredicate() override = default;
 
-	bool operator()(const Box2d& bounds, const skybolt::QuadTreeTileKey& key) override;
+	bool operator()(const Box2d& bounds, const skybolt::QuadTreeTileKey& key, const TileImages& images) override;
 
 	std::vector<TileSourcePtr> tileSources; //!< tileSources are queried to see if children exist at each level
 	osg::Vec2d observerLatLon;

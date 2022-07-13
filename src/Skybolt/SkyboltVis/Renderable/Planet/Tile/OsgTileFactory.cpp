@@ -10,7 +10,7 @@
 #include "SkyboltVis/OsgGeocentric.h"
 #include "SkyboltVis/OsgImageHelpers.h"
 #include "SkyboltVis/OsgStateSetHelpers.h"
-#include "SkyboltVis/ElevationProvider/HeightmapElevationProvider.h"
+#include "SkyboltVis/ElevationProvider/HeightMapElevationProvider.h"
 #include "SkyboltVis/Renderable/Planet/PlanetTileGeometry.h"
 #include "SkyboltVis/Shader/ShaderProgramRegistry.h"
 
@@ -101,8 +101,8 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 
 		int unit = 0;
 		osg::StateSet* ss = geode->getOrCreateStateSet();
-		ss->addUniform(new osg::Uniform("heightScale", heightImageScale));
-		ss->addUniform(new osg::Uniform("heightOffset", heightImageOffset));
+		ss->addUniform(new osg::Uniform("heightMapUvScale", heightImageScale));
+		ss->addUniform(new osg::Uniform("heightMapUvOffset", heightImageOffset));
 
 		ss->addUniform(new osg::Uniform("albedoImageScale", albedoImageScale));
 		ss->addUniform(new osg::Uniform("albedoImageOffset", albedoImageOffset));

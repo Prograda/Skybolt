@@ -28,6 +28,11 @@ struct RangeInclusive
 		return last < first;
 	}
 
+	bool operator ==(const RangeInclusive<T>& other) const
+	{
+		return minimum == other.minimum && maximum == other.maximum;
+	}
+
 	union {
 		T first;
 		T minimum;
@@ -55,6 +60,11 @@ struct RangeClosedOpen
 	bool isEmpty() const
 	{
 		return last <= first;
+	}
+
+	bool operator ==(const RangeClosedOpen<T>& other) const
+	{
+		return first == other.first && last == other.last;
 	}
 
 	T first;

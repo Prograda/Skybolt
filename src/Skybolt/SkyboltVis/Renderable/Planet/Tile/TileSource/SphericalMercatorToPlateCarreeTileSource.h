@@ -29,6 +29,9 @@ public:
 		return mTileSource->getHighestAvailableLevel(key);
 	}
 
+	const std::string& getCacheSha() const override { return mTileSource->getCacheSha(); }
+	const std::string& getCacheFileFormat() const override { return mTileSource->getCacheFileFormat(); }
+
 private:
 	TileSourcePtr mTileSource;
 };

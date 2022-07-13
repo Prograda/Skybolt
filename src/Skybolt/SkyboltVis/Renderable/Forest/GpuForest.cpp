@@ -11,6 +11,7 @@
 #include "SkyboltVis/Renderable/Forest/BillboardForest.h"
 #include "SkyboltVis/Renderable/Forest/GpuForestTile.h"
 #include "SkyboltVis/Renderable/Forest/PagedForest.h"
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h"
 #include "SkyboltVis/Renderable/Planet/Tile/TileKeyHelpers.h"
 #include "SkyboltVis/Shader/ShaderProgramRegistry.h"
 #include <SkyboltCommon/Random.h>
@@ -166,10 +167,13 @@ GpuForest::ForestTile GpuForest::createForestTile(const QuadTreeTileKey& key, co
 	auto forestTile = std::make_shared<GpuForestTile>(tile.height.texture, tile.attribute.texture, forestGeo, tileWorldSizeMeters);
 
 	{
+		HeightMapElevationRerange rerange = getRequiredHeightMapElevationRerange(*tile.height.texture->getImage());
+
 		osg::StateSet* ss = forestTile->_getNode()->getOrCreateStateSet();
 		ss->addUniform(new osg::Uniform("heightMapUvScale", heightImageScale));
 		ss->addUniform(new osg::Uniform("heightMapUvOffset", heightImageOffset));
-		ss->addUniform(new osg::Uniform("heightScale", 65536.f));
+		ss->addUniform(new osg::Uniform("heightScale", rerange.x() * 65536.f));
+		ss->addUniform(new osg::Uniform("heightOffset", rerange.y()));
 
 		ss->addUniform(new osg::Uniform("attributeMapUvScale", attributeImageScale));
 		ss->addUniform(new osg::Uniform("attributeMapUvOffset", attributeImageOffset));

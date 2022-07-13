@@ -24,5 +24,11 @@ osg::ref_ptr<osg::Image> readTexture3dFromSeparateFiles(const std::string& filen
 osg::ref_ptr<osg::Texture2D> createSrgbTexture(const osg::ref_ptr<osg::Image>& image);
 osg::ref_ptr<osg::Texture2D> createTilingSrgbTexture(const osg::ref_ptr<osg::Image>& image);
 
+inline int getHeightMapInternalTextureFormat()
+{
+	static const int f = GL_R16;
+	return f;
+}
+
 } // namespace vis
 } // namespace skybolt

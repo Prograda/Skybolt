@@ -11,6 +11,7 @@
 #include <osg/Image>
 
 #include <atomic>
+#include <string>
 
 namespace skybolt {
 namespace vis {
@@ -20,7 +21,8 @@ class TileSource
 public:
 	virtual ~TileSource() {}
 
-	//! createImage may be called concurrently from different threads to create different images.
+	//! May be called concurrently from different threads to create different images.
+	//! Images representing height maps are expected to have HeightMapElevationBounds and HeightMapElevationRerange user data.
 	//!@ThreadSafe
 	virtual osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const = 0;
 
@@ -29,6 +31,15 @@ public:
 
 	//! @returns the highest key with source data in the given key's ancestral hierarchy
 	virtual std::optional<skybolt::QuadTreeTileKey> getHighestAvailableLevel(const skybolt::QuadTreeTileKey& key) const = 0;
+
+	//! @return unique sha of parameters affecting the visual appearance of tiles, e.g URL. Used to determine name of this TileSource's cached tiles folder.
+	virtual const std::string& getCacheSha() const = 0;
+
+	virtual const std::string& getCacheFileFormat() const
+	{
+		static const std::string s = "png";
+		return s;
+	}
 };
 
 } // namespace vis

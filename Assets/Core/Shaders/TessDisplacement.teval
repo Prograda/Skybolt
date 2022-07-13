@@ -29,6 +29,7 @@ uniform sampler2D cloudSampler;
 uniform mat4 viewMatrix;
 uniform mat4 viewProjectionMatrix;
 uniform float heightScale;
+uniform float heightOffset;
 uniform vec2 heightMapUvScale;
 uniform vec2 heightMapUvOffset;
 uniform vec3 cameraPosition;
@@ -98,7 +99,7 @@ void main()
 	texCoord = interpolateQuad(csTexCoord[0], csTexCoord[1], csTexCoord[2], csTexCoord[3]);
 	vec3 upDir = interpolateQuad(csUpDir[0], csUpDir[1], csUpDir[2], csUpDir[3]);
 
-	elevation = (bilinear(heightSampler, texCoord.xy * heightMapUvScale + heightMapUvOffset).r - 0.5f) * heightScale;
+	elevation = bilinear(heightSampler, texCoord.xy * heightMapUvScale + heightMapUvOffset).r * heightScale + heightOffset;
 	float elevationDelta = elevation - interpolatedPos.w;
 	position_worldSpace += upDir * elevationDelta;
 	vec4 position_viewSpace = viewMatrix * vec4(position_worldSpace,1);

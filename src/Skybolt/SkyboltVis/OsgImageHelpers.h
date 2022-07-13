@@ -54,18 +54,24 @@ inline void setPixelColor(osg::Image& image, int x, int y, const osg::Vec4f& col
 //! Returns the SRGB-space average colour of an SRGB-space image
 osg::Vec4f averageSrgbColor(const osg::Image& image, float alphaRejectionThreshold = 0.5);
 
-osg::ref_ptr<osg::Image> loadRawImage16bit(const std::string& filename, int width, int height);
-
 GLuint toSrgbInternalFormat(GLuint format);
 
 osg::Image* readImageWithCorrectOrientation(const std::string& filename);
 
 osg::ref_ptr<osg::Image> readImageWithoutWarnings(const std::string& filename);
 
+//! Reads an image from stream including the image's user data stored in osg::UserDataContainer
+osg::ref_ptr<osg::Image> readImageWithUserData(std::istream& s, const std::string& extension);
+//! Write an image to a stream including the image's user data stored in osg::UserDataContainer.
+//! @return true on success.
+bool writeImageWithUserData(const osg::Image& image, std::ostream& s, const std::string& extension);
+
 //! @param coord is in pixel coordinates (not normalized)
 osg::Vec4f getColorBilinear(const osg::Image& image, const osg::Vec2f& coord);
 
 void normalize(osg::Image& image);
+
+bool isHeightMapDataFormat(const osg::Image& image);
 
 } // namespace vis
 } // namespace skybolt

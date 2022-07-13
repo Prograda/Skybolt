@@ -11,7 +11,7 @@
 
 #include <SkyboltCommon/MapUtility.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/TileSource.h>
-#include <SkyboltVis/ElevationProvider/HeightmapElevationProvider.h>
+#include <SkyboltVis/ElevationProvider/HeightMapElevationProvider.h>
 #include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
 #include <SkyboltCommon/Eventually.h>
 #include <SkyboltCommon/NumericComparison.h>
@@ -37,6 +37,12 @@ public:
 
 	bool hasAnyChildren(const skybolt::QuadTreeTileKey& key) const override { return true; }
 
+	const std::string& getCacheSha() const override
+	{
+		static std::string r;
+		return r;
+	}
+
 	//! @returns the highest key with source data in the given key's ancestral hierarchy
 	std::optional<skybolt::QuadTreeTileKey> getHighestAvailableLevel(const skybolt::QuadTreeTileKey& key) const { return key; }
 
@@ -48,10 +54,15 @@ constexpr double altitude = 234;
 
 static osg::ref_ptr<osg::Image> createDummyImage()
 {
+	HeightMapElevationRerange rerange = rerangeElevationFromUInt16WithElevationBounds(0, 65535);
+
 	auto image = new osg::Image;
 	image->allocateImage(1, 1, 1, GL_LUMINANCE, GL_UNSIGNED_SHORT);
 	uint16_t* p = reinterpret_cast<uint16_t*>(image->data());
-	*p = floatToHeightmapValue(-altitude);
+	*p = getColorValueForElevation(rerange, altitude);
+
+	setHeightMapElevationRerange(*image, rerange);
+
 	return image;
 }
 

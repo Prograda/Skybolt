@@ -29,6 +29,8 @@ public:
 		return mTileSource->getHighestAvailableLevel(key);
 	}
 
+	const std::string& getCacheSha() const override { throw std::runtime_error("Cached tile source cann't be cached"); }
+
 private:
 	TileSourcePtr mTileSource;
 	std::string mCacheDirectory;

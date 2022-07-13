@@ -6,12 +6,13 @@
 
 #pragma once
 
+#include "HeightMapElevationRerange.h"
 #include <osg/Image>
 
 namespace skybolt {
 namespace vis {
 
-osg::ref_ptr<osg::Image> createNormalmapFromHeightmap(const osg::Image& heightmap, const osg::Vec2f& texelWorldSize);
+osg::ref_ptr<osg::Image> createNormalMapFromHeightMap(const osg::Image& heightmap, const HeightMapElevationRerange& rerange, const osg::Vec2f& texelWorldSize, int filterWidth = 1);
 
 } // namespace vis
 } // namespace skybolt

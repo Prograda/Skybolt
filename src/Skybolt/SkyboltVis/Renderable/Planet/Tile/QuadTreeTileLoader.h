@@ -32,8 +32,10 @@ struct QuadTreeSubdivisionPredicate
 {
 	virtual ~QuadTreeSubdivisionPredicate() = default;
 
-	//! Returns true if the level should be subdivded
-	virtual bool operator()(const Box2d& bounds, const QuadTreeTileKey& key) = 0;
+	//! Returns true if the tile with the given key should be subdivded.
+	//! @param images specifies the tile's images, which are useful if the subdivision decision is based on image content,
+	//!        for example how close the camera is to elevations stored in a height map image.
+	virtual bool operator()(const Box2d& bounds, const QuadTreeTileKey& key, const TileImages& images) = 0;
 };
 
 using QuadTreeSubdivisionPredicatePtr = std::shared_ptr<QuadTreeSubdivisionPredicate>;
@@ -65,7 +67,7 @@ public:
 	LoadedTileTreePtr getLoadedTree() const { return mLoadedTree; }
 
 private:
-	void traveseToLoadAndUnload(skybolt::QuadTree<AsyncQuadTreeTile>& tree, AsyncQuadTreeTile& tile, bool parentIsSufficient);
+	void traveseToLoadAndUnload(skybolt::QuadTree<AsyncQuadTreeTile>& tree, AsyncQuadTreeTile& tile);
 	
 	void populateLoadedTree(AsyncQuadTreeTile& srcTile, skybolt::QuadTree<LoadedTile>& destTree, LoadedTile& destTile) const;
 

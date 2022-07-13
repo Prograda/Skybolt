@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 uniform float heightScale;
+uniform float heightOffset;
 uniform vec2 heightMapUvScale;
 uniform vec2 heightMapUvOffset;
 uniform vec2 attributeMapUvScale;
@@ -24,6 +25,6 @@ vec3 getWorldBillboardPositionFromVertexPosition(vec2 vertexPos)
 {
 	vec3 pos;
 	pos.xy = (vertexPos.xy - vec2(0.5)) * tileWorldSize;
-	pos.z = -(texture(heightSampler, vertexPos.yx * heightMapUvScale + heightMapUvOffset).r - 0.5f) * heightScale;
+	pos.z = -(texture(heightSampler, vertexPos.yx * heightMapUvScale + heightMapUvOffset).r * heightScale + heightOffset);
 	return pos;
 }

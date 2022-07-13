@@ -12,17 +12,15 @@
 #include <osg/Vec3d>
 #include <osg/Vec4d>
 
-inline void check(const osg::Vec2d& a, const osg::Vec2d& b, double eps)
+inline bool almostEqual(const osg::Vec3f& a, const osg::Vec3f& b, double eps)
 {
-	CHECK(a.x() == Approx(b.x()).margin(eps));
-	CHECK(a.y() == Approx(b.y()).margin(eps));
-}
-
-inline void check(const osg::Vec3d& a, const osg::Vec3d& b, double eps)
-{
-	CHECK(a.x() == Approx(b.x()).margin(eps));
-	CHECK(a.y() == Approx(b.y()).margin(eps));
-	CHECK(a.z() == Approx(b.z()).margin(eps));
+	if (!skybolt::almostEqual(a.x(), b.x(), eps))
+		return false;
+	if (!skybolt::almostEqual(a.y(), b.y(), eps))
+		return false;
+	if (!skybolt::almostEqual(a.z(), b.z(), eps))
+		return false;
+	return true;
 }
 
 inline bool almostEqual(const osg::Vec4f& a, const osg::Vec4f& b, double eps)

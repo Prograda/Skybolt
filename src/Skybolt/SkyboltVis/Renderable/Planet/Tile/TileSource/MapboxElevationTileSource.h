@@ -26,8 +26,17 @@ public:
 
 	osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
 
+	const std::string& getCacheSha() const override { return mCacheSha; }
+
+	const std::string& getCacheFileFormat() const override
+	{
+		static const std::string s = "pngx";
+		return s;
+	}
+
 private:
-	std::unique_ptr<XyzTileSource> m_source;
+	const std::string mCacheSha;
+	std::unique_ptr<XyzTileSource> mSource;
 };
 
 } // namespace vis

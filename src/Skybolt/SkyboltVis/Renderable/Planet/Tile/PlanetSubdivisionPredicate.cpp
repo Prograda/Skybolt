@@ -5,9 +5,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "PlanetSubdivisionPredicate.h"
-#include "HeightMap.h"
 #include "SkyboltVis/OsgGeocentric.h"
 #include "SkyboltVis/OsgMathHelpers.h"
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationBounds.h"
+#include "SkyboltVis/Renderable/Planet/Tile/PlanetTileImagesLoader.h"
 #include "SkyboltVis/Renderable/Planet/Tile/TileSource/TileSource.h"
 
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -29,24 +30,27 @@ static bool hasAnyChildren(const std::vector<TileSourcePtr>& tileSources, const 
 	return false;
 }
 
-bool PlanetSubdivisionPredicate::operator()(const Box2d& bounds, const QuadTreeTileKey& key)
+bool PlanetSubdivisionPredicate::operator()(const Box2d& bounds, const QuadTreeTileKey& key, const TileImages& images)
 {
 	if (!hasAnyChildren(tileSources, key))
 	{
 		return false;
 	}
 
+	const auto& tileImages = static_cast<const PlanetTileImages&>(images);
+	HeightMapElevationBounds elevationBounds = getRequiredHeightMapElevationBounds(*tileImages.heightMapImage.image);
+
 	Box2d latLonBounds(math::vec2SwapComponents(bounds.minimum), math::vec2SwapComponents(bounds.maximum));
 
 	osg::Vec2d latLon = nearestPointInSolidBox(observerLatLon, latLonBounds);
+	double altitude = std::clamp(observerAltitude, double(elevationBounds.x()), double(elevationBounds.y()));
 
 	osg::Vec3d observerPosition = llaToGeocentric(observerLatLon, std::max(1.0, observerAltitude), planetRadius);
 
-	// Assume mean tile elevation is close to sea level. TODO: improve assumtion. We should use min and max tile bounds if available.
-	osg::Vec3d tileNearestPointAtSeaLevel = llaToGeocentric(latLon, 0, planetRadius);
-	double distanceToTileNearestPoint = (tileNearestPointAtSeaLevel - observerPosition).length();
+	osg::Vec3d tileNearestPoint = llaToGeocentric(latLon, altitude, planetRadius);
+	double distanceToTileNearestPoint = (tileNearestPoint - observerPosition).length();
 
-	osg::Vec3d tileNearestPointAtLowestAltitude = llaToGeocentric(latLon, 0, planetRadius + getHeightmapMinAltitude());
+	osg::Vec3d tileNearestPointAtLowestAltitude = llaToGeocentric(latLon, 0, planetRadius + elevationBounds.x());
 
 	osg::Vec3d directionFromTileNearestPointAtLowestAltitudeToObserver = (observerPosition - tileNearestPointAtLowestAltitude);
 	directionFromTileNearestPointAtLowestAltitudeToObserver.normalize();

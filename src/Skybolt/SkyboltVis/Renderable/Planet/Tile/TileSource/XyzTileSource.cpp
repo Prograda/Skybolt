@@ -7,9 +7,13 @@
 #include "XyzTileSource.h"
 
 #include "SkyboltVis/OsgImageHelpers.h"
+#include "SkyboltVis/OsgTextureHelpers.h"
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationBounds.h"
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h"
 #include <osgDB/ReadFile>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/log/trivial.hpp>
+#include <SkyboltCommon/ShaUtility.h>
 
 using namespace skybolt;
 
@@ -20,7 +24,9 @@ XyzTileSource::XyzTileSource(const XyzTileSourceConfig& config) :
 	TileSourceWithMinMaxLevel(config.levelRange),
 	mUrlTemplate(config.urlTemplate),
 	mYOrigin(config.yOrigin),
-	mApiKey(config.apiKey)
+	mApiKey(config.apiKey),
+	mCacheSha(skybolt::calcSha1(config.urlTemplate)),
+	mImageType(config.imageType)
 {
 }
 
@@ -31,8 +37,25 @@ bool XyzTileSource::validate() const
 	if (!image)
 	{
 		BOOST_LOG_TRIVIAL(error) << "Could not load image from XyzTileSource with URL template '" << mUrlTemplate << ".";
+		return false;
 	}
-	return image != nullptr;
+
+	if (mImageType == XyzTileSourceConfig::ImageType::Elevation)
+	{
+		if (image->getPixelFormat() != GL_LUMINANCE)
+		{
+			BOOST_LOG_TRIVIAL(error) << "Elevation image with URL template '" << mUrlTemplate << "' is in wrong format: "
+				<< image->getPixelFormat() << ". It should be GL_LUMINANCE.'";
+		}
+		if (image->getDataType() != GL_UNSIGNED_SHORT)
+		{
+			BOOST_LOG_TRIVIAL(error) << "Elevation image with URL template '" << mUrlTemplate << "' is in wrong format: "
+				<< image->getPixelFormat() << ". It should be GL_UNSIGNED_SHORT.'";
+		}
+		return false;
+	}
+
+	return true;
 }
 
 static int flipY(int y, int level)
@@ -42,7 +65,31 @@ static int flipY(int y, int level)
 
 osg::ref_ptr<osg::Image> XyzTileSource::createImage(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
 {
-	return readImageWithoutWarnings(toUrl(key));
+	osg::ref_ptr<osg::Image> image = readImageWithoutWarnings(toUrl(key));
+
+	if (mImageType == XyzTileSourceConfig::ImageType::Elevation)
+	{
+		if (!isHeightMapDataFormat(*image))
+		{
+			return nullptr;
+		}
+		image->setInternalTextureFormat(getHeightMapInternalTextureFormat());
+
+		const HeightMapElevationRerange& rerange = getDefaultEarthRerange();
+		setHeightMapElevationRerange(*image, rerange);
+
+		HeightMapElevationBounds bounds = emptyHeightMapElevationBounds();
+		uint16_t* p = reinterpret_cast<uint16_t*>(image->data());
+		int elementCount = image->s() * image->t();
+		for (int i = 0; i < elementCount; ++i)
+		{
+			expand(bounds, getElevationForColorValue(rerange, *p));
+		}
+		setHeightMapElevationBounds(*image, bounds);
+
+	}
+
+	return image;
 }
 
 std::string XyzTileSource::toUrl(const skybolt::QuadTreeTileKey& key) const

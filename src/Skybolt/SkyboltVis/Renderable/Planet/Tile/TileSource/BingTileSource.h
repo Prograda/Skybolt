@@ -23,8 +23,10 @@ public:
 	BingTileSource(const BingTileSourceConfig& config);
 
 	osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
+	const std::string& getCacheSha() const override { return mCacheSha; }
 
 private:
+	const std::string mCacheSha;
 	std::string mUrlPartBeforeTileKey;
 	std::string mUrlPartAfterTileKey;
 };

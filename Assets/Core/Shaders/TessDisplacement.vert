@@ -13,6 +13,7 @@ out vec3 vsUpDir;
 
 uniform sampler2D heightSampler;
 uniform float heightScale;
+uniform float heightOffset;
 uniform vec2 heightMapUvScale;
 uniform vec2 heightMapUvOffset;
 
@@ -20,7 +21,7 @@ void main()
 {
 	vsUpDir = vec3(0,0,-1);
 
-	gl_Position.w = (texture(heightSampler, osg_MultiTexCoord0.xy * heightMapUvScale + heightMapUvOffset).r - 0.5f) * heightScale;
+	gl_Position.w = texture(heightSampler, osg_MultiTexCoord0.xy * heightMapUvScale + heightMapUvOffset).r * heightScale + heightOffset;
 	gl_Position.xyz = osg_Vertex.xyz + vsUpDir * gl_Position.w;
 	
 	vsTexCoord = osg_MultiTexCoord0.xyz;

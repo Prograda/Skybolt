@@ -7,8 +7,8 @@
 #include "PlanetTileImagesLoader.h"
 #include "TileSource/TileSource.h"
 #include "SkyboltVis/Renderable/Planet/AttributeMapHelpers.h"
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationBounds.h"
 #include "SkyboltVis/Renderable/Planet/Tile/NormalMapHelpers.h"
-#include "SkyboltVis/Renderable/Planet/Tile/HeightMap.h"
 #include "SkyboltVis/OsgImageHelpers.h"
 #include "SkyboltVis/OsgTextureHelpers.h"
 #include <algorithm>
@@ -24,19 +24,22 @@ using namespace skybolt;
 namespace skybolt {
 namespace vis {
 
-//const int oceanFlagHeight = 32267; // height value used to flag that a pixel in the DTED heightmap is ocean. This is not the actual height of the ocean.
-const int oceanFlagHeight = 32767; // height value of ocean in mapbox tiles
-
-static osg::Image* createDefaultHeightImage()
+static osg::Image* createDefaultHeightImage(const HeightMapElevationRerange& rerange)
 {
+	const int oceanHeight = getColorValueForElevation(rerange, 0.f);
+
 	osg::Image* image = new osg::Image();
 	image->allocateImage(256, 256, 1, GL_LUMINANCE, GL_UNSIGNED_SHORT);
 	image->setInternalTextureFormat(GL_R16);
 	uint16_t* ptr = (uint16_t*)image->getDataPointer();
 	for (int i = 0; i < 256 * 256; ++i)
 	{
-		ptr[i] = oceanFlagHeight;
+		ptr[i] = oceanHeight;
 	}
+
+	setHeightMapElevationBounds(*image, {0,0});
+	setHeightMapElevationRerange(*image, rerange);
+
 	return image;
 }
 
@@ -49,8 +52,10 @@ static osg::Image* createDefaultAlbedoImage()
 	return image;
 }
 
-static osg::Image* convertHeightmapToLandMask(const osg::Image& src)
+static osg::Image* convertHeightmapToLandMask(const osg::Image& src, const HeightMapElevationRerange& rerange)
 {
+	const int oceanHeight = getColorValueForElevation(rerange, 0.f);
+
 	osg::Image* dst = new osg::Image;
 	dst->allocateImage(src.s(), src.t(), 1, GL_ALPHA, GL_UNSIGNED_BYTE);
 	dst->setInternalTextureFormat(GL_ALPHA8);
@@ -60,30 +65,10 @@ static osg::Image* convertHeightmapToLandMask(const osg::Image& src)
 	size_t size = src.s() * src.t();
 	for (size_t i = 0; i < size; ++i)
 	{
-		pDst[i] = (pSrc[i] <= oceanFlagHeight) ? 0 : 255;
+		pDst[i] = (pSrc[i] <= oceanHeight) ? 0 : 255;
 	}
 
 	return dst;
-}
-
-static void fillBathymetryInHeightmap(osg::Image& src)
-{
-	uint16_t* pSrc = (uint16_t*)src.data();
-	size_t size = src.s() * src.t();
-	for (size_t i = 0; i < size; ++i)
-	{
-		uint16_t& v = pSrc[i];
-
-		//if (v <= 32267) // If water mask TODO: fix. The water mask values are not set in the TMS height map high LOD tiles in the Seattle bay.
-		if (v < getHeightmapSeaLevelValueInt()) // if below sea level
-		{
-			v = getHeightmapSeaLevelValueInt() - 10; // set sea floor level to just below sea level, to get sloping shore lines. TODO: should use real bathymetry
-		}
-		else if (v <= getHeightmapSeaLevelValueInt()) // Rase land above sea level. TODO: fix for dry areas below sea level, e.g Shore of Dead Sea
-		{
-			v = getHeightmapSeaLevelValueInt() + 1;
-		}
-	}
 }
 
 //! May be called from multiple threads
@@ -100,9 +85,10 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 #endif
 	auto images = std::make_shared<PlanetTileImages>();
 
-	static osg::ref_ptr<osg::Image> defaultHeightImage = createDefaultHeightImage();
-	static osg::ref_ptr<osg::Image> defaultNormalMap = createNormalmapFromHeightmap(*defaultHeightImage, osg::Vec2(1,1));
-	static osg::ref_ptr<osg::Image> defaultLandMask = convertHeightmapToLandMask(*defaultHeightImage);
+	static HeightMapElevationRerange defaultRerange = {1, 0};
+	static osg::ref_ptr<osg::Image> defaultHeightImage = createDefaultHeightImage(defaultRerange);
+	static osg::ref_ptr<osg::Image> defaultNormalMap = createNormalMapFromHeightMap(*defaultHeightImage, defaultRerange, osg::Vec2(1,1));
+	static osg::ref_ptr<osg::Image> defaultLandMask = convertHeightmapToLandMask(*defaultHeightImage, defaultRerange);
 
 	// Height map
 	{
@@ -110,14 +96,7 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 		if (elevationKey)
 		{
 			images->heightMapImage = getOrCreateImage(*elevationKey, size_t(CacheIndex::Elevation), [this, cancelSupplier](const QuadTreeTileKey& key) {
-				osg::ref_ptr<osg::Image> image = elevationLayer->createImage(key, cancelSupplier);
-
-				if (image)
-				{
-					image->setInternalTextureFormat(GL_R16);
-				}
-
-				return image;
+				return elevationLayer->createImage(key, cancelSupplier);
 			});
 		}
 
@@ -130,7 +109,8 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 				heightImageLonLatDelta.x() * mPlanetRadius * std::cos(bounds.center().y()) / heightImage->s(),
 				heightImageLonLatDelta.y() * mPlanetRadius / heightImage->t()
 			);
-			images->normalMapImage = createNormalmapFromHeightmap(*heightImage, texelWorldSize);
+			int filterWidth = 5;
+			images->normalMapImage = createNormalMapFromHeightMap(*heightImage, getRequiredHeightMapElevationRerange(*heightImage), texelWorldSize, filterWidth);
 		}
 		else
 		{
@@ -159,8 +139,7 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 				{
 					return defaultLandMask;
 				}
-				osg::ref_ptr<osg::Image> image = convertHeightmapToLandMask(*heightImage);
-				//fillBathymetryInHeightmap(*heightImage); // TODO: Remove this hack of modifying the heightImage in the factory for the land mask.
+				osg::ref_ptr<osg::Image> image = convertHeightmapToLandMask(*heightImage, getRequiredHeightMapElevationRerange(*heightImage));
 				return image;
 			}
 		}).image;

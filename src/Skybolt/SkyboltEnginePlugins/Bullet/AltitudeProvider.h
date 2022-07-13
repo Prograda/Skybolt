@@ -15,6 +15,8 @@ class AltitudeProvider
 {
 public:
 	virtual ~AltitudeProvider() {}
+
+	//! @return altitude above sea level. Positive is up.
 	virtual double get(const LatLon& position) const = 0;
 };
 

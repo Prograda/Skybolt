@@ -45,7 +45,7 @@ class DummyQuadTreeSubdivisionPredicate : public QuadTreeSubdivisionPredicate
 public:
 	~DummyQuadTreeSubdivisionPredicate() override = default;
 
-	bool operator()(const Box2d& bounds, const QuadTreeTileKey& key) override
+	bool operator()(const Box2d& bounds, const QuadTreeTileKey& key, const TileImages& images) override
 	{
 		return key.level < maxSubdivisionLevel;
 	}

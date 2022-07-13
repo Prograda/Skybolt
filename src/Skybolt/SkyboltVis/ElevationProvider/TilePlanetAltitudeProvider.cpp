@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TilePlanetAltitudeProvider.h"
-#include "HeightmapElevationProvider.h"
+#include "HeightMapElevationProvider.h"
 #include "SkyboltVis/Renderable/Planet/Tile/TileSource/TileSource.h"
 #include "SkyboltVis/OsgBox2.h"
 #include "SkyboltVis/GeoImageHelpers.h"
@@ -36,8 +36,14 @@ double TilePlanetAltitudeProvider::getAltitude(const sim::LatLon& position) cons
 		return 0.0;
 	}
 
-	vis::HeightmapElevationProvider provider(result->image, toBox2f(getKeyLatLonBounds<LatLonVec2Adapter>(result->key)));
-	return -provider.get(position.lat, position.lon);
+	std::optional<HeightMapElevationRerange> rerange = getHeightMapElevationRerange(*result->image);
+	if (!rerange)
+	{
+		return 0.0;
+	}
+
+	vis::HeightMapElevationProvider provider(result->image, *rerange, toBox2f(getKeyLatLonBounds<LatLonVec2Adapter>(result->key)));
+	return provider.get(position.lat, position.lon);
 }
 
 boost::optional<double> TilePlanetAltitudeProvider::tryGetAltitude(const sim::LatLon& position) const
@@ -52,8 +58,14 @@ boost::optional<double> TilePlanetAltitudeProvider::tryGetAltitude(const sim::La
 	}
 	if (success)
 	{
-		vis::HeightmapElevationProvider provider(result.image, toBox2f(getKeyLatLonBounds<LatLonVec2Adapter>(result.key)));
-		return -provider.get(position.lat, position.lon);
+		std::optional<HeightMapElevationRerange> rerange = getHeightMapElevationRerange(*result.image);
+		if (!rerange)
+		{
+			return {};
+		}
+
+		vis::HeightMapElevationProvider provider(result.image, *rerange,  toBox2f(getKeyLatLonBounds<LatLonVec2Adapter>(result.key)));
+		return provider.get(position.lat, position.lon);
 	}
 
 	return {};

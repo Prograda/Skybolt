@@ -11,7 +11,6 @@
 #include "SkyboltVis/Renderable/Planet/Tile/TileSource/MapboxElevationTileSource.h"
 #include "SkyboltVis/Renderable/Planet/Tile/TileSource/SphericalMercatorToPlateCarreeTileSource.h"
 #include "SkyboltVis/Renderable/Planet/Tile/TileSource/XyzTileSource.h"
-#include <SkyboltCommon/ShaUtility.h>
 #include <SkyboltCommon/Json/JsonHelpers.h>
 
 namespace skybolt {
@@ -49,7 +48,7 @@ JsonTileSourceFactory JsonTileSourceFactoryRegistry::wrapWithCacheSupport(JsonTi
 			if (i->get<bool>())
 			{
 				std::string url = json.at("url");
-				std::string directory = mCacheDirectory + "/" + calcSha1(url);
+				std::string directory = mCacheDirectory + "/" + tileSource->getCacheSha();
 				return std::make_shared<CachedTileSource>(tileSource, directory);
 			}
 		}
@@ -108,6 +107,7 @@ void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)
 		xyzConfig.yOrigin = readOptionalOrDefault(json, "yTileOriginAtBottom", false) ? XyzTileSourceConfig::YOrigin::Bottom : XyzTileSourceConfig::YOrigin::Top;
 		xyzConfig.apiKey = apiKey;
 		xyzConfig.levelRange = readLevelRange(json);
+		xyzConfig.imageType = readOptionalOrDefault(json, "produceElevation", false) ? XyzTileSourceConfig::ImageType::Elevation : XyzTileSourceConfig::ImageType::Color;
 		auto source = std::make_shared<XyzTileSource>(xyzConfig);
 		source->validate();
 		return source;

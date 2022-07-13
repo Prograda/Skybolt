@@ -10,6 +10,7 @@
 #include "OsgGeometryHelpers.h"
 #include "OsgStateSetHelpers.h"
 #include "PlanetTileGeometry.h"
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h"
 
 #include <osg/Geode>
 #include <osg/ShapeDrawable>
@@ -147,8 +148,10 @@ static void setupTerrainStateSet(osg::StateSet& ss, const TerrainConfig& config)
 		ss.addUniform(uniform);
 	}
 
-    osg::Uniform* heightScaleUniform = new osg::Uniform("heightScale", config.heightScale);
-    ss.addUniform(heightScaleUniform);
+	HeightMapElevationRerange rerange = getRequiredHeightMapElevationRerange(*config.heightMap->getImage());
+
+	ss.addUniform(new osg::Uniform("heightScale", rerange.x() * 65536.f));
+	ss.addUniform(new osg::Uniform("heightOffset", rerange.y()));
 	ss.setAttribute(config.program);
 	ss.setAttribute(new osg::PatchParameter(4)); 
 

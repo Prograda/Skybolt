@@ -8,6 +8,7 @@
 #include "SkyboltVis/OsgBox2.h"
 #include "SkyboltVis/OsgImageHelpers.h"
 #include <SkyboltCommon/Math/MathUtility.h>
+#include <SkyboltCommon/ShaUtility.h>
 
 #include <httplib/httplib.h>
 #include <osg/Vec2i>
@@ -50,8 +51,10 @@ static std::string tileXYToQuadKey(int tileX, int tileY, int levelOfDetail)
 }
 
 BingTileSource::BingTileSource(const BingTileSourceConfig& config) :
-	TileSourceWithMinMaxLevel(config.levelRange)
+	TileSourceWithMinMaxLevel(config.levelRange),
+	mCacheSha(skybolt::calcSha1(config.url))
 {
+
 	httplib::Client cli(config.url.c_str());
 
 	std::string request = "/REST/V1/Imagery/Metadata/Aerial?output=json&include=ImageryProviders&key=" + config.apiKey;

@@ -7,7 +7,6 @@
 #include "TileMapGenerator.h"
 #include <SkyboltVis/OsgImageHelpers.h>
 #include <SkyboltVis/OsgMathHelpers.h>
-#include <SkyboltVis/Renderable/Planet/Tile/HeightMap.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <osgDB/ReadFile>
 
@@ -28,6 +27,40 @@ Box2d getTileBounds(int x, int y, int numTilesX, int numTilesY)
 	return bounds;
 }
 
+constexpr int defaultHeightmapSeaLevelValue = 32767;
+
+static osg::ref_ptr<osg::Image> loadRawImage16bit(const std::string& filename, int width, int height)
+{
+	std::ifstream f(filename, std::ios::in | std::ios::binary);
+	if (!f.is_open())
+		throw skybolt::Exception("Unable to open file: " + filename);
+
+	osg::Image* image = new osg::Image;
+	image->allocateImage(width, height, 1, GL_LUMINANCE, GL_UNSIGNED_SHORT);
+	image->setInternalTextureFormat(GL_R16);
+
+	size_t elementCount = width * height;
+	size_t sizeBytes = elementCount * 2;
+	f.read((char*)image->data(), sizeBytes);
+
+	// Post process
+	char* p = (char*)image->data();
+	for (int i = 0; i < elementCount; ++i)
+	{
+		// Convert from big to little endian
+		//std::swap(*p, *(p + 1));
+
+		// Offset sea level
+		uint16_t& value = *(uint16_t*)p;
+		value += defaultHeightmapSeaLevelValue;
+
+		p += 2;
+	}
+
+	f.close();
+	return image;
+}
+
 void postProcessStrm(osg::Image& image)
 {
 	size_t elementCount = image.s() * image.t();
@@ -39,7 +72,7 @@ void postProcessStrm(osg::Image& image)
 		{
 			value = -500; // set to match mask in GLOBE data
 		}
-		value += getHeightmapSeaLevelValueInt();
+		value += defaultHeightmapSeaLevelValue;
 	}
 }
 
@@ -100,7 +133,7 @@ int main_dem()
 				int height = (y == 1 || y == 2) ? 6000 : 4800;
 
 				TileMapGeneratorLayer layer;
-				layer.image = vis::loadRawImage16bit(filename, width, height);
+				layer.image = loadRawImage16bit(filename, width, height);
 				layer.image->flipVertical();
 				layer.bounds = getTileBounds(x, 3-y, 4, 4);
 				layer.bounds.minimum.y() = latitudes[3-y];

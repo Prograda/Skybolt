@@ -27,6 +27,14 @@ struct XyzTileSourceConfig
 	YOrigin yOrigin = YOrigin::Top;
 
 	IntRangeInclusive levelRange;
+
+	enum class ImageType
+	{
+		Color,
+		Elevation
+	};
+
+	ImageType imageType = ImageType::Color; //!< Which image type to produce
 };
 
 class XyzTileSource : public TileSourceWithMinMaxLevel
@@ -39,13 +47,24 @@ public:
 
 	osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
 
+	const std::string& getCacheSha() const override { return mCacheSha; }
+
+	const std::string& getCacheFileFormat() const override
+	{
+		static const std::string pngStr = "png";
+		static const std::string pngxStr = "pngx";
+		return mImageType == XyzTileSourceConfig::ImageType::Color ? pngStr : pngxStr;
+	}
+
 private:
 	std::string toUrl(const skybolt::QuadTreeTileKey& key) const;
 
 private:
-	std::string mUrlTemplate;
-	XyzTileSourceConfig::YOrigin mYOrigin;
-	std::string mApiKey;
+	const std::string mUrlTemplate;
+	const XyzTileSourceConfig::YOrigin mYOrigin;
+	const std::string mApiKey;
+	const std::string mCacheSha;
+	const XyzTileSourceConfig::ImageType mImageType;
 };
 
 } // namespace vis

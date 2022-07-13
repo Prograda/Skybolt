@@ -29,8 +29,8 @@ uniform sampler2D albedoSampler;
 uniform sampler2D landMaskSampler;
 uniform sampler2D cloudSampler;
 uniform vec3 lightDirection;
-uniform vec2 heightScale;
-uniform vec2 heightOffset;
+uniform vec2 heightMapUvScale;
+uniform vec2 heightMapUvOffset;
 uniform vec3 ambientLightColor;
 
 void main()
@@ -46,7 +46,7 @@ void main()
 	vec3 visibleSunIrradiance = scattering.sunIrradiance;
 	
 #ifdef ENABLE_OCEAN
-	float landMask = texture(landMaskSampler, geoTexCoord.xy * heightScale + heightOffset).a;
+	float landMask = texture(landMaskSampler, geoTexCoord.xy * heightMapUvScale + heightMapUvOffset).a;
 	vec3 albedo = mix(waterColor, color.rgb, landMask);
 	vec3 specularReflectance = oceanSpecularColor * (1.0 - landMask) * calcBlinnPhongSpecular(lightDirection, viewDirection, normal, oceanShininess) * visibleSunIrradiance;
 #else
