@@ -25,6 +25,9 @@ nlohmann::json createDefaultEngineSettings()
 		"enabled": true,
 		"textureSize": 2048,
 		"cascadeBoundingDistances": [0.02, 20.0, 70.0, 250.0, 7000]
+	},
+	"clouds": {
+		"enableTemporalUpscaling": true
 	}
 })"_json;
 }
@@ -64,6 +67,19 @@ std::optional<vis::ShadowParams> getShadowParams(const nlohmann::json& engineSet
 		}
 	}
 	return {};
+}
+
+vis::CloudRenderingParams getCloudRenderingParams(const nlohmann::json& engineSettings)
+{
+	vis::CloudRenderingParams params;
+	params.enableTemporalUpscaling = true;
+
+	auto i = engineSettings.find("clouds");
+	if (i != engineSettings.end())
+	{
+		params.enableTemporalUpscaling = readOptionalOrDefault<bool>(i.value(), "enableTemporalUpscaling", true);
+	}
+	return params;
 }
 
 } // namespace skybolt

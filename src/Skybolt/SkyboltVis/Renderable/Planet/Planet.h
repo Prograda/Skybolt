@@ -11,6 +11,7 @@
 #include "SkyboltVis/VisFactory.h"
 #include "SkyboltVis/SkyboltVisFwd.h"
 #include "SkyboltVis/Renderable/Atmosphere/Bruneton/BruentonAtmosphere.h"
+#include "SkyboltVis/Renderable/Clouds/CloudRenderingParams.h"
 #include "SkyboltVis/Renderable/Clouds/VolumeClouds.h"
 #include "SkyboltVis/Renderable/Planet/Features/PlanetFeaturesSource.h"
 #include "SkyboltVis/Renderable/Forest/GpuForest.h"
@@ -40,6 +41,7 @@ struct PlanetConfig
 	VisFactoryRegistry* visFactoryRegistry;
 	bool waterEnabled = true;
 	osg::ref_ptr<osg::Texture2D> cloudsTexture; //!< Set to null to disable clouds
+	vis::CloudRenderingParams cloudRenderingParams;
 	boost::optional<BruentonAtmosphereConfig> atmosphereConfig;
 	file::FileLocator fileLocator;
 	std::vector<file::Path> featureTreeFiles;
@@ -75,6 +77,8 @@ public:
 
 	void setCloudsVisible(bool visible);
 	bool getCloudsVisible(void) const { return mCloudsVisible; }
+
+	VolumeCloudsPtr getClouds() const { return mVolumeClouds; }
 
 	//! If set, clouds will have uniform coverage across planet.
 	//! If not set, coverage will be governed by cloud texture.

@@ -20,6 +20,7 @@ osg::ref_ptr<vis::RenderCameraViewport> createAndAddViewportToWindowWithEngine(v
 		c.scene = engineRoot.scene;
 		c.programs = &engineRoot.programs;
 		c.shadowParams = getShadowParams(engineRoot.engineSettings);
+		c.cloudRenderingParams = getCloudRenderingParams(engineRoot.engineSettings);
 		return c;
 	}());
 	window.getRenderOperationSequence().addOperation(viewport);

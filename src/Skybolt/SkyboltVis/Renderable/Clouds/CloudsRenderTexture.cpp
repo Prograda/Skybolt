@@ -24,7 +24,7 @@ osg::ref_ptr<RenderTexture> createCloudsRenderTexture(const ScenePtr& scene)
 
 	osg::ref_ptr<RenderTexture> texture = new RenderTexture(c);
 	texture->setScene(group);
-	texture->setRelativeRect(RectF(0, 0, 0.333, 0.333));
+	texture->setRelativeRect(RectF(0, 0, 0.25, 0.25));
 	return texture;
 }
 

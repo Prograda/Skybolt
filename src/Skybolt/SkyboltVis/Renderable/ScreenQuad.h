@@ -16,6 +16,9 @@ class ScreenQuad : public DefaultRootNode
 {
 public:
 	ScreenQuad(osg::StateSet* stateSet, const BoundingBox2f& bounds = BoundingBox2f(osg::Vec2f(0, 0), osg::Vec2f(1, 1)));
+
+	static osg::ref_ptr<osg::Geode> createGeode(osg::StateSet* stateSet, const BoundingBox2f& bounds = BoundingBox2f(osg::Vec2f(0, 0), osg::Vec2f(1, 1)));
+	static osg::ref_ptr<osg::Group> createNode(osg::StateSet* stateSet, const BoundingBox2f& bounds = BoundingBox2f(osg::Vec2f(0, 0), osg::Vec2f(1, 1)));
 };
 
 } // namespace vis

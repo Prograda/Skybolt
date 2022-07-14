@@ -188,6 +188,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	context.fileLocator = locateFile;
 	context.assetPackagePaths = mAssetPackagePaths;
 	context.textureCache = std::make_shared<vis::TextureCache>();
+	context.engineSettings = engineSettings;
 
 	file::Paths paths = getFilesWithExtensionInDirectoryInAssetPackages(mAssetPackagePaths, "Entities", ".json");
 	entityFactory.reset(new EntityFactory(context, paths));

@@ -124,11 +124,13 @@ static osg::StateSet* createStateSet(const osg::ref_ptr<osg::Program>& program, 
 		stateSet->setTextureAttributeAndModes(unit, texture);
 		stateSet->addUniform(createUniformSampler3d("noiseVolumeSampler", unit++));
 	}
+	stateSet->addUniform(uniforms.upscaleFactor);
 
 	return stateSet;
 }
 
-VolumeClouds::VolumeClouds(const VolumeCloudsConfig& config)
+VolumeClouds::VolumeClouds(const VolumeCloudsConfig& config) :
+	mApplyTemporalUpscalingJitter(config.applyTemporalUpscalingJitter)
 {
 	mGeode = new osg::Geode();
 	mGeode->setCullingActive(false);
@@ -138,6 +140,10 @@ VolumeClouds::VolumeClouds(const VolumeCloudsConfig& config)
 	mUniforms.topRightDir = new osg::Uniform("topRightDir", osg::Vec3f(0, 0, 0));
 	mUniforms.bottomLeftDir = new osg::Uniform("bottomLeftDir", osg::Vec3f(0, 0, 0));
 	mUniforms.bottomRightDir = new osg::Uniform("bottomRightDir", osg::Vec3f(0, 0, 0));
+
+	// Specifies how much we need to increase texture LOD to account for upscaling.
+	// Although the upscaling factor is 4x we use a factor of 3x here to prevent excessive jittering.
+	mUniforms.upscaleFactor = new osg::Uniform("upscaleTextureLodFactor", mApplyTemporalUpscalingJitter ? 3.f : 1.f);
 
 	osg::StateSet* stateSet = createStateSet(config.program, mUniforms, config.cloudsTexture);
 
@@ -154,6 +160,31 @@ VolumeClouds::~VolumeClouds()
 {
 }
 
+// From https://en.wikipedia.org/wiki/Ordered_dithering
+const int bayerIndex[] = {
+    0, 8, 2, 10,
+    12, 4, 14, 6,
+    3, 11, 1, 9,
+	15, 7, 13, 5
+};
+
+const std::vector<osg::Vec2f> calcBayerOffsets(const int* bayerIndices)
+{
+	std::vector<osg::Vec2f> r;
+	for (int i = 0; i < 16; ++i)
+	{
+		for (int j = 0; j < 16; ++j)
+		{
+			if (bayerIndices[j] == i)
+			{
+				r.push_back(osg::Vec2f((float(j % 4) + 0.5f) / 4.0f, (float(j / 4) + 0.5f) / 4.0f));
+				break;
+			}
+		}
+	}
+	return r;
+};
+
 void VolumeClouds::updatePreRender(const CameraRenderContext& context)
 {
 	osg::Matrixf modelMatrix = mTransform->getWorldMatrices().front();
@@ -164,7 +195,23 @@ void VolumeClouds::updatePreRender(const CameraRenderContext& context)
 	{
 		osg::Vec3f cameraPosition = camera.getPosition();
 
-		osg::Matrixf viewProj = camera.getViewMatrix() * camera.getProjectionMatrix();
+		osg::Matrix proj = camera.getProjectionMatrix();
+
+
+		if (mApplyTemporalUpscalingJitter)
+		{
+			mFrameNumber = (mFrameNumber + 1) % (16);
+
+			static std::vector<osg::Vec2f> bayerOffset = calcBayerOffsets(bayerIndex);
+
+			mJitterOffset = osg::Vec2(
+				(bayerOffset[(mFrameNumber)].x() - 0.5f) / float(context.targetDimensions.x()) * 4.f,
+				(bayerOffset[(mFrameNumber)].y() - 0.5f) / float(context.targetDimensions.y()) * 4.f);
+			proj(2, 0) += mJitterOffset.x() * 2.f;
+			proj(2, 1) += mJitterOffset.y() * 2.f;
+		}
+
+		osg::Matrixf viewProj = camera.getViewMatrix() * proj;
 		osg::Matrixf viewProjInv = osg::Matrix::inverse(viewProj);
 
 		osg::Vec4f c00 = osg::Vec4f(-1, -1, 0.5f, 1.0f) * viewProjInv;
@@ -190,4 +237,9 @@ void VolumeClouds::updatePreRender(const CameraRenderContext& context)
 		mUniforms.bottomLeftDir->set(dir01);
 		mUniforms.bottomRightDir->set(dir11);
 	}
+}
+
+osg::Matrix VolumeClouds::getModelMatrix() const
+{
+	return mTransform->getWorldMatrices().front();
 }

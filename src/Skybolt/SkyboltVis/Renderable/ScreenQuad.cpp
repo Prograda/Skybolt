@@ -16,16 +16,26 @@ namespace vis {
 
 ScreenQuad::ScreenQuad(osg::StateSet* stateSet, const BoundingBox2f& bounds)
 {
+	mTransform->addChild(createGeode(stateSet, bounds));
+}
+
+osg::ref_ptr<osg::Geode> ScreenQuad::createGeode(osg::StateSet* stateSet, const BoundingBox2f& bounds)
+{
 	osg::Geometry* quad = createQuadWithUvs(bounds, QuadUpDirectionY);
 
 	quad->setStateSet(stateSet);
 	quad->setCullingActive(false);
 
-	//create the geode 
 	osg::Geode* geode = new osg::Geode(); 
 	geode->addDrawable(quad);
+	return geode;
+}
 
-	mTransform->addChild(quad);
+osg::ref_ptr<osg::Group> ScreenQuad::createNode(osg::StateSet* stateSet, const BoundingBox2f& bounds)
+{
+	osg::ref_ptr<osg::Group> group = new osg::Group();
+	group->addChild(createGeode(stateSet, bounds));
+	return group;
 }
 
 } // namespace vis

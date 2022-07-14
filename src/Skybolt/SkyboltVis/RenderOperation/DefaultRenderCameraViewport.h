@@ -10,6 +10,8 @@
 #include "RenderCameraViewport.h"
 #include "SkyboltVis/Rect.h"
 #include "SkyboltVis/RenderContext.h"
+#include "SkyboltVis/Renderable/Clouds/CloudsTemporalUpscaling.h"
+#include "SkyboltVis/Renderable/Clouds/CloudRenderingParams.h"
 #include "SkyboltVis/Shadow/ShadowParams.h"
 
 #include <osg/Camera>
@@ -25,6 +27,7 @@ struct DefaultRenderCameraViewportConfig
 	ScenePtr scene;
 	const ShaderPrograms* programs;
 	std::optional<ShadowParams> shadowParams;
+	CloudRenderingParams cloudRenderingParams;
 	RectF relativeRect = RectF(0,0,1,1);
 };
 
@@ -50,6 +53,7 @@ private:
 	osg::ref_ptr<RenderTarget> mFinalRenderTarget;
 	std::unique_ptr<class CascadedShadowMapGenerator> mShadowMapGenerator;
 
+	osg::ref_ptr<CloudsTemporalUpscaling> mCloudsUpscaling; //!< May be null
 	VisObjectPtr mCloudsComposite;
 	bool mCloudsCompositeInScene = false;
 

@@ -340,6 +340,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 		c.scene = mEngineRoot->scene;
 		c.programs = &mEngineRoot->programs;
 		c.shadowParams = getShadowParams(mEngineRoot->engineSettings);
+		c.cloudRenderingParams = getCloudRenderingParams(mEngineRoot->engineSettings);
 		return c;
 	}());
 	mOsgWidget->getWindow()->getRenderOperationSequence().addOperation(mViewport);

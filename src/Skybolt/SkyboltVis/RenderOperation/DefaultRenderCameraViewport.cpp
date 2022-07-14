@@ -15,6 +15,7 @@
 #include "SkyboltVis/Renderable/ScreenQuad.h"
 #include "SkyboltVis/Renderable/Atmosphere/Bruneton/BruentonAtmosphereRenderOperation.h"
 #include "SkyboltVis/Renderable/Clouds/CloudsRenderTexture.h"
+#include "SkyboltVis/Renderable/Clouds/CloudsTemporalUpscaling.h"
 #include "SkyboltVis/Renderable/Clouds/VolumeCloudsComposite.h"
 #include "SkyboltVis/Renderable/Planet/Planet.h"
 #include "SkyboltVis/Renderable/Water/WaterMaterialRenderOperation.h"
@@ -119,10 +120,24 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 		osg::ref_ptr<RenderTexture> clouds = createCloudsRenderTexture(mScene);
 		mSequence->addOperation(clouds, (int)RenderOperationOrder::Clouds);
 
+		osg::ref_ptr<RenderOperation> cloudsTarget = clouds;
+		if (config.cloudRenderingParams.enableTemporalUpscaling)
+		{
+			CloudsTemporalUpscalingConfig upscalingConfig;
+			upscalingConfig.colorTextureProvider = [clouds] { return clouds->getOutputTextures().empty() ? nullptr : clouds->getOutputTextures()[0]; };
+			upscalingConfig.depthTextureProvider = [clouds] { return clouds->getOutputTextures().empty() ? nullptr : clouds->getOutputTextures()[1]; };
+			upscalingConfig.scene = mScene;
+			upscalingConfig.upscalingProgram = config.programs->getRequiredProgram("cloudsTemporalUpscaling");
+			mCloudsUpscaling = new CloudsTemporalUpscaling(upscalingConfig);
+			mSequence->addOperation(mCloudsUpscaling, (int)RenderOperationOrder::Clouds);
+
+			cloudsTarget = mCloudsUpscaling;
+		}
+
 		VolumeCloudsCompositeConfig compositeConfig;
 		compositeConfig.compositorProgram = config.programs->getRequiredProgram("compositeClouds");
-		compositeConfig.colorTextureProvider = [clouds] { return clouds->getOutputTextures().empty() ? nullptr : clouds->getOutputTextures()[0]; };
-		compositeConfig.depthTextureProvider = [clouds] { return clouds->getOutputTextures().empty() ? nullptr : clouds->getOutputTextures()[1]; };
+		compositeConfig.colorTextureProvider = [cloudsTarget] { return cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[0]; };
+		compositeConfig.depthTextureProvider = [cloudsTarget] { return cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[1]; };
 
 		mCloudsComposite = createVolumeCloudsComposite(compositeConfig);
 	}
@@ -139,6 +154,10 @@ DefaultRenderCameraViewport::~DefaultRenderCameraViewport()
 void DefaultRenderCameraViewport::setCamera(const CameraPtr& camera)
 {
 	mCamera = camera;
+	if (mCloudsUpscaling)
+	{
+		mCloudsUpscaling->setCamera(camera);
+	}
 	mMainPassTexture->setCamera(camera);
 }
 

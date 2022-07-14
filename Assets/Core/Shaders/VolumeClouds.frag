@@ -29,6 +29,8 @@ uniform vec3 cameraPosition;
 uniform vec3 lightDirection;
 uniform vec3 cameraCenterDirection;
 uniform vec3 ambientLightColor;
+uniform int frameNumber;
+uniform float upscaleTextureLodFactor;
 
 // Cloud geometry heights for each cloud type
 const float cloudLayerMaxHeight = 7000;
@@ -322,7 +324,7 @@ vec4 evaluateGlobalLowResColor(vec2 cloudsUv, vec3 irradiance, float rayFar)
 	vec2 lod2d = textureQueryLod(globalAlphaSampler, cloudsUv.xy);
 	float lod = max(lod2d.x, lod2d.y);
 	lod2d = textureQueryLod(globalAlphaSampler, vec2(fract(cloudsUv.x-0.01), cloudsUv.y));
-	lod = min(lod, max(lod2d.x, lod2d.y));
+	lod = min(lod, max(lod2d.x, lod2d.y))-log2(upscaleTextureLodFactor);
 
 	float alpha = textureLod(globalAlphaSampler, cloudsUv, lod).r;
 	vec3 color = irradiance * alpha * oneOnFourPi;
@@ -338,7 +340,7 @@ float mipMapLevel(sampler2D sampler, vec2 uv)
 
 	// Take the average of the x and y dimensions.
 	// This provides a balance between sharpness and aliasing at grazing angles.
-	float deltaMaxSqr = 0.5 * (dot(dtc_dx, dtc_dx) + dot(dtc_dy, dtc_dy));
+	float deltaMaxSqr = 1.0/upscaleTextureLodFactor * 0.5 * (dot(dtc_dx, dtc_dx) + dot(dtc_dy, dtc_dy));
 	return 0.5 * log2(max(1.0, deltaMaxSqr));
 }
 
@@ -460,7 +462,6 @@ void main()
 	{
 		float rayStartTexelsPerPixel = pow(2, lod);
 		colorOut = march(positionRelPlanetPlanetAxes, rayDirPlanetAxes, stepSize, rayFar-rayNear, rayStartTexelsPerPixel, lightDirPlanetAxes, directIrradiance, meanCloudFrontDistance);
-		meanCloudFrontDistance += rayNear;
 	}
 	else
 	{
@@ -471,7 +472,8 @@ void main()
 	
 	float logZ;
 	if (hasSample)
-	{
+	{	
+		meanCloudFrontDistance += rayNear;
 		{
 			// Apply 'aerial perspective'
 			vec3 transmittance;
@@ -493,8 +495,7 @@ void main()
 	}
 	else
 	{
-		float precisionBias = 0.99; // needed to avoid z fighting at extreme distances
-		logZ = calcLogZNdc(precisionBias*dot(rayDir * rayFar, cameraCenterDirection));
+		logZ = calcLogZNdc(dot(rayDir * rayFar, cameraCenterDirection));
 	}
 
 	if (lowResBlend > 0)

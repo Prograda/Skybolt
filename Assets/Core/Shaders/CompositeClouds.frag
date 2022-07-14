@@ -15,7 +15,7 @@ out vec4 color;
 void main()
 {
 	color = texture(colorTexture, texCoord.xy);
-	gl_FragDepth = texture(depthTexture, texCoord.xy).r;
+	gl_FragDepth = texture(depthTexture, texCoord.xy).r*0.99; // add small bias to avoid z fighting
 
 	// Square the color value stored in the texture to undo the sqrt that was applied when the texture was written to.
 	// This gets us back into linear color space.

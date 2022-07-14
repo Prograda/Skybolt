@@ -302,6 +302,7 @@ Planet::Planet(const PlanetConfig& config) :
 			cloudsConfig.innerCloudLayerRadius = config.innerRadius + 3000;
 			cloudsConfig.outerCloudLayerRadius = config.innerRadius + 8000;
 			cloudsConfig.cloudsTexture = config.cloudsTexture;
+			cloudsConfig.applyTemporalUpscalingJitter = config.cloudRenderingParams.enableTemporalUpscaling;
 			mVolumeClouds = std::make_unique<VolumeClouds>(cloudsConfig);
 		}
 

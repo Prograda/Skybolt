@@ -6,6 +6,7 @@
 
 #include "EntityFactory.h"
 #include "EngineRoot.h"
+#include "EngineSettings.h"
 #include "EngineStats.h"
 #include "TemplateNameComponent.h"
 #include "VisObjectsComponent.h"
@@ -403,6 +404,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 		{
 			const nlohmann::json& clouds = it.value();
 			config.cloudsTexture = context.textureCache->getOrCreateTexture(clouds.at("map"), &createCloudTexture);
+			config.cloudRenderingParams = getCloudRenderingParams(context.engineSettings);
 		}
 	}
 

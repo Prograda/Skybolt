@@ -20,6 +20,12 @@ float calcLogZNdc(float clipSpaceW)
 	return log(C*clipSpaceW + 1) / log(C*farClipDistance + 1);
 }
 
+//! Inverse of calcLogZNdc
+float calcClipSpaceWFromLogZNdc(float logZNdc)
+{
+	return (exp(logZNdc * log(C*farClipDistance + 1)) - 1) / C;
+}
+
 // This calculates logarithmic Z in the vertex shader and avoids fragment shader computation,
 // with the drawback of less precision close to the camera.
 // @return a new clipSpaceZ to be assigned to gl_Position.z
