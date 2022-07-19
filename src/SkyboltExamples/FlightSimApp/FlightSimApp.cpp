@@ -8,6 +8,7 @@
 #include <ExamplesCommon/HudSystem.h>
 #include <ExamplesCommon/HelpDisplaySystem.h>
 #include <ExamplesCommon/HelpDisplayToggleEventListener.h>
+#include <ExamplesCommon/WindowUtil.h>
 
 #include <SkyboltEngine/CameraInputSystem.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
@@ -54,10 +55,6 @@ static void createEnvironmentEntities(const EntityFactory& entityFactory, World&
 	world.addEntity(entityFactory.createEntity("PlanetEarth"));
 }
 
-static std::unique_ptr<StandaloneWindow> createWindow()
-{
-	return std::make_unique<StandaloneWindow>(RectI(0, 0, 1080, 720));
-}
 static std::vector<LogicalAxisPtr> createHelicopterInputAxesKeyboard(const InputPlatform& inputPlatform)
 {
 	InputDevicePtr keyboard = inputPlatform.getInputDevicesOfType(InputDeviceTypeKeyboard)[0];
@@ -139,7 +136,7 @@ int main(int argc, char *argv[])
 		orbitController->setZoom(0.8);
 
 		// Attach camera to window
-		std::unique_ptr<vis::StandaloneWindow> window = createWindow();
+		std::unique_ptr<vis::StandaloneWindow> window = createExampleWindow();
 		osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindowWithEngine(*window, *engineRoot);
 		viewport->setCamera(getVisCamera(*simCamera));
 
@@ -164,6 +161,7 @@ Right arrow: Cyclic right
 F1: Cockpit view
 F2: External view
 H: Toggle help message
+Esc: Exit
 Mouse: Pan camera
 )";
 

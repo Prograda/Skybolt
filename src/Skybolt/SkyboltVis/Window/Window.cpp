@@ -46,6 +46,7 @@ Window::Window(const DisplaySettings& settings) :
 	osg::DisplaySettings::instance()->setNumMultiSamples(settings.multiSampleCount);
 
 	osg::setNotifyLevel(osg::WARN);
+	mViewer->setKeyEventSetsDone(0); // disable default 'escape' key binding to quit the application
 	mViewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded); // TODO: Use multi-threaded?
 
 	osg::StateSet* stateSet = mRootGroup->getOrCreateStateSet();

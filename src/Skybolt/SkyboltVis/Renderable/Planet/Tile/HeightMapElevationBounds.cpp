@@ -21,7 +21,7 @@ HeightMapElevationBounds getRequiredHeightMapElevationBounds(const osg::Image& i
 	std::optional<HeightMapElevationBounds> r = getHeightMapElevationBounds(image);
 	if (!r)
 	{
-		throw std::runtime_error("HeightMap does not have an associated elevation bounds information");
+		throw std::runtime_error("HeightMap does not have associated elevation bounds data");
 	}
 	return *r;
 }

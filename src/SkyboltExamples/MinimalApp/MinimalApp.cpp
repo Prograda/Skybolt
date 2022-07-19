@@ -6,6 +6,7 @@
 
 #include <ExamplesCommon/HelpDisplaySystem.h>
 #include <ExamplesCommon/HelpDisplayToggleEventListener.h>
+#include <ExamplesCommon/WindowUtil.h>
 
 #include <SkyboltEngine/CameraInputSystem.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
@@ -51,11 +52,6 @@ static void createEntities(const EntityFactory& entityFactory, World& world, Cam
 	cameraController.setTarget(planet.get());
 }
 
-static std::unique_ptr<StandaloneWindow> createWindow()
-{
-	return std::make_unique<StandaloneWindow>(RectI(0, 0, 1080, 720));
-}
-
 static std::shared_ptr<HelpDisplaySystem> createHelpDisplaySystem(const osg::ref_ptr<osg::Camera>& camera)
 {
 	std::string helpMessage =
@@ -64,6 +60,7 @@ W: Zoom in
 S: Zoom out
 H: Toggle help message
 Shift (hold): Camera tilt modifier
+Esc: Exit
 Mouse: Rotate camera
 )";
 
@@ -85,7 +82,7 @@ int main(int argc, char *argv[])
 		engineRoot->simWorld->addEntity(simCamera);
 
 		// Attach camera to window
-		std::unique_ptr<vis::StandaloneWindow> window = createWindow();
+		std::unique_ptr<vis::StandaloneWindow> window = createExampleWindow();
 		osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindowWithEngine(*window, *engineRoot);
 		viewport->setCamera(getVisCamera(*simCamera));
 

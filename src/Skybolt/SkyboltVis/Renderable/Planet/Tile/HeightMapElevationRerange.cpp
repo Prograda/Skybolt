@@ -31,7 +31,7 @@ HeightMapElevationRerange getRequiredHeightMapElevationRerange(const osg::Image&
 	std::optional<HeightMapElevationRerange> r = getHeightMapElevationRerange(image);
 	if (!r)
 	{
-		throw std::runtime_error("HeightMap does not have an associated elevation rerange");
+		throw std::runtime_error("HeightMap does not have associated elevation rerange data");
 	}
 	return *r;
 }
