@@ -168,6 +168,10 @@ osg::ref_ptr<RenderTarget> DefaultRenderCameraViewport::getFinalRenderTarget() c
 
 void DefaultRenderCameraViewport::updatePreRender(const RenderContext& renderContext)
 {
+	if (!mCamera)
+	{
+		return;
+	}
 	mSequence->updatePreRender(renderContext);
 
 	if (mShadowMapGenerator)

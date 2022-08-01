@@ -8,11 +8,13 @@
 #pragma once
 
 #include "SkyboltVis/SkyboltVisFwd.h"
+#include <osg/Image>
 #include <string>
 
 namespace skybolt {
 namespace vis {
 
+osg::ref_ptr<osg::Image> captureScreenshot(Window& window);
 void captureScreenshot(Window& window, const std::string& filename);
 
 } // namespace vis

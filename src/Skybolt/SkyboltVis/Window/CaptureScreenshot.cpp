@@ -14,6 +14,31 @@
 namespace skybolt {
 namespace vis {
 
+struct StoreImage : public osgViewer::ScreenCaptureHandler::CaptureOperation
+{
+    void operator() (const osg::Image& img, const unsigned int context_id) override
+	{
+		image = new osg::Image(img, osg::CopyOp::DEEP_COPY_ALL);
+	}
+
+    osg::ref_ptr<osg::Image> image;
+};
+
+osg::ref_ptr<osg::Image> captureScreenshot(Window& window)
+{
+	osg::ref_ptr<StoreImage> storeImage = new StoreImage();
+	osg::ref_ptr<osgViewer::ScreenCaptureHandler> screenCaptureHandler = new osgViewer::ScreenCaptureHandler(storeImage);
+
+	osgViewer::Viewer& viewer = window.getViewer();
+
+	screenCaptureHandler->setFramesToCapture(1);
+	screenCaptureHandler->captureNextFrame(viewer);
+	window.render();
+	screenCaptureHandler->stopCapture();
+
+	return storeImage->image;
+}
+
 class WriteToFile : public osgViewer::ScreenCaptureHandler::CaptureOperation
 {
 public:

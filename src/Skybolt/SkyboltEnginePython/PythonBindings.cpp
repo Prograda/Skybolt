@@ -20,6 +20,7 @@
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/ParentReferenceComponent.h>
 #include <SkyboltSim/Components/ProceduralLifetimeComponent.h>
+#include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Spatial/Orientation.h>
 #include <SkyboltSim/Spatial/Position.h>
 #include <SkyboltSim/System/SimStepper.h>
@@ -30,6 +31,8 @@
 #include <SkyboltVis/Window/CaptureScreenshot.h>
 #include <SkyboltVis/Window/StandaloneWindow.h>
 
+#include <osg/Image>
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
@@ -137,6 +140,22 @@ static bool stepOnceAndRenderUntilDone(EngineRoot& engineRoot, vis::Window& wind
 	while (engineRoot.stats.terrainTileLoadQueueSize > 0 || engineRoot.stats.featureTileLoadQueueSize > 0);
 
 	return true;
+}
+
+static py::array_t<std::uint8_t> captureScreenshotToImage(vis::Window& window)
+{
+	osg::ref_ptr<osg::Image> image = vis::captureScreenshot(window);
+
+	const int channelCount = image->getPixelSizeInBits() / 8;
+	const std::size_t size = image->s() * image->t() * channelCount;
+	auto result = py::array_t<std::uint8_t>(size);
+
+	py::buffer_info buf = result.request();
+	std::uint8_t* data = static_cast<std::uint8_t*>(buf.ptr);
+	std::memcpy(data, image->data(), size);
+
+	result.resize({ image->t(), image->s(), channelCount });
+    return result;
 }
 
 PYBIND11_MODULE(skybolt, m) {
@@ -296,9 +315,12 @@ PYBIND11_MODULE(skybolt, m) {
 	m.def("toGeocentricOrientation", [](const OrientationPtr& orientation, const LatLon& latLon) { return std::make_shared<GeocentricOrientation>(toGeocentric(*orientation, latLon)); });
 	m.def("toLatLonAlt", [](const PositionPtr& position) { return std::make_shared<LatLonAltPosition>(toLatLonAlt(*position)); });
 	m.def("toLatLon", &toLatLon);
+	m.def("toLatLonAlt", py::overload_cast<const LatLon&, double>(&toLatLonAlt));
 	m.def("dot", &dotFunc);
 	m.def("cross", &crossFunc);
 	m.def("normalize", &normalizeFunc);
 	m.def("quaternionFromEuler", py::overload_cast<const Vector3&>(&math::quatFromEuler));
+	m.def("captureScreenshot", [](vis::Window& window) { return captureScreenshotToImage(window); });
 	m.def("captureScreenshot", [](vis::Window& window, const std::string& filename) { return vis::captureScreenshot(window, filename); });
+	m.def("moveDistanceAndBearing", &moveDistanceAndBearing);
 }
