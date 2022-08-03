@@ -33,7 +33,7 @@ jobs:
     - name: Install conan
       run: |
         python3 -m pip install --upgrade pip
-        pip3 install conan
+        pip3 install conan==1.50.0
     - name: Add conan remotes
       run: |
         conan config set general.revisions_enabled=1
@@ -47,7 +47,7 @@ jobs:
         export CONAN_SYSREQUIRES_MODE=enabled
         mkdir ${{env.depsDir}}
         cd ${{env.depsDir}}
-        conan install ${{github.workspace}} -o openscenegraph-mr:shared=True --build=cxxtimer --build=px_sched --build=xsimd
+        conan install ${{github.workspace}} -o openscenegraph-mr:shared=True --build=cxxtimer --build=px_sched --build=xsimd -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
     - name: Cmake build
       run: |
         mkdir ${{env.buildDir}}
