@@ -57,19 +57,22 @@ public:
 static btCollisionShape* loadPlanetCollisionShape(const PlanetComponent& planet)
 {
 	// TODO: dispose of the shapes
-	double maxEarthRadius = planet.radius + 9000; // TODO: work out a safe maximum terrain altitude bound
-	btCollisionShape* shape = new sim::TerrainCollisionShape(std::make_shared<AltitudeProviderAdapter>(planet.altitudeProvider), planet.radius, maxEarthRadius);
+	btCompoundShape* compoundShape = new btCompoundShape();
+	if (planet.altitudeProvider)
+	{
+		double maxEarthRadius = planet.radius + 9000; // TODO: work out a safe maximum terrain altitude bound
+		btCollisionShape* shape = new sim::TerrainCollisionShape(std::make_shared<AltitudeProviderAdapter>(planet.altitudeProvider), planet.radius, maxEarthRadius);
+		compoundShape->addChildShape(btTransform::getIdentity(), shape);
+	}
 
 	if (planet.hasOcean)
 	{
 		// Add sphere to provide collision detection against ocean
-		btCompoundShape* compoundShape = new btCompoundShape();
 		compoundShape->addChildShape(btTransform::getIdentity(), new btSphereShape(planet.radius));
-		compoundShape->addChildShape(btTransform::getIdentity(), shape);
 		return compoundShape;
 	}
 
-	return shape;
+	return compoundShape;
 }
 
 static sim::ComponentPtr loadBulletDynamicBody(BulletWorld& world, Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)

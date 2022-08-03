@@ -24,7 +24,7 @@ struct PlanetComponent : public sim::Component
 
 	const double radius;
 	const bool hasOcean;
-	const std::shared_ptr<AsyncPlanetAltitudeProvider> altitudeProvider;
+	const std::shared_ptr<AsyncPlanetAltitudeProvider> altitudeProvider; //!< Null if the planet has no terrain
 };
 
 } // namespace sim

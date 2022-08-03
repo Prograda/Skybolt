@@ -159,11 +159,14 @@ Planet::Planet(const PlanetConfig& config) :
 
 		mTransform->getOrCreateStateSet()->setDefine("ENABLE_ATMOSPHERE");
 
-		PlanetSkyConfig skyConfig;
-		skyConfig.program = config.programs->getRequiredProgram("sky");
-		skyConfig.radius = config.atmosphereConfig->topRadius;
-		mPlanetSky.reset(new PlanetSky(skyConfig));
-		mScene->addObject(mPlanetSky);
+		if (config.skyVisible)
+		{
+			PlanetSkyConfig skyConfig;
+			skyConfig.program = config.programs->getRequiredProgram("sky");
+			skyConfig.radius = config.atmosphereConfig->topRadius;
+			mPlanetSky.reset(new PlanetSky(skyConfig));
+			mScene->addObject(mPlanetSky);
+		}
 	}
 
 	// Global uniforms, to be shared for everything in scene
@@ -186,10 +189,11 @@ Planet::Planet(const PlanetConfig& config) :
 		ss->addUniform(new osg::Uniform("solar_irradiance", BruentonAtmosphere::getSolarIrradiance()));
 	}
 
-	auto textureCache = std::make_shared<TileTextureCache>();
 
 	// Create terrain
+	if (config.planetTileSources)
 	{
+		auto textureCache = std::make_shared<TileTextureCache>();
 		std::shared_ptr<OsgTileFactory> osgTileFactory;
 		{
 			OsgTileFactoryConfig factoryConfig;
@@ -224,7 +228,7 @@ Planet::Planet(const PlanetConfig& config) :
 		surfaceConfig.osgTileFactory = osgTileFactory;
 		surfaceConfig.parentTransform = mTransform;
 		surfaceConfig.gpuForest = forest;
-		surfaceConfig.planetTileSources = config.planetTileSources;
+		surfaceConfig.planetTileSources = *config.planetTileSources;
 		surfaceConfig.oceanEnabled = config.waterEnabled;
 		surfaceConfig.cloudsTexture = config.cloudsTexture;
 		surfaceConfig.tileTexturesProvider = createSurfaceTileTexturesProvider(textureCache);
@@ -284,7 +288,10 @@ Planet::Planet(const PlanetConfig& config) :
 				params.groups[PlanetFeaturesParams::groupsNonBuildingsIndex] = nonBuildingFeaturesGroup;
 				mPlanetFeatures.reset(new PlanetFeatures(params));
 
-				mPlanetSurface->Listenable<PlanetSurfaceListener>::addListener(mPlanetSurfaceListener.get());
+				if (mPlanetSurface)
+				{
+					mPlanetSurface->Listenable<PlanetSurfaceListener>::addListener(mPlanetSurfaceListener.get());
+				}
 			}
 			else
 			{
@@ -338,7 +345,10 @@ Planet::~Planet()
 	setCloudsVisible(false);
 
 	// Remove listener to decouple shutdown order of mPlanetSurface and mPlanetSurfaceListener
-	mPlanetSurface->Listenable<PlanetSurfaceListener>::removeListener(mPlanetSurfaceListener.get());
+	if (mPlanetSurface)
+	{
+		mPlanetSurface->Listenable<PlanetSurfaceListener>::removeListener(mPlanetSurfaceListener.get());
+	}
 }
 
 osg::ref_ptr<class BruentonAtmosphere> Planet::getAtmosphere() const
@@ -435,9 +445,15 @@ void Planet::updatePreRender(const CameraRenderContext& context)
 	planetMatrixInv = osg::Matrixf::inverse(planetMatrixInv);
 	mPlanetMatrixInvUniform->set(planetMatrixInv);
 
-	mPlanetSurface->updatePreRender(context);
+	if (mPlanetSurface)
+	{
+		mPlanetSurface->updatePreRender(context);
+	}
+
 	if (mPlanetFeatures)
+	{
 		mPlanetFeatures->updatePreRender(context);
+	}
 
 	double julianDateSeconds = mJulianDate * 24.0 * 60.0 * 60.0;
 	// Move clouds
@@ -452,10 +468,13 @@ void Planet::updatePreRender(const CameraRenderContext& context)
 		mReflectionCameraController->update(context.camera);
 	}
 
-	double altitude = (getPosition() - context.camera.getPosition()).length() - mInnerRadius;
-	if (altitude < 40000) // TODO: ensure this value matches oceanMeshFadeoutEndDistance in Ocean.h shader file
+	if (mWaterMaterial)
 	{
-		mWaterMaterial->update(julianDateSeconds);
+		double altitude = (getPosition() - context.camera.getPosition()).length() - mInnerRadius;
+		if (altitude < 40000) // TODO: ensure this value matches oceanMeshFadeoutEndDistance in Ocean.h shader file
+		{
+			mWaterMaterial->update(julianDateSeconds);
+		}
 	}
 }
 

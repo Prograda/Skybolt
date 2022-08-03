@@ -166,6 +166,15 @@ osg::ref_ptr<RenderTarget> DefaultRenderCameraViewport::getFinalRenderTarget() c
 	return mFinalRenderTarget;
 }
 
+static bool getCloudsVisible(const Scene& scene)
+{
+	if (const auto& planet = scene.getPrimaryPlanet(); planet)
+	{
+		return planet->getCloudsVisible();
+	}
+	return false;
+}
+
 void DefaultRenderCameraViewport::updatePreRender(const RenderContext& renderContext)
 {
 	if (!mCamera)
@@ -179,20 +188,17 @@ void DefaultRenderCameraViewport::updatePreRender(const RenderContext& renderCon
 		mShadowMapGenerator->update(*mCamera, -mScene->getPrimaryLightDirection(), mScene->getWrappedNoiseOrigin());
 	}
 
-	if (const auto& planet = mScene->getPrimaryPlanet(); planet)
+	bool cloudsVisible = getCloudsVisible(*mScene);
+	if (cloudsVisible != mCloudsCompositeInScene)
 	{
-		if (planet->getCloudsVisible() != mCloudsCompositeInScene)
+		mCloudsCompositeInScene = cloudsVisible;
+		if (cloudsVisible)
 		{
-			mCloudsCompositeInScene = planet->getCloudsVisible();
-			if (mCloudsCompositeInScene)
-			{
-				mScene->addObject(mCloudsComposite);
-			}
-			else
-			{
-				mScene->removeObject(mCloudsComposite);
-			}
-
+			mScene->addObject(mCloudsComposite);
+		}
+		else
+		{
+			mScene->removeObject(mCloudsComposite);
 		}
 	}
 }

@@ -29,25 +29,38 @@
 namespace skybolt {
 namespace vis {
 
+// TODO: Split out aspects of the planet into different entity components (surface, atmosphere etc)
 struct PlanetConfig
 {
 	px_sched::Scheduler* scheduler;
 	const ShaderPrograms* programs;
 	Scene* scene;
-	BuildingTypesPtr buildingTypes; //!< optional
-	sim::LatLon latLonOrigin;
 	float innerRadius;
-	PlanetTileSources planetTileSources;
-	VisFactoryRegistry* visFactoryRegistry;
-	bool waterEnabled = true;
-	osg::ref_ptr<osg::Texture2D> cloudsTexture; //!< Set to null to disable clouds
-	vis::CloudRenderingParams cloudRenderingParams;
+
+	// Planet surface
+	boost::optional<PlanetTileSources> planetTileSources;
+	DetailMappingTechniquePtr detailMappingTechnique;
+
+	// Atmosphere
 	boost::optional<BruentonAtmosphereConfig> atmosphereConfig;
+	bool skyVisible = true;
+
+	// Ocean
+	VisFactoryRegistry* visFactoryRegistry; //!< Not null if waterEnabled = true
+	bool waterEnabled = true;
+
+	// Features (buildings etc)
+	BuildingTypesPtr buildingTypes; //!< optional
 	file::FileLocator fileLocator;
 	std::vector<file::Path> featureTreeFiles;
 	std::string featureTilesDirectoryRelAssetPackage;
+
+	// Clouds
+	osg::ref_ptr<osg::Texture2D> cloudsTexture; //!< Set to null to disable clouds
+	vis::CloudRenderingParams cloudRenderingParams;
+
+	// Forest
 	std::optional<ForestParams> forestParams;
-	DetailMappingTechniquePtr detailMappingTechnique;
 };
 
 class BruentonAtmosphere;
@@ -62,7 +75,7 @@ public:
 	Planet(const PlanetConfig& config);
 	~Planet();
 
-	PlanetSurface* getSurface() const { return mPlanetSurface.get(); } //!< Never returns null
+	PlanetSurface* getSurface() const { return mPlanetSurface.get(); } //!< May returns null
 
 	PlanetFeatures* getPlanetFeatures() const { return mPlanetFeatures.get(); } //!< May return null
 
@@ -105,13 +118,13 @@ public:
 
 private:
 	Scene* mScene;
-	osg::ref_ptr<WaterMaterial> mWaterMaterial;
+	osg::ref_ptr<WaterMaterial> mWaterMaterial; //!< May be null
 	OceanPtr mOcean;
 	std::unique_ptr <ReflectionCameraController> mReflectionCameraController;
 	
-	std::unique_ptr<PlanetSurface> mPlanetSurface;
+	std::unique_ptr<PlanetSurface> mPlanetSurface; //!< May be null
 	std::shared_ptr<PlanetSky> mPlanetSky;
-	std::unique_ptr<PlanetFeatures> mPlanetFeatures; //!< Can be null
+	std::unique_ptr<PlanetFeatures> mPlanetFeatures; //!< May be null
 	VolumeCloudsPtr mVolumeClouds;
 	osg::ref_ptr<BruentonAtmosphere> mAtmosphere;
 

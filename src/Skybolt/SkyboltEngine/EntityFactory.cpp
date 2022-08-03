@@ -307,7 +307,10 @@ struct PlanetStatsUpdater : vis::PlanetFeaturesListener, vis::QuadTreeTileLoader
 	PlanetStatsUpdater(EngineStats* stats, vis::Planet* planet)
 		: mStats(stats), mPlanet(planet)
 	{
-		planet->getSurface()->getTileLoaderListenable()->addListener(this);
+		if (planet->getSurface())
+		{
+			planet->getSurface()->getTileLoaderListenable()->addListener(this);
+		}
 
 		if (planet->getPlanetFeatures())
 		{
@@ -322,7 +325,10 @@ struct PlanetStatsUpdater : vis::PlanetFeaturesListener, vis::QuadTreeTileLoader
 			mPlanet->getPlanetFeatures()->removeListener(this);
 		}
 
-		mPlanet->getSurface()->getTileLoaderListenable()->removeListener(this);
+		if (mPlanet->getSurface())
+		{
+			mPlanet->getSurface()->getTileLoaderListenable()->removeListener(this);
+		}
 
 		mStats->terrainTileLoadQueueSize -= mOwnTilesLoading;
 		mStats->featureTileLoadQueueSize -= mOwnFeaturesLoading;
@@ -451,57 +457,63 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 	}
 	
 	int elevationMaxLodLevel;
-	const nlohmann::json& layers = json.at("surface");
+	auto it = json.find("surface");
+	if (it != json.end())
 	{
-		nlohmann::json elevation = layers.at("elevation");
-		config.planetTileSources.elevation = context
-			.tileSourceFactoryRegistry->getFactory(elevation.at("format"))(elevation);
-		elevationMaxLodLevel = elevation.at("maxLevel");
-	}
-	auto it = layers.find("landMask");
-	if (it != layers.end())
-	{
-		config.planetTileSources.landMask = context
-			.tileSourceFactoryRegistry->getFactory(it->at("format"))(*it);
-	}
-	{
-		nlohmann::json albedo = layers.at("albedo");
-		config.planetTileSources.albedo = context
-			.tileSourceFactoryRegistry->getFactory(albedo.at("format"))(albedo);
-	}
-	it = layers.find("attribute");
-	if (it != layers.end())
-	{
-		config.planetTileSources.attribute = context
-			.tileSourceFactoryRegistry->getFactory(it->at("format"))(*it);
-	}
-	it = layers.find("uniformDetail");
-	if (it != layers.end())
-	{
-		std::string filename = it->at("texture");
-		auto texture = vis::createTilingSrgbTexture(osgDB::readImageFile(filename));
-		convertSrgbToTexturizerMap(*texture->getImage());
-		auto technique = std::make_shared<vis::UniformDetailMappingTechnique>();
-		technique->albedoDetailMap = texture;
-		config.detailMappingTechnique = technique;
-	}
-	else
-	{
-		it = layers.find("albedoToDetail");
+		const nlohmann::json& layers = it.value();
+		vis::PlanetTileSources planetTileSources;
+		{
+			nlohmann::json elevation = layers.at("elevation");
+			planetTileSources.elevation = context
+				.tileSourceFactoryRegistry->getFactory(elevation.at("format"))(elevation);
+			elevationMaxLodLevel = elevation.at("maxLevel");
+		}
+		auto it = layers.find("landMask");
 		if (it != layers.end())
 		{
-			auto technique = std::make_shared<vis::AlbedoDerivedDetailMappingTechnique>();
-			technique->noiseMap = readTilingNonSrgbTexture("Environment/TerrainDetailNoise.png");
-
-			auto textures = it->at("textures").items();
-			for (const auto filename : textures)
-			{
-				auto texture = vis::createTilingSrgbTexture(osgDB::readImageFile(filename.value()));
-				technique->albedoDetailMaps.push_back(texture);
-			}
-
+			planetTileSources.landMask = context
+				.tileSourceFactoryRegistry->getFactory(it->at("format"))(*it);
+		}
+		{
+			nlohmann::json albedo = layers.at("albedo");
+			planetTileSources.albedo = context
+				.tileSourceFactoryRegistry->getFactory(albedo.at("format"))(albedo);
+		}
+		it = layers.find("attribute");
+		if (it != layers.end())
+		{
+			planetTileSources.attribute = context
+				.tileSourceFactoryRegistry->getFactory(it->at("format"))(*it);
+		}
+		it = layers.find("uniformDetail");
+		if (it != layers.end())
+		{
+			std::string filename = it->at("texture");
+			auto texture = vis::createTilingSrgbTexture(osgDB::readImageFile(filename));
+			convertSrgbToTexturizerMap(*texture->getImage());
+			auto technique = std::make_shared<vis::UniformDetailMappingTechnique>();
+			technique->albedoDetailMap = texture;
 			config.detailMappingTechnique = technique;
 		}
+		else
+		{
+			it = layers.find("albedoToDetail");
+			if (it != layers.end())
+			{
+				auto technique = std::make_shared<vis::AlbedoDerivedDetailMappingTechnique>();
+				technique->noiseMap = readTilingNonSrgbTexture("Environment/TerrainDetailNoise.png");
+
+				auto textures = it->at("textures").items();
+				for (const auto filename : textures)
+				{
+					auto texture = vis::createTilingSrgbTexture(osgDB::readImageFile(filename.value()));
+					technique->albedoDetailMaps.push_back(texture);
+				}
+
+				config.detailMappingTechnique = technique;
+			}
+		}
+		config.planetTileSources = planetTileSources;
 	}
 
 	{
@@ -549,7 +561,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 	entity->addComponent(visObjectsComponent);
 	visObjectsComponent->addObject(visObject);
 
-	auto altitudeProvider = std::make_shared<vis::TileAsyncPlanetAltitudeProvider>(context.scheduler, config.planetTileSources.elevation, elevationMaxLodLevel);
+	auto altitudeProvider = config.planetTileSources ? std::make_shared<vis::TileAsyncPlanetAltitudeProvider>(context.scheduler, config.planetTileSources->elevation, elevationMaxLodLevel) : nullptr;
 	auto planetComponent = std::make_shared<PlanetComponent>(planetRadius, hasOcean, altitudeProvider);
 	entity->addComponent(planetComponent);
 
