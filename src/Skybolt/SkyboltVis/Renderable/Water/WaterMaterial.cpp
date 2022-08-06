@@ -118,9 +118,9 @@ public:
 
 	void setWaveHeight(float height)
 	{
-		for (const auto& i : mCascades)
+		for (const auto& cascade : mCascades)
 		{
-			i->setWaveHeight(height);
+			cascade->setWaveHeight(height);
 		}
 	}
 

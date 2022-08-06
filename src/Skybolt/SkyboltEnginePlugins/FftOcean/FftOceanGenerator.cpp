@@ -307,6 +307,11 @@ FftOceanGenerator::complex_type toSingle(complex_type_simd4 v, int i)
 	return FftOceanGenerator::complex_type(v.real()[i], v.imag()[i]);
 }
 
+static float filterNan(float v, float valueIfNan)
+{
+	return std::isnan(v) ? valueIfNan : v;
+}
+
 void FftOceanGenerator::calculate(float t, std::vector<glm::vec3>& result)
 {
 	cxxtimer::Timer timer(true);
@@ -367,9 +372,9 @@ void FftOceanGenerator::calculate(float t, std::vector<glm::vec3>& result)
 			int index = m * mTextureSizePixels + n;
 			int sign = (int)signs[(n + m) & 1];
 
-			result[index].x = mFftOutputHorizontal[0][index].real() * sign * lambda;
-			result[index].y = mFftOutputHorizontal[1][index].real() * sign * lambda;
-			result[index].z = mFftOutputVertical[index].real() * sign;
+			result[index].x = filterNan(mFftOutputHorizontal[0][index].real() * sign * lambda, 0.f);
+			result[index].y = filterNan(mFftOutputHorizontal[1][index].real() * sign * lambda, 0.f);
+			result[index].z = filterNan(mFftOutputVertical[index].real() * sign, 0.f);
 		}
 	}
 }
