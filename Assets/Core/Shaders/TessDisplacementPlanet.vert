@@ -19,18 +19,12 @@ uniform float heightOffset;
 uniform vec2 heightMapUvScale;
 uniform vec2 heightMapUvOffset;
 
-const float localFlatteningRadius = 20000;
-const float localFlatteningBlend = 10000;
-
 void main()
 {
 	vec4 position = modelMatrix * osg_Vertex;
 	vsUpDir = normalize(position.xyz - planetCenter);
 	
 	float radius = length(vec2(position.x, position.y));
-	float roundEarthFactor = clamp((radius - localFlatteningRadius) / localFlatteningBlend, 0, 1);
-	//position.z *= roundEarthFactor;
-	//vsUpDir = mix(vec3(0,0,-1), vsUpDir, roundEarthFactor);
 	
 	gl_Position.w = texture(heightSampler, osg_MultiTexCoord0.xy * heightMapUvScale + heightMapUvOffset).r * heightScale + heightOffset;
 	gl_Position.xyz = position.xyz + vsUpDir * gl_Position.w;

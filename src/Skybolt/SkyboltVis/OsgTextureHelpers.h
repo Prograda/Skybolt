@@ -30,5 +30,19 @@ inline int getHeightMapInternalTextureFormat()
 	return f;
 }
 
+struct ScaleOffset
+{
+	osg::Vec2f scale;
+	osg::Vec2f offset;
+};
+
+//! Because OpenGL texels are in center of texture pixels, when GL_CLAMP_EDGE is used
+//! there is a margin of half a texel around the edges of the texture.
+//! For some use cases, such as height maps, we need to remove this margin so that
+//! The resulting UVs have [0, 1] range from the first pixel center to the last pixel center.
+//! This function calculates the UV scale and offset required to remove the margin., such that
+//! newUv = oldUv * scale + offset.
+ScaleOffset calcHalfTexelEdgeRemovalScaleOffset(const osg::Vec2i& textureSize);
+
 } // namespace vis
 } // namespace skybolt

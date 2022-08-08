@@ -66,12 +66,11 @@ struct TerrainConfig
 	osg::ref_ptr<osg::Texture2D> normalMap;
 	osg::ref_ptr<osg::Texture2D> landMask;
 	osg::ref_ptr<osg::Texture2D> overallAlbedoMap;
-	osg::ref_ptr<osg::Texture2D> attributeMap;
+	osg::ref_ptr<osg::Texture2D> attributeMap; //!< May be null
 
 	DetailMappingTechniquePtr detailMappingTechnique; //!< May be null
 
 	osg::ref_ptr<osg::Program> program;
-	float heightScale = 65536;
 	osg::Vec2f heightMapUvScale = osg::Vec2f(1, 1);
 	osg::Vec2f heightMapUvOffset = osg::Vec2f(0, 0);
 	osg::Vec2f overallAlbedoMapUvScale = osg::Vec2f(1, 1);

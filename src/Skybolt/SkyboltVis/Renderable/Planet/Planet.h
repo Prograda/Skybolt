@@ -40,6 +40,9 @@ struct PlanetConfig
 	// Planet surface
 	boost::optional<PlanetTileSources> planetTileSources;
 	DetailMappingTechniquePtr detailMappingTechnique;
+	//! If true, height map edge texels are assumed to run along tile edges.
+	//! If false, height map edge texels are assumed to be be offset half a texel inside the tile.
+	bool heightMapTexelsOnTileEdge = false;
 
 	// Atmosphere
 	boost::optional<BruentonAtmosphereConfig> atmosphereConfig;

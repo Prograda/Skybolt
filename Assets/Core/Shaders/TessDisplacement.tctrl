@@ -84,6 +84,9 @@ void main()
 			vec2 ss2 = fromNdcToScreenSpace(v2);
 			vec2 ss3 = fromNdcToScreenSpace(v3);
 
+			// FIXME: this method fails when looking along an edge because
+			// the screenspace distance of the edge is near zero, resulting in LOD that is too low.
+			// TODO: Improve level calculation to consider the perpendicular edge size as well.
 			float e0 = level(ss3, ss0);	
 			float e1 = level(ss0, ss1);
 			float e2 = level(ss1, ss2);

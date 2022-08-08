@@ -150,7 +150,7 @@ static void setupTerrainStateSet(osg::StateSet& ss, const TerrainConfig& config)
 
 	HeightMapElevationRerange rerange = getRequiredHeightMapElevationRerange(*config.heightMap->getImage());
 
-	ss.addUniform(new osg::Uniform("heightScale", rerange.x() * 65536.f));
+	ss.addUniform(new osg::Uniform("heightScale", rerange.x() * 65535.f));
 	ss.addUniform(new osg::Uniform("heightOffset", rerange.y()));
 	ss.setAttribute(config.program);
 	ss.setAttribute(new osg::PatchParameter(4)); 

@@ -56,10 +56,11 @@ vec4 interpolateQuad(vec4 v0, vec4 v1, vec4 v2, vec4 v3)
 vec4 bilinear(sampler2D tex, vec2 uv)
 {
 	vec2 dims = textureSize(tex, 0);
-	vec2 weight = fract(uv * dims);
-	vec2 texelSize = 1.0f / dims;
-	
-	uv -= weight * texelSize;
+
+	vec2 texelSize = 1.0 / dims;
+	vec2 unnormUv = (uv * dims) - vec2(0.5);
+	vec2 weight = fract(unnormUv);
+	uv = (floor(unnormUv) + vec2(0.5)) / dims;
 	
 	vec4 c00 = textureGrad(tex, uv, vec2(0), vec2(0)); // TODO: would be good if we didn't have to use zero derivatives
 	vec4 c10 = textureGrad(tex, uv + vec2(texelSize.x, 0), vec2(0), vec2(0));

@@ -100,5 +100,13 @@ osg::ref_ptr<osg::Texture2D> createTilingSrgbTexture(const osg::ref_ptr<osg::Ima
 	return texture;
 }
 
+ScaleOffset calcHalfTexelEdgeRemovalScaleOffset(const osg::Vec2i& textureSize)
+{
+	ScaleOffset r;
+	r.scale = osg::Vec2f(float(textureSize.x() - 1) / textureSize.x(), float(textureSize.y() - 1) / textureSize.y());
+	r.offset = osg::Vec2f(0.5f / textureSize.x(), 0.5f / textureSize.y());
+	return r;
+}
+
 } // namespace vis
 } // namespace skybolt

@@ -8,7 +8,7 @@ find_package(Catch2)
 
 find_package(OpenGL REQUIRED) # CaptureTexture.cpp requires OpenGL to workaround an OSG limitation
 
-add_definitions(-DCMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} -DSHADERS_SOURCE_DIR="${CMAKE_SOURCE_DIR}/Assets/Core/Shaders")
+add_definitions(-DCMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} -DASSERTS_CORE_DIR="${CMAKE_SOURCE_DIR}/Assets/Core" -DSHADERS_SOURCE_DIR="${CMAKE_SOURCE_DIR}/Assets/Core/Shaders")
 
 add_executable(${APP_NAME} ${SOURCE_FILES})
 

@@ -467,6 +467,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 			planetTileSources.elevation = context
 				.tileSourceFactoryRegistry->getFactory(elevation.at("format"))(elevation);
 			elevationMaxLodLevel = elevation.at("maxLevel");
+			config.heightMapTexelsOnTileEdge = readOptionalOrDefault(elevation, "heightMapTexelsOnTileEdge", false);
 		}
 		auto it = layers.find("landMask");
 		if (it != layers.end())

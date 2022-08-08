@@ -92,6 +92,9 @@ static osg::ref_ptr<osg::Texture2D> createNonSrgbTextureWithoutMipmaps(const osg
 	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
 	texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
 	texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+	texture->setNumMipmapLevels(0);
+	texture->setUseHardwareMipMapGeneration(false);
+	texture->setResizeNonPowerOfTwoHint(false); // tile can be non power of two, e.g for storing extra row/column of adjecent tile data
 	return texture;
 }
 
@@ -201,6 +204,7 @@ Planet::Planet(const PlanetConfig& config) :
 			factoryConfig.planetRadius = mInnerRadius;
 			factoryConfig.hasCloudShadows = config.cloudsTexture != nullptr;
 			factoryConfig.detailMappingTechnique = config.detailMappingTechnique;
+			factoryConfig.heightMapTexelsOnTileEdge = config.heightMapTexelsOnTileEdge;
 			osgTileFactory = std::make_shared<OsgTileFactory>(factoryConfig);
 		}
 

@@ -24,7 +24,11 @@ struct OsgTileFactoryConfig
 	DetailMappingTechniquePtr detailMappingTechnique;
 
 	double planetRadius;
-	bool hasCloudShadows;
+	bool hasCloudShadows = true;
+
+	//! If true, height map edge texels are assumed to run along tile edges.
+	//! If false, height map edge texels are assumed to be be offset half a texel inside the tile.
+	bool heightMapTexelsOnTileEdge = false;
 };
 
 class OsgTileFactory
@@ -49,6 +53,7 @@ private:
 	const ShaderPrograms* mPrograms;
 	DetailMappingTechniquePtr mDetailMappingTechnique;
 	bool mHasCloudShadows;
+	bool mHeightMapTexelsOnTileEdge;
 };
 
 } // namespace vis

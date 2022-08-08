@@ -172,7 +172,7 @@ GpuForest::ForestTile GpuForest::createForestTile(const QuadTreeTileKey& key, co
 		osg::StateSet* ss = forestTile->_getNode()->getOrCreateStateSet();
 		ss->addUniform(new osg::Uniform("heightMapUvScale", heightImageScale));
 		ss->addUniform(new osg::Uniform("heightMapUvOffset", heightImageOffset));
-		ss->addUniform(new osg::Uniform("heightScale", rerange.x() * 65536.f));
+		ss->addUniform(new osg::Uniform("heightScale", rerange.x() * 65535.f));
 		ss->addUniform(new osg::Uniform("heightOffset", rerange.y()));
 
 		ss->addUniform(new osg::Uniform("attributeMapUvScale", attributeImageScale));

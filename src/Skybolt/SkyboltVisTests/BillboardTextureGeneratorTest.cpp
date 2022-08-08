@@ -47,15 +47,7 @@ public:
 		mat.setRotate(osg::Quat(osg::PI, osg::Vec3d(1, 0, 0)));
 		mTransform->setMatrix(mat);
 
-		osg::ref_ptr<osgViewer::Viewer> viewer = new osgViewer::Viewer;
-		viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
-		viewer->getCamera()->setGraphicsContext(createOffscreenContext(mImageSize.x(), mImageSize.y()));
-		viewer->getCamera()->setRenderTargetImplementation(osg::Camera::PIXEL_BUFFER);
-		viewer->getCamera()->setViewport(new osg::Viewport(0, 0, mImageSize.x(), mImageSize.y()));
-
-		osg::State* state = viewer->getCamera()->getGraphicsContext()->getState();
-		state->setUseModelViewAndProjectionUniforms(true);
-		state->setUseVertexAttributeAliasing(true);
+		osg::ref_ptr<osgViewer::Viewer> viewer = createOffscreenViewer(mImageSize.x(), mImageSize.y());
 		mTransform->getOrCreateStateSet()->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
 
 		osg::Vec3f cameraForwardDir = osg::Quat(yaw, osg::Vec3d(0, 0, -1)) * osg::Quat(pitch, osg::Vec3d(0, -1, 0)) * osg::Vec3f(1, 0, 0);

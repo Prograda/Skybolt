@@ -28,6 +28,11 @@ private:
 	NamedProgramsMap mPrograms;
 };
 
+using ShaderProgramSourceFiles = std::map<osg::Shader::Type, std::string>; //!< Source code files for a program
+osg::ref_ptr<osg::Program> createProgram(const std::string& name, const ShaderProgramSourceFiles& files);
+
+ShaderProgramSourceFiles getShaderSource_terrainFlatTile();
+
 ShaderPrograms createShaderPrograms();
 
 } // namespace vis
