@@ -79,9 +79,10 @@ public:
 	virtual Particle createParticle(const Vector3& emitterVelocity, float timeOffset) const;
 
 private:
-	std::optional<sim::Vector3> getEmitterPositionInPlanetSpace() const;
-	Vector3 calculateParticleVelocityRelEmitter() const;
+	sim::Entity* getNearestPlanet() const;
 	float getAtmosphericDensity() const; // kg / m^3
+
+	Vector3 calculateParticleVelocityRelEmitter() const;
 
 private:
 	const Params mParams;

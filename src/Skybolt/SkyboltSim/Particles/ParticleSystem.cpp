@@ -6,6 +6,7 @@
 
 #include "ParticleSystem.h"
 #include <SkyboltSim/Entity.h>
+#include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/Physics/Atmosphere.h>
 #include "SkyboltSim/Spatial/GreatCircle.h"
 #include "SkyboltSim/Spatial/Positionable.h"
@@ -46,12 +47,6 @@ void ParticleEmitter::update(float dt, std::vector<Particle>& particles)
 	}
 }
 
-static const Atmosphere& getAtmosphere()
-{
-	static Atmosphere atmosphere = createEarthAtmosphere(); // TODO: get atmosphere specific to planet
-	return atmosphere;
-}
-
 int ParticleEmitter::mNextParticleId = 0;
 
 Particle ParticleEmitter::createParticle(const Vector3& emitterVelocity, float timeOffset) const
@@ -88,23 +83,37 @@ Vector3 ParticleEmitter::calculateParticleVelocityRelEmitter() const
 	return mParams.positionable->getOrientation() * (mOrientation * velocity);
 }
 
-std::optional<sim::Vector3> ParticleEmitter::getEmitterPositionInPlanetSpace() const
+sim::Entity* ParticleEmitter::getNearestPlanet() const
 {
 	sim::Vector3 position = mParams.positionable->getPosition();
-	sim::Entity* planet = mParams.nearestPlanetProvider(position);
-	if (planet)
+	return mParams.nearestPlanetProvider(position);
+}
+
+static double getAltitude(const sim::Entity& planet, const sim::Vector3& position)
+{
+	glm::dmat4 planetTransform = getTransform(planet).value_or(math::dmat4Identity());
+	glm::dmat4 invPlanetTransform = glm::inverse(planetTransform);
+	glm::dvec4 positionInPlanetSpace = invPlanetTransform * glm::dvec4(position, 1.0);
+	positionInPlanetSpace.w = 0.0;
+	return glm::length(positionInPlanetSpace) - planet.getFirstComponent<sim::PlanetComponent>()->radius;
+}
+
+static double getAtmosphericDensity(const sim::Entity& planet, const sim::Vector3& position)
+{
+	auto altitude = getAltitude(planet, position);
+	const std::optional<Atmosphere>& atmosphere = planet.getFirstComponent<sim::PlanetComponent>()->atmosphere;
+	if (atmosphere)
 	{
-		glm::dmat4 planetTransform = getTransform(*planet).value_or(math::dmat4Identity());
-		glm::dmat4 invPlanetTransform = glm::inverse(planetTransform);
-		return invPlanetTransform * glm::dvec4(position, 1.0);
+		return float(atmosphere->getDensity(altitude));
 	}
-	return std::nullopt;
+	return 0.0f;
 }
 
 float ParticleEmitter::getAtmosphericDensity() const
 {
-	auto emitterPositionPlanetSpace = getEmitterPositionInPlanetSpace();
-	return emitterPositionPlanetSpace ? float(getAtmosphere().getDensity(glm::length(*emitterPositionPlanetSpace) - earthRadius())) : 0.0f;
+	sim::Entity* planet = getNearestPlanet();
+	sim::Vector3 position = mParams.positionable->getPosition();
+	return planet ? float(sim::getAtmosphericDensity(*planet, position)) : 0.0f;
 }
 
 void ParticleKiller::update(float dt, std::vector<Particle>& particles)
@@ -143,26 +152,28 @@ void ParticleIntegrator::update(float dt, std::vector<Particle>& particles)
 	// Calculate wind velocity and damping factor
 	std::optional<sim::Vector3> windVelocity;
 	double velocityDamping;
-	sim::Entity* planet = mParams.nearestPlanetProvider(particles.front().position);
-	if (planet)
 	{
-		glm::dmat4 planetTransform = getTransform(*planet).value_or(math::dmat4Identity());
-		glm::dmat4 invPlanetTransform = glm::inverse(planetTransform);
-		sim::Vector3 firstParticlePosition = particles.front().position;
-
-		sim::Vector3 particlePositionPlanetSpace = invPlanetTransform * glm::dvec4(firstParticlePosition, 1.0);
-		if (mPrevPlanetTransform)
+		sim::Vector3 position = particles.front().position;
+		sim::Entity* planet = mParams.nearestPlanetProvider(position);
+		if (planet)
 		{
-			sim::Vector3 particlePrevPositionWorldSpace = *mPrevPlanetTransform * glm::dvec4(particlePositionPlanetSpace, 1.0);
+			glm::dmat4 planetTransform = getTransform(*planet).value_or(math::dmat4Identity());
+			glm::dmat4 invPlanetTransform = glm::inverse(planetTransform);
+			sim::Vector3 firstParticlePosition = particles.front().position;
 
-			windVelocity = (firstParticlePosition - particlePrevPositionWorldSpace) / dtD;
+			sim::Vector3 particlePositionPlanetSpace = invPlanetTransform * glm::dvec4(firstParticlePosition, 1.0);
+			if (mPrevPlanetTransform)
+			{
+				sim::Vector3 particlePrevPositionWorldSpace = *mPrevPlanetTransform * glm::dvec4(particlePositionPlanetSpace, 1.0);
+
+				windVelocity = (firstParticlePosition - particlePrevPositionWorldSpace) / dtD;
+			}
+
+			mPrevPlanetTransform = planetTransform;
+
+			double density = getAtmosphericDensity(*planet, position);
+			velocityDamping = std::exp(-mParams.atmosphericSlowdownFactor * density * dt);
 		}
-
-		mPrevPlanetTransform = planetTransform;
-
-		double density = getAtmosphere().getDensity(glm::length(particlePositionPlanetSpace) - earthRadius());
-
-		velocityDamping = std::exp(-mParams.atmosphericSlowdownFactor * density * dt);
 	}
 
 	// Integrate particle state

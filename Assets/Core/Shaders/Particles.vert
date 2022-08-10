@@ -9,6 +9,7 @@
 #include "DepthPrecision.h"
 
 #pragma import_defines ( CAST_SHADOWS )
+#pragma import_defines ( ENABLE_ATMOSPHERE )
 
 in vec4 osg_Vertex;
 in vec4 osg_MultiTexCoord0;
@@ -87,8 +88,14 @@ void main()
 
 	lightDirectionViewSpace = mat3(viewMatrix) * lightDirection;
 		
+#ifdef ENABLE_ATMOSPHERE
 	// Atmospheric scattering
 	vec3 positionRelPlanet = positionWS.xyz - planetCenter;
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
 	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
+#else
+	scattering.sunIrradiance = GetSunIrradianceInSpace();
+	scattering.skyIrradiance = vec3(0);
+#endif
+	
 }

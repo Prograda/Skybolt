@@ -8,6 +8,7 @@
 
 #include "SkyboltSim/Component.h"
 #include "SkyboltSim/PlanetAltitudeProvider.h"
+#include <SkyboltSim/Physics/Atmosphere.h>
 #include "SkyboltSim/SkyboltSimFwd.h"
 
 namespace skybolt {
@@ -25,6 +26,7 @@ struct PlanetComponent : public sim::Component
 	const double radius;
 	const bool hasOcean;
 	const std::shared_ptr<AsyncPlanetAltitudeProvider> altitudeProvider; //!< Null if the planet has no terrain
+	std::optional<Atmosphere> atmosphere;
 };
 
 } // namespace sim

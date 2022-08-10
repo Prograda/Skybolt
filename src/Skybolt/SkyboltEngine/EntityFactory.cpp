@@ -564,6 +564,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 
 	auto altitudeProvider = config.planetTileSources ? std::make_shared<vis::TileAsyncPlanetAltitudeProvider>(context.scheduler, config.planetTileSources->elevation, elevationMaxLodLevel) : nullptr;
 	auto planetComponent = std::make_shared<PlanetComponent>(planetRadius, hasOcean, altitudeProvider);
+	planetComponent->atmosphere = config.atmosphereConfig ? std::optional<Atmosphere>(createEarthAtmosphere()) : std::nullopt; // TODO: use planet specific atmospheric parameters
 	entity->addComponent(planetComponent);
 
 	entity->addComponent(ComponentPtr(new NameComponent("Earth", context.namedObjectRegistry, entity)));
