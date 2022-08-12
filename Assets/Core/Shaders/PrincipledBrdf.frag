@@ -11,6 +11,7 @@
 #pragma import_defines ( ENABLE_DEPTH_OFFSET )
 #pragma import_defines ( ENABLE_ENVIRONMENT_MAP )
 #pragma import_defines ( ENABLE_NORMAL_MAP )
+#pragma import_defines ( ENABLE_SPECULAR_MAP )
 #pragma import_defines ( ENABLE_SHADOWS )
 #pragma import_defines ( ENABLE_SPECULAR )
 #pragma import_defines ( UNIFORM_ALBEDO )
@@ -35,7 +36,7 @@ out vec4 color;
 
 uniform vec3 lightDirection;
 uniform vec3 ambientLightColor;
-uniform vec3 specularity;
+uniform vec3 specularityUniform;
 uniform float roughness;
 
 #ifdef UNIFORM_ALBEDO
@@ -45,6 +46,7 @@ uniform float roughness;
 #endif
 
 uniform sampler2D normalSampler;
+uniform sampler2D specularSampler;
 uniform sampler2D environmentSampler;
 
 #ifdef ENABLE_DEPTH_OFFSET
@@ -70,6 +72,12 @@ void main()
 	vec3 viewDirection = -positionRelCamera / fragmentViewDistance;
 	float dotNL = saturate(dot(normal, lightDirection));
 	float dotNV = saturate(dot(normal, viewDirection));
+
+#ifdef ENABLE_SPECULAR_MAP
+	vec3 specularity = texture(specularSampler, texCoord.xy).rgb * 0.08; // specular rescaled by 0.08 as per Disney BRDF
+#else
+	vec3 specularity = specularityUniform;
+#endif
 
 #ifdef ENABLE_SHADOWS
 	float lightVisibility = sampleShadowsAtTexCoord(shadowTexCoord.xy, shadowTexCoord.z, dotNL, fragmentViewDistance);
