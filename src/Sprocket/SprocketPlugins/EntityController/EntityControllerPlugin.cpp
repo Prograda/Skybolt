@@ -25,6 +25,7 @@
 #include <assert.h>
 #include <deque>
 #include <memory>
+#include <optional>
 #include <sstream>
 
 using namespace skybolt;
@@ -98,7 +99,7 @@ private:
 private:
 	Vec2Getter mGetter;
 	Vec2Setter mSetter;
-	boost::optional<glm::vec2> mResetOnReleaseValue;
+	std::optional<glm::vec2> mResetOnReleaseValue;
 };
 
 typedef std::function<float()> FloatGetter;
@@ -166,7 +167,7 @@ private:
 private:
 	FloatGetter mGetter;
 	FloatSetter mSetter;
-	boost::optional<float> mResetOnReleaseValue;
+	std::optional<float> mResetOnReleaseValue;
 };
 
 class EntityControllerWidget : public QWidget

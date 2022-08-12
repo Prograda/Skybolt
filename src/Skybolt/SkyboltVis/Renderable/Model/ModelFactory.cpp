@@ -10,8 +10,11 @@
 #include "OsgImageHelpers.h"
 #include "OsgStateSetHelpers.h"
 #include <SkyboltCommon/MapUtility.h>
+
 #include <osg/Image>
 #include <osgDB/ReadFile>
+
+#include <assert.h>
 
 using namespace skybolt::vis;
 

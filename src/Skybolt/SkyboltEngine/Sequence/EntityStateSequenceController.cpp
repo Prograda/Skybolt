@@ -177,7 +177,7 @@ SequenceStatePtr EntityStateSequenceController::getStateAtTime(double t) const
 	for (int i = 0; i < sampleCount; ++i)
 	{
 		double tSample = glm::mix(t - halfWidth, t + halfWidth, double(i) / double(sampleCount));
-		boost::optional<math::InterpolationPoint> point = math::findInterpolationPoint(mSequence->times, tSample, /* extrapolate */ false);
+		std::optional<math::InterpolationPoint> point = math::findInterpolationPoint(mSequence->times, tSample, /* extrapolate */ false);
 		if (point)
 		{
 			const EntitySequenceState& state = static_cast<const EntitySequenceState&>(*getStateAtInterpolationPoint(*point));

@@ -6,20 +6,20 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
+#include <optional>
 #include <map>
 
 namespace skybolt {
 
 template <typename KeyT, typename ValueT>
-boost::optional<ValueT> findOptional(const std::map<KeyT, ValueT>& m, const KeyT& key)
+std::optional<ValueT> findOptional(const std::map<KeyT, ValueT>& m, const KeyT& key)
 {
 	auto i = m.find(key);
 	if (i != m.end())
 	{
 		return i->second;
 	}
-	return boost::none;
+	return std::nullopt;
 }
 
 } // namespace skybolt

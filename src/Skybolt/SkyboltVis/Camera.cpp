@@ -93,7 +93,7 @@ void Camera::updateProjectionMatrix()
 	if (mObliqueClippingPlane)
 	{
 		// Translate the plane into view space
-		osg::Plane plane = mul(mObliqueClippingPlane.get(), mViewMatrix);
+		osg::Plane plane = mul(*mObliqueClippingPlane, mViewMatrix);
 
 		// Thanks to Eric Lenyel for posting this calculation 
 		// at www.terathon.com

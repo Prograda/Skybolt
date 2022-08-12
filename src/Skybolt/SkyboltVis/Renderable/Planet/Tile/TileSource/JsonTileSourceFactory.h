@@ -9,7 +9,6 @@
 #include "SkyboltVis/SkyboltVisFwd.h"
 
 #include <nlohmann/json.hpp>
-#include <boost/optional.hpp>
 #include <string>
 
 namespace skybolt {

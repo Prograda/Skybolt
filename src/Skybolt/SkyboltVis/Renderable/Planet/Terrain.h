@@ -12,8 +12,6 @@
 #include "SkyboltVis/Shadow/ShadowHelpers.h"
 #include <osg/Texture2D>
 
-#include <boost/optional.hpp>
-
 namespace skybolt {
 namespace vis {
 

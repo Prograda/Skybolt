@@ -9,9 +9,9 @@
 
 #include "RenderTarget.h"
 #include <osg/Texture2D>
-#include <boost/optional.hpp>
 #include <boost/signals2.hpp>
 #include <functional>
+#include <optional>
 
 namespace skybolt {
 namespace vis {
@@ -25,7 +25,7 @@ TextureFactory createScreenTextureFactory(GLint internalFormat);
 struct RenderTextureConfig
 {
 	std::vector<TextureFactory> colorTextureFactories;
-	boost::optional<TextureFactory> depthTextureFactory;
+	std::optional<TextureFactory> depthTextureFactory;
 	int multisampleSampleCount = 0;
 	bool clear = true;
 };
@@ -47,7 +47,7 @@ public: // RenderTarget interface
 private:
 	std::vector<osg::ref_ptr<osg::Texture>> mColorTextures;
 	std::vector<TextureFactory> mColorTextureFactories;
-	boost::optional<TextureFactory> mDepthTextureFactory;
+	std::optional<TextureFactory> mDepthTextureFactory;
 	int mMultisampleSampleCount;
 };
 

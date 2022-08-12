@@ -24,7 +24,7 @@
 #include <osg/Uniform>
 #include <osg/Vec3f>
 
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace skybolt {
 namespace vis {
@@ -38,14 +38,14 @@ struct PlanetConfig
 	float innerRadius;
 
 	// Planet surface
-	boost::optional<PlanetTileSources> planetTileSources;
+	std::optional<PlanetTileSources> planetTileSources;
 	DetailMappingTechniquePtr detailMappingTechnique;
 	//! If true, height map edge texels are assumed to run along tile edges.
 	//! If false, height map edge texels are assumed to be be offset half a texel inside the tile.
 	bool heightMapTexelsOnTileEdge = false;
 
 	// Atmosphere
-	boost::optional<BruentonAtmosphereConfig> atmosphereConfig;
+	std::optional<BruentonAtmosphereConfig> atmosphereConfig;
 	bool skyVisible = true;
 
 	// Ocean
@@ -135,7 +135,7 @@ private:
 	osg::Uniform* mPlanetMatrixInvUniform;
 
 	double mInnerRadius;
-	boost::optional<float> mAtmosphereScaleHeight;
+	std::optional<float> mAtmosphereScaleHeight;
 	osg::ref_ptr<osg::Group> mPlanetGroup;
 	osg::ref_ptr<osg::MatrixTransform> mTransform;
 	osg::ref_ptr<osg::Group> mShadowSceneGroup;

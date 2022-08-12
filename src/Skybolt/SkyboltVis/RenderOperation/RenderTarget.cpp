@@ -9,6 +9,8 @@
 #include "SkyboltVis/RenderContext.h"
 #include "SkyboltVis/Scene.h"
 
+#include <assert.h>
+
 namespace skybolt {
 namespace vis {
 

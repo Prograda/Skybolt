@@ -8,6 +8,7 @@
 
 #include <boost/program_options.hpp>
 #include <nlohmann/json.hpp>
+#include <optional>
 
 namespace skybolt {
 
@@ -20,7 +21,7 @@ public:
 
 	static void addOptions(boost::program_options::options_description& desc);
 
-	static boost::optional<nlohmann::json> readSettings(const boost::program_options::variables_map& params);
+	static std::optional<nlohmann::json> readSettings(const boost::program_options::variables_map& params);
 };
 
 } // namespace skybolt

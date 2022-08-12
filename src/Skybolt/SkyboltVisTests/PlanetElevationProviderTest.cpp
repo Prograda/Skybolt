@@ -16,7 +16,7 @@
 #include <SkyboltCommon/Eventually.h>
 #include <SkyboltCommon/NumericComparison.h>
 
-#include <boost/optional/optional_io.hpp>
+#include <optional>
 
 using namespace skybolt;
 using namespace skybolt::vis;
@@ -119,7 +119,7 @@ TEST_CASE("Test AsyncPlanetAltitudeProvider background loads tile")
 	scheduler.init();
 
 	TileAsyncPlanetAltitudeProvider provider(&scheduler, source, 3);
-	CHECK(provider.getAltitudeOrRequestLoad(sim::LatLon(1.4, -3.0)) == boost::none);
+	CHECK(provider.getAltitudeOrRequestLoad(sim::LatLon(1.4, -3.0)) == std::nullopt);
 
 	CHECK(eventually([&]{
 		return provider.getAltitudeOrRequestLoad(sim::LatLon(1.4, -3.0)) == altitude;

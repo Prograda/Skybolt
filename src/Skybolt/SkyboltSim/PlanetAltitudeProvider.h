@@ -7,7 +7,7 @@
 #pragma once
 
 #include <SkyboltSim/Spatial/LatLon.h>
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace skybolt {
 namespace sim {
@@ -25,7 +25,7 @@ public:
 	//! Get altitude above sea level, positive is up.
 	//! If tile is not immediately available, requests to load tile on a background thread
 	//! and immediately returns empty optional.
-	virtual boost::optional<double> getAltitudeOrRequestLoad(const sim::LatLon& position) const = 0;
+	virtual std::optional<double> getAltitudeOrRequestLoad(const sim::LatLon& position) const = 0;
 };
 
 } // namespace sim

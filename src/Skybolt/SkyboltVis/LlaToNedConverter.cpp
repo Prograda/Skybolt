@@ -45,7 +45,7 @@ sim::LatLon LlaToNedConverter::cartesianNeToLatLon(const osg::Vec2f& position) c
 
 float LlaToNedConverter::calcPlanetSurfaceDrop(float distance) const
 {
-	return distance * distance / (2 * mPlanetRadiusForSurfaceDrop.get());
+	return distance * distance / (2 * *mPlanetRadiusForSurfaceDrop);
 }
 
 } // namespace vis

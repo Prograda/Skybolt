@@ -7,8 +7,8 @@
 #pragma once
 
 #include "SkyboltCommon/Range.h"
-#include <boost/optional.hpp>
 #include <algorithm>
+#include <optional>
 #include <vector>
 
 namespace skybolt {
@@ -21,11 +21,11 @@ struct InterpolationPoint
 };
 
 //! Returns null if the input vector is empty, otherwise returns a valid result.
-boost::optional<InterpolationPoint> findInterpolationPoint(const std::vector<double> &xData, double x, bool extrapolate);
+std::optional<InterpolationPoint> findInterpolationPoint(const std::vector<double> &xData, double x, bool extrapolate);
 
 //! Returns null if the input vectors is empty, otherwise returns a valid result.
 //! xData and yData must be the same length.
-boost::optional<double> interpolateTableLinear(const std::vector<double> &xData, const std::vector<double> &yData, double x, bool extrapolate);
+std::optional<double> interpolateTableLinear(const std::vector<double> &xData, const std::vector<double> &yData, double x, bool extrapolate);
 
 } // namespace math
 } // namespace skybolt

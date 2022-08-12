@@ -8,7 +8,6 @@
 
 #include <SkyboltCommon/File/OsDirectories.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
-#include <boost/optional.hpp>
 #include <boost/log/trivial.hpp>
 
 namespace po = boost::program_options;
@@ -37,7 +36,7 @@ void EngineCommandLineParser::addOptions(po::options_description& desc)
 		("settingsFile", po::value<std::string>(), "settings file");
 }
 
-boost::optional<nlohmann::json> EngineCommandLineParser::readSettings(const boost::program_options::variables_map& params)
+std::optional<nlohmann::json> EngineCommandLineParser::readSettings(const boost::program_options::variables_map& params)
 {
 	file::Path settingsFilename;
 	if (params.count("settingsFile"))
@@ -59,7 +58,7 @@ boost::optional<nlohmann::json> EngineCommandLineParser::readSettings(const boos
 	{
 		BOOST_LOG_TRIVIAL(warning) << "Settings file not found: '" << settingsFilename << "'";
 	}
-	return boost::none;
+	return std::nullopt;
 }
 
 } // namespace skybolt

@@ -187,7 +187,7 @@ void PlanetSurface::updatePreRender(const CameraRenderContext& context)
 
 	updateGeometry();
 
-	LlaToNedConverter converter(toLatLon(mPredicate->observerLatLon), boost::none);
+	LlaToNedConverter converter(toLatLon(mPredicate->observerLatLon), std::nullopt);
 	for (const auto& node : mTileNodes)
 	{
 		const OsgTile& tile = node.second;

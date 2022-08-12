@@ -10,7 +10,7 @@
 #include <SkyboltSim/Spatial/LatLonAlt.h>
 #include <osg/Vec2>
 #include <osg/Vec3>
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace skybolt {
 namespace vis {
@@ -18,7 +18,7 @@ namespace vis {
 class LlaToNedConverter
 {
 public:
-	LlaToNedConverter(const sim::LatLon& origin, const boost::optional<double>& planetRadiusForSurfaceDrop) :
+	LlaToNedConverter(const sim::LatLon& origin, const std::optional<double>& planetRadiusForSurfaceDrop) :
 		mOrigin(origin),
 		mPlanetRadiusForSurfaceDrop(planetRadiusForSurfaceDrop)
 	{
@@ -41,7 +41,7 @@ public:
 
 private:
 	sim::LatLon mOrigin;
-	boost::optional<double> mPlanetRadiusForSurfaceDrop;
+	std::optional<double> mPlanetRadiusForSurfaceDrop;
 };
 
 } // namespace vis

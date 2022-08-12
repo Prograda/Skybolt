@@ -11,7 +11,7 @@
 #include <osg/Quat>
 #include <osg/Vec3f>
 
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace skybolt {
 namespace vis {
@@ -58,7 +58,7 @@ private:
 	float mFovY;
 	float mNear;
 	float mFar;
-	boost::optional<osg::Plane> mObliqueClippingPlane;
+	std::optional<osg::Plane> mObliqueClippingPlane;
 	uint32_t mCullMask;
 };
 

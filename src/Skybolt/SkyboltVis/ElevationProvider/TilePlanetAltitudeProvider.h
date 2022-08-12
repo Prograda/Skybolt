@@ -14,7 +14,7 @@
 
 #include <osg/Image>
 #include <px_sched/px_sched.h>
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace skybolt {
 namespace vis {
@@ -85,7 +85,7 @@ public:
 	//! Get altitude above sea level, positive is up.
 	//! If tile is not loaded, returns immedatly with empty.
 	//! @ThreadSafe
-	boost::optional<double> tryGetAltitude(const sim::LatLon& position) const;
+	std::optional<double> tryGetAltitude(const sim::LatLon& position) const;
 
 	typedef skybolt::Box2T<LatLonVec2Adapter> LatLonBounds;
 
@@ -96,7 +96,7 @@ private:
 		osg::ref_ptr<osg::Image> image;
 	};
 
-	boost::optional<TileImage> findHighestLodTile(const QuadTreeTileKey& highestLodKey) const;
+	std::optional<TileImage> findHighestLodTile(const QuadTreeTileKey& highestLodKey) const;
 
 private:
 	const TileSourcePtr mTileSource;
@@ -117,7 +117,7 @@ public:
 	//! Get altitude above sea level, positive is up.
 	//! If tile is not immediately available, requests to load tile on a background thread
 	//! and immediately returns empty optional.
-	boost::optional<double> getAltitudeOrRequestLoad(const sim::LatLon& position) const override;
+	std::optional<double> getAltitudeOrRequestLoad(const sim::LatLon& position) const override;
 
 private:
 	px_sched::Scheduler* mScheduler;

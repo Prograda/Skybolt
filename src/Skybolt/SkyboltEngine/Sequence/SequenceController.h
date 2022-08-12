@@ -10,10 +10,10 @@
 #include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltCommon/Math/InterpolateTableLinear.h>
 
-#include <boost/optional.hpp>
 #include <boost/signals2.hpp>
 #include <algorithm>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace skybolt {
@@ -35,7 +35,7 @@ struct Sequence
 	boost::signals2::signal<void(const size_t&)> valueChanged;
 	boost::signals2::signal<void(const size_t&)> itemRemoved;
 
-	boost::optional<size_t> getIndexAtTime(double time) const
+	std::optional<size_t> getIndexAtTime(double time) const
 	{
 		for (size_t i = 0; i < times.size(); ++i)
 		{
@@ -48,7 +48,7 @@ struct Sequence
 				break;
 			}
 		}
-		return boost::none;
+		return std::nullopt;
 	}
 
 	virtual void addItemAtIndex(const SequenceState& value, double time, size_t index) = 0;
@@ -148,7 +148,7 @@ public:
 
 	SequenceStatePtr getStateAtTime(double t) const override
 	{
-		boost::optional<math::InterpolationPoint> point = math::findInterpolationPoint(mSequence->times, t, /* extrapolate */ false);
+		std::optional<math::InterpolationPoint> point = math::findInterpolationPoint(mSequence->times, t, /* extrapolate */ false);
 		if (point)
 		{
 			return getStateAtInterpolationPoint(*point);

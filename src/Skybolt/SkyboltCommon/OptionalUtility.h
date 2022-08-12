@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
+#include <optional>
 #include <functional>
 
 namespace skybolt {
 
 template <typename T>
-T optionalMapOrElse(const boost::optional<T>& opt, const std::function<T()> onAbsent)
+T optionalMapOrElse(const std::optional<T>& opt, const std::function<T()> onAbsent)
 {
 	if (opt)
 	{
@@ -22,7 +22,7 @@ T optionalMapOrElse(const boost::optional<T>& opt, const std::function<T()> onAb
 }
 
 template <typename T>
-void optionalIfPresent(const boost::optional<T>& opt, const std::function<void(const T& value)> action)
+void optionalIfPresent(const std::optional<T>& opt, const std::function<void(const T& value)> action)
 {
 	if (opt)
 	{

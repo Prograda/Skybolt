@@ -78,7 +78,7 @@ static std::vector<T> readOptionalVector(const nlohmann::json& j, const std::str
 }
 
 template <typename T, typename ReaderT>
-static boost::optional<T> readOptionalChild(const nlohmann::json& j, const std::string& name, const ReaderT& r)
+static std::optional<T> readOptionalChild(const nlohmann::json& j, const std::string& name, const ReaderT& r)
 {
 	auto item = j.find(name);
 	if (item != j.end())

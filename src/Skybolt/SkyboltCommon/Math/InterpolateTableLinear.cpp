@@ -10,12 +10,12 @@
 namespace skybolt {
 namespace math {
 
-boost::optional<InterpolationPoint> findInterpolationPoint(const std::vector<double> &xData, double x, bool extrapolate)
+std::optional<InterpolationPoint> findInterpolationPoint(const std::vector<double> &xData, double x, bool extrapolate)
 {
 	int size = (int)xData.size();
 	if (size == 0)
 	{
-		return boost::none;
+		return std::nullopt;
 	}
 	else if (size == 1)
 	{
@@ -55,12 +55,12 @@ boost::optional<InterpolationPoint> findInterpolationPoint(const std::vector<dou
 	return point;
 }
 
-boost::optional<double> interpolateTableLinear(const std::vector<double> &xData, const std::vector<double> &yData, double x, bool extrapolate)
+std::optional<double> interpolateTableLinear(const std::vector<double> &xData, const std::vector<double> &yData, double x, bool extrapolate)
 {
-	boost::optional<InterpolationPoint> point = findInterpolationPoint(xData, x, extrapolate);
+	std::optional<InterpolationPoint> point = findInterpolationPoint(xData, x, extrapolate);
 	if (!point)
 	{
-		return boost::none;
+		return std::nullopt;
 	}
 	return math::lerp(xData[point->bounds.first], xData[point->bounds.last], point->weight);
 }

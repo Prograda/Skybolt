@@ -52,17 +52,17 @@ void PlanetCameraController::update(float dt)
 	float zoomDelta = (mInput.zoomSpeed + mInput.forwardSpeed * 1000.0) * dt * msZoomRate;
 	mZoom = skybolt::math::clamp(mZoom + zoomDelta, 0.0f, 1.0f);
 
-	float maxDistance = mParams.maxDistOnRadius * planet->radius;
+	float maxDistance = mParams.maxDistOnRadius * (float)planet->radius;
 
 	// Zoom control
-	float exponent = log(maxDistance - planet->radius);
+	float exponent = log(maxDistance - (float)planet->radius);
 	float distFromSurface = exp(exponent * (1 - mZoom));
 
 	// Orientation control
 	if (mInput.modifier1Pressed)
 	{
-		mPitch -= pitchDelta;
-		mPitch = skybolt::math::clamp<float>(mPitch, 0, skybolt::math::halfPiF());
+		mPitch -= (double)pitchDelta;
+		mPitch = skybolt::math::clamp<float>((float)mPitch, 0, skybolt::math::halfPiF());
 	}
 	else
 	{

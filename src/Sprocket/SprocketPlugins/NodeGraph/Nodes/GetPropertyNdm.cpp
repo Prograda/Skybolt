@@ -12,7 +12,7 @@
 #include <SkyboltSim/Components/FuselageComponent.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
-#include <boost/optional.hpp>
+#include <optional>
 
 using namespace skybolt::sim;
 namespace py = pybind11;

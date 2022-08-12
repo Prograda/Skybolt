@@ -30,7 +30,7 @@ TilePlanetAltitudeProvider::TilePlanetAltitudeProvider(const TileSourcePtr& tile
 double TilePlanetAltitudeProvider::getAltitude(const sim::LatLon& position) const
 {
 	QuadTreeTileKey highestLodKey = getKeyAtLevelIntersectingLonLatPoint(mMaxLod, LatLonVec2Adapter(position));
-	boost::optional<TilePlanetAltitudeProvider::TileImage> result = findHighestLodTile(highestLodKey);
+	std::optional<TilePlanetAltitudeProvider::TileImage> result = findHighestLodTile(highestLodKey);
 	if (!result)
 	{
 		return 0.0;
@@ -46,7 +46,7 @@ double TilePlanetAltitudeProvider::getAltitude(const sim::LatLon& position) cons
 	return provider.get(position.lat, position.lon);
 }
 
-boost::optional<double> TilePlanetAltitudeProvider::tryGetAltitude(const sim::LatLon& position) const
+std::optional<double> TilePlanetAltitudeProvider::tryGetAltitude(const sim::LatLon& position) const
 {
 	QuadTreeTileKey highestLodKey = getKeyAtLevelIntersectingLonLatPoint(mMaxLod, LatLonVec2Adapter(position));
 
@@ -71,7 +71,7 @@ boost::optional<double> TilePlanetAltitudeProvider::tryGetAltitude(const sim::La
 	return {};
 }
 
-boost::optional<TilePlanetAltitudeProvider::TileImage> TilePlanetAltitudeProvider::findHighestLodTile(const QuadTreeTileKey& highestLodKey) const
+std::optional<TilePlanetAltitudeProvider::TileImage> TilePlanetAltitudeProvider::findHighestLodTile(const QuadTreeTileKey& highestLodKey) const
 {
 	// If tile image exists in the cache, use it
 	TileImage result;
@@ -114,7 +114,7 @@ boost::optional<TilePlanetAltitudeProvider::TileImage> TilePlanetAltitudeProvide
 		key = createAncestorKey(highestLodKey, level);
 	}
 
-	return boost::none;
+	return std::nullopt;
 }
 
 TileAsyncPlanetAltitudeProvider::TileAsyncPlanetAltitudeProvider(px_sched::Scheduler* scheduler, const TileSourcePtr& tileSource, int maxLod) :
@@ -124,7 +124,7 @@ TileAsyncPlanetAltitudeProvider::TileAsyncPlanetAltitudeProvider(px_sched::Sched
 	assert(mScheduler);
 }
 
-boost::optional<double> TileAsyncPlanetAltitudeProvider::getAltitudeOrRequestLoad(const sim::LatLon& position) const
+std::optional<double> TileAsyncPlanetAltitudeProvider::getAltitudeOrRequestLoad(const sim::LatLon& position) const
 {
 	auto result = mProvider->tryGetAltitude(position);
 	if (!result)

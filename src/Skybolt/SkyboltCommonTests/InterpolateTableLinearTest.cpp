@@ -16,14 +16,14 @@ TEST_CASE("findInterpolationPoint")
 
 	SECTION("Null returned when interpolating empty vector")
 	{
-		boost::optional<InterpolationPoint> point = findInterpolationPoint({}, 2, /* extrapolate */ true);
-		CHECK(!point.is_initialized());
+		std::optional<InterpolationPoint> point = findInterpolationPoint({}, 2, /* extrapolate */ true);
+		CHECK(!point.has_value());
 	}
 
 	SECTION("Extrapolate below lower bound")
 	{
-		boost::optional<InterpolationPoint> point = findInterpolationPoint(xData, 2, /* extrapolate */ true);
-		REQUIRE(point.is_initialized());
+		std::optional<InterpolationPoint> point = findInterpolationPoint(xData, 2, /* extrapolate */ true);
+		REQUIRE(point.has_value());
 		CHECK(point->bounds.first == 0);
 		CHECK(point->bounds.last == 1);
 		CHECK(point->weight == -2);
@@ -31,8 +31,8 @@ TEST_CASE("findInterpolationPoint")
 
 	SECTION("Extrapolate above upper bound")
 	{
-		boost::optional<InterpolationPoint> point = findInterpolationPoint(xData, 8, /* extrapolate */ true);
-		REQUIRE(point.is_initialized());
+		std::optional<InterpolationPoint> point = findInterpolationPoint(xData, 8, /* extrapolate */ true);
+		REQUIRE(point.has_value());
 		CHECK(point->bounds.first == 1);
 		CHECK(point->bounds.last == 2);
 		CHECK(point->weight == 1.5);
@@ -40,8 +40,8 @@ TEST_CASE("findInterpolationPoint")
 
 	SECTION("Clamp below lower bound")
 	{
-		boost::optional<InterpolationPoint> point = findInterpolationPoint(xData, 2, /* extrapolate */ false);
-		REQUIRE(point.is_initialized());
+		std::optional<InterpolationPoint> point = findInterpolationPoint(xData, 2, /* extrapolate */ false);
+		REQUIRE(point.has_value());
 		CHECK(point->bounds.first == 0);
 		CHECK(point->bounds.last == 1);
 		CHECK(point->weight == 0);
@@ -49,8 +49,8 @@ TEST_CASE("findInterpolationPoint")
 
 	SECTION("Clamp above upper bound")
 	{
-		boost::optional<InterpolationPoint> point = findInterpolationPoint(xData, 8, /* extrapolate */ false);
-		REQUIRE(point.is_initialized());
+		std::optional<InterpolationPoint> point = findInterpolationPoint(xData, 8, /* extrapolate */ false);
+		REQUIRE(point.has_value());
 		CHECK(point->bounds.first == 1);
 		CHECK(point->bounds.last == 2);
 		CHECK(point->weight == 1);
@@ -58,8 +58,8 @@ TEST_CASE("findInterpolationPoint")
 
 	SECTION("Interpolate")
 	{
-		boost::optional<InterpolationPoint> point = findInterpolationPoint(xData, 5.5, /* extrapolate */ false);
-		REQUIRE(point.is_initialized());
+		std::optional<InterpolationPoint> point = findInterpolationPoint(xData, 5.5, /* extrapolate */ false);
+		REQUIRE(point.has_value());
 		CHECK(point->bounds.first == 1);
 		CHECK(point->bounds.last == 2);
 		CHECK(point->weight == 0.25);
