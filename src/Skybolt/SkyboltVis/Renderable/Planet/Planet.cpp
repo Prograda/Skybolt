@@ -425,10 +425,11 @@ static osg::Quat getOrientationFromAzEl(const AzEl& azEl)
 
 void Planet::updatePreRender(const CameraRenderContext& context)
 {
-	osg::Vec3f position = getPosition();
+	osg::Vec3d position = getPosition();
+	osg::Vec3f positionFloat = osg::Vec3f(position);
 	if (mPlanetSky)
 	{
-		mPlanetSky->setPosition(osg::Vec3f(position));
+		mPlanetSky->setPosition(positionFloat);
 	}
 	
 	if (mOcean)
@@ -438,11 +439,11 @@ void Planet::updatePreRender(const CameraRenderContext& context)
 	
 	if (mVolumeClouds)
 	{
-		mVolumeClouds->setPosition(osg::Vec3f(position));
+		mVolumeClouds->setPosition(positionFloat);
 		mVolumeClouds->setOrientation(getOrientation());
 	}
 
-	mPlanetCenterUniform->set(position);
+	mPlanetCenterUniform->set(positionFloat);
 
 	osg::Matrixf planetMatrixInv;
 	getOrientation().get(planetMatrixInv);

@@ -34,7 +34,6 @@ in float logZ;
 
 out vec4 color;
 
-uniform sampler2D heightSampler;
 uniform sampler2D normalSampler;
 uniform sampler2D landMaskSampler;
 uniform sampler2D attributeSampler;
