@@ -97,7 +97,9 @@ endif()
 # Installation
 #-------------------------------------------------------------
 # Install conan files (required by 'conan editable' feature. See https://docs.conan.io/en/latest/developing_packages/editable_packages.html)
-install(FILES ${CMAKE_SOURCE_DIR}/conanfile.py DESTINATION .)
+if (EXISTS ${CMAKE_SOURCE_DIR}/conanfile.py) # File might not exist if during conan build. See https://github.com/conan-io/conan/issues/5415.
+	install(FILES ${CMAKE_SOURCE_DIR}/conanfile.py DESTINATION .)
+endif()
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/Conan	DESTINATION .)
 
 # Install headers
