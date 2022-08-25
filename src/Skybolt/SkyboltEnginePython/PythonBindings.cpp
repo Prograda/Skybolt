@@ -14,6 +14,7 @@
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/CameraController/CameraController.h>
 #include <SkyboltSim/CameraController/CameraControllerSelector.h>
+#include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Components/OrbitComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
@@ -208,6 +209,11 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_readwrite("argumentOfPeriapsis", &Orbit::argumentOfPeriapsis)
 		.def_readwrite("trueAnomaly", &Orbit::trueAnomaly);
 		
+	py::class_<CameraState>(m, "CameraState")
+		.def(py::init())
+		.def_readwrite("nearClipDistance", &CameraState::nearClipDistance)
+		.def_readwrite("farClipDistance", &CameraState::farClipDistance)
+		.def_readwrite("fovY", &CameraState::fovY);
 
 	py::class_<vis::RectI>(m, "RectI")
 		.def(py::init<int, int, int, int>());
@@ -248,8 +254,14 @@ PYBIND11_MODULE(skybolt, m) {
 		.def(py::init<sim::Entity*>())
 		.def("getParent", &ParentReferenceComponent::getParent);
 
+	py::class_<CameraComponent, std::shared_ptr<CameraComponent>, Component>(m, "CameraComponent")
+		.def_property("state",
+			[](const CameraComponent& c) { return c.getState(); },
+			[](CameraComponent& c, const CameraState& state) { CameraState& s = c.getState(); s = state; },
+			py::return_value_policy::reference_internal);
+
 	py::class_<CameraControllerComponent, std::shared_ptr<CameraControllerComponent>, Component>(m, "CameraControllerComponent")
-		.def_property_readonly("cameraController", [](const CameraControllerComponent& c) {return c.cameraController.get(); }, py::return_value_policy::reference_internal);
+		.def_property_readonly("cameraController", [](const CameraControllerComponent& c) { return c.cameraController.get(); }, py::return_value_policy::reference_internal);
 
 	py::class_<ProceduralLifetimeComponent, std::shared_ptr<ProceduralLifetimeComponent>, Component>(m, "ProceduralLifetimeComponent")
 		.def(py::init());
