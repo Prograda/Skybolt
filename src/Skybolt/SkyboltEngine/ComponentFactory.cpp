@@ -174,6 +174,9 @@ static sim::ComponentPtr loadShipWake(Entity* entity, const ComponentFactoryCont
 	if (type == "shipWake")
 	{
 		component->type = ShipWakeComponent::Type::SHIP_WAKE;
+		component->startRadius = readOptionalOrDefault(json, "startRadius", 8.f);
+		component->endRadius = readOptionalOrDefault(json, "endRadius", 40.f);
+		component->length = readOptionalOrDefault(json, "length", 700.f);
 	}
 	else if (type == "rotorWash")
 	{

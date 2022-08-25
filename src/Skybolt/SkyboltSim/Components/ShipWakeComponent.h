@@ -22,6 +22,9 @@ public:
 	};
 
 	Type type;
+	float startRadius;
+	float endRadius;
+	float length;
 };
 
 } // namespace sim

@@ -26,8 +26,6 @@ WakeBinding::WakeBinding(const sim::World* simWorld, const osg::ref_ptr<vis::Wat
 	assert(mWaterMaterial);
 }
 
-const float wakeLength = 700;
-
 void WakeBinding::syncVis(const GeocentricToNedConverter& converter)
 {
 	std::vector<vis::Wake> wakes;
@@ -55,9 +53,9 @@ void WakeBinding::syncVis(const GeocentricToNedConverter& converter)
 				if (component->type == sim::ShipWakeComponent::Type::SHIP_WAKE)
 				{
 					wake.points[0] = startPoint;
-					wake.points[0].z() = 8;
-					wake.points[1] = startPoint - wakeDir * wakeLength;
-					wake.points[1].z() = 40;
+					wake.points[0].z() = component->startRadius;
+					wake.points[1] = startPoint - wakeDir * component->length;
+					wake.points[1].z() = component->endRadius;
 				}
 				else if(component->type == sim::ShipWakeComponent::Type::ROTOR_WASH)
 				{
