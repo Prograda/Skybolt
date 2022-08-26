@@ -21,10 +21,12 @@
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/ParentReferenceComponent.h>
 #include <SkyboltSim/Components/ProceduralLifetimeComponent.h>
+#include <SkyboltSim/Spatial/Frustum.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Spatial/Orientation.h>
 #include <SkyboltSim/Spatial/Position.h>
 #include <SkyboltSim/System/SimStepper.h>
+#include <SkyboltCommon/Math/Box3.h>
 
 #include <SkyboltVis/Rect.h>
 #include <SkyboltVis/RenderOperation/DefaultRenderCameraViewport.h>
@@ -200,6 +202,22 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_readwrite("lon", &LatLonAlt::lon)
 		.def_readwrite("alt", &LatLonAlt::alt);
 
+	py::class_<Frustum>(m, "Frustum")
+		.def(py::init())
+		.def_readwrite("origin", &Frustum::origin)
+		.def_readwrite("orientation", &Frustum::orientation)
+		.def_readwrite("fieldOfViewHorizontal", &Frustum::fieldOfViewHorizontal)
+		.def_readwrite("fieldOfViewVertical", &Frustum::fieldOfViewVertical);
+
+	py::class_<Box3d>(m, "Box3d")
+		.def(py::init())
+		.def(py::init<const Vector3&, const Vector3&>())
+		.def("size", &Box3d::size)
+		.def("center", &Box3d::center)
+		.def("merge", &Box3d::merge)
+		.def_readwrite("minimum", &Box3d::minimum)
+		.def_readwrite("maximum", &Box3d::maximum);
+
 	py::class_<Orbit>(m, "Orbit")
 		.def(py::init())
 		.def_readwrite("semiMajorAxis", &Orbit::semiMajorAxis)
@@ -335,4 +353,5 @@ PYBIND11_MODULE(skybolt, m) {
 	m.def("captureScreenshot", [](vis::Window& window) { return captureScreenshotToImage(window); });
 	m.def("captureScreenshot", [](vis::Window& window, const std::string& filename) { return vis::captureScreenshot(window, filename); });
 	m.def("moveDistanceAndBearing", &moveDistanceAndBearing);
+	m.def("transformToScreenSpace", &transformToScreenSpace);
 }
