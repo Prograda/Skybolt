@@ -8,6 +8,9 @@
 #pragma import_defines ( DISTANCE_CULL )
 #pragma import_defines ( ENABLE_DEPTH_OFFSET )
 
+#extension GL_EXT_gpu_shader4 : enable // Required by HARDWARE_ANISTROPIC_FILTERING
+#define HARDWARE_ANISTROPIC_FILTERING
+
 #include "AtmosphericScatteringWithClouds.h"
 #include "DepthPrecision.h"
 #include "Ocean.h"
@@ -68,26 +71,6 @@ vec3 frontFacing(vec3 viewDirection, vec3 v)
 {
 	v *= sign(dot(viewDirection, v));
 	return v;
-}
-
-// Manual texture lookup with bilinear filtering.
-// Used in cases where more precision is required than used in built-in bilinear filtering.
-vec4 bilinear(sampler2D tex, vec2 uv)
-{
-	vec2 dims = vec2(1201, 1201); // TODO: get actual dimensions
-	vec2 weight = fract(uv * dims);
-	vec2 texelSize = 1.0f / dims;
-	
-	uv -= weight * texelSize;
-	
-	vec4 c00 = textureGrad(tex, uv, vec2(0), vec2(0)); // TODO: would be good if we didn't have to use zero derivatives
-	vec4 c10 = textureGrad(tex, uv + vec2(texelSize.x, 0), vec2(0), vec2(0));
-	vec4 c01 = textureGrad(tex, uv + vec2(0, texelSize.y), vec2(0), vec2(0));
-	vec4 c11 = textureGrad(tex, uv + texelSize, vec2(0), vec2(0));
-	
-	vec4 c0 = mix(c00, c10, weight.x);
-	vec4 c1 = mix(c01, c11, weight.x);
-	return mix(c0, c1, weight.y);
 }
 
 vec3 blendNormals(vec3 baseColor, vec3 detailColor)
@@ -214,6 +197,15 @@ float calcUvCyclesPerPixel(vec2 uv)
 	return max(dot(dxUv, dxUv), dot(dyUv, dyUv));
 }
 
+vec3 calcSphereLightDir(vec3 R, vec3 L)
+{
+	// Based on https://alextardif.com/arealights.html
+	vec3 centerToRay = (dot(L, R) * R) - L;
+
+	vec3 closestPoint = L + centerToRay * min(1.0, 0.005 / length(centerToRay));
+	return normalize(closestPoint);
+}
+
 const vec3 upDir = vec3(0,0,-1);
 
 void main(void)
@@ -245,7 +237,7 @@ void main(void)
 			
 			vec3 normalSample2 = texture(normalSamplers[i], texCoord, normalMipmapBias).rgb;
 			normal = blendNormals(normalSample, normalSample2);
-			foamMask = max(foamMask, texture(foamMaskSamplers[i], texCoord).r);
+			foamMask = max(foamMask, texture(foamMaskSamplers[i], texCoord, normalMipmapBias).r);
 		}
 	}
 
@@ -261,7 +253,7 @@ void main(void)
 	vec3 u = positionRelCameraWS; // MTODO
 	vec3 N = -normal;
 	vec3 V = -viewDirection; // MTODO: unflip. +z up?
-	vec3 L = -lightDirection;
+	vec3 L = -calcSphereLightDir(reflect(V, N), lightDirection);
 	
 	
     float Jxx = dFdx(u.x);
@@ -275,7 +267,7 @@ void main(void)
     float ua = pow(A / SCALE, 0.25);
     float ub = 0.5 + 0.5 * B / sqrt(A * C);
     float uc = pow(C / SCALE, 0.25);
-    vec2 sigmaSq = vec2(0.0001);// MTODO texture3D(slopeVarianceSampler, vec3(ua, ub, uc)).xw;
+    vec2 sigmaSq = vec2(0.001);// TODO texture3D(slopeVarianceSampler, vec3(ua, ub, uc)).xw;
 
     sigmaSq = max(sigmaSq, 2e-5);
 
@@ -300,7 +292,7 @@ void main(void)
 	foamMask = max(foamMask, calcWakeMask());
 
 	vec3 foamColor = vec3(1.0);
-	float foamTexture = texture(foamSampler, wrappedNoiseCoord.xy*400).r;
+	float foamTexture = texture(foamSampler, wrappedNoiseCoord.xy*1000, normalMipmapBias).r;
 	float foamFraction = pow(foamTexture, 0.5 / (foamMask + 0.0001)) * smoothstep(0.0, 0.1, foamMask);
 	
 	color.rgb = mix(color.rgb, foamColor * foamReflectance, foamFraction);

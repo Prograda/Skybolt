@@ -50,22 +50,6 @@ osg::Texture2D* createFoamMaskTexture(int width, int height)
 	return texture;
 }
 
-//! @param textureScale is textureSizeInWorldSpace / maxHeightInWorldSpace
-osg::StateSet* createHeightToNormalMapStateSet(osg::ref_ptr<osg::Program> program, osg::Texture2D* heightTexture, const osg::Vec2f& textureScale)
-{
-	osg::StateSet* stateSet = new osg::StateSet();
-	stateSet->setAttributeAndModes(program, osg::StateAttribute::ON);
-	stateSet->setTextureAttributeAndModes(0, heightTexture, osg::StateAttribute::ON);
-
-	const osg::Image& image = *heightTexture->getImage(0);
-	osg::Vec2f texelSize(1.0f / (float)image.s(), 1.0f / (float)image.t());
-	osg::Vec2f texelScale(textureScale.x() * texelSize.x(), textureScale.y() * texelSize.y());
-	stateSet->addUniform(new osg::Uniform("texelSizeInTextureSpace", texelSize));
-	stateSet->addUniform(new osg::Uniform("texelScale", texelScale));
-
-	return stateSet;
-}
-
 class CascadedWaveHeightTextureGenerator
 {
 public:

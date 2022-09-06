@@ -88,10 +88,9 @@ float reflectedSunRadiance(vec3 L, vec3 V, vec3 N, vec3 Tx, vec3 Ty, vec2 sigmaS
 // manual anisotropic filter
 vec4 myTexture2DGrad(sampler2D tex, vec2 u, vec2 s, vec2 t)
 {
-    const float TEX_SIZE = 512.0; // 'tex' size in pixels
     const int N = 1; // use (2*N+1)^2 samples
     vec4 r = vec4(0.0);
-    float l = max(0.0, log2(max(length(s), length(t)) * TEX_SIZE) - 0.0);
+    float l = max(0.0, log2(max(length(s), length(t)) * textureSize(tex, 0).x) - 0.0);
     for (int i = -N; i <= N; ++i) {
         for (int j = -N; j <= N; ++j) {
             r += textureLod(tex, u + (s * float(i) + t * float(j)) / float(N), l);
