@@ -12,6 +12,7 @@
 #pragma import_defines ( ENABLE_ENVIRONMENT_MAP )
 #pragma import_defines ( ENABLE_NORMAL_MAP )
 #pragma import_defines ( ENABLE_SPECULAR_MAP )
+#pragma import_defines ( ENABLE_ROUGHNESS_MAP )
 #pragma import_defines ( ENABLE_SHADOWS )
 #pragma import_defines ( ENABLE_SPECULAR )
 #pragma import_defines ( UNIFORM_ALBEDO )
@@ -37,7 +38,7 @@ out vec4 color;
 uniform vec3 lightDirection;
 uniform vec3 ambientLightColor;
 uniform vec3 specularityUniform;
-uniform float roughness;
+uniform float roughnessUniform;
 
 #ifdef UNIFORM_ALBEDO
 	uniform vec4 albedoColor;
@@ -47,6 +48,7 @@ uniform float roughness;
 
 uniform sampler2D normalSampler;
 uniform sampler2D specularSampler;
+uniform sampler2D roughnessSampler;
 uniform sampler2D environmentSampler;
 
 #ifdef ENABLE_DEPTH_OFFSET
@@ -77,6 +79,12 @@ void main()
 	vec3 specularity = texture(specularSampler, texCoord.xy).rgb * 0.08; // specular rescaled by 0.08 as per Disney BRDF
 #else
 	vec3 specularity = specularityUniform;
+#endif
+
+#ifdef ENABLE_ROUGHNESS_MAP
+	float roughness = texture(roughnessSampler, texCoord.xy).r;
+#else
+	float roughness = roughnessUniform;
 #endif
 
 #ifdef ENABLE_SHADOWS
