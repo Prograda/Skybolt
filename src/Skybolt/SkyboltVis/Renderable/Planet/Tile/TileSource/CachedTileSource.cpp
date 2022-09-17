@@ -58,12 +58,18 @@ osg::ref_ptr<osg::Image> CachedTileSource::createImage(const skybolt::QuadTreeTi
 			if (supportUserData)
 			{
 				std::ofstream f(filename.c_str(), std::ios::binary);
-				writeImageWithUserData(*image, f, "png");
+				if (!writeImageWithUserData(*image, f, "png"))
+				{
+					throw std::runtime_error("Could not write cached tile image to: " + filename);
+				}
 				f.close();
 			}
 			else
 			{
-				osgDB::writeImageFile(*image, filename);
+				if (!osgDB::writeImageFile(*image, filename))
+				{
+					throw std::runtime_error("Could not write cached tile image to: " + filename);
+				}
 			}
 		}
 		return image;

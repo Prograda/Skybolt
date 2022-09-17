@@ -66,27 +66,28 @@ static int flipY(int y, int level)
 osg::ref_ptr<osg::Image> XyzTileSource::createImage(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
 {
 	osg::ref_ptr<osg::Image> image = readImageWithoutWarnings(toUrl(key));
-
-	if (mImageType == XyzTileSourceConfig::ImageType::Elevation)
+	if (image)
 	{
-		if (!isHeightMapDataFormat(*image))
+		if (mImageType == XyzTileSourceConfig::ImageType::Elevation)
 		{
-			return nullptr;
+			if (!isHeightMapDataFormat(*image))
+			{
+				return nullptr;
+			}
+			image->setInternalTextureFormat(getHeightMapInternalTextureFormat());
+
+			const HeightMapElevationRerange& rerange = getDefaultEarthRerange();
+			setHeightMapElevationRerange(*image, rerange);
+
+			HeightMapElevationBounds bounds = emptyHeightMapElevationBounds();
+			uint16_t* p = reinterpret_cast<uint16_t*>(image->data());
+			int elementCount = image->s() * image->t();
+			for (int i = 0; i < elementCount; ++i)
+			{
+				expand(bounds, getElevationForColorValue(rerange, *p));
+			}
+			setHeightMapElevationBounds(*image, bounds);
 		}
-		image->setInternalTextureFormat(getHeightMapInternalTextureFormat());
-
-		const HeightMapElevationRerange& rerange = getDefaultEarthRerange();
-		setHeightMapElevationRerange(*image, rerange);
-
-		HeightMapElevationBounds bounds = emptyHeightMapElevationBounds();
-		uint16_t* p = reinterpret_cast<uint16_t*>(image->data());
-		int elementCount = image->s() * image->t();
-		for (int i = 0; i < elementCount; ++i)
-		{
-			expand(bounds, getElevationForColorValue(rerange, *p));
-		}
-		setHeightMapElevationBounds(*image, bounds);
-
 	}
 
 	return image;

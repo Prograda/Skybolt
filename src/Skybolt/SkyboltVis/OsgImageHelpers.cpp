@@ -117,7 +117,10 @@ osg::ref_ptr<osg::Image> readImageWithUserData(std::istream& s, const std::strin
 	osg::ref_ptr<osg::Image> image;
 	{
 		osg::ref_ptr<osgDB::ReaderWriter> reader = osgDB::Registry::instance()->getReaderWriterForExtension(extension);
-		image = reader->readImage(s).takeImage();
+		if (reader)
+		{
+			image = reader->readImage(s).takeImage();
+		}
 	}
 	if (image && !s.eof())
 	{
@@ -132,6 +135,10 @@ bool writeImageWithUserData(const osg::Image& image, std::ostream& s, const std:
 {
 	{
 		osg::ref_ptr<osgDB::ReaderWriter> writer = osgDB::Registry::instance()->getReaderWriterForExtension(extension);
+		if (!writer)
+		{
+			return false;
+		}
 		osgDB::ReaderWriter::WriteResult res = writer->writeImage(image, s);
 		if (res.error())
 		{
@@ -141,6 +148,10 @@ bool writeImageWithUserData(const osg::Image& image, std::ostream& s, const std:
 	if (image.getUserDataContainer())
 	{
 		auto writer = osgDB::Registry::instance()->getReaderWriterForExtension("osgb");
+		if (!writer)
+		{
+			return false;
+		}
 		osgDB::ReaderWriter::WriteResult res = writer->writeObject(*image.getUserDataContainer(), s);
 		if (res.error())
 		{

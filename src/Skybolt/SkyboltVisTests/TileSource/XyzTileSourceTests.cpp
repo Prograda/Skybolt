@@ -72,7 +72,7 @@ TEST_CASE("Test height map tile loaded from XYZ elevation tile source")
 	writeTestElevationImage(getTemporaryDirectory() / "testKey_2_1_3.png", elevationValue);
 
 	osg::ref_ptr<osg::Image> image = source.createImage(QuadTreeTileKey(2,1,3), [] { return false;});
-	CHECK(image);
+	REQUIRE(image);
 
 	auto rerange = getHeightMapElevationRerange(*image);
 	REQUIRE(rerange);
