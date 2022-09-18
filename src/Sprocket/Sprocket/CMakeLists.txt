@@ -17,7 +17,7 @@ find_package(pybind11 REQUIRED)
 # Qt5
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
-FIND_PACKAGE(Qt5 COMPONENTS Core Gui Widgets OpenGL REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui Widgets OpenGL REQUIRED)
 
 QT5_ADD_RESOURCES(SrcRccsSrc ${SrcRccs})
 
@@ -25,7 +25,7 @@ QT5_WRAP_UI(SrcUiHeaders ${UiSrc})
 SET(SrcFiles ${SrcFiles} ${SrcUiHeaders} ${SrcRccsSrc})
 SOURCE_GROUP("Generated Ui Files" FILES ${SrcUiHeaders} ${SrcRccsSrc})
 
-find_package(ToolWindowManager)
+find_package(ToolWindowManager REQUIRED)
 include_directories(${ToolWindowManager_INCLUDE_DIR})
 
 set(LIBS
@@ -41,8 +41,6 @@ set(LIBS
 )
 
 add_library(${TARGET_NAME} STATIC ${SrcFiles})
-
-add_dependencies(${TARGET_NAME} skybolt)
 
 target_link_libraries (${TARGET_NAME} ${LIBS})
 

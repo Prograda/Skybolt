@@ -7,12 +7,14 @@ class SkyboltConan(ConanFile):
     settings = "os", "compiler", "arch", "build_type"
     options = {
 		"shared": [True, False],
-		"enableFftOcean": [True, False],
+		"enable_fft_ocean": [True, False],
+		"enable_sprocket": [True, False],
 		"shared_plugins": [True, False] # Build plugins as shared libraries
 	}
     default_options = {
         "shared": False,
-        "enableFftOcean": True,
+        "enable_fft_ocean": True,
+		"enable_sprocket": False,
 		"shared_plugins": True
     }
     generators = ["cmake_paths", "cmake_find_package", "virtualrunenv"]
@@ -47,9 +49,15 @@ class SkyboltConan(ConanFile):
         self.include_package("px_sched", "1.0.0")
         self.include_package("openscenegraph-mr", "3.7.0", "all")
 		
-        if self.options.enableFftOcean:
+        if self.options.enable_fft_ocean:
             self.include_package("mufft", "1.0.0")
             self.include_package("xsimd", "7.4.10")
+			
+        if self.options.enable_sprocket:
+            self.requires("ois/1.5@_/_")
+            self.requires("pybind11/2.9.1@_/_")
+            self.requires("qt/5.15.3@_/_")
+            self.include_package("toolwindowmanager", "1.0.0")
 
     def build(self):
         cmake = CMake(self)
@@ -58,8 +66,11 @@ class SkyboltConan(ConanFile):
         cmake.definitions["OSG_STATIC_LIBS"] = str(not self.options["openscenegraph-mr"].shared)
         cmake.definitions["SKYBOLT_PLUGINS_STATIC_BUILD"] = str(not self.options.shared_plugins)
 
-        if self.options.enableFftOcean == True:
+        if self.options.enable_fft_ocean == True:
             cmake.definitions["BUILD_FFT_OCEAN_PLUGIN"] = "true"
+        if self.options.enable_sprocket == True:
+            cmake.definitions["BUILD_PYTHON_BINDINGS"] = "true"
+            cmake.definitions["BUILD_SPROCKET"] = "true"
 
         cmake.definitions["CMAKE_TOOLCHAIN_FILE"] = "conan_paths.cmake"
         cmake.configure()
@@ -74,5 +85,7 @@ class SkyboltConan(ConanFile):
         self.cpp_info.names["cmake_find_package"] = "Skybolt"
         self.cpp_info.libs = ["AircraftHud", "MapAttributesConverter", "SkyboltCommon", "SkyboltEngine", "SkyboltSim", "SkyboltVis"]
 		
-        if self.options.enableFftOcean and not self.options.shared_plugins:
+        if self.options.enable_fft_ocean and not self.options.shared_plugins:
             self.cpp_info.libs.append("FftOcean")
+        if self.options.enable_sprocket == True:
+            self.cpp_info.libs.append("Sprocket")

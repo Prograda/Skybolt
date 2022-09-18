@@ -47,7 +47,7 @@ jobs:
         export CONAN_SYSREQUIRES_MODE=enabled
         mkdir ${{env.depsDir}}
         cd ${{env.depsDir}}
-        conan install ${{github.workspace}} -o openscenegraph-mr:shared=True --build=cxxtimer --build=px_sched --build=xsimd -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
+        conan install ${{github.workspace}} -o openscenegraph-mr:shared=True -o qt:shared=True -o enable_sprocket=True --build=cxxtimer --build=px_sched --build=toolwindowmanager --build=xsimd -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
     - name: Cmake build
       run: |
         mkdir ${{env.buildDir}}
