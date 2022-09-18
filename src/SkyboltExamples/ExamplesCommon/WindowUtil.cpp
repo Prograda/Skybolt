@@ -1,4 +1,4 @@
-#pragma once
+#include "WindowUtil.h"
 
 #include <SkyboltVis/Rect.h>
 #include <SkyboltVis/Window/StandaloneWindow.h>

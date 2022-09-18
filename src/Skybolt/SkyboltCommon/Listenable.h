@@ -37,7 +37,7 @@ public:
 
 // Call listeners in reverse order in case listeners are removed during callback
 #define CALL_LISTENERS(fn) \
-for (int i = (int)mListeners.size()-1; i >= 0; --i) \
-	mListeners[i]->fn;
+for (int i = (int)this->mListeners.size()-1; i >= 0; --i) \
+	this->mListeners[i]->fn;
 
 } // namespace skybolt

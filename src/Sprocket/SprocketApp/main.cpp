@@ -27,7 +27,11 @@ namespace py = pybind11;
 
 static std::string appendConfigurationDir(const std::string& dir)
 {
+#ifdef CMAKE_INTDIR
 	return dir + "/" + CMAKE_INTDIR;
+#else
+	return dir;
+#endif
 }
 
 static std::string getLibDirectory()

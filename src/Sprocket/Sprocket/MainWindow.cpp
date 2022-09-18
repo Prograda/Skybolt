@@ -350,7 +350,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	mStatsDisplaySystem->setVisible(false);
 	mEngineRoot->systemRegistry->push_back(mStatsDisplaySystem);
 
-	mInputPlatform.reset(new InputPlatformOis(std::to_string(size_t(HWND(winId()))), 800, 600)); // TODO: use actual resolution
+	mInputPlatform.reset(new InputPlatformOis(std::to_string(size_t(winId())), 800, 600)); // TODO: use actual resolution
 	mViewportInput.reset(new ViewportInput(mInputPlatform));
 
 	mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
@@ -822,10 +822,10 @@ QToolBar* MainWindow::createViewportToolBar()
 	return toolbar;
 }
 
-static QVariantMap toVariantMap(QByteArray& array)
+static QVariantMap toVariantMap(const QByteArray& array)
 {
 	QVariantMap variantMap;
-	QDataStream stream(&array, QIODevice::OpenMode::enum_type::ReadOnly);
+	QDataStream stream(const_cast<QByteArray*>(&array), QIODevice::OpenMode::enum_type::ReadOnly);
 	stream >> variantMap;
 	return variantMap;
 }
@@ -1246,7 +1246,7 @@ void MainWindow::addToolWindow(const QString& windowName, QWidget* window)
 	window->setObjectName(windowName);
 
 	QAction* action = ui->menuView->addAction(windowName);
-	action->setData(mToolActions.size());
+	action->setData((int)mToolActions.size());
 	action->setCheckable(true);
 	action->setChecked(true);
 	connect(action, SIGNAL(triggered(bool)), this, SLOT(toolWindowActionToggled(bool)));

@@ -9,13 +9,15 @@ class SkyboltConan(ConanFile):
 		"shared": [True, False],
 		"enable_fft_ocean": [True, False],
 		"enable_sprocket": [True, False],
-		"shared_plugins": [True, False] # Build plugins as shared libraries
+		"shared_plugins": [True, False], # Build plugins as shared libraries
+		"fPIC": [True, False]
 	}
     default_options = {
         "shared": False,
         "enable_fft_ocean": True,
 		"enable_sprocket": False,
-		"shared_plugins": True
+		"shared_plugins": True,
+		"fPIC": True
     }
     generators = ["cmake_paths", "cmake_find_package", "virtualrunenv"]
     exports = "Conan/*"
@@ -43,6 +45,8 @@ class SkyboltConan(ConanFile):
 
     def configure(self):
         self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
+        if self.settings.compiler == 'Visual Studio':
+            del self.options.fPIC
 
     def requirements(self):
         self.include_package("cxxtimer", "1.0.0")
@@ -54,6 +58,7 @@ class SkyboltConan(ConanFile):
             self.include_package("xsimd", "7.4.10")
 			
         if self.options.enable_sprocket:
+            self.requires("expat/2.4.8@_/_") # Indirect dependency. Specified to resolve version clash between wayland (used by Qt) and fontconfig (used by OSG)
             self.requires("ois/1.5@_/_")
             self.requires("pybind11/2.9.1@_/_")
             self.requires("qt/5.15.3@_/_")
@@ -65,6 +70,7 @@ class SkyboltConan(ConanFile):
         cmake.definitions["Boost_STATIC_LIBS"] = str(not self.options["boost"].shared)
         cmake.definitions["OSG_STATIC_LIBS"] = str(not self.options["openscenegraph-mr"].shared)
         cmake.definitions["SKYBOLT_PLUGINS_STATIC_BUILD"] = str(not self.options.shared_plugins)
+        cmake.definitions["CMAKE_POSITION_INDEPENDENT_CODE"] = self.options.fPIC
 
         if self.options.enable_fft_ocean == True:
             cmake.definitions["BUILD_FFT_OCEAN_PLUGIN"] = "true"

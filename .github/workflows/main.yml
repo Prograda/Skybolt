@@ -17,7 +17,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       buildDir: ${{github.workspace}}/build
-      depsDir: ${{github.workspace}}/deps
     steps:
     - uses: actions/checkout@v2.4.0
     - name: Set up Python ${{ matrix.python-version }}
@@ -45,15 +44,13 @@ jobs:
     - name: Conan install
       run: |
         export CONAN_SYSREQUIRES_MODE=enabled
-        mkdir ${{env.depsDir}}
-        cd ${{env.depsDir}}
-        conan install ${{github.workspace}} -o openscenegraph-mr:shared=True -o qt:shared=True -o enable_sprocket=True --build=cxxtimer --build=px_sched --build=toolwindowmanager --build=xsimd -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
-    - name: Cmake build
-      run: |
         mkdir ${{env.buildDir}}
         cd ${{env.buildDir}}
-        cmake -DCMAKE_TOOLCHAIN_FILE=${{env.depsDir}}/conan_paths.cmake ${{github.workspace}}
-        cmake --build .
+        conan install ${{github.workspace}} -o openscenegraph-mr:shared=True -o qt:shared=True -o enable_sprocket=True -o enable_sprocket=True --build=cxxtimer --build=px_sched --build=toolwindowmanager --build=xsimd -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
+    - name: Cmake build
+      run: |
+        cd ${{env.buildDir}}
+        conan build ${{github.workspace}}
     - name: Cmake test
       run: |
         cd ${{env.buildDir}}
