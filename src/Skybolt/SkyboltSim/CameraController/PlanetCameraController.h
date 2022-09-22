@@ -30,8 +30,8 @@ public:
 public:
 	// CameraController interface
 	void update(float dt) override;
-
 	void setInput(const Input& input) override { mInput = input; }
+	void setTarget(Entity* target) override;
 
 private:
 	Params mParams;

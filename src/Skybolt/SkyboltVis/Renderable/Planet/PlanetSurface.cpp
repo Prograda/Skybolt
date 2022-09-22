@@ -110,7 +110,7 @@ PlanetSurface::~PlanetSurface()
 	mParentTransform->removeChild(mGroup);
 }
 
-void PlanetSurface::updateGeometry()
+bool PlanetSurface::updateGeometry()
 {
 	mTileSource->update();
 
@@ -160,6 +160,11 @@ void PlanetSurface::updateGeometry()
 	{
 		mGpuForest->updateFromTree(*tree);
 	}
+
+	// Iif tiles were added this update, we might need to load their children next update.
+	bool mightNeedToLoadNextUpdate = !addedTiles.empty();
+	// Return true if all loading is complete
+	return !mightNeedToLoadNextUpdate && !mTileSource->isLoading();
 }
 
 static sim::LatLon toLatLon(const osg::Vec2d& latLon)
@@ -185,7 +190,17 @@ void PlanetSurface::updatePreRender(const CameraRenderContext& context)
 
 	geocentricToLla(geocentricPos, mPredicate->observerLatLon, mPredicate->observerAltitude, mRadius);
 
-	updateGeometry();
+	bool loadingComplete = updateGeometry();
+
+	if (context.loadTimingPolicy == LoadTimingPolicy::LoadBeforeRender)
+	{
+		while (!loadingComplete)
+		{
+			loadingComplete = updateGeometry();
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+	}
+
 
 	LlaToNedConverter converter(toLatLon(mPredicate->observerLatLon), std::nullopt);
 	for (const auto& node : mTileNodes)

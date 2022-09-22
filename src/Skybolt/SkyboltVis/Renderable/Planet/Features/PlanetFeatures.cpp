@@ -9,6 +9,7 @@
 #include "SkyboltVis/LlaToNedConverter.h"
 #include "SkyboltVis/OsgGeocentric.h"
 #include "SkyboltVis/Scene.h"
+#include "SkyboltVis/RenderContext.h"
 #include "SkyboltVis/Renderable/BuildingsBatch.h"
 #include "SkyboltVis/Renderable/RoadsBatch.h"
 #include "SkyboltVis/Renderable/RunwaysBatch.h"
@@ -293,6 +294,15 @@ void PlanetFeatures::updatePreRender(const CameraRenderContext& context)
 {
 	processLoadingQueue();
 
+	if (context.loadTimingPolicy == LoadTimingPolicy::LoadBeforeRender)
+	{
+		while (!mLoadingQueue.empty())
+		{
+			processLoadingQueue();
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+	}
+
 	auto& tree = (skybolt::DiQuadTree<VisFeatureTile>&)(mFeatures.tree);
 
 	for (LoadedVisObjects* objects : mLoadedVisObjects)
@@ -367,8 +377,10 @@ void PlanetFeatures::processLoadingQueue()
 			std::unique_ptr<LoadedVisObjects>& objects = item.objects;
 			if (objects)
 			{
+#ifdef DEBUG_PLANET_FREATURES_LOAD_TIMES
 				cxxtimer::Timer timer;
 				timer.start();
+#endif
 
 				for (int i = 0; i < PlanetFeaturesParams::featureGroupsSize; ++i)
 				{
@@ -388,8 +400,10 @@ void PlanetFeatures::processLoadingQueue()
 				erase = true;
 				++loadedItems;
 
-				//printf("Feature %lli\n", timer.count());
+#ifdef DEBUG_PLANET_FREATURES_LOAD_TIMES
+				printf("Feature %lli\n", timer.count());
 				timer.reset();
+#endif
 			}
 		}
 

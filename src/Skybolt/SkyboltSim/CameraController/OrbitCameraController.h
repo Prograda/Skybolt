@@ -43,6 +43,7 @@ public:
 	void updatePostDynamicsSubstep(TimeReal dtSubstep) override;
 	void update(float dt) override;
 	void setInput(const Input& input) override { mInput = input; }
+	void setTarget(Entity* target) override;
 
 private:
 	void resetFiltering();

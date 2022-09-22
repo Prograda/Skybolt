@@ -114,36 +114,19 @@ static bool attachCameraToWindowWithEngine(sim::Entity& camera, vis::Window& win
 	return false;
 }
 
-static bool stepOnceAndRenderOnce(EngineRoot& engineRoot, vis::Window& window, double dtWallClock)
+static void stepSim(EngineRoot& engineRoot, double dt)
 {
 	SimStepper stepper(engineRoot.systemRegistry);
 	System::StepArgs args;
-	args.dtSim = dtWallClock;
-	args.dtWallClock = dtWallClock;
+	args.dtSim = dt;
+	args.dtWallClock = dt;
 	stepper.step(args);
-	return window.render();
 }
 
-static bool stepOnceAndRenderUntilDone(EngineRoot& engineRoot, vis::Window& window, double dtWallClock)
+static bool render(EngineRoot& engineRoot, vis::Window& window, vis::LoadTimingPolicy loadTimingPolicy)
 {
-	SimStepper stepper(engineRoot.systemRegistry);
-	System::StepArgs args;
-	args.dtSim = dtWallClock;
-	args.dtWallClock = dtWallClock;
-	stepper.step(args);
-
-	// Keep rendering until the last render does not have any outstanding loading tasks.
-	// Note we render first and then check (do, while) because a render may spawn additional tasks.
-	do
-	{
-		if (!window.render())
-		{
-			return false;
-		}
-	}
-	while (engineRoot.stats.terrainTileLoadQueueSize > 0 || engineRoot.stats.featureTileLoadQueueSize > 0);
-
-	return true;
+	stepSim(engineRoot, 0.0); // FIXME: We need to call this to update all the systems prior to rendering, but we don't actually need to 'step'.
+	return window.render(loadTimingPolicy);
 }
 
 static py::array_t<std::uint8_t> captureScreenshotToImage(vis::Window& window)
@@ -339,12 +322,17 @@ PYBIND11_MODULE(skybolt, m) {
 	py::class_<vis::OffscreenWindow, vis::Window>(m, "OffscreenWindow")
 		.def(py::init<int, int>()); // width, height
 
+	py::enum_<vis::LoadTimingPolicy>(m, "LoadTimingPolicy")
+    .value("LoadAcrossMultipleFrames", vis::LoadTimingPolicy::LoadAcrossMultipleFrames)
+    .value("LoadBeforeRender", vis::LoadTimingPolicy::LoadBeforeRender)
+    .export_values();
+
 	m.def("getGlobalEngineRoot", &getGlobalEngineRoot, "Get global EngineRoot", py::return_value_policy::reference);
 	m.def("setGlobalEngineRoot", &setGlobalEngineRoot, "Set global EngineRoot");
 	m.def("createEngineRootWithDefaults", &createEngineRootWithDefaults, "Create an EngineRoot with default values");
 	m.def("attachCameraToWindowWithEngine", &attachCameraToWindowWithEngine);
-	m.def("stepOnceAndRenderOnce", &stepOnceAndRenderOnce);
-	m.def("stepOnceAndRenderUntilDone", &stepOnceAndRenderUntilDone);
+	m.def("stepSim", &stepSim);
+	m.def("render", &render, py::arg("engineRoot"), py::arg("window"), py::arg("loadTimingPolicy") = vis::LoadTimingPolicy::LoadBeforeRender);
 	m.def("toGeocentricPosition", [](const PositionPtr& position) { return std::make_shared<GeocentricPosition>(toGeocentric(*position)); });
 	m.def("toGeocentricOrientation", [](const OrientationPtr& orientation, const LatLon& latLon) { return std::make_shared<GeocentricOrientation>(toGeocentric(*orientation, latLon)); });
 	m.def("toLatLonAlt", [](const PositionPtr& position) { return std::make_shared<LatLonAltPosition>(toLatLonAlt(*position)); });

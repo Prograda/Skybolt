@@ -90,7 +90,7 @@ controller = camera.getFirstComponentOfType("CameraControllerComponent").cameraC
 controller.setTarget(earth)
 controller.selectController("Globe")
 
-sb.stepOnceAndRenderUntilDone(engine, window, 0.1)
+sb.render(engine, window)
 ```
 
 ## Projects and Dependencies

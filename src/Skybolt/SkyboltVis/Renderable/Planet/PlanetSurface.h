@@ -72,7 +72,7 @@ public:
 	const osg::ref_ptr<osg::Group>& getGroup() const { return mGroup; }
 
 private:
-	void updateGeometry();
+	bool updateGeometry(); //!< @returns true if all geometry loading has completed
 
 private:
 	float mRadius;

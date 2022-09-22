@@ -57,6 +57,8 @@ public:
 
 	void update();
 
+	bool isLoading() const { return !mLoadQueue.empty(); }
+
 	struct LoadedTile : public skybolt::QuadTreeTile<osg::Vec2d, LoadedTile>
 	{
 		TileImagesPtr images;

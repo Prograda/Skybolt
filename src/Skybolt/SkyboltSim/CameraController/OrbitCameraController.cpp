@@ -153,3 +153,9 @@ void OrbitCameraController::update(float dt)
 	// Derive camera position
 	mNodeComponent->setPosition(mTargetPosition + mNodeComponent->getOrientation() * (Vector3(-dist, 0, 0) + mTargetOffset));
 }
+
+void OrbitCameraController::setTarget(Entity* target)
+{
+	CameraController::setTarget(target);
+	update(0);
+}

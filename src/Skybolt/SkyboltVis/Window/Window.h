@@ -8,6 +8,7 @@
 #pragma once
 
 #include "SkyboltVis/SkyboltVisFwd.h"
+#include "SkyboltVis/RenderContext.h"
 #include "SkyboltVis/RenderOperation/RenderOperationSequence.h"
 
 #include <osgViewer/Viewer>
@@ -23,7 +24,7 @@ public:
 	~Window();
 
 	//! @returns false if window has been closed
-	virtual bool render();
+	virtual bool render(LoadTimingPolicy loadTimingPolicy = LoadTimingPolicy::LoadAcrossMultipleFrames);
 
 	virtual int getWidth() const = 0;
 	virtual int getHeight() const = 0;

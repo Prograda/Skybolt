@@ -68,6 +68,7 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 		if (camera)
 		{
 			CameraRenderContext cameraContext(*camera);
+			(RenderContext&)cameraContext = context;
 			cameraContext.targetDimensions = context.targetDimensions;
 			cameraContext.lightDirection = -mScene->getPrimaryLightDirection();
 			cameraContext.atmosphericDensity = mScene->calcAtmosphericDensity(camera->getPosition());

@@ -14,9 +14,18 @@
 namespace skybolt {
 namespace vis {
 
+//! Load policy defines how renderable objects are loaded prior to rendering
+enum class LoadTimingPolicy
+{
+	LoadAcrossMultipleFrames, //!< Load the scene in increments across multiple frames to avoid stutters
+	LoadBeforeRender //!< Ensure all loading has completed before rendering the next frame
+};
+
 struct RenderContext
 {
 	osg::Vec2i targetDimensions; //!< Size of the render target in pixels
+	
+	LoadTimingPolicy loadTimingPolicy = LoadTimingPolicy::LoadAcrossMultipleFrames;
 };
 
 struct CameraRenderContext : public RenderContext

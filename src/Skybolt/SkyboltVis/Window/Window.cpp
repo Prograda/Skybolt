@@ -66,12 +66,13 @@ Window::~Window()
 {
 }
 
-bool Window::render()
+bool Window::render(LoadTimingPolicy loadTimingPolicy)
 {
 	mScreenSizePixelsUniform->set(osg::Vec2f(getWidth(), getHeight()));
 
 	RenderContext context;
 	context.targetDimensions = osg::Vec2i(getWidth(), getHeight());
+	context.loadTimingPolicy = loadTimingPolicy;
 	mRenderOperationSequence->updatePreRender(context);
 
 	mViewer->frame();

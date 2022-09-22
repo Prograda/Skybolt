@@ -1,9 +1,7 @@
 import skybolt as sb
 
 window = sb.StandaloneWindow(sb.RectI(0,0,800,600))
-
 engine = sb.createEngineRootWithDefaults()
-
 camera = engine.entityFactory.createEntity("Camera")
 engine.world.addEntity(camera);
 
@@ -20,6 +18,6 @@ controller = camera.getFirstComponentOfType("CameraControllerComponent").cameraC
 controller.setTarget(earth)
 controller.selectController("Globe")
 
-sb.stepOnceAndRenderUntilDone(engine, window, 0.1)
+sb.render(engine, window)
 
 input("Press enter to exit")

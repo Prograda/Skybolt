@@ -38,7 +38,6 @@ void PlanetCameraController::update(float dt)
 		return;
 	}
 
-
 	auto position = getPosition(*mTarget);
 	auto orientation = getOrientation(*mTarget);
 	auto planet = mTarget->getFirstComponent<PlanetComponent>();
@@ -80,4 +79,10 @@ void PlanetCameraController::update(float dt)
 
 	// Derive camera position
 	mNodeComponent->setPosition(surfacePosition + mNodeComponent->getOrientation() * Vector3(-distFromSurface, 0, 0));
+}
+
+void PlanetCameraController::setTarget(Entity* target)
+{
+	CameraController::setTarget(target);
+	update(0);
 }
