@@ -100,6 +100,7 @@
 #include <osgDB/Registry>
 
 #include <algorithm>
+#include <chrono>
 #include <deque>
 #include <sstream>
 
@@ -541,7 +542,6 @@ MainWindow::~MainWindow()
 	mEngineRoot.reset();
 }
 
-double prevElapsedTime = 0;
 double minFrameDuration = 0.01;
 
 double latestSimTime = 0;
@@ -577,9 +577,8 @@ static QString addSeparator(const QString& str)
 
 void MainWindow::update()
 {
-	double elapsed = mUpdateTimer.elapsed();
-	float dt = (float)(elapsed - prevElapsedTime);
-	prevElapsedTime = elapsed;
+	double dt = double(mUpdateTimer.count<std::chrono::milliseconds>()) / 1000.0;
+	mUpdateTimer.start();
 
 	if (mInputPlatform) // TODO
 	{
@@ -659,8 +658,8 @@ void MainWindow::updateIfIntervalElapsed()
 {
 	QTimer::singleShot(0, this, SLOT(updateIfIntervalElapsed()));
 
-	double elapsed = mUpdateTimer.elapsed();
-	if (elapsed - prevElapsedTime < minFrameDuration)
+	double elapsed = double(mUpdateTimer.count<std::chrono::milliseconds>()) / 1000.0;
+	if (elapsed < minFrameDuration)
 	{
 		return;
 	}

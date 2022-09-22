@@ -1,9 +1,8 @@
 set(TARGET_NAME EntityController)
 add_source_group_tree(. SrcFiles)
 
-include_directories("./")
-include_directories("../")
 include_directories("../../")
+include_directories("../../../Skybolt")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
