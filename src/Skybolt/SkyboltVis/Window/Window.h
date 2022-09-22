@@ -19,7 +19,7 @@ namespace vis {
 class Window
 {
 public:
-	Window(const DisplaySettings& config);
+	Window(std::unique_ptr<osgViewer::Viewer> viewer, const DisplaySettings& config);
 	~Window();
 
 	//! @returns false if window has been closed

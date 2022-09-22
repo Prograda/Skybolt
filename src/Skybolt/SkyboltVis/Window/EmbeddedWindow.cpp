@@ -11,7 +11,7 @@
 using namespace skybolt::vis;
 
 EmbeddedWindow::EmbeddedWindow(const EmbeddedWindowConfig& config) :
-	Window(config.displaySettings)
+	Window(std::make_unique<osgViewer::Viewer>(), config.displaySettings)
 {
 	const auto& rect = config.rect;
     mWindow = mViewer->setUpViewerAsEmbeddedInWindow(rect.x, rect.y, rect.width, rect.height);

@@ -32,6 +32,7 @@
 #include <SkyboltVis/RenderOperation/DefaultRenderCameraViewport.h>
 #include <SkyboltVis/RenderOperation/RenderOperationSequence.h>
 #include <SkyboltVis/Window/CaptureScreenshot.h>
+#include <SkyboltVis/Window/OffscreenWindow.h>
 #include <SkyboltVis/Window/StandaloneWindow.h>
 
 #include <osg/Image>
@@ -334,6 +335,9 @@ PYBIND11_MODULE(skybolt, m) {
 
 	py::class_<vis::StandaloneWindow, vis::Window>(m, "StandaloneWindow")
 		.def(py::init<vis::RectI>());
+
+	py::class_<vis::OffscreenWindow, vis::Window>(m, "OffscreenWindow")
+		.def(py::init<int, int>()); // width, height
 
 	m.def("getGlobalEngineRoot", &getGlobalEngineRoot, "Get global EngineRoot", py::return_value_policy::reference);
 	m.def("setGlobalEngineRoot", &setGlobalEngineRoot, "Set global EngineRoot");

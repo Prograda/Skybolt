@@ -13,7 +13,7 @@
 #endif
 using namespace skybolt::vis;
 
-StandaloneWindowConfig createDefaultConfigWithRect(const RectI& rect)
+static StandaloneWindowConfig createDefaultConfigWithRect(const RectI& rect)
 {
 	StandaloneWindowConfig c;
 	c.rect = rect;
@@ -26,7 +26,7 @@ StandaloneWindow::StandaloneWindow(const RectI& rect) :
 }
 
 StandaloneWindow::StandaloneWindow(const StandaloneWindowConfig& config) :
-	Window(config.displaySettings)
+	Window(std::make_unique<osgViewer::Viewer>(), config.displaySettings)
 {
 	const auto& rect = config.rect;
     mViewer->setUpViewInWindow(rect.x, rect.y, rect.width, rect.height);

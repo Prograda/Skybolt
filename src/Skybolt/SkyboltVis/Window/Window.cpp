@@ -34,11 +34,12 @@ USE_GRAPHICSWINDOW()
 namespace skybolt {
 namespace vis {
 
-Window::Window(const DisplaySettings& settings) :
-	mViewer(new osgViewer::Viewer),
+Window::Window(std::unique_ptr<osgViewer::Viewer> viewer, const DisplaySettings& settings) :
+	mViewer(std::move(viewer)),
 	mRootGroup(new osg::Group),
 	mRenderOperationSequence(std::make_unique<RenderOperationSequence>())
 {
+	assert(mViewer);
 	mRootGroup->addChild(mRenderOperationSequence->getRootNode());
 
 	forwardOsgLogToBoost();
