@@ -18,6 +18,7 @@ class SkyboltConan(ConanFile):
         "enable_python": False,
         "enable_sprocket": False,
         "qt:shared": True, # Use shared Qt to avoid Qt's LGPL viral static linking
+        "qt:qtsvg":True, # Build the Qt SVG plugin to display Sprocket icons
         "qwt:shared": True,
         "shared": False,
         "shared_plugins": True,

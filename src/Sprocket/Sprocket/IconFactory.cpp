@@ -87,6 +87,10 @@ void IconFactory::registerIcon(const Icon& icon, const std::string& filename)
 
 		m_icons[icon] = qicon;
 	}
+	else
+	{
+		BOOST_LOG_TRIVIAL(error) << "Could not read SVG file: " << locatedFile;
+	}
 	file.close();
 }
 
