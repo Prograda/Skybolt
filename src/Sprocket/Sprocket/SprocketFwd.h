@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <SkyboltSim/SkyboltSimFwd.h>
-
 #include <functional>
 #include <memory>
 

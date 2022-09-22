@@ -6,18 +6,22 @@ class SkyboltConan(ConanFile):
     version = "1.4.0"
     settings = "os", "compiler", "arch", "build_type"
     options = {
-		"shared": [True, False],
 		"enable_fft_ocean": [True, False],
+                "enable_python": [True, False],
 		"enable_sprocket": [True, False],
+		"shared": [True, False],
 		"shared_plugins": [True, False], # Build plugins as shared libraries
 		"fPIC": [True, False]
 	}
     default_options = {
-        "shared": False,
         "enable_fft_ocean": True,
-		"enable_sprocket": False,
-		"shared_plugins": True,
-		"fPIC": True
+        "enable_python": False,
+        "enable_sprocket": False,
+        "qt:shared": True, # Use shared Qt to avoid Qt's LGPL viral static linking
+        "qwt:shared": True,
+        "shared": False,
+        "shared_plugins": True,
+        "fPIC": True
     }
     generators = ["cmake_paths", "cmake_find_package", "virtualrunenv"]
     exports = "Conan/*"
@@ -56,12 +60,15 @@ class SkyboltConan(ConanFile):
         if self.options.enable_fft_ocean:
             self.include_package("mufft", "1.0.0")
             self.include_package("xsimd", "7.4.10")
-			
+
+        if self.options.enable_python:
+            self.requires("pybind11/2.9.1@_/_")
+            
         if self.options.enable_sprocket:
             self.requires("expat/2.4.8@_/_") # Indirect dependency. Specified to resolve version clash between wayland (used by Qt) and fontconfig (used by OSG)
             self.requires("ois/1.5@_/_")
-            self.requires("pybind11/2.9.1@_/_")
             self.requires("qt/5.15.3@_/_")
+            self.requires("qwt/6.1.6@_/_")
             self.include_package("toolwindowmanager", "1.0.0")
 
     def build(self):
@@ -70,12 +77,18 @@ class SkyboltConan(ConanFile):
         cmake.definitions["Boost_STATIC_LIBS"] = str(not self.options["boost"].shared)
         cmake.definitions["OSG_STATIC_LIBS"] = str(not self.options["openscenegraph-mr"].shared)
         cmake.definitions["SKYBOLT_PLUGINS_STATIC_BUILD"] = str(not self.options.shared_plugins)
-        cmake.definitions["CMAKE_POSITION_INDEPENDENT_CODE"] = self.options.fPIC
+        if "fPIC" in self.options:
+            cmake.definitions["CMAKE_POSITION_INDEPENDENT_CODE"] = self.options.fPIC
 
-        if self.options.enable_fft_ocean == True:
+        if self.options.enable_fft_ocean:
             cmake.definitions["BUILD_FFT_OCEAN_PLUGIN"] = "true"
-        if self.options.enable_sprocket == True:
+
+        if self.options.enable_python:
             cmake.definitions["BUILD_PYTHON_BINDINGS"] = "true"
+            cmake.definitions["BUILD_PYTHON_COMPONENT_PLUGIN"] = "true"
+            
+        if self.options.enable_sprocket:
+            cmake.definitions["BUILD_SEQUENCE_EDITOR_PLUGIN"] = "true"
             cmake.definitions["BUILD_SPROCKET"] = "true"
 
         cmake.definitions["CMAKE_TOOLCHAIN_FILE"] = "conan_paths.cmake"

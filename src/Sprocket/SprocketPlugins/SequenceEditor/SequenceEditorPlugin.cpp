@@ -168,7 +168,7 @@ public:
 	{
 		for (const auto& item : mSequenceTreeItemRegistry->getItems())
 		{
-			auto& sequence = toSequenceController(*item);
+			const auto& sequence = toSequenceController(*item);
 
 			auto i = mRecordingControllers.find(sequence);
 			if (i == mRecordingControllers.end()) // playing

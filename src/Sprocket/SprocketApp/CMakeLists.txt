@@ -3,6 +3,7 @@ set(TARGET_NAME SprocketApp)
 file(GLOB SOURCE_FILES *.cpp *.h)
 
 include_directories("../")
+include_directories("../../Skybolt")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)

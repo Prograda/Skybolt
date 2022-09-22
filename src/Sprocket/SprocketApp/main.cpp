@@ -14,16 +14,7 @@
 #include <SkyboltSim/World.h>
 #include <SkyboltCommon/Stringify.h>
 
-#pragma push_macro("slots")
-#undef slots
-#include <pybind11/embed.h>
-#pragma pop_macro("slots")
-
 using namespace skybolt;
-
-namespace py = pybind11;
-
-
 
 static std::string appendConfigurationDir(const std::string& dir)
 {
@@ -32,13 +23,6 @@ static std::string appendConfigurationDir(const std::string& dir)
 #else
 	return dir;
 #endif
-}
-
-static std::string getLibDirectory()
-{
-	std::string dir = STRINGIFY(CMAKE_BINARY_DIR) "/lib";
-	dir = appendConfigurationDir(dir);
-	return dir;
 }
 
 static std::string getBinDirectory()
@@ -58,22 +42,9 @@ public:
 
 		setStyle(new DarkStyle);
 		mMainWindow.reset(new MainWindow(enginePluginFactories, editorPluginFactories));
-		mPyInterpreter.reset(new py::scoped_interpreter);
 
 		try
 		{
-			py::list sysPath = py::module::import("sys").attr("path").cast<py::list>();
-			sysPath.append(getLibDirectory());
-
-			auto scriptFolders = getPathsInAssetPackages(mMainWindow->getEngineRoot()->getAssetPackagePaths(), "Scripts");
-			for (const file::Path& scriptFolder : scriptFolders)
-			{
-				sysPath.append(scriptFolder);
-			}
-
-			py::module flow = py::module::import("skybolt");
-			flow.attr("setGlobalEngineRoot")(mMainWindow->getEngineRoot());
-			
 			if (argc >= 2)
 			{
 				QString filename(argv[1]);
@@ -84,15 +55,9 @@ public:
 				mMainWindow->newScenario();
 			}
 		}
-		catch (const pybind11::error_already_set& e)
-		{
-			// Convert python exception to standard one because it will become invalid after the interpreter is destroyed.
-			throw std::runtime_error(e.what());
-		}
 		catch (...)
 		{
 			mMainWindow.reset();
-			mPyInterpreter.reset();
 			throw;
 		}
 
@@ -102,11 +67,9 @@ public:
 	~Application()
 	{
 		mMainWindow.reset();
-		mPyInterpreter.reset();
 	}
 
 private:
-	std::unique_ptr<py::scoped_interpreter> mPyInterpreter;
 	std::unique_ptr<MainWindow> mMainWindow;
 };
 

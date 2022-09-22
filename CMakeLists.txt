@@ -110,6 +110,13 @@ install(
 	PATTERN "*.h*"
 )
 
+install(
+	DIRECTORY ${CMAKE_SOURCE_DIR}/src/Sprocket
+	DESTINATION include
+	FILES_MATCHING
+	PATTERN "*.h*"
+)
+
 # Install cmake config files
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(

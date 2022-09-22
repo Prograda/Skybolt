@@ -1,7 +1,7 @@
 # Skybolt Engine
 Skybolt is a real-time planetary environment rendering engine, designed for flight simulators, aerospace R&D, and geospatial applications. Skybolt is written in C++, based on OpenSceneGraph, and supports CIGI for communicating with host applications. Skybolt also features a Python API for easy integration with science and engineering research tools.
 
-The Skybolt repository includes Sprocket, a GUI application for creating scenarios and visualizing data. Sprocket supports python scripting and node-based graphical programming.
+The Skybolt repository includes Sprocket, a GUI application providing a sandbox for interactive scenario execution and testing.
 
 ![alt text](https://piraxus.com/wp-content/uploads/2020/06/Mountain1-edited-300x162.jpg "Mointain") ![alt text](https://piraxus.com/wp-content/uploads/2020/06/Seattle2-edit-300x162.jpg "Airport")
 ![alt text](https://piraxus.com/wp-content/uploads/2020/06/Shuttle3-flipped-300x170.jpg "Shuttle in space") ![alt text](https://piraxus.com/wp-content/uploads/2020/11/ShipHeloShot1-300x169.jpg "Ship on ocean")
@@ -19,10 +19,10 @@ The Skybolt repository includes Sprocket, a GUI application for creating scenari
 * [JSBSim](https://github.com/JSBSim-Team/jsbsim) flight dynamics model integration
 * [Bullet](https://github.com/bulletphysics/bullet3) physics integration
 * Python API
-* Integrates with Sprocket R&D GUI platform, with node-based graphical programming system
+* Sprocket GUI application, a sandbox for interactive scenario execution and testing
 
 ## Contact
-Skybolt and Sprocket created and maintained by Matthew Reid.
+Skybolt created and maintained by Matthew Reid.
 To submit a bug report, please [raise an issue on the GitHub repository](https://github.com/Piraxus/Skybolt/issues).
 For other queries, please use the [contact form](https://piraxus.com/contact) on the [Piraxus website](https://piraxus.com).
 
@@ -134,28 +134,12 @@ Requires:
 ### Sprocket
 GUI application for creating, editing and running simulation scenarios, and performing analysis.
 Requires:
-* Skybolt Python Bindings
 * [OpenInputSystem](https://github.com/wgois/OIS)
 * [Qt](https://www.qt.io)
 * [ToolWindowManager](https://github.com/Riateche/toolwindowmanager)
 
-#### NodeGraph Plugin
-Sprocket plugin providing a node-based graphical programming interface.
-Requires:
-* [placeholder/NodeEditor](https://github.com/paceholder/nodeeditor)
-* [QCodeEditor](https://github.com/cbtek/EasyCodeCreator/tree/master/common/contrib/QCodeEditor)
-
-#### PythonConsole Plugin
-Sprocket plugin providing an interactive python console in the Sprocket GUI.
-* [QCodeEditor](https://github.com/cbtek/EasyCodeCreator/tree/master/common/contrib/QCodeEditor)
-
-#### Plot Plugin
-Sprocket plugin providing a GUI for plotting graphs.
-Requires:
-* [Qwt](https://github.com/opencor/qwt)
-
-#### SequenceEditor Plugin
-Sprocket plugin providing a GUI for editing animated sequences.
+#### SequenceEditor Plugin (Experimental)
+Experimental plugin providing a GUI for editing animated sequences.
 Requires:
 * [Qwt](https://github.com/opencor/qwt)
 

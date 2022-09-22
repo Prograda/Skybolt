@@ -11,14 +11,14 @@
 #include <QBoxLayout>
 #include <QTimer>
 
-#include <qwt/qwt_legend.h>
-#include <qwt/qwt_plot.h>
-#include <qwt/qwt_plot_canvas.h>
-#include <qwt/qwt_plot_curve.h>
-#include <qwt/qwt_plot_marker.h>
-#include <qwt/qwt_plot_zoomer.h>
-#include <qwt/qwt_series_data.h>
-#include <qwt/qwt_symbol.h>
+#include <qwt_legend.h>
+#include <qwt_plot.h>
+#include <qwt_plot_canvas.h>
+#include <qwt_plot_curve.h>
+#include <qwt_plot_marker.h>
+#include <qwt_plot_zoomer.h>
+#include <qwt_series_data.h>
+#include <qwt_symbol.h>
 
 using namespace skybolt;
 
@@ -104,7 +104,6 @@ public:
 	{
 		d_samples += point;
 		dirtyBounds = true;
-
 	}
 
 	inline void remove(int i)
