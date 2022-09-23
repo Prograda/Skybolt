@@ -42,7 +42,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(LIBRARIES
 	SkyboltCommon
 	SkyboltSim
-	MapAttributesConverter
 	${Boost_LIBRARIES}
 	${OSG_LIBRARIES}
 	${OPENTHREADS_LIBRARIES}

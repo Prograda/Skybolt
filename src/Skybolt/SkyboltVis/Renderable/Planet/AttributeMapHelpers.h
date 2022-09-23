@@ -6,10 +6,15 @@
 
 #pragma once
 
-#include <MapAttributesConverter/MapAttributesConverter.h>
+#include <osg/Image>
+#include <utility>
+#include <vector>
 
 namespace skybolt {
 namespace vis {
+
+using AttributeColor = std::pair<int, osg::Vec4f>;
+using AttributeColors = std::vector<AttributeColor>;
 
 const AttributeColors& getNlcdAttributeColors();
 
@@ -18,6 +23,9 @@ const AttributeColors& getNlcdAttributeColors();
 //! mapped to an ID representing grass, a brown pixel mapped to an ID representing
 //@ dirt etc.
 osg::ref_ptr<osg::Image> convertToAttributeMap(const osg::Image& albedo);
+
+//! Convert an image of different colored attribute areas to an image of attribute interger IDs
+osg::ref_ptr<osg::Image> convertAttributeMap(const osg::Image& image, const AttributeColors& srcAttributeColors);
 
 } // namespace vis
 } // namespace skybolt
