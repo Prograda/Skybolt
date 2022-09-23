@@ -9,7 +9,7 @@ jobs:
         include:
           - os: ubuntu-20.04
             python-arch: "x64"
-            python-version: "3.6.x" 
+            python-version: "3.7.x" 
             install-headerfiles: true
             prepare-python: true
             gcc-version: "9"
