@@ -6,14 +6,16 @@ class SkyboltConan(ConanFile):
     version = "1.4.0"
     settings = "os", "compiler", "arch", "build_type"
     options = {
-		"enable_fft_ocean": [True, False],
-                "enable_python": [True, False],
-		"enable_sprocket": [True, False],
-		"shared": [True, False],
-		"shared_plugins": [True, False], # Build plugins as shared libraries
-		"fPIC": [True, False]
-	}
+        "enable_bullet": [True, False],
+        "enable_fft_ocean": [True, False],
+        "enable_python": [True, False],
+        "enable_sprocket": [True, False],
+        "shared": [True, False],
+        "shared_plugins": [True, False], # Build plugins as shared libraries
+        "fPIC": [True, False]
+    }
     default_options = {
+        "enable_bullet": False,
         "enable_fft_ocean": True,
         "enable_python": False,
         "enable_sprocket": False,
@@ -50,6 +52,7 @@ class SkyboltConan(ConanFile):
 
     def configure(self):
         self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
+        self.options["bullet3"].double_precision = True
         if self.settings.compiler == 'Visual Studio':
             del self.options.fPIC
 
@@ -57,7 +60,10 @@ class SkyboltConan(ConanFile):
         self.include_package("cxxtimer", "1.0.0")
         self.include_package("px_sched", "1.0.0")
         self.include_package("openscenegraph-mr", "3.7.0", "all")
-		
+
+        if self.options.enable_bullet:
+            self.requires("bullet3/3.22a@_/_")
+
         if self.options.enable_fft_ocean:
             self.include_package("mufft", "1.0.0")
             self.include_package("xsimd", "7.4.10")
@@ -80,6 +86,9 @@ class SkyboltConan(ConanFile):
         cmake.definitions["SKYBOLT_PLUGINS_STATIC_BUILD"] = str(not self.options.shared_plugins)
         if "fPIC" in self.options:
             cmake.definitions["CMAKE_POSITION_INDEPENDENT_CODE"] = self.options.fPIC
+
+        if self.options.enable_bullet:
+            cmake.definitions["BUILD_BULLET_PLUGIN"] = "true"
 
         if self.options.enable_fft_ocean:
             cmake.definitions["BUILD_FFT_OCEAN_PLUGIN"] = "true"
