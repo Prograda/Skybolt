@@ -186,15 +186,17 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 		if (attributeLayer)
 		{
 			std::optional<QuadTreeTileKey> attributeKey = attributeLayer->getHighestAvailableLevel(key);
-
-			images->attributeMapImage = getOrCreateImage(*attributeKey, size_t(CacheIndex::Attribute), [this, cancelSupplier](const QuadTreeTileKey& key) {
-				osg::ref_ptr<osg::Image> image = attributeLayer->createImage(key, cancelSupplier);
-				if (image)
-				{
-					image = convertAttributeMap(*image, getNlcdAttributeColors());
-				}
-				return image;
-			});
+			if (attributeKey)
+			{
+				images->attributeMapImage = getOrCreateImage(*attributeKey, size_t(CacheIndex::Attribute), [this, cancelSupplier](const QuadTreeTileKey& key) {
+					osg::ref_ptr<osg::Image> image = attributeLayer->createImage(key, cancelSupplier);
+					if (image)
+					{
+						image = convertAttributeMap(*image, getNlcdAttributeColors());
+					}
+					return image;
+				});
+			}
 			if (!images->attributeMapImage->image)
 			{
 				images->attributeMapImage = std::nullopt;

@@ -6,7 +6,9 @@
 
 #include "JsonHelpers.h"
 #include <SkyboltCommon/Math/MathUtility.h>
+
 #include <QJsonArray>
+#include <stdexcept>
 
 using namespace skybolt;
 
