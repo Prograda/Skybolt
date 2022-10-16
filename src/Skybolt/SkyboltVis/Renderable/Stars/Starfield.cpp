@@ -61,7 +61,7 @@ Starfield::Starfield(const StarfieldConfig& config)
 	for (const BrightStarCatelog::Star& star : BrightStarCatelog::stars)
 	{
 		float cosElevation = cos(star.elevation);
-		*ptr = osg::Vec4f(sin(star.azimuth*24) * cosElevation, cos(star.azimuth * 24) * cosElevation, sin(star.elevation), star.magnitude);
+		*ptr = osg::Vec4f(sin(star.azimuth) * cosElevation, cos(star.azimuth) * cosElevation, sin(star.elevation), star.magnitude);
 		++ptr;
 	}
 
