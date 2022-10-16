@@ -3,7 +3,7 @@ import os
 
 class SkyboltConan(ConanFile):
     name = "skybolt"
-    version = "1.4.0"
+    version = "1.5.0"
     settings = "os", "compiler", "arch", "build_type"
     options = {
         "enable_bullet": [True, False],
