@@ -328,6 +328,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 
 	ui->setupUi(this);
 	ui->actionNewEntityTemplate->setEnabled(false); // Entity Template editing is not implemented
+	mViewMenuToolWindowSeparator = ui->menuView->addSeparator();
 	mRecentFilesMenuPopulator.reset(new RecentFilesMenuPopulator(ui->menuRecentFiles, &mSettings, fileOpener));
 
 	mEngineSettings = readOrCreateEngineSettingsFile(this, mSettings);
@@ -512,7 +513,6 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 		}
 	}
 
-	ui->menuView->addSeparator();
 	addViewportMenuActions(*ui->menuView);
 
 	connect(mOsgWidget, SIGNAL(mouseDown()), this, SLOT(enableViewportInput()));
@@ -1244,7 +1244,9 @@ void MainWindow::addToolWindow(const QString& windowName, QWidget* window)
 	window->setWindowTitle(windowName);
 	window->setObjectName(windowName);
 
-	QAction* action = ui->menuView->addAction(windowName);
+	QAction* action = new QAction(windowName, ui->menuView);
+	ui->menuView->insertAction(mViewMenuToolWindowSeparator, action);
+	
 	action->setData((int)mToolActions.size());
 	action->setCheckable(true);
 	action->setChecked(true);
