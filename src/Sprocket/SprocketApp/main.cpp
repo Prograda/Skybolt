@@ -11,26 +11,11 @@
 #include <Sprocket/OsgWidget.h>
 #include <Sprocket/ThirdParty/DarkStyle.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
+#include <SkyboltEngine/GetExecutablePath.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltCommon/Stringify.h>
 
 using namespace skybolt;
-
-static std::string appendConfigurationDir(const std::string& dir)
-{
-#ifdef CMAKE_INTDIR
-	return dir + "/" + CMAKE_INTDIR;
-#else
-	return dir;
-#endif
-}
-
-static std::string getBinDirectory()
-{
-	std::string dir = STRINGIFY(CMAKE_BINARY_DIR) "/bin";
-	dir = appendConfigurationDir(dir);
-	return dir;
-}
 
 class Application : public UiApplication
 {
@@ -94,7 +79,7 @@ int main(int argc, char *argv[])
 			QSurfaceFormat::setDefaultFormat(format);
 		}
 
-		std::string pluginsDir = getBinDirectory() + "/plugins";
+		std::string pluginsDir = QCoreApplication::applicationDirPath().toStdString() + "/plugins";
 		std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(pluginsDir);
 		std::vector<EditorPluginFactory> editorPluginFactories = loadPluginFactories<EditorPlugin, EditorPluginConfig>(pluginsDir);
 		Application application(enginePluginFactories, editorPluginFactories, argc, argv);
