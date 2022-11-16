@@ -73,6 +73,7 @@ class SkyboltConan(ConanFile):
             
         if self.options.enable_sprocket:
             self.requires("expat/2.4.8@_/_") # Indirect dependency. Specified to resolve version clash between wayland (used by Qt) and fontconfig (used by OSG)
+            self.requires("openssl/1.1.1s@_/_") # Indirect dependency. Specified to resolve version clash between qt/5.15.3 and libcurl/7.83.1
             self.requires("ois/1.5@_/_")
             self.requires("qt/5.15.3@_/_")
             self.requires("qwt/6.1.6@_/_")
