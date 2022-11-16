@@ -578,6 +578,7 @@ static QString addSeparator(const QString& str)
 void MainWindow::update()
 {
 	double dt = double(mUpdateTimer.count<std::chrono::milliseconds>()) / 1000.0;
+	mUpdateTimer.reset();
 	mUpdateTimer.start();
 
 	if (mInputPlatform) // TODO
