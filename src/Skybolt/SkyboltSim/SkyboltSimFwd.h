@@ -16,6 +16,7 @@ struct AttachmentPoint;
 class CameraController;
 class CameraControllerSelector;
 class CameraComponent;
+struct CameraState;
 class Component;
 class DynamicBodyComponent;
 class Entity;

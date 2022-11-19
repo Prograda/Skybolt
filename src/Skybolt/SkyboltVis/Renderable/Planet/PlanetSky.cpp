@@ -52,8 +52,7 @@ static osg::StateSet* createStateSet(const osg::ref_ptr<osg::Program>& program)
 PlanetSky::PlanetSky(const PlanetSkyConfig& config) :
 	radius(config.radius)
 {
-	osg::Geometry* geometry = createSphere(config.radius, 256, 128);
-	vis::configureDrawable(*geometry);
+	osg::Geometry* geometry = createSphere(config.radius, 256, 128, SphereFacingMode::InsideFacing);
 
 	mGeode = new osg::Geode();
 	mGeode->setCullingActive(false);

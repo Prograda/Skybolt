@@ -44,6 +44,7 @@ protected:
 	CameraPtr mCamera;
 	osg::ref_ptr<osg::Node> mScene;
 	osg::Uniform* mRcpWindowSizeInPixelsUniform;
+	osg::Uniform* mRcpViewAspectRatio;
 };
 
 //! Render target that renders into the currently attached frame buffer,

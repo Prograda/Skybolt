@@ -8,8 +8,8 @@
 #include <Sprocket/EditorPlugin.h>
 #include <Sprocket/MainWindow.h>
 #include <Sprocket/SprocketModel.h>
-#include <Sprocket/OsgWidget.h>
 #include <Sprocket/ThirdParty/DarkStyle.h>
+#include <Sprocket/Viewport/OsgWidget.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
 #include <SkyboltEngine/GetExecutablePath.h>
 #include <SkyboltSim/World.h>

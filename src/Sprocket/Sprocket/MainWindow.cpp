@@ -12,7 +12,6 @@
 #include "IconFactory.h"
 #include "InputPlatformOis.h"
 #include "QDialogHelpers.h"
-#include "OsgWidget.h"
 #include "RecentFilesMenuPopulator.h"
 #include "SprocketModel.h"
 #include "SettingsEditor.h"
@@ -31,6 +30,8 @@
 #include "Entity/EntityPropertiesModel.h"
 #include "Scenario/ScenarioPropertiesModel.h"
 #include "Scenario/ScenarioSerialization.h"
+#include "Viewport/VisEntityIcons.h"
+#include "Viewport/OsgWidget.h"
 
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EngineSettings.h>
@@ -317,6 +318,27 @@ static nlohmann::json readOrCreateEngineSettingsFile(QWidget* parent, QSettings&
 	return result;
 }
 
+static osg::ref_ptr<osg::Texture> createEntitySelectionIcon(int width = 64)
+{
+	int height = width;
+	osg::ref_ptr<osg::Image> image = new osg::Image();
+	image->allocateImage(width, height, 1, GL_RGBA, GL_UNSIGNED_BYTE);
+	std::uint8_t* p = image->data();
+	for (int y = 0; y < height; ++y)
+	{
+		for (int x = 0; x < width; ++x)
+		{
+			bool edge = (x == 0 || y == 0 || x == (width - 1) || y == (height - 1));
+			*p++ = 255;
+			*p++ = 255;
+			*p++ = 255;
+			*p++ = edge ? 255 : 0;
+		}
+	}
+
+	return new osg::Texture2D(image);
+}
+
 MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, const std::vector<EditorPluginFactory>& editorPluginFactories, QWidget *parent, Qt::WindowFlags flags) :
 	QMainWindow(parent, flags),
 	ui(new Ui::MainWindow),
@@ -377,10 +399,16 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	
 	World* world = mEngineRoot->simWorld.get();
 
+	mSceneObjectPicker = createSceneObjectPicker(world);
+
 	Scenario& scenario = mEngineRoot->scenario;
 
 	auto group = mEngineRoot->scene->getBucketGroup(vis::Scene::Bucket::Default);
-	mVisNameLabels.reset(new VisNameLabels(world, group, mEngineRoot->programs));
+
+	mVisSelectedEntityIcon = new VisEntityIcons(mEngineRoot->programs, createEntitySelectionIcon());
+	group->addChild(mVisSelectedEntityIcon);
+
+	mVisNameLabels = std::make_unique<VisNameLabels>(world, group, mEngineRoot->programs);
 
 	osg::ref_ptr<osg::Program> unlitColoredProgram = mEngineRoot->programs.getRequiredProgram("unlitColored");
 
@@ -515,7 +543,9 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 
 	addViewportMenuActions(*ui->menuView);
 
-	connect(mOsgWidget, SIGNAL(mouseDown()), this, SLOT(enableViewportInput()));
+	connect(mOsgWidget, &OsgWidget::mouseDown, this, [this](Qt::MouseButton button, const QPointF& position) {
+		onViewportMouseDown(button, position);
+	});
 
 	clearProject();
 
@@ -620,6 +650,7 @@ void MainWindow::update()
 
 	if (mCurrentSimCamera)
 	{
+		mVisSelectedEntityIcon->syncVis(coordinateConverter);
 		mVisNameLabels->syncVis(coordinateConverter);
 		mVisOrbits->syncVis(coordinateConverter);
 		mForcesVisBinding->syncVis(coordinateConverter);
@@ -1212,32 +1243,69 @@ void MainWindow::setLiveShaderEditingEnabled(bool enabled)
 	}
 }
 
-void MainWindow::explorerSelectionChanged(const TreeItem& item)
+void MainWindow::setPropertiesModel(PropertiesModelPtr properties)
 {
 	mPropertiesEditor->setModel(nullptr);
-	mPropertiesModel.reset();
-
-	mSelectedEntity = nullptr;
-
-	if (auto entityItem = dynamic_cast<const EntityTreeItem*>(&item))
-	{
-		mSelectedEntity = entityItem->data;
-		mPropertiesModel.reset(new EntityPropertiesModel(mSelectedEntity));
-	}
-	else if (auto scenarioItem = dynamic_cast<const ScenarioTreeItem*>(&item))
-	{
-		mPropertiesModel.reset(new ScenarioPropertiesModel(&mSprocketModel->engineRoot->scenario));
-	}
-
-	FOREACH_CALL(mPlugins, explorerSelectionChanged, item);
-
+	mPropertiesModel = std::move(properties);
 	mPropertiesEditor->setModel(mPropertiesModel);
 }
 
-void MainWindow::enableViewportInput()
+void MainWindow::setSelectedEntity(sim::Entity* entity)
 {
-	if (mViewportInput)
-		mViewportInput->setEnabled(true);
+	mSelectedEntity = entity;
+	std::set<sim::Entity*> selection;
+	if (entity)
+	{
+		selection.insert(entity);
+	}
+	mVisSelectedEntityIcon->setEntities(selection);
+}
+
+void MainWindow::explorerSelectionChanged(const TreeItem& item)
+{
+	setSelectedEntity(nullptr);
+
+	if (auto entityItem = dynamic_cast<const EntityTreeItem*>(&item))
+	{
+		setSelectedEntity(entityItem->data);
+		setPropertiesModel(std::make_shared<EntityPropertiesModel>(mSelectedEntity));
+	}
+	else if (auto scenarioItem = dynamic_cast<const ScenarioTreeItem*>(&item))
+	{
+		setPropertiesModel(std::make_shared<ScenarioPropertiesModel>(&mSprocketModel->engineRoot->scenario));
+	}
+
+	FOREACH_CALL(mPlugins, explorerSelectionChanged, item);
+}
+
+void MainWindow::onViewportMouseDown(Qt::MouseButton button, const QPointF& position)
+{
+	if (button == Qt::MouseButton::LeftButton)
+	{
+		if (mViewportInput)
+		{
+			mViewportInput->setEnabled(true);
+		}
+	}
+	else if (button == Qt::MouseButton::MiddleButton)
+	{
+		skybolt::sim::Vector3 origin = *getPosition(*mCurrentSimCamera);
+		skybolt::sim::Quaternion orientation = *getOrientation(*mCurrentSimCamera);
+		skybolt::sim::CameraState camera = mCurrentSimCamera->getFirstComponentRequired<sim::CameraComponent>()->getState();
+		double aspectRatio = double(mOsgWidget->width()) / double(mOsgWidget->height());
+		glm::dmat4 transform = makeViewProjTransform(origin, orientation, camera, aspectRatio);
+
+		sim::Entity* selectedEntity = nullptr;
+		if (std::optional<PickedSceneObject> object = mSceneObjectPicker(transform, glm::vec2(position.x(), position.y()), 0.04); object)
+		{
+			selectedEntity = object->entity.get();
+		}
+		if (selectedEntity != mSelectedEntity)
+		{
+			setSelectedEntity(selectedEntity);
+			setPropertiesModel(selectedEntity ? std::make_shared<EntityPropertiesModel>(selectedEntity) : nullptr);
+		}
+	}
 }
 
 void MainWindow::addToolWindow(const QString& windowName, QWidget* window)

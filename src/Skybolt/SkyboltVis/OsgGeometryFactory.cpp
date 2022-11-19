@@ -76,7 +76,7 @@ void createPlaneBuffers(osg::Vec3Array& posBuffer, osg::UIntArray& indexBuffer, 
 	createPlaneIndicies(indexBuffer, segmentCountX, segmentCountY, type);
 }
 
-osg::Geometry* createSphere(float radius, unsigned int rings, unsigned int sectors)
+osg::Geometry* createSphere(float radius, unsigned int rings, unsigned int sectors, SphereFacingMode facingMode)
 {
 	osg::Geometry* sphereGeometry = new osg::Geometry;
 
@@ -107,23 +107,26 @@ osg::Geometry* createSphere(float radius, unsigned int rings, unsigned int secto
 	sphereGeometry->setVertexArray(sphereVertices);
 	sphereGeometry->setTexCoordArray(0, sphereTexCoords);
 
+	const int facingIndex0 = int(facingMode == SphereFacingMode::OutsideFacing);
+	const int facingIndex1 = int(facingMode == SphereFacingMode::InsideFacing);
+
 	// Generate quads for each face.  
 	osg::UIntArray* indexBuffer = new osg::UIntArray();
 	for (r = 0; r < rings - 1; r++)
 	{
 		for (s = 0; s < sectors - 1; s++)
 		{
-			// Corners of quads should be in CCW order.
 			indexBuffer->push_back((r + 0) * sectors + (s + 0));
-			indexBuffer->push_back((r + 0) * sectors + (s + 1));
-			indexBuffer->push_back((r + 1) * sectors + (s + 1));
+			indexBuffer->push_back((r + facingIndex0) * sectors + (s + 1));
+			indexBuffer->push_back((r + facingIndex1) * sectors + (s + 1));
 
 			indexBuffer->push_back((r + 0) * sectors + (s + 0));
-			indexBuffer->push_back((r + 1) * sectors + (s + 1));
-			indexBuffer->push_back((r + 1) * sectors + (s + 0));
+			indexBuffer->push_back((r + 1) * sectors + (s + facingIndex1));
+			indexBuffer->push_back((r + 1) * sectors + (s + facingIndex0));
 		}
 	}
 	sphereGeometry->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
+	configureDrawable(*sphereGeometry);
 	return sphereGeometry;
 }
 

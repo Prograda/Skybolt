@@ -8,6 +8,7 @@
 
 #include "SprocketFwd.h"
 #include "WorldTreeWidget.h"
+#include "Viewport/SceneObjectPicker.h"
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Plugin/PluginHelpers.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
@@ -29,6 +30,7 @@ class TreeItem;
 class WorldTreeWidget;
 
 namespace Ui { class MainWindow; }
+namespace skybolt { class VisEntityIcons; }
 
 class Application;
 
@@ -72,7 +74,7 @@ private slots:
 	
 	void explorerSelectionChanged(const TreeItem& item);
 
-	void enableViewportInput();
+	void onViewportMouseDown(Qt::MouseButton button, const QPointF& position);
 
 private:
 	void onEvent(const skybolt::Event& event) override;
@@ -95,6 +97,9 @@ private:
 	void addViewportMenuActions(QMenu& menu);
 
 	void setCameraTarget(skybolt::sim::Entity* target);
+
+	void setSelectedEntity(skybolt::sim::Entity* entity);
+	void setPropertiesModel(PropertiesModelPtr properties);
 
 private:
 	std::unique_ptr<skybolt::EngineRoot> mEngineRoot;
@@ -123,6 +128,9 @@ private:
 
 	QString mProjectFilename;
 
+	SceneObjectPicker mSceneObjectPicker;
+
+	osg::ref_ptr<skybolt::VisEntityIcons> mVisSelectedEntityIcon;
 	std::unique_ptr<skybolt::VisNameLabels> mVisNameLabels;
 	std::unique_ptr<skybolt::VisOrbits> mVisOrbits;
 	std::unique_ptr<skybolt::ForcesVisBinding> mForcesVisBinding;

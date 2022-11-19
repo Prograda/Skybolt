@@ -8,6 +8,7 @@
 
 #include "OsgBox2.h"
 #include <osg/Array>
+#include <osg/FrontFace>
 #include <osg/Geometry>
 
 namespace skybolt {
@@ -27,7 +28,13 @@ enum QuadUpDirection
 
 void createPlaneBuffers(osg::Vec3Array& posBuffer, osg::UIntArray& indexBuffer, const osg::Vec2f& minBound, const osg::Vec2f& size, int segmentCountX, int segmentCountY, PrimitiveType type);
 
-osg::Geometry* createSphere(float radius, unsigned int rings, unsigned int sectors);
+enum class SphereFacingMode
+{
+	OutsideFacing,
+	InsideFacing
+};
+
+osg::Geometry* createSphere(float radius, unsigned int rings, unsigned int sectors, SphereFacingMode facingMode);
 
 osg::Geometry* createQuad(const BoundingBox2f& box, QuadUpDirection upDir);
 

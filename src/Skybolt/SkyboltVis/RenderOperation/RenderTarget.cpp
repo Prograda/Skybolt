@@ -22,6 +22,14 @@ RenderTarget::RenderTarget(const osg::ref_ptr<osg::Camera>& osgCamera) :
 	assert(mOsgCamera);
 	mOsgCamera->setViewport(mViewport);
 	addChild(mOsgCamera);
+
+	osg::StateSet* ss = mOsgCamera->getOrCreateStateSet();
+
+	mRcpWindowSizeInPixelsUniform = new osg::Uniform("rcpWindowSizeInPixels", osg::Vec2f(1.0f, 1.0f));
+	ss->addUniform(mRcpWindowSizeInPixelsUniform);
+
+	mRcpViewAspectRatio = new osg::Uniform("rcpViewAspectRatio", 1.0f);
+	ss->addUniform(mRcpViewAspectRatio);
 }
 
 void RenderTarget::setRelativeRect(const RectF& rect)
@@ -58,8 +66,8 @@ void RenderTarget::updatePreRender(const RenderContext& context)
 		mRect.height * context.targetDimensions.y());
 
 	osg::StateSet* ss = mOsgCamera->getOrCreateStateSet();
-	mRcpWindowSizeInPixelsUniform = new osg::Uniform("rcpWindowSizeInPixels", osg::Vec2f(1.0f / rect.width, 1.0f / rect.height));
-	ss->addUniform(mRcpWindowSizeInPixelsUniform);
+	mRcpWindowSizeInPixelsUniform->set(osg::Vec2f(1.0f / rect.width, 1.0f / rect.height));
+	mRcpViewAspectRatio->set(float(rect.height) / float(rect.width));
 
 	mViewport->setViewport(rect.x, rect.y, rect.width, rect.height);
 
