@@ -6,13 +6,22 @@
 
 #version 330 core
 
+#pragma import_defines ( USE_WORLD_SPACE_POSITION ) // Position quat at screen-projected world-space position
+
 in vec4 osg_Vertex;
 in vec4 osg_MultiTexCoord0;
 
 out vec3 texCoord;
 
+uniform mat4 osg_ModelViewProjectionMatrix;
+
 void main()
 {
+#ifdef USE_WORLD_SPACE_POSITION
+	gl_Position = osg_ModelViewProjectionMatrix * vec4(0,0,0,1);
+	gl_Position.xy += osg_Vertex.xy * gl_Position.w;
+#else
 	gl_Position = osg_Vertex * vec4(2) - vec4(1);
+#endif
 	texCoord = osg_MultiTexCoord0.xyz;
 }
