@@ -346,4 +346,5 @@ PYBIND11_MODULE(skybolt, m) {
 	m.def("captureScreenshot", [](vis::Window& window, const std::string& filename) { return vis::captureScreenshot(window, filename); });
 	m.def("moveDistanceAndBearing", &moveDistanceAndBearing);
 	m.def("transformToScreenSpace", &transformToScreenSpace);
+	m.def("findObjectByName", &findObjectByName);
 }
