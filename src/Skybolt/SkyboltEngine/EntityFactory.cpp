@@ -591,6 +591,7 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 	componentFactoryContext.julianDateProvider = mContext.julianDateProvider;
 	componentFactoryContext.scheduler = mContext.scheduler;
 	componentFactoryContext.simWorld = mContext.simWorld;
+	componentFactoryContext.entityFactory = this;
 	componentFactoryContext.stats = mContext.stats;
 
 	const nlohmann::json& components = json.at("components");

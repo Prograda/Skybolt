@@ -93,6 +93,7 @@
 #include <QJsonDocument>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QSortFilterProxyModel>
 #include <QTableView>
 #include <QTimer>
 #include <QToolBar>
@@ -723,10 +724,13 @@ public:
 		layout()->addWidget(mCameraModeCombo);
 
 		mTargetListModel = new EntityListModel(world, isNamedEntityWithPosition);
+		auto proxyModel = new QSortFilterProxyModel(this);
+		proxyModel->setSourceModel(mTargetListModel);
+		
 
 		mCameraTargetCombo = new QComboBox();
 		mCameraTargetCombo->setToolTip("Camera Target");
-		mCameraTargetCombo->setModel(mTargetListModel);
+		mCameraTargetCombo->setModel(proxyModel);
 		mCameraTargetCombo->setEnabled(false);
 		layout()->addWidget(mCameraTargetCombo);
 	}

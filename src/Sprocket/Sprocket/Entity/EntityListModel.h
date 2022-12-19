@@ -14,11 +14,9 @@
 
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/World.h>
-#include <QAbstractListModel>
+#include <QStandardItemModel>
 
-// TODO: simplify this. Should be using StandardItemListModel and a sort filter proxy model.
-// Fix bug where current selection is lost when list changes.
-class EntityListModel : public QAbstractListModel, public skybolt::sim::WorldListener, public skybolt::sim::EntityListener
+class EntityListModel : public QStandardItemModel, public skybolt::sim::WorldListener
 {
 public:
 	typedef std::function<bool(const skybolt::sim::Entity&)> EntityPredicate;
@@ -28,31 +26,16 @@ public:
 
 	void setEntityFilter(const EntityPredicate& predicate);
 
-	int rowCount(const QModelIndex& /* parent */) const;
-
-	QVariant data(const QModelIndex &index, int role) const;
-
 private:
 	// WorldListener interface
 	void entityAdded(const skybolt::sim::EntityPtr& entity) override;
-
 	void entityAboutToBeRemoved(const skybolt::sim::EntityPtr& entity) override;
 
 private:
-	// EntityListener interface
-	void onComponentAdded(skybolt::sim::Entity* entity, skybolt::sim::Component* component) override;
-
-	void onComponentRemove(skybolt::sim::Entity* entity, skybolt::sim::Component* component) override;
-
-	void updateName(skybolt::sim::Entity* entity);
-
-	void updateModel();
-
-	void updateNamesMap();
+	void populateList();
 
 private:
 	skybolt::sim::World* mWorld;
 	EntityPredicate mPredicate;
-	std::map<skybolt::sim::Entity*, std::string> mNamesMap;
-	std::vector<std::string> mNames;
+	std::map<skybolt::sim::Entity*, QStandardItem*> mItems;
 };

@@ -17,6 +17,7 @@ struct ComponentFactoryContext
 {
 	px_sched::Scheduler* scheduler;
 	sim::World* simWorld;
+	EntityFactory const* entityFactory;
 	JulianDateProvider julianDateProvider;
 	EngineStats* stats;
 };

@@ -22,64 +22,20 @@ EntityListModel::EntityListModel(World* world, const EntityPredicate& predicate)
 {
 	world->addListener(this);
 
-	updateNamesMap();
-	updateModel();
+	populateList();
 }
 
 EntityListModel::~EntityListModel()
 {
-	for (auto entry : mNamesMap)
-	{
-		entry.first->removeListener(this);
-	}
-
 	mWorld->removeListener(this);
 }
 
-void EntityListModel::updateNamesMap()
-{
-	mNamesMap.clear();
-
-	const sim::World::Entities& entities = mWorld->getEntities();
-
-	for (const sim::EntityPtr& entity : entities)
-	{
-		if (mPredicate(*entity))
-		{
-			const std::string& name = getName(*entity);
-			if (!name.empty())
-			{
-				entity->addListener(this);
-				mNamesMap[entity.get()] = name;
-			}
-		}
-	}
-}
 
 void EntityListModel::setEntityFilter(const EntityPredicate& predicate)
 {
 	mPredicate = predicate;
 
-	updateNamesMap();
-	updateModel();
-}
-
-int EntityListModel::rowCount(const QModelIndex& /* parent */) const
-{
-	return (int)mNames.size();
-}
-
-QVariant EntityListModel::data(const QModelIndex &index, int role) const
-{
-	if (!index.isValid() || index.row() >= mNames.size() || index.row() < 0)
-	{
-		return QVariant();
-	}
-	if (role == Qt::DisplayRole)
-	{
-		return QString::fromStdString(mNames.at(index.row()));
-	}
-	return QVariant();
+	populateList();
 }
 
 // WorldListener interface
@@ -87,73 +43,30 @@ void EntityListModel::entityAdded(const sim::EntityPtr& entity)
 {
 	if (mPredicate(*entity))
 	{
-		entity->addListener(this);
-		updateName(entity.get());
+		if (std::string name = getName(*entity); !name.empty())
+		{
+			auto item = new QStandardItem(QString::fromStdString(name));
+			appendRow(item);
+			mItems[entity.get()] = item;
+		}
 	}
 }
 
 void EntityListModel::entityAboutToBeRemoved(const sim::EntityPtr& entity)
 {
-	auto it = mNamesMap.find(entity.get());
-	if (it != mNamesMap.end())
+	if (auto i = mItems.find(entity.get()); i != mItems.end())
 	{
-		mNamesMap.erase(it);
-		updateModel();
-		entity->removeListener(this);
+		removeRow(i->second->row());
+		mItems.erase(i);
 	}
 }
 
-void EntityListModel::onComponentAdded(Entity* entity, Component* component)
+void EntityListModel::populateList()
 {
-	updateName(entity);
-}
-
-void EntityListModel::onComponentRemove(Entity* entity, Component* component)
-{
-	updateName(entity);
-}
-
-void EntityListModel::updateName(Entity* entity)
-{
-	const std::string& name = getName(*entity);
-	auto it = mNamesMap.find(entity);
-
-	bool changed = false;
-
-	if (name.empty() && it != mNamesMap.end())
+	clear();
+	mItems.clear();
+	for (const auto& entity : mWorld->getEntities())
 	{
-		mNamesMap.erase(it);
-		changed = true;
-	}
-	else
-	{
-		std::string prevName = (it != mNamesMap.end()) ? it->second : "";
-		if (name != prevName)
-		{
-			mNamesMap[entity] = name;
-			changed = true;
-		}
-	}
-
-	if (changed)
-	{
-		updateModel();
-	}
-}
-
-void EntityListModel::updateModel()
-{
-	std::vector<std::string> newNames;
-	for (auto entry : mNamesMap)
-	{
-		newNames.push_back(entry.second);
-	}
-	std::sort(newNames.begin(), newNames.end());
-
-	if (newNames != mNames)
-	{
-		beginResetModel();
-		mNames = newNames;
-		endResetModel();
+		entityAdded(entity);
 	}
 }
