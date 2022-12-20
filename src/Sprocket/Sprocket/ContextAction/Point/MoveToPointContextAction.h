@@ -6,15 +6,15 @@
 
 #pragma once
 
-#include "Sprocket/ContextAction.h"
+#include "Sprocket/ContextAction/ActionContext.h"
 #include <SkyboltSim/Entity.h>
 
-class DebugInfoContextAction : public ContextAction<skybolt::sim::Entity>
+class MoveToPointContextAction : public DefaultContextAction
 {
 public:
-	std::string getName() const override { return "Debug Info"; }
+	std::string getName() const override { return "Move To Point"; }
 
-	bool handles(const skybolt::sim::Entity& entity) const override;
+	bool handles(const ActionContext& context) const override;
 
-	void execute(skybolt::sim::Entity& entity) const override;
+	void execute(ActionContext& context) const override;
 };

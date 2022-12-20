@@ -18,13 +18,7 @@
 #include "TimeControlWidget.h"
 #include "TimelineWidget.h"
 #include "DataSeries/DataSeries.h"
-#include "ContextActions/AboutContextAction.h"
-#include "ContextActions/AttachToParentContextAction.h"
-#include "ContextActions/DebugInfoContextAction.h"
-#include "ContextActions/DetatchFromParentContextAction.h"
-#include "ContextActions/MoveToAirportContextAction.h"
-#include "ContextActions/SetOrientationContextAction.h"
-#include "ContextActions/SetPositionContextAction.h"
+#include "ContextAction/CreateContextActions.h"
 #include "Entity/EntityCreatorWidget.h"
 #include "Entity/EntityListModel.h"
 #include "Entity/EntityPropertiesModel.h"
@@ -53,6 +47,7 @@
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
+#include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltSim/Physics/Astronomy.h>
 #include <SkyboltSim/System/SimStepper.h>
 #include <SkyboltSim/System/System.h>
@@ -371,6 +366,9 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	}());
 	mOsgWidget->getWindow()->getRenderOperationSequence().addOperation(mViewport);
 
+	mOsgWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+	connect(mOsgWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
+
 	mStatsDisplaySystem = std::make_shared<StatsDisplaySystem>(&mOsgWidget->getWindow()->getViewer(), mViewport->getFinalRenderTarget()->getOsgCamera());
 	mStatsDisplaySystem->setVisible(false);
 	mEngineRoot->systemRegistry->push_back(mStatsDisplaySystem);
@@ -511,6 +509,8 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 		addToolWindow("Properties", mPropertiesEditor);
 	}
 
+	mContextActions = createContextActions(*mEngineRoot);
+
 	{
 		std::vector<TreeItemType> itemTypes;
 
@@ -525,7 +525,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 		config.factory = mEngineRoot->entityFactory.get();
 		config.itemTypes = itemTypes;
 		config.scenario = &scenario;
-		config.contextActions = createContextActions();
+		config.contextActions = adaptToTreeItems(mContextActions);
 
 		mWorldTreeWidget = new WorldTreeWidget(config);
 		QObject::connect(mWorldTreeWidget, &WorldTreeWidget::selectionChanged, this, &MainWindow::explorerSelectionChanged);
@@ -1293,11 +1293,7 @@ void MainWindow::onViewportMouseDown(Qt::MouseButton button, const QPointF& posi
 	}
 	else if (button == Qt::MouseButton::MiddleButton)
 	{
-		skybolt::sim::Vector3 origin = *getPosition(*mCurrentSimCamera);
-		skybolt::sim::Quaternion orientation = *getOrientation(*mCurrentSimCamera);
-		skybolt::sim::CameraState camera = mCurrentSimCamera->getFirstComponentRequired<sim::CameraComponent>()->getState();
-		double aspectRatio = double(mOsgWidget->width()) / double(mOsgWidget->height());
-		glm::dmat4 transform = makeViewProjTransform(origin, orientation, camera, aspectRatio);
+		glm::dmat4 transform = calcCurrentViewProjTransform();
 
 		sim::Entity* selectedEntity = nullptr;
 		if (std::optional<PickedSceneObject> object = mSceneObjectPicker(transform, glm::vec2(position.x(), position.y()), 0.04); object)
@@ -1310,6 +1306,31 @@ void MainWindow::onViewportMouseDown(Qt::MouseButton button, const QPointF& posi
 			setPropertiesModel(selectedEntity ? std::make_shared<EntityPropertiesModel>(selectedEntity) : nullptr);
 		}
 	}
+}
+
+void MainWindow::showContextMenu(const QPoint& point)
+{
+   QMenu contextMenu(tr("Context menu"), this);
+
+   glm::vec2 pointNdc = glm::vec2(float(point.x()) / mOsgWidget->width(), 1.0 - float(point.y()) / mOsgWidget->height());
+   sim::Vector3 camPosition = *getPosition(*mCurrentSimCamera);
+   if (auto intersection = pickPointOnPlanet(*mEngineRoot->simWorld, camPosition, glm::inverse(calcCurrentViewProjTransform()), pointNdc); intersection)
+   {
+	   ActionContext context;
+	   context.entity = mSelectedEntity;
+	   context.point = *intersection;
+
+	   for (const auto& contextAction : mContextActions)
+	   {
+		   if (contextAction->handles(context))
+		   {
+				auto action = new QAction(QString::fromStdString(contextAction->getName()), this);
+				connect(action, &QAction::triggered, this, [&] { contextAction->execute(context); });
+				contextMenu.addAction(action);
+		   }
+	   }
+	   contextMenu.exec(mOsgWidget->mapToGlobal(point));
+   }
 }
 
 void MainWindow::addToolWindow(const QString& windowName, QWidget* window)
@@ -1384,63 +1405,6 @@ void MainWindow::onEvent(const Event& event)
 	}
 }
 
-typedef std::shared_ptr<ContextAction<sim::Entity>> EntityContextActionPtr;
-
-class TreeItemToEntityContextActionAdapter : public ContextAction<TreeItem>
-{
-public:
-	TreeItemToEntityContextActionAdapter(const EntityContextActionPtr& wrapped) : mWrapped(wrapped) {}
-
-	std::string getName() const override { return mWrapped->getName(); }
-
-	bool handles(const TreeItem& object) const override
-	{
-		auto item = dynamic_cast<const EntityTreeItem*>(&object);
-		if (item)
-		{
-			return mWrapped->handles(*item->data);
-		}
-		return false;
-	}
-
-	void execute(TreeItem& object) const override
-	{
-		auto item = dynamic_cast<const EntityTreeItem*>(&object);
-		if (item)
-		{
-			mWrapped->execute(*item->data);
-		}
-	}
-
-private:
-	EntityContextActionPtr mWrapped;
-};
-
-TreeItemContextActionPtr adaptToTreeItem(const EntityContextActionPtr& action)
-{
-	return std::make_shared<TreeItemToEntityContextActionAdapter>(action);
-}
-
-std::vector<TreeItemContextActionPtr> MainWindow::createContextActions() const
-{
-	auto path = mEngineRoot->fileLocator("Airports/airports.apt", file::FileLocatorMode::Required);
-	AirportsMap airports;
-	if (!path.empty())
-	{
-		airports = mapfeatures::loadAirports(path.string());
-	}
-	
-	return {
-		adaptToTreeItem(std::make_shared<AboutContextAction>()),
-		adaptToTreeItem(std::make_shared<AttachToParentContextAction>(mEngineRoot->simWorld.get())),
-		adaptToTreeItem(std::make_shared<DetatchFromParentContextAction>()),
-		adaptToTreeItem(std::make_shared<MoveToAirportContextAction>(airports)),
-		adaptToTreeItem(std::make_shared<SetPositionContextAction>()),
-		adaptToTreeItem(std::make_shared<SetOrientationContextAction>()),
-		adaptToTreeItem(std::make_shared<DebugInfoContextAction>())
-	};
-}
-
 static QAction* addCheckedAction(QMenu& menu, const QString& text, std::function<void(bool checked)> fn)
 {
 	QAction* action = menu.addAction(text, fn);
@@ -1480,4 +1444,13 @@ void MainWindow::addViewportMenuActions(QMenu& menu)
 	addVisibilityFilterableSubMenu(menu, "Labels", mVisNameLabels.get());
 	addVisibilityFilterableSubMenu(menu, "Forces", mForcesVisBinding.get());
 	addVisibilityFilterableSubMenu(menu, "Orbits", mVisOrbits.get());
+}
+
+glm::dmat4 MainWindow::calcCurrentViewProjTransform() const
+{
+	skybolt::sim::Vector3 origin = *getPosition(*mCurrentSimCamera);
+	skybolt::sim::Quaternion orientation = *getOrientation(*mCurrentSimCamera);
+	skybolt::sim::CameraState camera = mCurrentSimCamera->getFirstComponentRequired<sim::CameraComponent>()->getState();
+	double aspectRatio = double(mOsgWidget->width()) / double(mOsgWidget->height());
+	return makeViewProjTransform(origin, orientation, camera, aspectRatio);
 }

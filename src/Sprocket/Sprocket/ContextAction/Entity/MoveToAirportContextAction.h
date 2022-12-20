@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include "Sprocket/ContextAction.h"
+#include "Sprocket/ContextAction/Entity/EntityContextAction.h"
 #include <SkyboltSim/Entity.h>
 #include <SkyboltVis/Renderable/Planet/Features/PlanetFeaturesSource.h>
 #include <string>
 
 typedef std::map<std::string, skybolt::mapfeatures::AirportPtr> AirportsMap;
 
-class MoveToAirportContextAction : public ContextAction<skybolt::sim::Entity>
+class MoveToAirportContextAction : public EntityContextAction
 {
 public:
 	MoveToAirportContextAction(const AirportsMap& airports) : mAirports(airports) {}

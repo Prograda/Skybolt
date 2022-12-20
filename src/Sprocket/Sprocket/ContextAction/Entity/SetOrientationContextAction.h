@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "Sprocket/ContextAction.h"
+#include "Sprocket/ContextAction/Entity/EntityContextAction.h"
 #include <SkyboltSim/Entity.h>
 
-class AboutContextAction : public ContextAction<skybolt::sim::Entity>
+class SetOrientationContextAction : public EntityContextAction
 {
 public:
-	std::string getName() const override { return "About"; }
+	std::string getName() const override { return "Set Orientation"; }
 
 	bool handles(const skybolt::sim::Entity& entity) const override;
 

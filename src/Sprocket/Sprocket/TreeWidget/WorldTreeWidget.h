@@ -7,48 +7,14 @@
 #pragma once
 
 #include "TreeItemModel.h"
-#include "ContextAction.h"
-#include "Registry.h"
+#include "TreeItems.h"
+#include "TreeItemContextAction.h"
+
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltVis/Renderable/Planet/Features/PlanetFeaturesSource.h>
 
 #include <QWidget>
-
-template <class T>
-struct TreeItemT : public TreeItem
-{
-	QString label;
-	T data;
-	
-	TreeItemT(const QIcon& icon, const QString& label, const T& data)
-		: TreeItem(icon), label(label), data(data)
-	{
-	}
-
-	const QString& getLabel() override
-	{
-		return label;
-	}
-};
-
-typedef TreeItemT<void*> SimpleTreeItem;
-typedef TreeItemT<skybolt::sim::Entity*> EntityTreeItem;
-typedef TreeItemT<skybolt::Scenario*> ScenarioTreeItem;
-
-struct TreeItemType
-{
-	TreeItemType(const std::type_index& itemTypeId) : itemTypeId(itemTypeId) {}
-
-	std::string name;
-	std::vector<std::string> subTypes; //!< Names of each sub type of this item. Leave empty if there's only one type.
-	std::function<void(const std::string& name, const std::string& subType)> itemCreator;
-	std::function<void(TreeItem*)> itemDeleter; //!< Throws exception if item is not disposable
-	std::shared_ptr<Registry<TreeItem>> itemRegistry;
-	std::type_index itemTypeId;
-};
-
-typedef std::shared_ptr<ContextAction<TreeItem>> TreeItemContextActionPtr;
 
 struct WorldTreeWidgetConfig
 {

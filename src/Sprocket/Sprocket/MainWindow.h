@@ -7,7 +7,7 @@
 #pragma once
 
 #include "SprocketFwd.h"
-#include "WorldTreeWidget.h"
+#include "TreeWidget/WorldTreeWidget.h"
 #include "Viewport/SceneObjectPicker.h"
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Plugin/PluginHelpers.h>
@@ -76,6 +76,8 @@ private slots:
 
 	void onViewportMouseDown(Qt::MouseButton button, const QPointF& position);
 
+	void showContextMenu(const QPoint& point);
+
 private:
 	void onEvent(const skybolt::Event& event) override;
 
@@ -92,14 +94,14 @@ private:
 
 	void setProjectFilename(const QString& filename);
 
-	std::vector<TreeItemContextActionPtr> createContextActions() const;
-
 	void addViewportMenuActions(QMenu& menu);
 
 	void setCameraTarget(skybolt::sim::Entity* target);
 
 	void setSelectedEntity(skybolt::sim::Entity* entity);
 	void setPropertiesModel(PropertiesModelPtr properties);
+
+	glm::dmat4 calcCurrentViewProjTransform() const;
 
 private:
 	std::unique_ptr<skybolt::EngineRoot> mEngineRoot;
@@ -117,6 +119,8 @@ private:
 	class PictureTableModel* mPictureTableModel;
 	class PlanTableModel* mPlanTableModel;
 	std::shared_ptr<class PropertiesModel> mPropertiesModel;
+
+	std::vector<DefaultContextActionPtr> mContextActions;
 
 	bool mDisableInputSystemOnNextUpdate = false;
 	std::shared_ptr<skybolt::InputPlatform> mInputPlatform;

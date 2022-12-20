@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "Sprocket/ContextAction.h"
+#include "Sprocket/ContextAction/Entity/EntityContextAction.h"
 #include <SkyboltSim/Entity.h>
 
-class DetatchFromParentContextAction : public ContextAction<skybolt::sim::Entity>
+class DebugInfoContextAction : public ContextAction<skybolt::sim::Entity>
 {
 public:
-	std::string getName() const override { return "Detatch from Parent"; }
+	std::string getName() const override { return "Debug Info"; }
 
 	bool handles(const skybolt::sim::Entity& entity) const override;
 

@@ -79,3 +79,20 @@ TEST_CASE("Intersect grid diagonally")
 	CHECK(intersectedCells[1] == glm::ivec2(5, 3));
 	CHECK(intersectedCells[2] == glm::ivec2(4, 3));
 }
+
+TEST_CASE("Intersect ray vs sphere")
+{
+	// Test hit
+	glm::vec3 r0(4,2,3);
+	glm::vec3 rd(-1,0,0);
+	glm::vec3 s0(1,2,3);
+	float sr = 2;
+	auto result = intersectRaySphere(r0, rd, s0, sr);
+	REQUIRE(result);
+	CHECK(result->first == Approx(1.0).margin(1e-8f));
+	CHECK(result->second == Approx(5.0).margin(1e-8f));
+
+	// Test miss
+	result = intersectRaySphere(r0, glm::vec3(0,1,0), s0, sr);
+	CHECK(!result);
+}

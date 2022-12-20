@@ -10,18 +10,19 @@
 #include "Box2.h"
 #include "Box3.h"
 #include "MathUtility.h"
+#include <optional>
 #include <vector>
 
 namespace skybolt {
 
-// @param direction must be normalized
-// @param hitDistance is negative if origin is inside box
-// @returns true if intersection occured. Returns min hitDistance
+//! @param direction must be normalized
+//! @param hitDistance is negative if origin is inside box
+//! @returns true if intersection occured. Returns min hitDistance
 bool intersectRayAabb(const glm::vec3 &origin, const glm::vec3 &direction, const Box3 &box, float &hitDistance);
 
-// @param direction must be normalized
-// @param hitDistance is negative if origin is inside box
-// @returns true if intersection occured. Returns min hitDistance
+//! @param direction must be normalized
+//! @param hitDistance is negative if origin is inside box
+//! @returns true if intersection occured. Returns min hitDistance
 bool intersectRayAabb(const glm::vec2 &origin, const glm::vec2 &direction, const Box2 &box, float &hitDistance);
 
 struct Grid
@@ -33,6 +34,13 @@ struct Grid
 };
 
 void intersectRayGrid(const Grid& grid, const glm::vec2 &origin, const glm::vec2 &direction, float length, std::vector<glm::ivec2>& intersectedCells);
+
+//! @param r0 specifies ray origin
+//! @param rd specifies normalized ray direction
+//! @param s0 specifies sphere center
+//! @param sr specifies sphere radius
+//! @returns Returns distances to intersections t0 and t1. Sets t0 to -1 if there was no intersection.
+std::optional<std::pair<float, float>> intersectRaySphere(const glm::vec3& r0, const glm::vec3& rd, const glm::vec3& s0, float sr);
 
 template <typename T>
 float nearestPointOnLine(const T &lineP0, const T &lineP1, const T &point)

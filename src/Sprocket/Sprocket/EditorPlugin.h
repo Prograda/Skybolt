@@ -8,8 +8,8 @@
 
 #include "Sprocket/PropertyEditor.h"
 #include "Sprocket/SprocketFwd.h"
-#include "Sprocket/WorldTreeWidget.h"
 #include "Sprocket/DataSeries/DataSeries.h"
+#include "Sprocket/TreeWidget/WorldTreeWidget.h"
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltCommon/File/FileLocator.h>
 #include <QString>

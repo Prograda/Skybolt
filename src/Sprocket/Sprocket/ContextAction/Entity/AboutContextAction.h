@@ -6,20 +6,15 @@
 
 #pragma once
 
-#include "Sprocket/ContextAction.h"
+#include "Sprocket/ContextAction/Entity/EntityContextAction.h"
 #include <SkyboltSim/Entity.h>
 
-class AttachToParentContextAction : public ContextAction<skybolt::sim::Entity>
+class AboutContextAction : public ContextAction<skybolt::sim::Entity>
 {
 public:
-	AttachToParentContextAction(skybolt::sim::World* simWorld) : mWorld(simWorld) {}
-
-	std::string getName() const override { return "Attach to Parent"; }
+	std::string getName() const override { return "About"; }
 
 	bool handles(const skybolt::sim::Entity& entity) const override;
 
 	void execute(skybolt::sim::Entity& entity) const override;
-
-private:
-	skybolt::sim::World* mWorld;
 };

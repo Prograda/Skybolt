@@ -190,4 +190,19 @@ void intersectRayGrid(const Grid& grid, const glm::vec2& origin, const glm::vec2
 	}
 }
 
+std::optional<std::pair<float, float>> intersectRaySphere(const glm::vec3& r0, const glm::vec3& rd, const glm::vec3& s0, float sr)
+{
+    glm::vec3 s0_r0 = r0 - s0;
+    float b = 2.0f * dot(rd, s0_r0);
+    float c = dot(s0_r0, s0_r0) - (sr * sr);
+
+	float det = b*b - 4.0f*c;
+    if (det < 0.0)
+	{
+		return std::nullopt;
+    }
+	float sqrtDet = sqrt(det);
+	return std::make_pair((-b - sqrtDet) * 0.5f, (-b + sqrtDet) * 0.5f);
+}
+
 } // namespace skybolt
