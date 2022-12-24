@@ -13,10 +13,12 @@
 namespace skybolt {
 namespace vis {
 
-BruentonAtmosphereRenderOperation::BruentonAtmosphereRenderOperation(const ScenePtr& scene) :
-	mScene(scene)
+BruentonAtmosphereRenderOperation::BruentonAtmosphereRenderOperation(const ScenePtr& scene, const osg::ref_ptr<osg::StateSet>& viewportStateSet) :
+	mScene(scene),
+	mViewportStateSet(viewportStateSet)
 {
 	assert(mScene);
+	assert(mViewportStateSet);
 }
 
 void BruentonAtmosphereRenderOperation::updatePreRender(const RenderContext& renderContext)
@@ -27,7 +29,7 @@ void BruentonAtmosphereRenderOperation::updatePreRender(const RenderContext& ren
 		if (auto atmosphere = planet->getAtmosphere(); atmosphere)
 		{
 			addChild(atmosphere);
-			mScene->getStateSet()->merge(*atmosphere->getStateSet());
+			mViewportStateSet->merge(*atmosphere->getStateSet());
 		}
 	}
 }

@@ -9,15 +9,15 @@
 #include <SkyboltVis/Scene.h>
 #include <SkyboltVis/RenderOperation/RenderTarget.h>
 #include <SkyboltVis/Window/Window.h>
-#include <osgViewer/Viewer>
+#include <osgViewer/View>
 
 namespace skybolt {
 
-StatsDisplaySystem::StatsDisplaySystem(osgViewer::Viewer* viewer, const osg::ref_ptr<osg::Camera>& camera) :
+StatsDisplaySystem::StatsDisplaySystem(osgViewer::View* view, const osg::ref_ptr<osg::Camera>& camera) :
 	mCamera(camera)
 {
-	mViewerStats = viewer->getStats();
-	mCameraStats = viewer->getCamera()->getStats();
+	mViewerStats = view->getStats();
+	mCameraStats = view->getCamera()->getStats();
 
 	mViewerStats->collectStats("frame_rate", true);
 	mCameraStats->collectStats("gpu", true);

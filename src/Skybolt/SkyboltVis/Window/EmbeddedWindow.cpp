@@ -8,19 +8,29 @@
 #include "EmbeddedWindow.h"
 #include <osgViewer/ViewerEventHandlers>
 
+#include <assert.h>
+
 using namespace skybolt::vis;
 
+static osg::ref_ptr<osgViewer::View> createEmbeddedView(const RectI& rect)
+{
+	osg::ref_ptr<osgViewer::View> view = new osgViewer::View;
+
+    osgViewer::GraphicsWindowEmbedded* context = new osgViewer::GraphicsWindowEmbedded(rect.x, rect.y, rect.width, rect.height);
+    view->getCamera()->setViewport(new osg::Viewport(rect.x, rect.y, rect.width, rect.height));
+    view->getCamera()->setGraphicsContext(context);
+
+	configureGraphicsState(*context);
+	return view;
+}
+
 EmbeddedWindow::EmbeddedWindow(const EmbeddedWindowConfig& config) :
-	Window(std::make_unique<osgViewer::Viewer>(), config.displaySettings)
+	Window(createEmbeddedView(config.rect))
 {
 	const auto& rect = config.rect;
-    mWindow = mViewer->setUpViewerAsEmbeddedInWindow(rect.x, rect.y, rect.width, rect.height);
 
-	mViewer->realize();
-	configureGraphicsState();
-
-	// TODO: The Viewer's default camera clears the frame before our Camera is rendered from, which clears the frame a second time.
-	// The first frame clearing is redundant and should be avoided.
+	mWindow = dynamic_cast<osgViewer::GraphicsWindowEmbedded*>(mView->getCamera()->getGraphicsContext());
+	assert(mWindow);
 }
 
 void EmbeddedWindow::setWidth(int newWidth)
@@ -29,7 +39,7 @@ void EmbeddedWindow::setWidth(int newWidth)
 	mWindow->getWindowRectangle(x, y, width, height);
 	mWindow->setWindowRectangle(x, y, newWidth, height);
 
-	mViewer->getCamera()->getGraphicsContext()->resized(x, y, newWidth, height);
+	mWindow->resized(x, y, newWidth, height);
 }
 
 void EmbeddedWindow::setHeight(int newHeight)
@@ -38,7 +48,7 @@ void EmbeddedWindow::setHeight(int newHeight)
 	mWindow->getWindowRectangle(x, y, width, height);
 	mWindow->setWindowRectangle(x, y, width, newHeight);
 
-	mViewer->getCamera()->getGraphicsContext()->resized(x, y, width, newHeight);
+	mWindow->resized(x, y, width, newHeight);
 }
 
 int EmbeddedWindow::getWidth() const

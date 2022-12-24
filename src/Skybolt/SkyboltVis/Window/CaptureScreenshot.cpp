@@ -5,7 +5,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "CaptureScreenshot.h"
-#include "Window/Window.h"
+#include "VisRoot.h"
+
+#include <osgViewer/CompositeViewer>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgDB/WriteFile>
 
@@ -18,22 +20,24 @@ struct StoreImage : public osgViewer::ScreenCaptureHandler::CaptureOperation
 {
     void operator() (const osg::Image& img, const unsigned int context_id) override
 	{
-		image = new osg::Image(img, osg::CopyOp::DEEP_COPY_ALL);
+		// Only capture from first context for now. TODO: write out one image per context.
+		if (!image)
+		{
+			image = new osg::Image(img, osg::CopyOp::DEEP_COPY_ALL);
+		}
 	}
 
     osg::ref_ptr<osg::Image> image;
 };
 
-osg::ref_ptr<osg::Image> captureScreenshot(Window& window)
+osg::ref_ptr<osg::Image> captureScreenshot(VisRoot& visRoot)
 {
 	osg::ref_ptr<StoreImage> storeImage = new StoreImage();
 	osg::ref_ptr<osgViewer::ScreenCaptureHandler> screenCaptureHandler = new osgViewer::ScreenCaptureHandler(storeImage);
 
-	osgViewer::Viewer& viewer = window.getViewer();
-
 	screenCaptureHandler->setFramesToCapture(1);
-	screenCaptureHandler->captureNextFrame(viewer);
-	window.render();
+	screenCaptureHandler->captureNextFrame(visRoot.getViewer());
+	visRoot.render();
 	screenCaptureHandler->stopCapture();
 
 	return storeImage->image;
@@ -49,14 +53,20 @@ public:
 
     void operator() (const osg::Image& image, const unsigned int context_id) override
 	{
-		osgDB::writeImageFile(image, mFilename);
+		// Only capture from first context for now. TODO: write out one image per context.
+		if (!mCaptured)
+		{
+			osgDB::writeImageFile(image, mFilename);
+			mCaptured = true;
+		}
 	}
 
 protected:
     const std::string mFilename;
+	bool mCaptured = false;
 };
 
-void captureScreenshot(Window& window, const std::string& filename)
+void captureScreenshot(VisRoot& visRoot, const std::string& filename)
 {
 	// Create directory if it does not already exist
 	std::filesystem::path path(filename);
@@ -69,11 +79,9 @@ void captureScreenshot(Window& window, const std::string& filename)
 	osg::ref_ptr<WriteToFile> writeToFile = new WriteToFile(filename);
 	osg::ref_ptr<osgViewer::ScreenCaptureHandler> screenCaptureHandler = new osgViewer::ScreenCaptureHandler(writeToFile);
 
-	osgViewer::Viewer& viewer = window.getViewer();
-
 	screenCaptureHandler->setFramesToCapture(1);
-	screenCaptureHandler->captureNextFrame(viewer);
-	window.render();
+	screenCaptureHandler->captureNextFrame(visRoot.getViewer());
+	visRoot.render();
 	screenCaptureHandler->stopCapture();
 }
 

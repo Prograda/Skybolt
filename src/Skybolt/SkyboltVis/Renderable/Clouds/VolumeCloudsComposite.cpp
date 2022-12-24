@@ -7,7 +7,6 @@
 #include "VolumeCloudsComposite.h"
 #include "SkyboltVis/OsgStateSetHelpers.h"
 #include "SkyboltVis/OsgTextureHelpers.h"
-#include "SkyboltVis/Renderable/ScreenQuad.h"
 
 namespace skybolt {
 namespace vis {
@@ -22,35 +21,22 @@ static osg::StateSet* createTexturedQuadStateSet(osg::ref_ptr<osg::Program> prog
 	return stateSet;
 }
 
-class VolumeCloudsComposite : public ScreenQuad
+VolumeCloudsComposite::VolumeCloudsComposite(const VolumeCloudsCompositeConfig& config) :
+	ScreenQuad(createTexturedQuadStateSet(config.compositorProgram))
 {
-public:
-	VolumeCloudsComposite(const osg::ref_ptr<osg::StateSet>& texturedQuadStateSet, const TextureProvider& colorTextureProvider, const TextureProvider& depthTextureProvider) :
-		ScreenQuad(texturedQuadStateSet),
-		mTexturedQuadStateSet(texturedQuadStateSet),
-		mColorTextureProvider(colorTextureProvider),
-		mDepthTextureProvider(depthTextureProvider)
-	{
-	}
+	makeStateSetTransparent(*mTransform->getOrCreateStateSet(), vis::TransparencyMode::PremultipliedAlpha, RenderBinId::Clouds);
+	setColorTexture(config.colorTexture);
+	setDepthTexture(config.depthTexture);
+}
 
-	void updatePreRender(const CameraRenderContext& context) override
-	{
-		mTexturedQuadStateSet->setTextureAttributeAndModes(0, mColorTextureProvider(), osg::StateAttribute::ON);
-		mTexturedQuadStateSet->setTextureAttributeAndModes(1, mDepthTextureProvider(), osg::StateAttribute::ON);
-	}
-
-private:
-	osg::ref_ptr<osg::StateSet> mTexturedQuadStateSet;
-	TextureProvider mColorTextureProvider;
-	TextureProvider mDepthTextureProvider;
-};
-
-VisObjectPtr createVolumeCloudsComposite(const VolumeCloudsCompositeConfig& config)
+void VolumeCloudsComposite::setColorTexture(osg::ref_ptr<osg::Texture> texture)
 {
-	osg::StateSet* texturedQuadStateSet = createTexturedQuadStateSet(config.compositorProgram);
-	makeStateSetTransparent(*texturedQuadStateSet, vis::TransparencyMode::PremultipliedAlpha, RenderBinId::Clouds);
+	mTransform->getOrCreateStateSet()->setTextureAttributeAndModes(0, texture, osg::StateAttribute::ON);
+}
 
-	return std::make_shared<VolumeCloudsComposite>(texturedQuadStateSet, config.colorTextureProvider, config.depthTextureProvider);
+void VolumeCloudsComposite::setDepthTexture(osg::ref_ptr<osg::Texture> texture)
+{
+	mTransform->getOrCreateStateSet()->setTextureAttributeAndModes(1, texture, osg::StateAttribute::ON);
 }
 
 } // namespace vis

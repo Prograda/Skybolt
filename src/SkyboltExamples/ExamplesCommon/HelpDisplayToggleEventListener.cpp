@@ -1,5 +1,4 @@
 #include "HelpDisplayToggleEventListener.h"
-#include "HelpDisplaySystem.h"
 
 #include <SkyboltEngine/Input/InputPlatform.h>
 
@@ -7,8 +6,8 @@
 
 namespace skybolt {
 
-HelpDisplayToggleEventListener::HelpDisplayToggleEventListener(const std::shared_ptr<HelpDisplaySystem>& helpDisplaySystem) :
-	mHelpDisplaySystem(helpDisplaySystem)
+HelpDisplayToggleEventListener::HelpDisplayToggleEventListener(const osg::ref_ptr<HelpDisplayRenderOperation>& helpDisplay) :
+	mHelpDisplay(helpDisplay)
 {
 	assert(mHelpDisplaySystem);
 }
@@ -23,7 +22,7 @@ void HelpDisplayToggleEventListener::onEvent(const Event& event)
 			{
 				case KC_H:
 				{
-					mHelpDisplaySystem->setVisible(!mHelpDisplaySystem->isVisible());
+					mHelpDisplay->setVisible(!mHelpDisplay->isVisible());
 					break;
 				}
 			}

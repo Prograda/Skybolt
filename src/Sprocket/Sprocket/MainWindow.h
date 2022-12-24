@@ -24,7 +24,6 @@ class OsgWidget;
 class QAction;
 class QComboBox;
 class QModelIndex;
-class QwtPlot;
 class PropertyEditor;
 class TreeItem;
 class WorldTreeWidget;
@@ -140,7 +139,6 @@ private:
 	std::unique_ptr<skybolt::ForcesVisBinding> mForcesVisBinding;
 	skybolt::sim::EntityPtr mCurrentSimCamera;
 
-	QwtPlot* mPlot = nullptr;
 	OsgWidget* mOsgWidget = nullptr;
 	WorldTreeWidget* mWorldTreeWidget = nullptr;
 

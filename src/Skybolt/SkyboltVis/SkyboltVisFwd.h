@@ -76,6 +76,7 @@ struct TileProgressCallback;
 class TileSource;
 struct TileTexture;
 class VisMarker;
+class VisRoot;
 class Viewport;
 class VisObject;
 class Viewport;

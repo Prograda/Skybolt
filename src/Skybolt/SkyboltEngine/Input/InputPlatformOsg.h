@@ -15,7 +15,7 @@
 #include <string>
 
 namespace osgViewer {
-	class Viewer;
+	class View;
 }
 
 namespace skybolt {
@@ -63,7 +63,7 @@ private:
 class InputPlatformOsg : public InputPlatform
 {
 public:
-	InputPlatformOsg(const std::weak_ptr<osgViewer::Viewer>& viewer);
+	InputPlatformOsg(const osg::ref_ptr<osgViewer::View>& view);
 	~InputPlatformOsg() override;
 
 	void setEnabled(bool enabled) override;
@@ -76,7 +76,7 @@ private:
 	void addEventHandler(const osg::ref_ptr<osgGA::GUIEventHandler>& handler);
 
 private:
-	std::weak_ptr<osgViewer::Viewer> mViewer;
+	osg::ref_ptr<osgViewer::View> mView;
 	EventEmitterPtr mEmitter;
 	std::shared_ptr<class KeyboardInputDeviceOsg> mKeyboard;
 	std::shared_ptr<MouseInputDeviceOsg> mMouse;

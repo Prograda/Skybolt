@@ -17,7 +17,7 @@ public:
 	VisHud();
 	~VisHud();
 
-	void setAspectRatio(double value);
+	void setAspectRatio(float value);
 
 	void clear();
 

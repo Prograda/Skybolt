@@ -25,15 +25,11 @@ OffscreenWindow::OffscreenWindow(int width, int height) :
 }
 
 OffscreenWindow::OffscreenWindow(const OffscreenWindowConfig& config) :
-	Window(std::unique_ptr<osgViewer::Viewer>(createOffscreenViewer(config.width, config.height).release()), config.displaySettings),
+	Window(createOffscreenViewer(config.width, config.height).release()),
 	mWidth(config.width),
 	mHeight(config.height)
 {
-	mViewer->realize();
-	configureGraphicsState();
-
-	// TODO: The Viewer's default camera clears the frame before our Camera is rendered from, which clears the frame a second time.
-	// The first frame clearing is redundant and should be avoided.
+	configureGraphicsState(*mView->getCamera()->getGraphicsContext());
 }
 
 int OffscreenWindow::getWidth() const

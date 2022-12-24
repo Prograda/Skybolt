@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include <ExamplesCommon/HelpDisplaySystem.h>
+#include <ExamplesCommon/HelpDisplayRenderOperation.h>
 #include <ExamplesCommon/HelpDisplayToggleEventListener.h>
+#include <ExamplesCommon/VisRootUtil.h>
 #include <ExamplesCommon/WindowUtil.h>
 
 #include <SkyboltEngine/CameraInputSystem.h>
@@ -29,7 +30,9 @@
 
 #include <SkyboltVis/Camera.h>
 #include <SkyboltVis/Scene.h>
+#include <SkyboltVis/VisRoot.h>
 #include <SkyboltVis/RenderOperation/RenderCameraViewport.h>
+#include <SkyboltVis/RenderOperation/RenderOperationOrder.h>
 #include <SkyboltVis/RenderOperation/RenderTarget.h>
 #include <SkyboltVis/Window/StandaloneWindow.h>
 
@@ -52,7 +55,7 @@ static void createEntities(const EntityFactory& entityFactory, World& world, Cam
 	cameraController.setTarget(planet.get());
 }
 
-static std::shared_ptr<HelpDisplaySystem> createHelpDisplaySystem(const osg::ref_ptr<osg::Camera>& camera)
+static osg::ref_ptr<HelpDisplayRenderOperation> createHelpDisplay()
 {
 	std::string helpMessage =
 R"(= Controls =
@@ -64,9 +67,9 @@ Esc: Exit
 Mouse: Rotate camera
 )";
 
-	auto helpDisplaySystem = std::make_shared<HelpDisplaySystem>(camera);
-	helpDisplaySystem->setMessage(helpMessage);
-	return helpDisplaySystem;
+	osg::ref_ptr<HelpDisplayRenderOperation> helpDisplay = new HelpDisplayRenderOperation();
+	helpDisplay->setMessage(helpMessage);
+	return helpDisplay;
 }
 
 int main(int argc, char *argv[])
@@ -80,23 +83,26 @@ int main(int argc, char *argv[])
 		// Create camera
 		EntityPtr simCamera = engineRoot->entityFactory->createEntity("Camera");
 		engineRoot->simWorld->addEntity(simCamera);
+		
+		auto visRoot = createExampleVisRoot();
 
 		// Attach camera to window
-		std::unique_ptr<vis::StandaloneWindow> window = createExampleWindow();
+		vis::WindowPtr window = createExampleWindow();
 		osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindowWithEngine(*window, *engineRoot);
 		viewport->setCamera(getVisCamera(*simCamera));
+		visRoot->addWindow(window);
 
 		// Create input
-		auto inputPlatform = std::make_shared<InputPlatformOsg>(window->getViewerPtr());
+		auto inputPlatform = std::make_shared<InputPlatformOsg>(window->getView());
 		std::vector<LogicalAxisPtr> axes = CameraInputSystem::createDefaultAxes(*inputPlatform);
 
 		// Create systems
 		engineRoot->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, window.get(), axes));
 		engineRoot->systemRegistry->push_back(std::make_shared<CameraInputSystem>(simCamera, inputPlatform, axes));
 
-		auto helpDisplaySystem = createHelpDisplaySystem(viewport->getFinalRenderTarget()->getOsgCamera());
-		engineRoot->systemRegistry->push_back(helpDisplaySystem);
-		auto helpDisplayToggleEventListener = std::make_shared<HelpDisplayToggleEventListener>(helpDisplaySystem);
+		osg::ref_ptr<HelpDisplayRenderOperation> helpDisplay = createHelpDisplay();
+		window->getRenderOperationSequence().addOperation(helpDisplay, (int)RenderOperationOrder::Hud);
+		auto helpDisplayToggleEventListener = std::make_shared<HelpDisplayToggleEventListener>(helpDisplay);
 		inputPlatform->getEventEmitter()->addEventListener<KeyEvent>(helpDisplayToggleEventListener.get());
 
 //#define SHOW_STATS
@@ -108,7 +114,7 @@ int main(int argc, char *argv[])
 		createEntities(*engineRoot->entityFactory, *engineRoot->simWorld, *simCamera->getFirstComponentRequired<CameraControllerComponent>()->cameraController);
 
 		// Run loop
-		runMainLoop(*window, *engineRoot, UpdateLoop::neverExit);
+		runMainLoop(*visRoot, *engineRoot, UpdateLoop::neverExit);
 	}
 	catch (const std::exception& e)
 	{

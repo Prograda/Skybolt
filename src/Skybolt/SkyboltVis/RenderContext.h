@@ -24,9 +24,15 @@ enum class LoadTimingPolicy
 struct RenderContext
 {
 	osg::Vec2i targetDimensions; //!< Size of the render target in pixels
-	
+	int frameNumber = 0;
+
 	LoadTimingPolicy loadTimingPolicy = LoadTimingPolicy::LoadAcrossMultipleFrames;
 };
+
+inline float calcAspectRatio(const RenderContext& context)
+{
+	return float(context.targetDimensions.x()) / float(context.targetDimensions.y());
+}
 
 struct CameraRenderContext : public RenderContext
 {

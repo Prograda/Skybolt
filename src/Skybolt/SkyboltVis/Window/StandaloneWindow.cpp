@@ -5,12 +5,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "StandaloneWindow.h"
-#include <osgViewer/ViewerEventHandlers>
+#include <osgViewer/View>
+
 #if defined(WIN32)
 #include <osgViewer/api/Win32/GraphicsHandleWin32>
 #else
 #include <osgViewer/api/X11/GraphicsWindowX11>
 #endif
+
+#include <assert.h>
+
 using namespace skybolt::vis;
 
 static StandaloneWindowConfig createDefaultConfigWithRect(const RectI& rect)
@@ -25,19 +29,27 @@ StandaloneWindow::StandaloneWindow(const RectI& rect) :
 {
 }
 
+static osg::ref_ptr<osgViewer::View> createStandaloneView(const RectI& rect)
+{
+	osg::ref_ptr<osgViewer::View> view = new osgViewer::View;
+	view->setUpViewInWindow(rect.x, rect.y, rect.width, rect.height);
+
+	osg::GraphicsContext* context = view->getCamera()->getGraphicsContext();
+	if (!context)
+	{
+		throw std::runtime_error("Could not initialize graphics context");
+	}
+
+	configureGraphicsState(*context);
+	return view;
+}
+
 StandaloneWindow::StandaloneWindow(const StandaloneWindowConfig& config) :
-	Window(std::make_unique<osgViewer::Viewer>(), config.displaySettings)
+	Window(createStandaloneView(config.rect))
 {
 	const auto& rect = config.rect;
-    mViewer->setUpViewInWindow(rect.x, rect.y, rect.width, rect.height);
-	mViewer->realize();
 
-	configureGraphicsState();
-
-	// Hide cursor
-	osgViewer::ViewerBase::Windows windows;
-	mViewer->getWindows(windows);
-	windows.front()->useCursor(false);
+	getGraphicsWindow().useCursor(false);
 
 	// FIXME: The Viewer's default camera clears the frame before our Camera is rendered from, which clears the frame a second time.
 	// The first frame clearing is unnecessary and should be eliminated.
@@ -45,39 +57,32 @@ StandaloneWindow::StandaloneWindow(const StandaloneWindowConfig& config) :
 
 int StandaloneWindow::getWidth() const
 {
-	osgViewer::ViewerBase::Windows windows;
-	mViewer->getWindows(windows);
-	if (windows.empty())
-		return 0;
-
 	int x, y, width, height;
-	windows[0]->getWindowRectangle(x, y, width, height);
+	getGraphicsWindow().getWindowRectangle(x, y, width, height);
 	return width;
-
 }
 
 int StandaloneWindow::getHeight() const
 {
-	osgViewer::ViewerBase::Windows windows;
-	mViewer->getWindows(windows);
-	if (windows.empty())
-		return 0;
-
 	int x, y, width, height;
-	windows[0]->getWindowRectangle(x, y, width, height);
+	getGraphicsWindow().getWindowRectangle(x, y, width, height);
 	return height;
 }
 
 std::string StandaloneWindow::getHandle() const
 {
-	osgViewer::ViewerBase::Windows windows;
-	mViewer->getWindows(windows);
-	if (windows.empty())
-		return "";
+	osg::GraphicsContext* context = mView->getCamera()->getGraphicsContext();
 #if defined(WIN32)
-	size_t ptr = (size_t)dynamic_cast<osgViewer::GraphicsHandleWin32*>(windows[0])->getHWND();
+	size_t ptr = (size_t)dynamic_cast<osgViewer::GraphicsHandleWin32*>(context)->getHWND();
 #else
-	size_t ptr = (size_t)dynamic_cast<osgViewer::GraphicsWindowX11*>(windows[0])->getWindow();
+	size_t ptr = (size_t)dynamic_cast<osgViewer::GraphicsWindowX11*>(context)->getWindow();
 #endif
 	return std::to_string(ptr);
+}
+
+osgViewer::GraphicsWindow& StandaloneWindow::getGraphicsWindow() const
+{
+	osgViewer::GraphicsWindow* window = dynamic_cast<osgViewer::GraphicsWindow*>(mView->getCamera()->getGraphicsContext());
+	assert(window);
+	return *window;
 }

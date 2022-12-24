@@ -161,7 +161,7 @@ VolumeClouds::~VolumeClouds()
 }
 
 // From https://en.wikipedia.org/wiki/Ordered_dithering
-const int bayerIndex[] = {
+const int bayerIndices[] = {
     0, 8, 2, 10,
     12, 4, 14, 6,
     3, 11, 1, 9,
@@ -200,13 +200,13 @@ void VolumeClouds::updatePreRender(const CameraRenderContext& context)
 
 		if (mApplyTemporalUpscalingJitter)
 		{
-			mFrameNumber = (mFrameNumber + 1) % (16);
+			int frameNumberMod = context.frameNumber % 16;
 
-			static std::vector<osg::Vec2f> bayerOffset = calcBayerOffsets(bayerIndex);
+			static std::vector<osg::Vec2f> bayerOffset = calcBayerOffsets(bayerIndices);
 
 			mJitterOffset = osg::Vec2(
-				(bayerOffset[(mFrameNumber)].x() - 0.5f) / float(context.targetDimensions.x()) * 4.f,
-				(bayerOffset[(mFrameNumber)].y() - 0.5f) / float(context.targetDimensions.y()) * 4.f);
+				(bayerOffset[(frameNumberMod)].x() - 0.5f) / float(context.targetDimensions.x()) * 4.f,
+				(bayerOffset[(frameNumberMod)].y() - 0.5f) / float(context.targetDimensions.y()) * 4.f);
 			proj(2, 0) += mJitterOffset.x() * 2.f;
 			proj(2, 1) += mJitterOffset.y() * 2.f;
 		}

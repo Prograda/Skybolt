@@ -14,7 +14,7 @@ namespace vis {
 class BruentonAtmosphereRenderOperation : public RenderOperation
 {
 public:
-	BruentonAtmosphereRenderOperation(const ScenePtr& scene);
+	BruentonAtmosphereRenderOperation(const ScenePtr& scene, const osg::ref_ptr<osg::StateSet>& viewportStateSet);
 	~BruentonAtmosphereRenderOperation() override = default;
 
 	void updatePreRender(const RenderContext& renderContext) override;
@@ -23,6 +23,7 @@ public:
 
 private:
 	ScenePtr mScene;
+	osg::ref_ptr<osg::StateSet> mViewportStateSet;
 };
 
 } // namespace vis

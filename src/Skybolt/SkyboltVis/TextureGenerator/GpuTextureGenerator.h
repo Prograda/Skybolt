@@ -15,6 +15,8 @@
 namespace skybolt {
 namespace vis {
 
+class TextureGeneratorCullCallback;
+
 class GpuTextureGenerator : public RenderOperation
 {
 public:
@@ -29,12 +31,10 @@ public:
 	}
 
 private:
+	osg::ref_ptr<TextureGeneratorCullCallback> mTextureGeneratorCullCallback;
 	osg::ref_ptr<osg::Texture2D> mTexture;
 	osg::ref_ptr<osg::Camera> mCamera;
 	std::unique_ptr<ScreenQuad> mQuad;
-	bool mActive;
-
-	friend class GpuTextureGeneratorDrawCallback;
 };
 
 } // namespace vis

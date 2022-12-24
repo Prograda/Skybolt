@@ -8,9 +8,7 @@ namespace skybolt {
 
 std::unique_ptr<vis::StandaloneWindow> createExampleWindow()
 {
-	auto window = std::make_unique<vis::StandaloneWindow>(vis::RectI(0, 0, 1080, 720));
-	window->getViewer().setKeyEventSetsDone(osgGA::GUIEventAdapter::KEY_Escape);
-	return window;
+	return std::make_unique<vis::StandaloneWindow>(vis::RectI(0, 0, 1080, 720));
 }
 
 } // namespace skybolt

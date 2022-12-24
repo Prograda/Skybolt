@@ -22,6 +22,9 @@
 namespace skybolt {
 namespace vis {
 
+class VolumeCloudsComposite;
+class ViewportStateSet;
+
 struct DefaultRenderCameraViewportConfig
 {
 	ScenePtr scene;
@@ -47,6 +50,7 @@ public:
 	std::vector<osg::ref_ptr<osg::Texture>> getOutputTextures() const override;
 
 private:
+	osg::ref_ptr<ViewportStateSet> mViewportStateSet;
 	ScenePtr mScene;
 	std::unique_ptr<RenderOperationSequence> mSequence;
 	osg::ref_ptr<RenderTexture> mMainPassTexture;
@@ -54,7 +58,7 @@ private:
 	std::unique_ptr<class CascadedShadowMapGenerator> mShadowMapGenerator;
 
 	osg::ref_ptr<CloudsTemporalUpscaling> mCloudsUpscaling; //!< May be null
-	VisObjectPtr mCloudsComposite;
+	std::shared_ptr<VolumeCloudsComposite> mCloudsComposite;
 	bool mCloudsCompositeInScene = false;
 
 	CameraPtr mCamera;

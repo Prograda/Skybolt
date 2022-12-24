@@ -14,7 +14,7 @@ namespace vis {
 class RenderEnvironmentMap : public RenderOperation
 {
 public:
-	RenderEnvironmentMap(const ScenePtr& scene, const ShaderPrograms& programs);
+	RenderEnvironmentMap(const ScenePtr& scene, const osg::ref_ptr<osg::StateSet> viewportStateSet, const ShaderPrograms& programs);
 	~RenderEnvironmentMap() override = default;
 
 	void updatePreRender(const RenderContext& renderContext) override;

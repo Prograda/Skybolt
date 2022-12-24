@@ -5,90 +5,76 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "Window.h"
-#include "DisplaySettings.h"
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/OsgLogHandler.h"
 #include "SkyboltVis/RenderContext.h"
 #include "SkyboltVis/RenderOperation/RenderTarget.h"
 
+#include <assert.h>
 #include <boost/foreach.hpp>
-
-#ifdef OSG_LIBRARY_STATIC
-#include <osgDB/Registry>
-// include the plugins we need
-USE_OSGPLUGIN(bmp)
-USE_OSGPLUGIN(curl)
-USE_OSGPLUGIN(dds)
-USE_OSGPLUGIN(freetype)
-USE_OSGPLUGIN(jpeg)
-USE_OSGPLUGIN(png)
-USE_OSGPLUGIN(tga)
-
-USE_OSGPLUGIN(osg2)
-USE_SERIALIZER_WRAPPER_LIBRARY(osg)
-
-// include the platform specific GraphicsWindow implementation
-USE_GRAPHICSWINDOW()
-#endif
 
 namespace skybolt {
 namespace vis {
 
-Window::Window(std::unique_ptr<osgViewer::Viewer> viewer, const DisplaySettings& settings) :
-	mViewer(std::move(viewer)),
-	mRootGroup(new osg::Group),
+class NodeCallbackFunction : public osg::NodeCallback
+{
+public:
+	NodeCallbackFunction(std::function<void()> fn) :
+		mFn(std::move(fn))
+	{
+	}
+
+	void operator()(osg::Node* node, osg::NodeVisitor* nv)
+	{
+		mFn();
+		traverse(node, nv);
+	}
+
+private:
+	std::function<void()> mFn;
+};
+
+Window::Window(const osg::ref_ptr<osgViewer::View>& view) :
+	mView(view),
 	mRenderOperationSequence(std::make_unique<RenderOperationSequence>())
 {
-	assert(mViewer);
-	mRootGroup->addChild(mRenderOperationSequence->getRootNode());
+	assert(view);
 
-	forwardOsgLogToBoost();
+	mView->getCamera()->setClearMask(0); // No need to clear this camera, since the RenderOperationSequence will clear the view as needed
+	mView->setSceneData(mRenderOperationSequence->getRootNode());
 
-	osg::DisplaySettings::instance()->setNumMultiSamples(settings.multiSampleCount);
-
-	osg::setNotifyLevel(osg::WARN);
-	mViewer->setKeyEventSetsDone(0); // disable default 'escape' key binding to quit the application
-	mViewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded); // TODO: Use multi-threaded?
-
-	osg::StateSet* stateSet = mRootGroup->getOrCreateStateSet();
+	osg::StateSet* stateSet = mView->getCamera()->getOrCreateStateSet();
 	// We will write to the frame buffer in linear light space, and it will automatically convert to SRGB
 	stateSet->setMode(GL_FRAMEBUFFER_SRGB, osg::StateAttribute::ON);
 
 	stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
 
-	mViewer->setSceneData(osg::ref_ptr<osg::Node>(mRootGroup));
-
 	mScreenSizePixelsUniform = new osg::Uniform("screenSizePixels", osg::Vec2f(0, 0));
 	stateSet->addUniform(mScreenSizePixelsUniform);
+
+	// Call preRender callback during the cull phase, which happens just before render phase per camera.
+	mView->getCamera()->addCullCallback(new NodeCallbackFunction([this] {
+		preRender(mLoadTimingPolicy);
+	}));
 }
 
-Window::~Window()
-{
-}
+Window::~Window() = default;
 
-bool Window::render(LoadTimingPolicy loadTimingPolicy)
+void Window::preRender(LoadTimingPolicy policy)
 {
 	mScreenSizePixelsUniform->set(osg::Vec2f(getWidth(), getHeight()));
 
 	RenderContext context;
 	context.targetDimensions = osg::Vec2i(getWidth(), getHeight());
-	context.loadTimingPolicy = loadTimingPolicy;
+	context.frameNumber = mFrameNumber++;
+	context.loadTimingPolicy = policy;
 	mRenderOperationSequence->updatePreRender(context);
-
-	mViewer->frame();
-
-	return !mViewer->done();
 }
 
-void Window::configureGraphicsState()
+void configureGraphicsState(osg::GraphicsContext& context)
 {
 	// Set global graphics state
-	osg::GraphicsContext* context = mViewer->getCamera()->getGraphicsContext();
-	if (!context)
-	{
-		throw std::runtime_error("Could not initialize graphics context");
-	}
-	osg::State* state = context->getState();
+	osg::State* state = context.getState();
 
 	state->setUseModelViewAndProjectionUniforms(true);
 	state->setUseVertexAttributeAliasing(true);

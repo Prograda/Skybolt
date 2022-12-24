@@ -54,6 +54,7 @@
 #include <SkyboltSim/System/SystemRegistry.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltVis/Camera.h>
+#include <SkyboltVis/DisplaySettings.h>
 #include <SkyboltVis/Shader/OsgShaderHelpers.h>
 #include <SkyboltVis/Scene.h>
 #include <SkyboltVis/Renderable/Planet/Planet.h>
@@ -63,7 +64,6 @@
 #include <SkyboltVis/RenderOperation/RenderTarget.h>
 #include <SkyboltVis/Shader/ShaderSourceFileChangeMonitor.h>
 #include <SkyboltVis/Window/CaptureScreenshot.h>
-#include <SkyboltVis/Window/DisplaySettings.h>
 #include <SkyboltVis/Window/Window.h>
 #include <SkyboltCommon/File/OsDirectories.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
@@ -369,7 +369,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	mOsgWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(mOsgWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
 
-	mStatsDisplaySystem = std::make_shared<StatsDisplaySystem>(&mOsgWidget->getWindow()->getViewer(), mViewport->getFinalRenderTarget()->getOsgCamera());
+	mStatsDisplaySystem = std::make_shared<StatsDisplaySystem>(mOsgWidget->getWindow()->getView(), mViewport->getFinalRenderTarget()->getOsgCamera());
 	mStatsDisplaySystem->setVisible(false);
 	mEngineRoot->systemRegistry->push_back(mStatsDisplaySystem);
 

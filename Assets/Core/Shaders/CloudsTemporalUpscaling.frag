@@ -36,7 +36,7 @@ const ivec2 neighborClampingOffsets[neighborClampingTapCount] = ivec2[neighborCl
 
 void main()
 {
-	ivec2 texCoordInt = ivec2(gl_FragCoord.x/4, gl_FragCoord.y/4);//ivec2(texCoord.xy * textureSize(colorTextureSrc, 0));
+	ivec2 texCoordInt = ivec2(gl_FragCoord.x/4, gl_FragCoord.y/4);
 	vec4 srcColor = texelFetch(colorTextureSrc, texCoordInt, 0);
 
 	// Calculate min and max color of 3x3 box around source sample point
@@ -70,7 +70,7 @@ void main()
 		prevColor = clamp(prevColor, minColor, maxColor);
 	
 		float bayerValue = bayerIndex[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4];
-		colorOut = mix(prevColor, srcColor, (int(bayerValue) == frameNumber) ? 1.0 : 0.0);
+		colorOut = mix(prevColor, srcColor, (int(bayerValue) == (frameNumber % 16)) ? 1.0 : 0.0);
 	}
 
 	depthOut = logZNdc;

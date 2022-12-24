@@ -28,33 +28,6 @@ Scene::Scene(const osg::ref_ptr<osg::StateSet>& ss) :
 		mBucketGroups.push_back(new osg::Group);
 	}
 
-	mCameraPositionUniform = new osg::Uniform("cameraPosition", osg::Vec3f(0, 0, 0));
-	ss->addUniform(mCameraPositionUniform);
-
-	mViewCameraPositionUniform = new osg::Uniform("viewCameraPosition", osg::Vec3f(0, 0, 0));
-	ss->addUniform(mViewCameraPositionUniform);
-
-	mCameraCenterDirectionUniform = new osg::Uniform("cameraCenterDirection", osg::Vec3f(0, 0, 0));
-	ss->addUniform(mCameraCenterDirectionUniform);
-
-	mCameraUpDirectionUniform = new osg::Uniform("cameraUpDirection", osg::Vec3f(0, 0, 0));
-	ss->addUniform(mCameraUpDirectionUniform);
-
-	mCameraRightDirectionUniform = new osg::Uniform("cameraRightDirection", osg::Vec3f(0, 0, 0));
-	ss->addUniform(mCameraRightDirectionUniform);
-
-	mFarClipDistanceUniform = new osg::Uniform("farClipDistance", 1e5f);
-	ss->addUniform(mFarClipDistanceUniform);
-
-	mViewMatrixUniform = new osg::Uniform("viewMatrix", osg::Matrixf());
-	ss->addUniform(mViewMatrixUniform);
-
-	mViewProjectionMatrixUniform = new osg::Uniform("viewProjectionMatrix", osg::Matrixf());
-	ss->addUniform(mViewProjectionMatrixUniform);
-
-	mProjectionMatrixUniform = new osg::Uniform("projectionMatrix", osg::Matrixf());
-	ss->addUniform(mProjectionMatrixUniform);
-
 	mLightDirectionUniform = new osg::Uniform("lightDirection", osg::Vec3f(0, 0, -1));
 	ss->addUniform(mLightDirectionUniform);
 
@@ -77,23 +50,6 @@ Scene::~Scene() = default;
 
 void Scene::updatePreRender(const CameraRenderContext& context)
 {
-	mCameraPositionUniform->set(osg::Vec3f(context.camera.getPosition()));
-	mViewCameraPositionUniform->set(osg::Vec3f(context.camera.getPosition()));
-
-	mCameraCenterDirectionUniform->set(context.camera.getOrientation() * osg::Vec3f(1, 0, 0));
-	mCameraUpDirectionUniform->set(context.camera.getOrientation() * osg::Vec3f(0, 0, -1));
-	mCameraRightDirectionUniform->set(context.camera.getOrientation() * osg::Vec3f(0, 1, 0));
-	mFarClipDistanceUniform->set(context.camera.getFarClipDistance());
-
-	const auto& camera = context.camera;
-
-	mViewMatrixUniform->set(camera.getViewMatrix());
-
-	osg::Matrixf viewProj = camera.getViewMatrix() * camera.getProjectionMatrix();
-	osg::Matrixf viewProjInv = osg::Matrix::inverse(viewProj);
-	mViewProjectionMatrixUniform->set(viewProj);
-	mProjectionMatrixUniform->set(camera.getProjectionMatrix());
-
 	mLightDirectionUniform->set(-getPrimaryLightDirection());
 
 	mWrappedNoiseOriginUniform->set(mWrappedNoiseOrigin);

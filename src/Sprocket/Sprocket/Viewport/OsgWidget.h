@@ -36,6 +36,7 @@ protected:
 	void keyPressEvent(QKeyEvent* event) override;
 
 private:
-	std::unique_ptr<skybolt::vis::EmbeddedWindow> mWindow;
+	std::unique_ptr<skybolt::vis::VisRoot> mVisRoot;
+	std::shared_ptr<skybolt::vis::EmbeddedWindow> mWindow;
 	osg::ref_ptr<osg::Camera::DrawCallback> mDrawCallback;
 };

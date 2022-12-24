@@ -51,8 +51,6 @@ CloudsTemporalUpscaling::CloudsTemporalUpscaling(const CloudsTemporalUpscalingCo
 		mUpscaledColorTexture[i] = new RenderTexture(textureConfig);
 		mUpscaledColorTexture[i]->setScene(quad);
 	}
-
-	addChild(mUpscaledColorTexture[0]);
 }
 
 // https://en.wikipedia.org/wiki/Halton_sequence#Implementation_in_pseudocode
@@ -95,13 +93,14 @@ void CloudsTemporalUpscaling::updatePreRender(const RenderContext& context)
 		mUpscaledColorTexture[i]->updatePreRender(context);
 	}
 
+	mUpscaledOutputIndex = 1 - mUpscaledOutputIndex;
+
 	osg::ref_ptr<RenderTexture> input = mUpscaledColorTexture[1 - mUpscaledOutputIndex];
 	osg::ref_ptr<RenderTexture> output = mUpscaledColorTexture[mUpscaledOutputIndex];
-	osg::ref_ptr<osg::Texture> inputColorTexture = input->getOutputTextures().front();
 
 	mStateSet->setTextureAttribute(0, mColorTextureProvider(), osg::StateAttribute::ON);
 	mStateSet->setTextureAttribute(1, mDepthTextureProvider(), osg::StateAttribute::ON);
-	mStateSet->setTextureAttribute(2, inputColorTexture, osg::StateAttribute::ON);
+	mStateSet->setTextureAttribute(2, input->getOutputTextures().front(), osg::StateAttribute::ON);
 	mStateSet->setTextureAttribute(3, input->getOutputTextures().back(), osg::StateAttribute::ON);
 	removeChild(input);
 	addChild(output);
@@ -123,10 +122,9 @@ void CloudsTemporalUpscaling::updatePreRender(const RenderContext& context)
 		mReprojectionMatrixUniform->set(osg::Matrix::inverse(modelViewProjXy) * mPrevFrameModelViewProjXyMatrix);
 		mPrevFrameModelViewProjXyMatrix = modelViewProjXy;
 			
-		mFrameNumberUniform->set(clouds->getCurrentFrameNumber());
+		mFrameNumberUniform->set(context.frameNumber);
 		mJitterOffsetUniform->set(clouds->getCurrentFrameJitterNdcOffset());
 	}
-	mUpscaledOutputIndex = 1 - mUpscaledOutputIndex;
 }
 
 std::vector<osg::ref_ptr<osg::Texture>> CloudsTemporalUpscaling::getOutputTextures() const

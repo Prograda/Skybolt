@@ -49,7 +49,6 @@ struct BruentonAtmosphereConfig
 
 class BruentonAtmosphere : public osg::Group
 {
-	friend class BruentonAtmosphereDrawCallback;
 public:
 	BruentonAtmosphere(const BruentonAtmosphereConfig& config);
 	~BruentonAtmosphere();

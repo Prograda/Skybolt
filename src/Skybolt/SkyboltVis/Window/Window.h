@@ -19,33 +19,34 @@ namespace vis {
 
 class Window
 {
+	friend class VisRoot;
 public:
-	Window(std::unique_ptr<osgViewer::Viewer> viewer, const DisplaySettings& config);
-	~Window();
-
-	//! @returns false if window has been closed
-	virtual bool render(LoadTimingPolicy loadTimingPolicy = LoadTimingPolicy::LoadAcrossMultipleFrames);
+	Window(const osg::ref_ptr<osgViewer::View>& view);
+	virtual ~Window();
 
 	virtual int getWidth() const = 0;
 	virtual int getHeight() const = 0;
 
-	osgViewer::Viewer& getViewer() const { return *mViewer; }
-	std::weak_ptr<osgViewer::Viewer> getViewerPtr() const {return mViewer;}
+	osg::ref_ptr<osgViewer::View> getView() const { return mView; }
 
 	RenderOperationSequence& getRenderOperationSequence() { return *mRenderOperationSequence; }
 	const RenderOperationSequence& getRenderOperationSequence() const { return *mRenderOperationSequence; }
 
 protected:
-	void configureGraphicsState();
+	void setLoadTimingPolicy(LoadTimingPolicy loadTimingPolicy) { mLoadTimingPolicy = loadTimingPolicy; }
+	void preRender(LoadTimingPolicy policy);
 
 protected:
-	std::shared_ptr<osgViewer::Viewer> mViewer;
+	osg::ref_ptr<osgViewer::View> mView;
 
 private:
-	osg::ref_ptr<osg::Group> mRootGroup;
 	std::unique_ptr<RenderOperationSequence> mRenderOperationSequence;
 	osg::Uniform* mScreenSizePixelsUniform;
+	int mFrameNumber = 0;
+	LoadTimingPolicy mLoadTimingPolicy = LoadTimingPolicy::LoadAcrossMultipleFrames;
 };
+
+void configureGraphicsState(osg::GraphicsContext& context);
 
 } // namespace vis
 } // namespace skybolt

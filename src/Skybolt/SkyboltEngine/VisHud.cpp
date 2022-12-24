@@ -175,7 +175,7 @@ VisHud::~VisHud()
 {
 }
 
-void VisHud::setAspectRatio(double value)
+void VisHud::setAspectRatio(float value)
 {
 	mCamera->setProjectionMatrix(osg::Matrix::ortho2D(-value, value, -1, 1));
 }

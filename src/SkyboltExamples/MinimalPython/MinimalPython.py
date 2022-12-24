@@ -1,7 +1,16 @@
+import os, sys
+sys.path.append(os.getenv("SKYBOLT_LIB_DIR"))
+
 import skybolt as sb
 
+visRoot = sb.VisRoot()
+visRoot.setLoadTimingPolicy(sb.LoadTimingPolicy.LoadBeforeRender);
+
 window = sb.StandaloneWindow(sb.RectI(0,0,800,600))
+visRoot.addWindow(window)
+
 engine = sb.createEngineRootWithDefaults()
+
 camera = engine.entityFactory.createEntity("Camera")
 engine.world.addEntity(camera);
 
@@ -18,6 +27,6 @@ controller = camera.getFirstComponentOfType("CameraControllerComponent").cameraC
 controller.setTarget(earth)
 controller.selectController("Globe")
 
-sb.render(engine, window)
+sb.render(engine, visRoot)
 
 input("Press enter to exit")

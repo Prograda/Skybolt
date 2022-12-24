@@ -7,6 +7,7 @@
 #pragma once
 
 #include "SkyboltVis/DefaultRootNode.h"
+#include "SkyboltVis/Renderable/ScreenQuad.h"
 #include <osg/PrimitiveSet>
 #include <osg/Texture2D>
 
@@ -15,16 +16,21 @@
 namespace skybolt {
 namespace vis {
 
-using TextureProvider = std::function<osg::ref_ptr<osg::Texture>()>;
-
 struct VolumeCloudsCompositeConfig
 {
 	osg::ref_ptr<osg::Program> compositorProgram;
-	TextureProvider colorTextureProvider;
-	TextureProvider depthTextureProvider;
+	osg::ref_ptr<osg::Texture> colorTexture;
+	osg::ref_ptr<osg::Texture> depthTexture;
 };
 
-VisObjectPtr createVolumeCloudsComposite(const VolumeCloudsCompositeConfig& config);
+class VolumeCloudsComposite : public ScreenQuad
+{
+public:
+	VolumeCloudsComposite(const VolumeCloudsCompositeConfig& config);
+
+	void setColorTexture(osg::ref_ptr<osg::Texture> texture);
+	void setDepthTexture(osg::ref_ptr<osg::Texture> texture);
+};
 
 } // namespace vis
 } // namespace skybolt

@@ -406,8 +406,8 @@ void MouseInputDeviceOsg::enablePointerWrap(bool wrap)
 	mPrevPosition.reset();
 }
 
-InputPlatformOsg::InputPlatformOsg(const std::weak_ptr<osgViewer::Viewer>& viewer) :
-	mViewer(viewer),
+InputPlatformOsg::InputPlatformOsg(const osg::ref_ptr<osgViewer::View>& view) :
+	mView(view),
 	mEmitter(std::make_shared<EventEmitter>())
 {
 	mKeyboard = std::make_shared<KeyboardInputDeviceOsg>(mEmitter);
@@ -419,21 +419,15 @@ InputPlatformOsg::InputPlatformOsg(const std::weak_ptr<osgViewer::Viewer>& viewe
 
 void InputPlatformOsg::addEventHandler(const osg::ref_ptr<osgGA::GUIEventHandler>& handler)
 {
-	if (auto viewer = mViewer.lock(); viewer)
-	{
-		mEventHandlers.push_back(handler);
-		viewer->addEventHandler(handler);
-	}
+	mEventHandlers.push_back(handler);
+	mView->addEventHandler(handler);
 }
 
 InputPlatformOsg::~InputPlatformOsg()
 {
-	if (auto viewer = mViewer.lock(); viewer)
+	for (const auto& handler : mEventHandlers)
 	{
-		for (const auto& handler : mEventHandlers)
-		{
-			viewer->removeEventHandler(handler);
-		}
+		mView->removeEventHandler(handler);
 	}
 }
 

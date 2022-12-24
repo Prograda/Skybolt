@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "DisplaySettings.h"
 #include "Window.h"
 #include "SkyboltVis/Rect.h"
 
@@ -16,7 +15,6 @@ namespace vis {
 struct StandaloneWindowConfig
 {
 	RectI rect;
-	DisplaySettings displaySettings;
 };
 
 class StandaloneWindow : public Window
@@ -24,11 +22,15 @@ class StandaloneWindow : public Window
 public:
 	StandaloneWindow(const StandaloneWindowConfig& config);
 	StandaloneWindow(const RectI& rect);
+	~StandaloneWindow() override = default;
 
-	virtual int getWidth() const;
-	virtual int getHeight() const;
+	int getWidth() const override;
+	int getHeight() const override;
 
 	std::string getHandle() const;
+
+private:
+	osgViewer::GraphicsWindow& getGraphicsWindow() const;
 };
 
 } // namespace vis

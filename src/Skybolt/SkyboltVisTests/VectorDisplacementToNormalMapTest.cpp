@@ -18,7 +18,7 @@ using namespace skybolt::vis;
 
 TEST_CASE("Generate normal map from vector displacement map")
 {
-	// TODO: reenable
+	// TODO: reenable and assert output image is as expected
 	/*
 	int width = 64;
 	int height = 64;

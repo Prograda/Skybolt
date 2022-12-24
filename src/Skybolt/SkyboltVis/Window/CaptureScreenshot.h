@@ -14,8 +14,8 @@
 namespace skybolt {
 namespace vis {
 
-osg::ref_ptr<osg::Image> captureScreenshot(Window& window);
-void captureScreenshot(Window& window, const std::string& filename);
+osg::ref_ptr<osg::Image> captureScreenshot(VisRoot& visRoot);
+void captureScreenshot(VisRoot& visRoot, const std::string& filename);
 
 } // namespace vis
 } // namespace skybolt

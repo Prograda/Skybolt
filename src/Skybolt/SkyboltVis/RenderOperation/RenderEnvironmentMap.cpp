@@ -36,7 +36,7 @@ static osg::ref_ptr<osg::Texture2D> createEnvironmentTexture(int width, int heig
 	return texture;
 }
 
-RenderEnvironmentMap::RenderEnvironmentMap(const ScenePtr& scene, const ShaderPrograms& programs) :
+RenderEnvironmentMap::RenderEnvironmentMap(const ScenePtr& scene, const osg::ref_ptr<osg::StateSet> viewportStateSet, const ShaderPrograms& programs) :
 	mScene(scene)
 {
 	assert(mScene);
@@ -45,9 +45,8 @@ RenderEnvironmentMap::RenderEnvironmentMap(const ScenePtr& scene, const ShaderPr
 	mGenerator = new GpuTextureGenerator(environmentTexture, createSkyToEnvironmentMapStateSet(programs.getRequiredProgram("skyToEnvironmentMap")), /* generateMipMaps */ true);
 	addChild(mGenerator);
 
-	osg::StateSet* ss = mScene->getStateSet();
-	ss->setTextureAttributeAndModes((int)GlobalSamplerUnit::EnvironmentProbe, environmentTexture, osg::StateAttribute::ON);
-	ss->addUniform(createUniformSampler2d("environmentSampler", (int)GlobalSamplerUnit::EnvironmentProbe));
+	viewportStateSet->setTextureAttributeAndModes((int)GlobalSamplerUnit::EnvironmentProbe, environmentTexture, osg::StateAttribute::ON);
+	viewportStateSet->addUniform(createUniformSampler2d("environmentSampler", (int)GlobalSamplerUnit::EnvironmentProbe));
 }
 
 void RenderEnvironmentMap::updatePreRender(const RenderContext& renderContext)

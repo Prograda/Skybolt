@@ -73,8 +73,6 @@ void RenderTarget::updatePreRender(const RenderContext& context)
 
 	if (mCamera)
 	{
-		mCamera->setAspectRatio((float)context.targetDimensions.x() / (float)context.targetDimensions.y());
-
 		mCamera->updateOsgCameraGeometry(*mOsgCamera);
 	}
 }

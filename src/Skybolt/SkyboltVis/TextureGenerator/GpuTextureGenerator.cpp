@@ -5,31 +5,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "GpuTextureGenerator.h"
+#include "TextureGeneratorCullCallback.h"
 
 #include <osg/Camera>
 
 namespace skybolt {
 namespace vis {
 
-class GpuTextureGeneratorDrawCallback : public osg::Camera::DrawCallback
-{
-public:
-	GpuTextureGeneratorDrawCallback(GpuTextureGenerator* generator) : generator(generator) {}
-	void operator() (const osg::Camera &) const
-	{
-		if (generator->mActive)
-		{
-			generator->mActive = false;
-			generator->removeChild(generator->mCamera);
-		}
-	}
-
-	GpuTextureGenerator* generator;
-};
-
 GpuTextureGenerator::GpuTextureGenerator(const osg::ref_ptr<osg::Texture2D>& texture, const osg::ref_ptr<osg::StateSet>& stateSet, bool generateMipMaps) :
-	mTexture(texture),
-	mActive(true)
+	mTextureGeneratorCullCallback(new TextureGeneratorCullCallback()),
+	mTexture(texture)
 {
 	mCamera = new osg::Camera;
 	mCamera->setClearMask(GL_COLOR_BUFFER_BIT); 
@@ -39,6 +24,7 @@ GpuTextureGenerator::GpuTextureGenerator(const osg::ref_ptr<osg::Texture2D>& tex
 	mCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT); 
 	mCamera->attach(osg::Camera::COLOR_BUFFER, texture, 0, 0, generateMipMaps);
 	mCamera->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+	
 	mQuad.reset(new ScreenQuad(stateSet));
 	mCamera->addChild(mQuad->_getNode());
 
@@ -48,24 +34,18 @@ GpuTextureGenerator::GpuTextureGenerator(const osg::ref_ptr<osg::Texture2D>& tex
 		int mipMapCount = 1 + floor(log((float)osg::maximum(texture->getTextureWidth(), texture->getTextureHeight())));
 		texture->setNumMipmapLevels(mipMapCount);
 	}
-
-	mCamera->setPostDrawCallback(new GpuTextureGeneratorDrawCallback(this)); // osg::Camera takes ownership of the callback by storing it as a ref_ptr
+	
+	// Always cull the camera (don't render from the camera) after the first generation, unless the generator has been requested to regenerate.
+	addCullCallback(mTextureGeneratorCullCallback);
 
 	addChild(mCamera);
 }
 
-GpuTextureGenerator::~GpuTextureGenerator()
-{
-	removeChild(mCamera);
-}
+GpuTextureGenerator::~GpuTextureGenerator() = default;
 
 void GpuTextureGenerator::requestRegenerate()
 {
-	if (!mActive)
-	{
-		mActive = true;
-		addChild(mCamera);
-	}
+	mTextureGeneratorCullCallback->resetCulling();
 }
 
 } // namespace vis

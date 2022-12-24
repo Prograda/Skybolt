@@ -5,8 +5,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "OsgWidget.h"
+#include <SkyboltVis/VisRoot.h>
 #include <SkyboltVis/Window/EmbeddedWindow.h>
 
+#include <osgViewer/CompositeViewer>
 #include <QKeyEvent>
 
 using namespace skybolt;
@@ -26,16 +28,20 @@ public:
 };
 
 OsgWidget::OsgWidget(const DisplaySettings& displaySettings, QWidget* parent):
-	QOpenGLWidget(parent)
+	QOpenGLWidget(parent),
+	mVisRoot(std::make_unique<VisRoot>(displaySettings))
 {
 	setFocusPolicy(Qt::StrongFocus);
 
+	// Since Qt manages the OpenGL context, ensure OSG renders on the Qt thread
+	mVisRoot->getViewer().setThreadingModel(osgViewer::Viewer::SingleThreaded);
+
 	EmbeddedWindowConfig config;
 	config.rect = RectI(0, 0, width(), height());
-	config.displaySettings = displaySettings;
-	mWindow.reset(new EmbeddedWindow(config));
+	mWindow = std::make_shared<EmbeddedWindow>(config);
+	mVisRoot->addWindow(mWindow);
 
-	auto camera = mWindow->getViewer().getCamera();
+	auto camera = mWindow->getView()->getCamera();
 	camera->setPreDrawCallback(new DrawCallback(this));
 	camera->getOrCreateStateSet()->setDefine("CONVERT_OUTPUT_TO_SRGB");
 }
@@ -55,7 +61,7 @@ void OsgWidget::initializeGL()
  
 void OsgWidget::paintGL()
 {
-	mWindow->render();
+	mVisRoot->render();
 }
  
 void OsgWidget::resizeGL(int width, int height)

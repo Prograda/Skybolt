@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "DisplaySettings.h"
 #include "Window.h"
 #include "SkyboltVis/Rect.h"
 
@@ -17,7 +16,6 @@ namespace vis {
 struct EmbeddedWindowConfig
 {
 	RectI rect;
-	DisplaySettings displaySettings;
 };
 
 class EmbeddedWindow : public Window

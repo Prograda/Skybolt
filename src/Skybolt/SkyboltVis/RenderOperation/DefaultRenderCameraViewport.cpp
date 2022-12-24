@@ -8,6 +8,7 @@
 #include "DefaultRenderCameraViewport.h"
 #include "RenderOperationSequence.h"
 #include "RenderOperationUtil.h"
+#include "ViewportStateSet.h"
 
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/GlobalSamplerUnit.h"
@@ -47,11 +48,33 @@ static osg::ref_ptr<RenderTexture> createMainPassTexture()
 
 	return new RenderTexture(config);
 }
+//! Only traverses if rendered by the given camera
+class CameraOnlyCallback : public osg::NodeCallback
+{
+public:
+	CameraOnlyCallback(osg::ref_ptr<osg::Camera> camera) :
+		mCamera(std::move(camera))
+	{
+		assert(mCamera);
+	}
+
+	void operator()(osg::Node* node, osg::NodeVisitor* nv)
+	{
+		if (nv->asCullVisitor()->getCurrentCamera() == mCamera)
+		{
+			traverse(node, nv);
+		}
+	}
+
+private:
+	osg::ref_ptr<osg::Camera> mCamera;
+};
 
 DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCameraViewportConfig& config) :
-	mScene(config.scene)
+	mScene(config.scene),
+	mViewportStateSet(new ViewportStateSet())
 {
-	setStateSet(mScene->getStateSet());
+	setStateSet(mViewportStateSet);
 
 	mMainPassTexture = createMainPassTexture();
 	mMainPassTexture->setScene(mScene->getBucketGroup(Scene::Bucket::Default));
@@ -64,26 +87,19 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 	addChild(mSequence->getRootNode());
 
 	mSequence->addOperation(createRenderOperationFunction([this] (const RenderContext& context) {
-		auto camera = mMainPassTexture->getCamera();
-		if (camera)
+		if (mCamera)
 		{
-			CameraRenderContext cameraContext(*camera);
+			CameraRenderContext cameraContext(*mCamera);
 			(RenderContext&)cameraContext = context;
-			cameraContext.targetDimensions = context.targetDimensions;
 			cameraContext.lightDirection = -mScene->getPrimaryLightDirection();
-			cameraContext.atmosphericDensity = mScene->calcAtmosphericDensity(camera->getPosition());
+			cameraContext.atmosphericDensity = mScene->calcAtmosphericDensity(mCamera->getPosition());
 			mScene->updatePreRender(cameraContext);
-
-			if (!mMainPassTexture->getOutputTextures().empty())
-			{
-				mFinalRenderTarget->getOrCreateStateSet()->setTextureAttributeAndModes(0, mMainPassTexture->getOutputTextures().front());
-			}
 		}
 
 	}), (int)RenderOperationOrder::PrepareScene);
 
-	mSequence->addOperation(new BruentonAtmosphereRenderOperation(mScene), (int)RenderOperationOrder::PrecomputeAtmosphere);
-	mSequence->addOperation(new RenderEnvironmentMap(mScene, *config.programs), (int)RenderOperationOrder::EnvironmentMap);
+	mSequence->addOperation(new BruentonAtmosphereRenderOperation(mScene, mViewportStateSet), (int)RenderOperationOrder::PrecomputeAtmosphere);
+	mSequence->addOperation(new RenderEnvironmentMap(mScene, mViewportStateSet, *config.programs), (int)RenderOperationOrder::EnvironmentMap);
 	mSequence->addOperation(new WaterMaterialRenderOperation(mScene, *config.programs), (int)RenderOperationOrder::WaterMaterial);
 
 	// Shadows
@@ -94,11 +110,7 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 		c.textureSize = config.shadowParams->textureSize;
 
 		mShadowMapGenerator = std::make_unique<CascadedShadowMapGenerator>(c);
-
-		{
-			osg::StateSet* ss = mScene->getStateSet();
-			ss->setDefine("ENABLE_SHADOWS");
-		}
+		mViewportStateSet->setDefine("ENABLE_SHADOWS");
 
 		osg::ref_ptr<osg::Group> shadowSceneGroup(new osg::Group);
 		shadowSceneGroup->getOrCreateStateSet()->setDefine("CAST_SHADOWS");
@@ -111,7 +123,7 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 			mSequence->addOperation(generator, (int)RenderOperationOrder::ShadowMap);
 		}
 
-		osg::StateSet* ss = defaultGroup->getOrCreateStateSet();
+		osg::StateSet* ss = mMainPassTexture->getOrCreateStateSet();
 		mShadowMapGenerator->configureShadowReceiverStateSet(*ss);
 		addShadowMapsToStateSet(mShadowMapGenerator->getTextures(), *ss, int(GlobalSamplerUnit::ShadowCascade0));
 	}
@@ -137,13 +149,31 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 
 		VolumeCloudsCompositeConfig compositeConfig;
 		compositeConfig.compositorProgram = config.programs->getRequiredProgram("compositeClouds");
-		compositeConfig.colorTextureProvider = [cloudsTarget] { return cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[0]; };
-		compositeConfig.depthTextureProvider = [cloudsTarget] { return cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[1]; };
+		compositeConfig.colorTexture = cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[0];
+		compositeConfig.depthTexture = cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[1];
 
-		mCloudsComposite = createVolumeCloudsComposite(compositeConfig);
+		mCloudsComposite = std::make_shared<VolumeCloudsComposite>(compositeConfig);
+		// Because each Viewport may add a mCloudsComposite to the vis::Scene, there will be multiple in the scene,
+		// but we should only render each for their own camera.
+		// FIXME: This is a hack. Ideally the compositing wouldn't be done in the main scene pass, but we do it here
+		// for now so that the clouds can be composited before rendering the main scene transparent objects.
+		mCloudsComposite->_getNode()->addCullCallback(new CameraOnlyCallback(mMainPassTexture->getOsgCamera()));
+
+		mSequence->addOperation(createRenderOperationFunction([this, cloudsTarget] (const RenderContext& context) {
+			mCloudsComposite->setColorTexture(cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[0]);
+			mCloudsComposite->setDepthTexture(cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[1]);
+		}), (int)RenderOperationOrder::Clouds);
 	}
 
 	mSequence->addOperation(mMainPassTexture, (int)RenderOperationOrder::MainPass);
+
+	mSequence->addOperation(createRenderOperationFunction([this] (const RenderContext& context) {
+		if (!mMainPassTexture->getOutputTextures().empty())
+		{
+			mFinalRenderTarget->getOrCreateStateSet()->setTextureAttributeAndModes(0, mMainPassTexture->getOutputTextures().front());
+		}
+	}), (int)RenderOperationOrder::MainPass);
+
 	mSequence->addOperation(mFinalRenderTarget, (int)RenderOperationOrder::FinalComposite);
 }
 
@@ -182,6 +212,11 @@ void DefaultRenderCameraViewport::updatePreRender(const RenderContext& renderCon
 	{
 		return;
 	}
+
+	mCamera->setAspectRatio(vis::calcAspectRatio(renderContext));
+	mViewportStateSet->update(*mCamera);
+	mViewportStateSet->merge(*mScene->getStateSet());
+
 	mSequence->updatePreRender(renderContext);
 
 	if (mShadowMapGenerator)

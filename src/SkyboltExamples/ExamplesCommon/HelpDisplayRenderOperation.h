@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include "SkyboltEngine/SkyboltEngineFwd.h"
-#include "SkyboltSim/System/System.h"
-#include "SkyboltVis/SkyboltVisFwd.h"
+#include <SkyboltVis/RenderOperation/RenderOperation.h>
 
 #include <osg/Camera>
 #include <osg/ref_ptr>
@@ -16,22 +14,21 @@
 
 namespace skybolt {
 
-class HelpDisplaySystem : public sim::System
+class HelpDisplayRenderOperation : public vis::RenderOperation
 {
 public:
-	HelpDisplaySystem(const osg::ref_ptr<osg::Camera>& camera);
-	~HelpDisplaySystem();
+	HelpDisplayRenderOperation();
+	~HelpDisplayRenderOperation() override = default;
 
 	void setMessage(const std::string& message);
 
 	void setVisible(bool visible);
 	bool isVisible();
 
-	void updatePostDynamics(const System::StepArgs& args) override;
+	void updatePreRender(const vis::RenderContext& context);
 
 private:
 	osg::ref_ptr<class VisHud> mHud;
-	osg::ref_ptr<osg::Camera> mCamera;
 };
 
 } // namespace skybolt

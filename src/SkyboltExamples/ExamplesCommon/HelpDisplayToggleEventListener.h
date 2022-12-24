@@ -1,20 +1,19 @@
 #pragma once
 
+#include "HelpDisplayRenderOperation.h"
 #include <SkyboltCommon/Event.h>
 
 namespace skybolt {
 
-class HelpDisplaySystem;
-
 class HelpDisplayToggleEventListener : public EventListener
 {
 public:
-	HelpDisplayToggleEventListener(const std::shared_ptr<HelpDisplaySystem>& helpDisplaySystem);
+	HelpDisplayToggleEventListener(const osg::ref_ptr<HelpDisplayRenderOperation>& helpDisplaySystem);
 
 	void onEvent(const Event& event) override;
 
 private:
-	std::shared_ptr<HelpDisplaySystem> mHelpDisplaySystem;
+	osg::ref_ptr<HelpDisplayRenderOperation> mHelpDisplay;
 };
 
 } // namespace skybolt

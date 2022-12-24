@@ -36,6 +36,17 @@ public:
 	}
 
 	template <typename T>
+	static T* findFirst(std::vector<T>& v, const T& t)
+	{
+		typename std::vector<T>::iterator it = std::find(v.begin(), v.end(), t);
+		if (it != v.end())
+		{
+			&*it;
+		}
+		return nullptr;
+	}
+
+	template <typename T>
 	static void eraseFirst(std::vector<T>& v, const T& t)
 	{
 		typename std::vector<T>::iterator it = std::find(v.begin(), v.end(), t);
