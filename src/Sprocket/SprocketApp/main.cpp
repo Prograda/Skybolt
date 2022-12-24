@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 			QSurfaceFormat::setDefaultFormat(format);
 		}
 
-		std::string pluginsDir = QCoreApplication::applicationDirPath().toStdString() + "/plugins";
+		std::string pluginsDir = (getExecutablePath() / "plugins").string();
 		std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(pluginsDir);
 		std::vector<EditorPluginFactory> editorPluginFactories = loadPluginFactories<EditorPlugin, EditorPluginConfig>(pluginsDir);
 		Application application(enginePluginFactories, editorPluginFactories, argc, argv);
