@@ -972,39 +972,8 @@ void MainWindow::open(const QString& filename)
 		QByteArray wholeFile = file.readAll();
 		QJsonObject const json = QJsonDocument::fromJson(wholeFile).object();
 
-		QJsonValue value = json["scenario"];
-		if (!value.isUndefined())
-		{
-			loadScenario(engineRoot->scenario, value.toObject());
-		}
-
-		value = json["geometry"];
-		if (!value.isUndefined())
-		{
-			mToolWindowManager->restoreGeometry(QByteArray::fromBase64(value.toString().toUtf8()));
-		}
-
-		value = json["windows"];
-		if (!value.isUndefined())
-		{
-			mToolWindowManager->restoreState(toVariantMap(QByteArray::fromBase64(value.toString().toUtf8())));
-		}
-
-		value = json["entities"];
-		if (!value.isUndefined())
-		{
-			loadEntities(*engineRoot->simWorld, *engineRoot->entityFactory, value);
-		}
-
-		value = json["viewport"];
-		if (!value.isUndefined())
-		{
-			loadViewport(value.toObject());
-		}
-
+		loadProject(json);
 		mRecentFilesMenuPopulator->addFilename(filename);
-
-		FOREACH_CALL(mPlugins, loadProject, json);
 	}
 	catch (std::exception &e)
 	{
@@ -1013,9 +982,51 @@ void MainWindow::open(const QString& filename)
 	}
 }
 
+void MainWindow::loadProject(const QJsonObject& json)
+{
+	QJsonValue value = json["scenario"];
+	if (!value.isUndefined())
+	{
+		loadScenario(mEngineRoot->scenario, value.toObject());
+	}
+
+	value = json["geometry"];
+	if (!value.isUndefined())
+	{
+		mToolWindowManager->restoreGeometry(QByteArray::fromBase64(value.toString().toUtf8()));
+	}
+
+	value = json["windows"];
+	if (!value.isUndefined())
+	{
+		mToolWindowManager->restoreState(toVariantMap(QByteArray::fromBase64(value.toString().toUtf8())));
+	}
+
+	value = json["entities"];
+	if (!value.isUndefined())
+	{
+		loadEntities(*mEngineRoot->simWorld, *mEngineRoot->entityFactory, value);
+	}
+
+	value = json["viewport"];
+	if (!value.isUndefined())
+	{
+		loadViewport(value.toObject());
+	}
+
+	FOREACH_CALL(mPlugins, loadProject, json);
+}
+
 void MainWindow::save(QFile& file)
 {
 	QJsonObject json;
+	saveProject(json);
+
+	file.write(QJsonDocument(json).toJson());
+}
+
+void MainWindow::saveProject(QJsonObject& json) const
+{
 	json["scenario"] = saveScenario(mSprocketModel->engineRoot->scenario);
 	json["windows"] = QString(toByteArray(mToolWindowManager->saveState()).toBase64());
 	json["geometry"] = QString(saveGeometry().toBase64());
@@ -1023,8 +1034,6 @@ void MainWindow::save(QFile& file)
 	json["viewport"] = saveViewport();
 
 	FOREACH_CALL(mPlugins, saveProject, json);
-
-	file.write(QJsonDocument(json).toJson());
 }
 
 void MainWindow::save()
@@ -1099,7 +1108,7 @@ static QJsonArray writeJson(const osg::Vec3& v)
 	return { v.x(), v.y(), v.z() };
 }
 
-QJsonObject MainWindow::saveViewport()
+QJsonObject MainWindow::saveViewport() const
 {
 	QJsonObject json;
 	if (mCurrentSimCamera)
@@ -1254,25 +1263,25 @@ void MainWindow::setPropertiesModel(PropertiesModelPtr properties)
 	mPropertiesEditor->setModel(mPropertiesModel);
 }
 
-void MainWindow::setSelectedEntity(sim::Entity* entity)
+void MainWindow::setSelectedEntity(std::weak_ptr<skybolt::sim::Entity> entity)
 {
 	mSelectedEntity = entity;
 	std::set<sim::Entity*> selection;
-	if (entity)
+	if (auto e = entity.lock(); e)
 	{
-		selection.insert(entity);
+		selection.insert(e.get());
 	}
 	mVisSelectedEntityIcon->setEntities(selection);
 }
 
 void MainWindow::explorerSelectionChanged(const TreeItem& item)
 {
-	setSelectedEntity(nullptr);
+	setSelectedEntity(std::weak_ptr<skybolt::sim::Entity>());
 
 	if (auto entityItem = dynamic_cast<const EntityTreeItem*>(&item))
 	{
 		setSelectedEntity(entityItem->data);
-		setPropertiesModel(std::make_shared<EntityPropertiesModel>(mSelectedEntity));
+		setPropertiesModel(std::make_shared<EntityPropertiesModel>(mSelectedEntity.lock().get()));
 	}
 	else if (auto scenarioItem = dynamic_cast<const ScenarioTreeItem*>(&item))
 	{
@@ -1282,42 +1291,60 @@ void MainWindow::explorerSelectionChanged(const TreeItem& item)
 	FOREACH_CALL(mPlugins, explorerSelectionChanged, item);
 }
 
+std::optional<PickedSceneObject> MainWindow::pickSceneObjectAtPointInWindow(const QPointF& position) const
+{
+	glm::dmat4 transform = calcCurrentViewProjTransform();
+	return mSceneObjectPicker(transform, glm::vec2(position.x(), position.y()), 0.04);
+}
+
+std::optional<sim::Vector3> MainWindow::pickPointOnPlanetAtPointInWindow(const QPointF& position) const
+{
+   glm::vec2 pointNdc = glm::vec2(float(position.x()) / mOsgWidget->width(), 1.0 - float(position.y()) / mOsgWidget->height());
+   sim::Vector3 camPosition = *getPosition(*mCurrentSimCamera);
+   return pickPointOnPlanet(*mEngineRoot->simWorld, camPosition, glm::inverse(calcCurrentViewProjTransform()), pointNdc);
+}
+
+MainWindow::ViewportClickHandler MainWindow::getDefaultViewportClickHandler()
+{
+	static ViewportClickHandler f = [this] (Qt::MouseButton button, const QPointF& position) {
+		if (button == Qt::MouseButton::LeftButton)
+		{
+			if (mViewportInput)
+			{
+				mViewportInput->setEnabled(true);
+			}
+		}
+		else if (button == Qt::MouseButton::MiddleButton)
+		{
+			std::weak_ptr<skybolt::sim::Entity> selectedEntity;
+			
+			if (std::optional<PickedSceneObject> object = pickSceneObjectAtPointInWindow(position); object)
+			{
+				selectedEntity = object->entity;
+			}
+			if (selectedEntity.lock() != mSelectedEntity.lock())
+			{
+				setSelectedEntity(selectedEntity);
+				setPropertiesModel(selectedEntity.lock() ? std::make_shared<EntityPropertiesModel>(selectedEntity.lock().get()) : nullptr);
+			}
+		}
+	};
+	return f;
+}
+
 void MainWindow::onViewportMouseDown(Qt::MouseButton button, const QPointF& position)
 {
-	if (button == Qt::MouseButton::LeftButton)
-	{
-		if (mViewportInput)
-		{
-			mViewportInput->setEnabled(true);
-		}
-	}
-	else if (button == Qt::MouseButton::MiddleButton)
-	{
-		glm::dmat4 transform = calcCurrentViewProjTransform();
-
-		sim::Entity* selectedEntity = nullptr;
-		if (std::optional<PickedSceneObject> object = mSceneObjectPicker(transform, glm::vec2(position.x(), position.y()), 0.04); object)
-		{
-			selectedEntity = object->entity.get();
-		}
-		if (selectedEntity != mSelectedEntity)
-		{
-			setSelectedEntity(selectedEntity);
-			setPropertiesModel(selectedEntity ? std::make_shared<EntityPropertiesModel>(selectedEntity) : nullptr);
-		}
-	}
+	mViewportClickHandler(button, position);
 }
 
 void MainWindow::showContextMenu(const QPoint& point)
 {
    QMenu contextMenu(tr("Context menu"), this);
 
-   glm::vec2 pointNdc = glm::vec2(float(point.x()) / mOsgWidget->width(), 1.0 - float(point.y()) / mOsgWidget->height());
-   sim::Vector3 camPosition = *getPosition(*mCurrentSimCamera);
-   if (auto intersection = pickPointOnPlanet(*mEngineRoot->simWorld, camPosition, glm::inverse(calcCurrentViewProjTransform()), pointNdc); intersection)
+   if (auto intersection = pickPointOnPlanetAtPointInWindow(point); intersection)
    {
 	   ActionContext context;
-	   context.entity = mSelectedEntity;
+	   context.entity = mSelectedEntity.lock().get();
 	   context.point = *intersection;
 
 	   for (const auto& contextAction : mContextActions)
@@ -1427,7 +1454,7 @@ QMenu* MainWindow::addVisibilityFilterableSubMenu(QMenu& parent, const QString& 
 	});
 
 	QAction* selectedAction = addCheckedAction(*menu, "Show Selected", [=](bool checked) {
-		filterable->setVisibilityPredicate([=](const Entity& entity) {return mSelectedEntity  == &entity; });
+		filterable->setVisibilityPredicate([=](const Entity& entity) {return mSelectedEntity.lock().get()  == &entity; });
 	});
 
 	alignmentGroup->addAction(offAction);

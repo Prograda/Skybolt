@@ -249,7 +249,7 @@ WorldTreeWidget::WorldTreeWidget(const WorldTreeWidgetConfig& config) :
 			TreeItem* baseItem = mModel->getTreeItem(index);
 			if (EntityTreeItem* item = dynamic_cast<EntityTreeItem*>(baseItem))
 			{
-				mWorld->removeEntity(item->data);
+				mWorld->removeEntity(item->data.lock().get());
 			}
 			else
 			{
@@ -320,7 +320,7 @@ void WorldTreeWidget::update()
 	}
 }
 
-std::shared_ptr<EntityTreeItem> createEntityTreeItem(sim::Entity* entity)
+static std::shared_ptr<EntityTreeItem> createEntityTreeItem(const sim::EntityPtr& entity)
 {
 	std::string name = getName(*entity);
 	if (!name.empty())
@@ -344,7 +344,7 @@ void WorldTreeWidget::updateEntityItems()
 		const sim::World::Entities& entities = mWorld->getEntities();
 		for (const sim::EntityPtr& entity : entities)
 		{
-			auto item = createEntityTreeItem(entity.get());
+			auto item = createEntityTreeItem(entity);
 			if (item)
 			{
 				sim::Entity* parent = getParent(*entity);
@@ -429,7 +429,10 @@ bool WorldTreeWidget::isDeletable(const TreeItem& item) const
 {
 	if (const EntityTreeItem* entityTreeItem = dynamic_cast<const EntityTreeItem*>(&item))
 	{
-		return !entityTreeItem->data->getFirstComponent<sim::ProceduralLifetimeComponent>().get();
+		if (auto e = entityTreeItem->data.lock(); e)
+		{
+			return !e->getFirstComponent<sim::ProceduralLifetimeComponent>().get();
+		}
 	}
 
 	return true;

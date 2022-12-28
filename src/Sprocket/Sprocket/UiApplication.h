@@ -15,14 +15,7 @@ class UiApplication : public QApplication
 public:
 	UiApplication(int argc, char* argv[]);
 
-	//! Process Qt events
-	bool notify(QObject *rec, QEvent *ev);
-
 	static void printError(const std::string &error);
 
 	static bool supportsOpenGl();
-
-private slots:
-	//! GUI per-frame update event
-	void update();
 };

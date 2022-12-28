@@ -11,7 +11,7 @@ bool TreeItemContextActionAdapter::handles(const TreeItem& object) const
 	if (item)
 	{
 		ActionContext context;
-		context.entity = item->data;
+		context.entity = item->data.lock().get();
 		return mWrapped->handles(context);
 	}
 	return false;
@@ -23,7 +23,7 @@ void TreeItemContextActionAdapter::execute(TreeItem& object) const
 	if (item)
 	{
 		ActionContext context;
-		context.entity = item->data;
+		context.entity = item->data.lock().get();
 		mWrapped->execute(context);
 	}
 }

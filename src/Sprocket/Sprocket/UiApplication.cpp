@@ -20,24 +20,6 @@ UiApplication::UiApplication(int argc, char* argv[]) :
 {
 }
 
-// Override QApplication::notify() so we can catch exceptions thrown from the Qt event loop
-bool UiApplication::notify(QObject *rec, QEvent *ev)
-{
-	try
-	{
-		return QApplication::notify(rec, ev);
-	}
-	catch (std::exception &e)
-	{
-		printError(e.what());
-	}
-	return false;
-}
-
-void UiApplication::update()
-{
-}
-
 void UiApplication::printError(const std::string &error)
 {
 	std::cout << "Error: " << error << std::endl;
