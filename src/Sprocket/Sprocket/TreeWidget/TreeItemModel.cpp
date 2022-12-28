@@ -25,7 +25,7 @@ TreeItem* TreeItemModel::getTreeItem(const QModelIndex &index) const
 
 void TreeItemModel::addChildren(TreeItem& item, const std::vector<TreeItemPtr>& children)
 {
-	insertChildren(item, 0, children);
+	insertChildren(item, item.mChildren.size(), children);
 }
 
 void TreeItemModel::insertChildren(TreeItem& item, int position, const std::vector<TreeItemPtr>& children)
@@ -67,9 +67,31 @@ void TreeItemModel::removeChildren(TreeItem& item, int position, int count)
 	endRemoveRows();
 }
 
+void TreeItemModel::removeChild(TreeItem& item, const TreeItem& child)
+{
+	if (int i = getChildPosition(item, child); i >= 0)
+	{
+		removeChildren(item, i, 1);
+	}
+}
+
 void TreeItemModel::clearChildren(TreeItem& item)
 {
 	removeChildren(item, 0, (int)item.mChildren.size());
+}
+
+int TreeItemModel::getChildPosition(const TreeItem& item, const TreeItem& child)
+{
+	int i = 0;
+	for (const auto& c : item.mChildren)
+	{
+		if (c.get() == &child)
+		{
+			return i;
+		}
+		++i;
+	}
+	return -1;
 }
 
 QModelIndex TreeItemModel::index(int row, int column, const QModelIndex &parent) const

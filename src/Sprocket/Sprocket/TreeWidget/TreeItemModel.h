@@ -40,11 +40,18 @@ public:
 	TreeItemModel(const TreeItemPtr& root, QObject *parent = 0);
 
 	TreeItem* getTreeItem(const QModelIndex &index) const;
+	QModelIndex index(TreeItem* item) const;
 
 	void addChildren(TreeItem& item, const std::vector<TreeItemPtr>& children);
 	void insertChildren(TreeItem& item, int position, const std::vector<TreeItemPtr>& children);
 	void removeChildren(TreeItem& item, int position, int count);
+	void removeChild(TreeItem& item, const TreeItem& child);
 	void clearChildren(TreeItem& item);
+
+	//! @returns -1 if child is not a child of item
+	int getChildPosition(const TreeItem& item, const TreeItem& child);
+
+	TreeItem* getParent(const TreeItem& item) const { return item.mParent; }
 
 public:
 	// QAbstractItemModel interface
@@ -55,9 +62,6 @@ public:
 	QModelIndex parent(const QModelIndex &index) const override;
 	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-
-private:
-	QModelIndex index(TreeItem* item) const;
 
 private:
 	TreeItemPtr mRootItem;

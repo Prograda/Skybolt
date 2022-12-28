@@ -16,6 +16,8 @@
 
 #include <QWidget>
 
+class QTreeView;
+
 struct WorldTreeWidgetConfig
 {
 	skybolt::sim::World* world;
@@ -34,19 +36,22 @@ class WorldTreeWidget : public QWidget, skybolt::sim::WorldListener, skybolt::si
 public:
 	WorldTreeWidget(const WorldTreeWidgetConfig& config);
 	~WorldTreeWidget();
-
-	void update();
 	
 signals:
 	void selectionChanged(const TreeItem&);
 	void itemClicked(const TreeItem&);
 
 private:
-	void updateEntityItems();
 	void setItemsUnderParent(TreeItem& parent, const Registry<TreeItem>& registry);
 	const TreeItemType* findItemType(const TreeItem& item) const; //!< Returns nullptr if no type has not been registered for the item
 	bool isDeletable(const TreeItem& item) const;
 	void showContextMenu(TreeItem& item, const QPoint& point);
+
+	void updateTreeItemParents();
+	TreeItemPtr getParentTreeItem(const skybolt::sim::Entity& entity) const;
+
+	TreeItem* getCurrentSelection() const;
+	void setCurrentSelection(TreeItem* item);
 
 private:
 	// WorldListener interface
@@ -63,8 +68,10 @@ private:
 	const std::vector<TreeItemContextActionPtr> mContextActions;
 	std::vector<TreeItemType> mItemTypes;
 	TreeItemModel* mModel;
+	QTreeView* mView;
 	TreeItemPtr mEntityRootItem;
 	std::vector<TreeItemPtr> mTypeRootItems;
 	std::vector<std::unique_ptr<struct WorldTreeWidgetRegistryListener>> mRegistryListeners;
-	bool mDirty = false;
+	
+	std::map<skybolt::sim::Entity*, TreeItemPtr> mEntityTreeItems;
 };
