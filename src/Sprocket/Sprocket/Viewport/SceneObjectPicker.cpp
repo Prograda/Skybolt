@@ -30,7 +30,7 @@ glm::dmat4 makeViewProjTransform(const sim::Vector3& origin, const sim::Quaterni
 
 sim::Vector3 screenToWorldDirection(const sim::Vector3& origin, const glm::dmat4& invViewProjTransform, const glm::vec2& pointNdc)
 {
-	glm::vec4 point(pointNdc.x * 2.0 - 1.0, pointNdc.y * 2.0 - 1.0, 0.99, 1);
+	glm::vec4 point(pointNdc.x * 2.0 - 1.0, 1.0 - pointNdc.y * 2.0, 0.99, 1);
 	point = invViewProjTransform * point;
 	point.x /= point.w;
 	point.y /= point.w;

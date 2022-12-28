@@ -1293,13 +1293,14 @@ void MainWindow::explorerSelectionChanged(const TreeItem& item)
 
 std::optional<PickedSceneObject> MainWindow::pickSceneObjectAtPointInWindow(const QPointF& position) const
 {
+	glm::vec2 pointNdc = glm::vec2(float(position.x()) / mOsgWidget->width(), float(position.y()) / mOsgWidget->height());
 	glm::dmat4 transform = calcCurrentViewProjTransform();
-	return mSceneObjectPicker(transform, glm::vec2(position.x(), position.y()), 0.04);
+	return mSceneObjectPicker(transform, pointNdc, 0.04);
 }
 
 std::optional<sim::Vector3> MainWindow::pickPointOnPlanetAtPointInWindow(const QPointF& position) const
 {
-   glm::vec2 pointNdc = glm::vec2(float(position.x()) / mOsgWidget->width(), 1.0 - float(position.y()) / mOsgWidget->height());
+   glm::vec2 pointNdc = glm::vec2(float(position.x()) / mOsgWidget->width(), float(position.y()) / mOsgWidget->height());
    sim::Vector3 camPosition = *getPosition(*mCurrentSimCamera);
    return pickPointOnPlanet(*mEngineRoot->simWorld, camPosition, glm::inverse(calcCurrentViewProjTransform()), pointNdc);
 }

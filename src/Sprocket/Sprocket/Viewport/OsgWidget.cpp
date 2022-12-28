@@ -72,10 +72,7 @@ void OsgWidget::resizeGL(int width, int height)
 
 void OsgWidget::mousePressEvent(QMouseEvent* event)
 {
-	QPointF position = event->localPos();
-	position.setX(position.x() / float(width()));
-	position.setY(position.y() / float(height()));
-	emit mouseDown(event->button(), position);
+	emit mouseDown(event->button(), event->localPos());
 	event->accept();
 }
 

@@ -22,12 +22,16 @@ glm::dmat4 makeViewProjTransform(const skybolt::sim::Vector3& origin, const skyb
 
 skybolt::sim::Vector3 screenToWorldDirection(const skybolt::sim::Vector3& origin, const glm::dmat4& invViewProjTransform, const glm::vec2& pointNdc);
 
+//! @param invViewProjTransform converts from projection space to world space (inverse of viewProjection matrix)
+//! @param pointNdc is a point in the viewport in Normalized Device Coordinates:
+//!  * x axis is left to right viewport edge in range [0, 1],
+//!  * y axis is top to bottom viewport edge in range [0, 1]
 std::optional<skybolt::sim::Vector3> pickPointOnPlanet(const skybolt::sim::World& world, const skybolt::sim::Vector3& origin, const glm::dmat4& invViewProjTransform, const glm::vec2& pointNdc);
 
-//! @param viewProjTransform converts from world space to view projection space
+//! @param viewProjTransform converts from world space to projection space
 //! @param pointNdc is a point in the viewport in Normalized Device Coordinates:
-//!  - x axis is left to right viewport edge in range [0, 1],
-//!  - y axis is top to bottom viewport edge in range [0, 1]
+//!  * x axis is left to right viewport edge in range [0, 1],
+//!  * y axis is top to bottom viewport edge in range [0, 1]
 using SceneObjectPicker = std::function<std::optional<PickedSceneObject>(const glm::dmat4& viewProjTransform, const glm::vec2& pointNdc, float pickRadiusNdc)>;
 
 SceneObjectPicker createSceneObjectPicker(const skybolt::sim::World* world);
