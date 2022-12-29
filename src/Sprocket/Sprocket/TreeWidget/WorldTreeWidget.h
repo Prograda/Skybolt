@@ -37,6 +37,8 @@ public:
 	WorldTreeWidget(const WorldTreeWidgetConfig& config);
 	~WorldTreeWidget();
 	
+	void setSelectedEntity(const skybolt::sim::Entity* entity);
+
 signals:
 	void selectionChanged(const TreeItem&);
 	void itemClicked(const TreeItem&);
@@ -50,8 +52,8 @@ private:
 	void updateTreeItemParents();
 	TreeItemPtr getParentTreeItem(const skybolt::sim::Entity& entity) const;
 
-	TreeItem* getCurrentSelection() const;
-	void setCurrentSelection(TreeItem* item);
+	std::vector<TreeItem*> getCurrentSelection() const;
+	void setCurrentSelection(std::vector<TreeItem*> items);
 
 private:
 	// WorldListener interface
@@ -73,5 +75,5 @@ private:
 	std::vector<TreeItemPtr> mTypeRootItems;
 	std::vector<std::unique_ptr<struct WorldTreeWidgetRegistryListener>> mRegistryListeners;
 	
-	std::map<skybolt::sim::Entity*, TreeItemPtr> mEntityTreeItems;
+	std::map<const skybolt::sim::Entity*, TreeItemPtr> mEntityTreeItems;
 };

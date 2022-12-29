@@ -58,28 +58,31 @@ std::optional<sim::Vector3> pickPointOnPlanet(const skybolt::sim::World& world, 
 
 SceneObjectPicker createSceneObjectPicker(const sim::World* world)
 {
-	return [world](const glm::dmat4& viewProjTransform, const glm::vec2& pointNdc, float pickRadiusNdc) -> std::optional<PickedSceneObject> {
+	return [world](const glm::dmat4& viewProjTransform, const glm::vec2& pointNdc, float pickRadiusNdc, const EntitySelectionPredicate& predicate) -> std::optional<PickedSceneObject> {
 
 		std::optional<PickedSceneObject> pickedObject;
 		float pickedEntityDistance = pickRadiusNdc;
 
 		for (const auto& entity : world->getEntities())
 		{
-			if (auto position = getPosition(*entity); position)
+			if (!predicate || predicate(*entity))
 			{
-				glm::dvec4 entityPoint = viewProjTransform * glm::dvec4(*position, 1.0);
-				if (entityPoint.z > 0)
+				if (auto position = getPosition(*entity); position)
 				{
-					glm::vec2 entityPointNdc(entityPoint.x / entityPoint.w, -entityPoint.y / entityPoint.w);
-					entityPointNdc = entityPointNdc * 0.5f + glm::vec2(0.5f);
-					float distance = glm::distance(entityPointNdc, pointNdc);
-					if (distance < pickedEntityDistance)
+					glm::dvec4 entityPoint = viewProjTransform * glm::dvec4(*position, 1.0);
+					if (entityPoint.z > 0)
 					{
-						pickedObject = PickedSceneObject({
-							entity,
-							*position
-							});
-						pickedEntityDistance = distance;
+						glm::vec2 entityPointNdc(entityPoint.x / entityPoint.w, -entityPoint.y / entityPoint.w);
+						entityPointNdc = entityPointNdc * 0.5f + glm::vec2(0.5f);
+						float distance = glm::distance(entityPointNdc, pointNdc);
+						if (distance < pickedEntityDistance)
+						{
+							pickedObject = PickedSceneObject({
+								entity,
+								*position
+								});
+							pickedEntityDistance = distance;
+						}
 					}
 				}
 			}

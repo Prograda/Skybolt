@@ -529,7 +529,6 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 
 		mWorldTreeWidget = new WorldTreeWidget(config);
 		QObject::connect(mWorldTreeWidget, &WorldTreeWidget::selectionChanged, this, &MainWindow::explorerSelectionChanged);
-		QObject::connect(mWorldTreeWidget, &WorldTreeWidget::itemClicked, this, &MainWindow::explorerSelectionChanged);
 
 		addToolWindow("Explorer", mWorldTreeWidget);
 	}
@@ -1272,6 +1271,10 @@ void MainWindow::setSelectedEntity(std::weak_ptr<skybolt::sim::Entity> entity)
 		selection.insert(e.get());
 	}
 	mVisSelectedEntityIcon->setEntities(selection);
+	
+	mWorldTreeWidget->blockSignals(true); // prevent tree widget signaling explorerSelectionChanged
+	mWorldTreeWidget->setSelectedEntity(entity.lock().get());
+	mWorldTreeWidget->blockSignals(false);
 }
 
 void MainWindow::explorerSelectionChanged(const TreeItem& item)
@@ -1291,11 +1294,11 @@ void MainWindow::explorerSelectionChanged(const TreeItem& item)
 	FOREACH_CALL(mPlugins, explorerSelectionChanged, item);
 }
 
-std::optional<PickedSceneObject> MainWindow::pickSceneObjectAtPointInWindow(const QPointF& position) const
+std::optional<PickedSceneObject> MainWindow::pickSceneObjectAtPointInWindow(const QPointF& position, const EntitySelectionPredicate& predicate) const
 {
 	glm::vec2 pointNdc = glm::vec2(float(position.x()) / mOsgWidget->width(), float(position.y()) / mOsgWidget->height());
 	glm::dmat4 transform = calcCurrentViewProjTransform();
-	return mSceneObjectPicker(transform, pointNdc, 0.04);
+	return mSceneObjectPicker(transform, pointNdc, 0.04, predicate);
 }
 
 std::optional<sim::Vector3> MainWindow::pickPointOnPlanetAtPointInWindow(const QPointF& position) const
@@ -1318,8 +1321,9 @@ MainWindow::ViewportClickHandler MainWindow::getDefaultViewportClickHandler()
 		else if (button == Qt::MouseButton::MiddleButton)
 		{
 			std::weak_ptr<skybolt::sim::Entity> selectedEntity;
+			auto hasNamePredicate = [] (const skybolt::sim::Entity& e) { return !getName(e).empty(); };
 			
-			if (std::optional<PickedSceneObject> object = pickSceneObjectAtPointInWindow(position); object)
+			if (std::optional<PickedSceneObject> object = pickSceneObjectAtPointInWindow(position, hasNamePredicate); object)
 			{
 				selectedEntity = object->entity;
 			}

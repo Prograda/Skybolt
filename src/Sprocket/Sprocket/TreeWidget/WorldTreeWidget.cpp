@@ -12,6 +12,7 @@
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/ParentReferenceComponent.h>
 #include <SkyboltSim/Components/ProceduralLifetimeComponent.h>
+#include <SkyboltCommon/MapUtility.h>
 
 #include <QDialogButtonBox>
 #include <QFileDialog>
@@ -315,6 +316,18 @@ WorldTreeWidget::~WorldTreeWidget()
 	}
 }
 
+void WorldTreeWidget::setSelectedEntity(const skybolt::sim::Entity* entity)
+{
+	if (auto i = findOptional(mEntityTreeItems, entity); i)
+	{
+		setCurrentSelection({(*i).get()});
+	}
+	else
+	{
+		setCurrentSelection({});
+	}
+}
+
 static std::shared_ptr<EntityTreeItem> createEntityTreeItem(const sim::EntityPtr& entity)
 {
 	std::string name = getName(*entity);
@@ -353,25 +366,28 @@ TreeItemPtr WorldTreeWidget::getParentTreeItem(const sim::Entity& entity) const
 	return parent;
 }
 
-TreeItem* WorldTreeWidget::getCurrentSelection() const
+std::vector<TreeItem*> WorldTreeWidget::getCurrentSelection() const
 {
-	QModelIndex selected = mView->selectionModel()->currentIndex();
-	return mModel->getTreeItem(selected);
+	QModelIndexList selected = mView->selectionModel()->selectedIndexes();
+	std::vector<TreeItem*> r;
+	for (auto i : selected)
+	{
+		r.push_back(mModel->getTreeItem(i));
+	}
+	return r;
 }
 
-void WorldTreeWidget::setCurrentSelection(TreeItem* item)
+void WorldTreeWidget::setCurrentSelection(std::vector<TreeItem*> items)
 {
-	if (getCurrentSelection() != item)
+	if (getCurrentSelection() != items)
 	{
-		if (item)
+		QItemSelection selected;
+		for (const auto i : items)
 		{
-			QModelIndex selected = mModel->index(item);
-			mView->selectionModel()->setCurrentIndex(selected, QItemSelectionModel::ClearAndSelect);
+			selected.push_back(QItemSelectionRange(mModel->index(i)));
 		}
-		else
-		{
-			mView->selectionModel()->clearSelection();
-		}
+
+		mView->selectionModel()->select(selected, QItemSelectionModel::ClearAndSelect);
 	}
 }
 
@@ -395,7 +411,7 @@ void WorldTreeWidget::entityRemoved(const sim::EntityPtr& entity)
 {
 	entity->removeListener(this);
 
-	TreeItem* selection = getCurrentSelection();
+	std::vector<TreeItem*> selection = getCurrentSelection();
 
 	if (auto i = mEntityTreeItems.find(entity.get()); i != mEntityTreeItems.end())
 	{
@@ -429,7 +445,7 @@ void WorldTreeWidget::onComponentRemove(Entity* entity, Component* component)
 
 void WorldTreeWidget::updateTreeItemParents()
 {
-	TreeItem* selection = getCurrentSelection();
+	std::vector<TreeItem*> selection = getCurrentSelection();
 
 	for (const auto& [entity, item] : mEntityTreeItems)
 	{

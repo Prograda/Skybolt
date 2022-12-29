@@ -52,7 +52,7 @@ public:
 
 	QMenu* addVisibilityFilterableSubMenu(QMenu& parent, const QString& text, skybolt::EntityVisibilityFilterable* filterable) const;
 
-	std::optional<PickedSceneObject> pickSceneObjectAtPointInWindow(const QPointF& position) const;
+	std::optional<PickedSceneObject> pickSceneObjectAtPointInWindow(const QPointF& position, const EntitySelectionPredicate& predicate = &EntitySelectionPredicateAlways) const;
 	std::optional<skybolt::sim::Vector3> pickPointOnPlanetAtPointInWindow(const QPointF& position) const;
 
 	using ViewportClickHandler = std::function<void(Qt::MouseButton button, const QPointF& position)>;
