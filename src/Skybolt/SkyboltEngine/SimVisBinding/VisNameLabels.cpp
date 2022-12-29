@@ -70,7 +70,7 @@ std::optional<osg::MatrixTransform*> VisNameLabels::createObject(const sim::Enti
 			osgText::Text* text = new osgText::Text();
 			text->setFont("fonts/verdana.ttf");
 			text->setText(name);
-			text->setCharacterSize(0.1); // scaled in shader to be approximately font point size / 100
+			text->setCharacterSize(0.12); // scaled in shader to be approximately font point size / 100
 			text->setUseDisplayList(false);
 			text->setUseVertexBufferObjects(true);
 			text->setUseVertexArrayObject(true);

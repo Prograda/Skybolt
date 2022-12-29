@@ -55,6 +55,7 @@ private:
 	std::unique_ptr<RenderOperationSequence> mSequence;
 	osg::ref_ptr<RenderTexture> mMainPassTexture;
 	osg::ref_ptr<RenderTarget> mFinalRenderTarget;
+	osg::ref_ptr<RenderTarget> mHudTarget;
 	std::unique_ptr<class CascadedShadowMapGenerator> mShadowMapGenerator;
 
 	osg::ref_ptr<CloudsTemporalUpscaling> mCloudsUpscaling; //!< May be null

@@ -314,7 +314,7 @@ static nlohmann::json readOrCreateEngineSettingsFile(QWidget* parent, QSettings&
 	return result;
 }
 
-static osg::ref_ptr<osg::Texture> createEntitySelectionIcon(int width = 64)
+static osg::ref_ptr<osg::Texture> createEntitySelectionIcon(int width = 32)
 {
 	int height = width;
 	osg::ref_ptr<osg::Image> image = new osg::Image();
@@ -402,19 +402,19 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 
 	Scenario& scenario = mEngineRoot->scenario;
 
-	auto group = mEngineRoot->scene->getBucketGroup(vis::Scene::Bucket::Default);
+	auto hudGroup = mEngineRoot->scene->getBucketGroup(vis::Scene::Bucket::Hud);
 
 	mVisSelectedEntityIcon = new VisEntityIcons(mEngineRoot->programs, createEntitySelectionIcon());
-	group->addChild(mVisSelectedEntityIcon);
+	hudGroup->addChild(mVisSelectedEntityIcon);
 
-	mVisNameLabels = std::make_unique<VisNameLabels>(world, group, mEngineRoot->programs);
+	mVisNameLabels = std::make_unique<VisNameLabels>(world, hudGroup, mEngineRoot->programs);
 
 	osg::ref_ptr<osg::Program> unlitColoredProgram = mEngineRoot->programs.getRequiredProgram("unlitColored");
 
 	{
 		vis::Polyline::Params params;
 		params.program = unlitColoredProgram;
-		mVisOrbits.reset(new VisOrbits(world, group, params, mEngineRoot->julianDateProvider));
+		mVisOrbits.reset(new VisOrbits(world, hudGroup, params, mEngineRoot->julianDateProvider));
 	}
 	
 	{

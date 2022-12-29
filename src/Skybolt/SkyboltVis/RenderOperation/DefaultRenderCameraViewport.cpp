@@ -175,6 +175,11 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 	}), (int)RenderOperationOrder::MainPass);
 
 	mSequence->addOperation(mFinalRenderTarget, (int)RenderOperationOrder::FinalComposite);
+
+	mHudTarget = createDefaultRenderTarget();
+	mHudTarget->getOsgCamera()->setClearMask(0);
+	mHudTarget->setScene(mScene->getBucketGroup(Scene::Bucket::Hud));
+	mSequence->addOperation(mHudTarget, (int)RenderOperationOrder::Hud);
 }
 
 DefaultRenderCameraViewport::~DefaultRenderCameraViewport()
@@ -190,6 +195,7 @@ void DefaultRenderCameraViewport::setCamera(const CameraPtr& camera)
 		mCloudsUpscaling->setCamera(camera);
 	}
 	mMainPassTexture->setCamera(camera);
+	mHudTarget->setCamera(camera);
 }
 
 osg::ref_ptr<RenderTarget> DefaultRenderCameraViewport::getFinalRenderTarget() const

@@ -27,6 +27,7 @@ public:
 	{
 		Default,
 		Clouds,
+		Hud,
 		BucketCount
 	};
 
