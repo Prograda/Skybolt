@@ -75,8 +75,6 @@ private:
 	bool updateGeometry(); //!< @returns true if all geometry loading has completed
 
 private:
-	float mRadius;
-
 	std::unique_ptr<class QuadTreeTileLoader> mTileSource;
 	std::function<OsgTileFactory::TileTextures(const struct PlanetTileImages&)> mTileTexturesProvider;
 	std::shared_ptr<OsgTileFactory> mOsgTileFactory;

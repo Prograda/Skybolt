@@ -7,8 +7,8 @@
 #pragma once
 
 #include "EngineStats.h"
-#include "Scenario.h"
 #include "EntityFactory.h"
+#include "Scenario/Scenario.h"
 #include "Plugin/Plugin.h"
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/System/SystemRegistry.h>

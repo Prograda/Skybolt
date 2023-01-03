@@ -15,12 +15,16 @@
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
 
-#include <QJsonObject>
+#include <nlohmann/json.hpp>
 
-void loadScenario(skybolt::Scenario& scenario, const QJsonObject& object);
+namespace skybolt {
 
-QJsonObject saveScenario(const skybolt::Scenario& scenario);
+void loadScenario(Scenario& scenario, const nlohmann::json& value);
 
-void loadEntities(skybolt::sim::World& world, skybolt::EntityFactory& factory, const QJsonValue& value);
+nlohmann::json saveScenario(const Scenario& scenario);
 
-QJsonObject saveEntities(const skybolt::sim::World& world);
+void loadEntities(sim::World& world, EntityFactory& factory, const nlohmann::json& value);
+
+nlohmann::json saveEntities(const sim::World& world);
+
+} // namespace skybolt

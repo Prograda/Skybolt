@@ -23,18 +23,18 @@
 #include "Entity/EntityListModel.h"
 #include "Entity/EntityPropertiesModel.h"
 #include "Scenario/ScenarioPropertiesModel.h"
-#include "Scenario/ScenarioSerialization.h"
 #include "Viewport/VisEntityIcons.h"
 #include "Viewport/OsgWidget.h"
 
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/EngineStats.h>
-#include <SkyboltEngine/Scenario.h>
 #include <SkyboltEngine/TemplateNameComponent.h>
 #include <SkyboltEngine/VisObjectsComponent.h>
 #include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltEngine/Input/LogicalAxis.h>
+#include <SkyboltEngine/Scenario/Scenario.h>
+#include <SkyboltEngine/Scenario/ScenarioSerialization.h>
 #include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
 #include <SkyboltEngine/SimVisBinding/ForcesVisBinding.h>
 #include <SkyboltEngine/SimVisBinding/EntityVisibilityFilterable.h>
@@ -86,6 +86,7 @@
 #include <QFileDialog>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSortFilterProxyModel>
@@ -981,12 +982,25 @@ void MainWindow::open(const QString& filename)
 	}
 }
 
+static nlohmann::json toNlohmannJson(const QJsonObject& json)
+{
+	QJsonDocument doc(json);
+	QString str(doc.toJson(QJsonDocument::Compact));
+	return nlohmann::json::parse(str.toStdString());
+}
+
+static QJsonObject toQJson(const nlohmann::json& json)
+{
+	auto doc = QJsonDocument::fromJson(QString::fromStdString(json.dump()).toUtf8());
+	return doc.object();
+}
+
 void MainWindow::loadProject(const QJsonObject& json)
 {
 	QJsonValue value = json["scenario"];
 	if (!value.isUndefined())
 	{
-		loadScenario(mEngineRoot->scenario, value.toObject());
+		loadScenario(mEngineRoot->scenario, toNlohmannJson(value.toObject()));
 	}
 
 	value = json["geometry"];
@@ -1004,7 +1018,7 @@ void MainWindow::loadProject(const QJsonObject& json)
 	value = json["entities"];
 	if (!value.isUndefined())
 	{
-		loadEntities(*mEngineRoot->simWorld, *mEngineRoot->entityFactory, value);
+		loadEntities(*mEngineRoot->simWorld, *mEngineRoot->entityFactory, toNlohmannJson(value.toObject()));
 	}
 
 	value = json["viewport"];
@@ -1026,10 +1040,10 @@ void MainWindow::save(QFile& file)
 
 void MainWindow::saveProject(QJsonObject& json) const
 {
-	json["scenario"] = saveScenario(mSprocketModel->engineRoot->scenario);
+	json["scenario"] = toQJson(saveScenario(mSprocketModel->engineRoot->scenario));
 	json["windows"] = QString(toByteArray(mToolWindowManager->saveState()).toBase64());
 	json["geometry"] = QString(saveGeometry().toBase64());
-	json["entities"] = saveEntities(*mSprocketModel->engineRoot->simWorld);
+	json["entities"] = toQJson(saveEntities(*mSprocketModel->engineRoot->simWorld));
 	json["viewport"] = saveViewport();
 
 	FOREACH_CALL(mPlugins, saveProject, json);

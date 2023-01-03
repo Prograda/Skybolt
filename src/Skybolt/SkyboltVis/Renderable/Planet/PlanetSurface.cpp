@@ -59,7 +59,6 @@ std::vector<TileSourcePtr> getNonNullTileSources(const PlanetTileSources& source
 }
 
 PlanetSurface::PlanetSurface(const PlanetSurfaceConfig& config) :
-	mRadius(config.radius),
 	mParentTransform(config.parentTransform),
 	mOsgTileFactory(config.osgTileFactory),
 	mTileTexturesProvider(config.tileTexturesProvider),
@@ -92,7 +91,7 @@ PlanetSurface::PlanetSurface(const PlanetSurfaceConfig& config) :
 	mPredicate->tileSources = getNonNullTileSources(planetTileSources);
 	mPredicate->observerAltitude = 20;
 	mPredicate->observerLatLon = osg::Vec2(0, 0);
-	mPredicate->planetRadius = mRadius;
+	mPredicate->planetRadius = config.radius;
 
 	auto imageLoader = std::make_shared<PlanetTileImagesLoader>(config.radius);
 	imageLoader->elevationLayer = planetTileSources.elevation;
@@ -188,7 +187,7 @@ void PlanetSurface::updatePreRender(const CameraRenderContext& context)
 	}
 #endif
 
-	geocentricToLla(geocentricPos, mPredicate->observerLatLon, mPredicate->observerAltitude, mRadius);
+	geocentricToLla(geocentricPos, mPredicate->observerLatLon, mPredicate->observerAltitude, mPredicate->planetRadius);
 
 	bool loadingComplete = updateGeometry();
 

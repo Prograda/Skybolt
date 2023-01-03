@@ -11,9 +11,9 @@
 * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "ScenarioSerialization.h"
-#include <Sprocket/JsonHelpers.h>
-#include <SkyboltEngine/Scenario.h>
+#include "Scenario.h"
 #include <SkyboltEngine/EntityFactory.h>
+#include <SkyboltEngine/TemplateNameComponent.h>
 #include <SkyboltSim/Components/AttachmentComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
@@ -23,51 +23,50 @@
 #include <SkyboltSim/CameraController/Pitchable.h>
 #include <SkyboltSim/CameraController/Yawable.h>
 #include <SkyboltSim/CameraController/Zoomable.h>
+#include <SkyboltSim/JsonHelpers.h>
 #include <SkyboltSim/World.h>
-#include <SkyboltEngine/TemplateNameComponent.h>
+#include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltCommon/StringVector.h>
 
-#include <QJsonArray>
-#include <QStringList>
-
-using namespace skybolt;
 using namespace skybolt::sim;
 
-void loadScenario(Scenario& scenario, const QJsonObject& object)
+namespace skybolt {
+
+void loadScenario(Scenario& scenario, const nlohmann::json& object)
 {
-	scenario.startJulianDate = object["julianDate"].toDouble();
-	scenario.timeSource.setRange(TimeRange(0, object["duration"].toDouble()));
+	scenario.startJulianDate = object.at("julianDate");
+	scenario.timeSource.setRange(TimeRange(0, object.at("duration")));
 }
 
-QJsonObject saveScenario(const Scenario& scenario)
+nlohmann::json saveScenario(const Scenario& scenario)
 {
-	QJsonObject json;
+	nlohmann::json json;
 	json["julianDate"] = scenario.startJulianDate;
 	json["duration"] = scenario.timeSource.getRange().end;
 	return json;
 }
 
-static skybolt::StringVector loadEntityAttachments(const QJsonArray& json)
+static skybolt::StringVector loadEntityAttachments(const nlohmann::json& json)
 {
 	skybolt::StringVector result;
-	for (const QJsonValue& value : json)
+	for (const nlohmann::json& value : json)
 	{
-		result.push_back(value.toString().toStdString());
+		result.push_back(value);
 	}
 	return result;
 }
 
 typedef std::map<std::string, sim::CameraControllerPtr> CameraModes;
 
-static void loadCameraController(CameraControllerSelector& cameraControllerSelector, const World& world, const QJsonObject& j)
+static void loadCameraController(CameraControllerSelector& cameraControllerSelector, const World& world, const nlohmann::json& j)
 {
-	std::string name = j["mode"].toString().toStdString();
+	std::string name = j.at("mode");
 	cameraControllerSelector.selectController(name);
 
 	if (j.contains("target"))
 	{
-		EntityPtr target = findObjectByName(world, j["target"].toString().toStdString());
+		EntityPtr target = findObjectByName(world, j.at("target"));
 		if (target)
 		{
 			cameraControllerSelector.setTarget(target.get());
@@ -76,29 +75,29 @@ static void loadCameraController(CameraControllerSelector& cameraControllerSelec
 
 	if (j.contains("modes"))
 	{
-		QJsonObject modes = j["modes"].toObject();
+		nlohmann::json modes = j.at("modes");
 		for (const auto& item : cameraControllerSelector.getControllers())
 		{
-			QString name = QString::fromStdString(item.first);
+			std::string name = item.first;
 			if (modes.contains(name))
 			{
-				QJsonObject mode = modes[name].toObject();
+				nlohmann::json mode = modes.at(name);
 				CameraController* controller = item.second.get();
 				if (auto latLonSettable = dynamic_cast<LatLonSettable*>(controller))
 				{
-					latLonSettable->setLatLon(sim::LatLon(mode["lat"].toDouble(), mode["lon"].toDouble()));
+					latLonSettable->setLatLon(sim::LatLon(mode.at("lat"), mode.at("lon")));
 				}
 				if (auto pitchable = dynamic_cast<Pitchable*>(controller))
 				{
-					pitchable->setPitch(mode["pitch"].toDouble());
+					pitchable->setPitch(mode.at("pitch"));
 				}
 				if (auto yawable = dynamic_cast<Yawable*>(controller))
 				{
-					yawable->setYaw(mode["yaw"].toDouble());
+					yawable->setYaw(mode.at("yaw"));
 				}
 				if (auto zoomable = dynamic_cast<Zoomable*>(controller))
 				{
-					zoomable->setZoom(mode["zoom"].toDouble());
+					zoomable->setZoom(mode.at("zoom"));
 				}
 			}
 		}
@@ -142,80 +141,78 @@ static void findAndAttachEntityByName(Entity& parent, const World& world, const 
 	}
 }
 
-static sim::EntityPtr loadEntity(World& world, EntityFactory& factory, const std::string& name, const QJsonObject& json)
+static sim::EntityPtr loadEntity(World& world, EntityFactory& factory, const std::string& name, const nlohmann::json& json)
 {
-	std::string templateName = json["template"].toString().toStdString();
+	std::string templateName = json.at("template");
 	sim::EntityPtr body = factory.createEntity(templateName, name);
 	world.addEntity(body);
 
-	readJsonOptionalValue(json, "position", [=](const QJsonValue& object) {
-		setPosition(*body, readJsonVector3(object.toArray()));
+	ifChildExists(json, "position", [=](const nlohmann::json& object) {
+		setPosition(*body, readVector3(object));
 	});
 
-	readJsonOptionalValue(json, "orientation", [=](const QJsonValue& object) {
-		setOrientation(*body, readJsonQuaternion(object.toObject()));
+	ifChildExists(json, "orientation", [=](const nlohmann::json& object) {
+		setOrientation(*body, readQuaternion(object));
 	});
 
-	readJsonOptionalValue(json, "velocity", [=](const QJsonValue& object) {
-		setVelocity(*body, readJsonVector3(object.toArray()));
+	ifChildExists(json, "velocity", [=](const nlohmann::json& object) {
+		setVelocity(*body, readVector3(object));
 	});
 
-	body->setDynamicsEnabled(json["dynamicsEnabled"].toBool());
+	body->setDynamicsEnabled(json.at("dynamicsEnabled").get<bool>());
 
 	return body;
 }
 
-static void loadEntityComponents(World& world, sim::Entity& entity, const QJsonObject& json)
+static void loadEntityComponents(World& world, sim::Entity& entity, const nlohmann::json& json)
 {
 	if (auto cameraControllerComponent = entity.getFirstComponent<CameraControllerComponent>())
 	{
-		QJsonValue value = json["cameraController"];
-		if (!value.isUndefined())
+		if (auto i = json.find("cameraController"); i != json.end())
 		{
 			if (auto selector = dynamic_cast<CameraControllerSelector*>(cameraControllerComponent->cameraController.get()))
 			{
-				loadCameraController(*selector, world, value.toObject());
+				loadCameraController(*selector, world, i.value());
 			}
 		}
 	}
 
-	skybolt::StringVector attachments = loadEntityAttachments(json["attachments"].toArray());
-	for (const std::string& name : attachments)
+	if (auto i = json.find("attachments"); i != json.end())
 	{
-		findAndAttachEntityByName(entity, world, name);
+		skybolt::StringVector attachments = loadEntityAttachments(i.value());
+		for (const std::string& name : attachments)
+		{
+			findAndAttachEntityByName(entity, world, name);
+		}
 	}
 }
 
-void loadEntities(World& world, EntityFactory& factory, const QJsonValue& value)
+void loadEntities(World& world, EntityFactory& factory, const nlohmann::json& json)
 {
-	assert(!value.isUndefined());
-
 	std::vector<sim::EntityPtr> entities;
 
-	QJsonObject json = value.toObject();
-	for (const QString& key : json.keys())
+	for (const auto& [key, entity] : json.items())
 	{
-		QJsonObject entity = json.value(key).toObject();
-		entities.push_back(loadEntity(world, factory, key.toStdString(), entity));
+		entities.push_back(loadEntity(world, factory, key, entity));
 	}
 
+	// Load components after all entities exist, in case a component refers to an entity
 	int i = 0;
-	for (const QString& key : json.keys())
+	for (const auto& [key, entity] : json.items())
 	{
-		QJsonObject entity = json.value(key).toObject();
 		loadEntityComponents(world, *entities[i], entity);
 		++i;
 	}
 }
 
-static QJsonArray saveEntityAttachments(const Entity& entity)
+static nlohmann::json saveEntityAttachments(const Entity& entity)
 {
-	QJsonArray json;
+	nlohmann::json json;
 	for (auto attachment : entity.getComponentsOfType<AttachmentComponent>())
 	{
 		if (Entity* target = attachment->getTarget())
 		{
-			json.append(QString::fromStdString(getName(*target)));
+			json.push_back(getName(*target));
 		}
 	}
 	return json;
@@ -233,21 +230,21 @@ static std::string getName(const sim::CameraController& controller, const Camera
 	return "";
 }
 
-static QJsonObject saveCameraController(CameraControllerSelector& cameraControllerSelector)
+static nlohmann::json saveCameraController(CameraControllerSelector& cameraControllerSelector)
 {
-	QJsonObject j;
-	j["mode"] = QString::fromStdString(cameraControllerSelector.getSelectedControllerName());
+	nlohmann::json j;
+	j["mode"] = cameraControllerSelector.getSelectedControllerName();
 
 	if (cameraControllerSelector.getTarget())
 	{
-		j["target"] = QString::fromStdString(getName(*cameraControllerSelector.getTarget()));
+		j["target"] = getName(*cameraControllerSelector.getTarget());
 	}
 
-	QJsonObject modes;
+	nlohmann::json modes;
 	for (const auto& item : cameraControllerSelector.getControllers())
 	{
-		QString name = QString::fromStdString(item.first);
-		QJsonObject mode;
+		std::string name = item.first;
+		nlohmann::json mode;
 
 		CameraController* controller = item.second.get();
 		if (auto latLonSettable = dynamic_cast<LatLonSettable*>(controller))
@@ -276,10 +273,10 @@ static QJsonObject saveCameraController(CameraControllerSelector& cameraControll
 	return j;
 }
 
-static QJsonObject saveEntity(const Entity& entity, const std::string& templateName)
+static nlohmann::json saveEntity(const Entity& entity, const std::string& templateName)
 {
-	QJsonObject json;
-	json["template"] = QString::fromStdString(templateName);
+	nlohmann::json json;
+	json["template"] = templateName;
 	json["dynamicsEnabled"] = entity.isDynamicsEnabled();
 	writeIfNotEmpty(json, "attachments", saveEntityAttachments(entity));
 
@@ -314,9 +311,9 @@ static QJsonObject saveEntity(const Entity& entity, const std::string& templateN
 	return json;
 }
 
-QJsonObject saveEntities(const World& world)
+nlohmann::json saveEntities(const World& world)
 {
-	QJsonObject json;
+	nlohmann::json json;
 	for (const EntityPtr& entity : world.getEntities())
 	{
 		if (!entity->getFirstComponent<ProceduralLifetimeComponent>())
@@ -325,9 +322,11 @@ QJsonObject saveEntities(const World& world)
 			auto templateNameComponent = entity->getFirstComponent<TemplateNameComponent>();
 			if (!name.empty() && templateNameComponent)
 			{
-				json[QString::fromStdString(name)] = saveEntity(*entity, templateNameComponent->name);
+				json[name] = saveEntity(*entity, templateNameComponent->name);
 			}
 		}
 	}
 	return json;
 }
+
+} // namespace skybolt

@@ -5,8 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "JulianDateSequenceController.h"
+#include <SkyboltEngine/Scenario/Scenario.h>
 #include "SkyboltEngine/Sequence/Interpolator/LinearInterpolator.h"
-#include <SkyboltEngine/Scenario.h>
 #include <SkyboltSim/World.h>
 #include <assert.h>
 

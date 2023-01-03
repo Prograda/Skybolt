@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <SkyboltVis/OsgBox2.h>
 #include <SkyboltVis/SkyboltVisFwd.h>
 #include <SkyboltCommon/Math/QuadTree.h>
 

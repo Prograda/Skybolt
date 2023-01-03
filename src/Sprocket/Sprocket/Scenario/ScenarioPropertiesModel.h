@@ -7,7 +7,7 @@
 #pragma once
 
 #include <SkyboltEngine/SkyboltEngineFwd.h>
-#include <SkyboltEngine/Scenario.h>
+#include <SkyboltEngine/Scenario/Scenario.h>
 
 #include "PropertyEditor.h"
 

@@ -22,6 +22,11 @@ inline Vector3 readVector3(const nlohmann::json& j)
 	return Vector3(j[0].get<double>(), j[1].get<double>(), j[2].get<double>());
 }
 
+inline nlohmann::json writeJson(const Vector3& v)
+{
+	return {v[0], v[1], v[2]};
+}
+
 inline Vector3 readOptionalVector3(const nlohmann::json& j, const std::string& name)
 {
 	auto i = j.find(name);
@@ -37,6 +42,15 @@ inline Quaternion readQuaternion(const nlohmann::json& j)
 	return glm::angleAxis(j["angleDeg"].get<double>() * skybolt::math::degToRadD(), readVector3(j["axis"]));
 }
 
+inline nlohmann::json writeJson(const Quaternion& v)
+{
+	nlohmann::json j;
+	
+	j["angleDeg"] = glm::angle(v) * skybolt::math::radToDegD();
+	j["axis"] = writeJson(glm::axis(v));
+	return j;
+}
+
 inline Quaternion readOptionalQuaternion(const nlohmann::json& j, const std::string& name)
 {
 	auto i = j.find(name);
@@ -45,6 +59,14 @@ inline Quaternion readOptionalQuaternion(const nlohmann::json& j, const std::str
 		return readQuaternion(*i);
 	}
 	return math::dquatIdentity();
+}
+
+inline void writeIfNotEmpty(nlohmann::json& object, const std::string& key, const nlohmann::json& v)
+{
+	if (!v.empty())
+	{
+		object[key] = v;
+	}
 }
 
 } // namespace sim

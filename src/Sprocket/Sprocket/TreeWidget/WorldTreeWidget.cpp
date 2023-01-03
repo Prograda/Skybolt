@@ -7,8 +7,8 @@
 #include "WorldTreeWidget.h"
 #include "IconFactory.h"
 
-#include <SkyboltEngine/Scenario.h>
 #include <SkyboltEngine/EntityFactory.h>
+#include <SkyboltEngine/Scenario/Scenario.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/ParentReferenceComponent.h>
 #include <SkyboltSim/Components/ProceduralLifetimeComponent.h>

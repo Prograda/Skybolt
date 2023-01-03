@@ -77,15 +77,14 @@ static std::vector<T> readOptionalVector(const nlohmann::json& j, const std::str
 	return defaultValue;
 }
 
-template <typename T, typename ReaderT>
-static std::optional<T> readOptionalChild(const nlohmann::json& j, const std::string& name, const ReaderT& r)
+template <typename ActionT>
+static void ifChildExists(const nlohmann::json& j, const std::string& name, const ActionT& action)
 {
 	auto item = j.find(name);
 	if (item != j.end())
 	{
-		return r(item.value());
+		action(item.value());
 	}
-	return {};
 }
 
 } // namespace skybolt
