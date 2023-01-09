@@ -157,5 +157,4 @@ void OrbitCameraController::update(float dt)
 void OrbitCameraController::setTarget(Entity* target)
 {
 	CameraController::setTarget(target);
-	update(0);
 }

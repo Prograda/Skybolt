@@ -84,5 +84,4 @@ void PlanetCameraController::update(float dt)
 void PlanetCameraController::setTarget(Entity* target)
 {
 	CameraController::setTarget(target);
-	update(0);
 }

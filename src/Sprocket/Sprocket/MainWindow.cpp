@@ -700,14 +700,23 @@ void MainWindow::updateIfIntervalElapsed()
 	update();
 }
 
-static bool isNamedEntityWithPosition(const Entity& entity)
-{
-	return getPosition(entity).has_value() && entity.getFirstComponent<TemplateNameComponent>() != nullptr;
-}
-
 static bool isPlanet(const Entity& entity)
 {
 	return getPosition(entity).has_value() && entity.getFirstComponent<PlanetComponent>() != nullptr;
+}
+
+static bool entityPredicateAlwaysFalse(const Entity& entity)
+{
+	return false;
+}
+
+static sim::CameraControllerSelectorPtr getCameraControllerSelector(const sim::Entity& entity)
+{	
+	if (auto controller = entity.getFirstComponent<sim::CameraControllerComponent>())
+	{
+		return std::dynamic_pointer_cast<sim::CameraControllerSelector>(controller->cameraController);
+	}
+	return nullptr;
 }
 
 class CameraControllerWidget : public QWidget
@@ -723,7 +732,7 @@ public:
 		mCameraModeCombo->setEnabled(false);
 		layout()->addWidget(mCameraModeCombo);
 
-		mTargetListModel = new EntityListModel(world, isNamedEntityWithPosition);
+		mTargetListModel = new EntityListModel(world, &entityPredicateAlwaysFalse);
 		auto proxyModel = new QSortFilterProxyModel(this);
 		proxyModel->setSourceModel(mTargetListModel);
 		
@@ -735,8 +744,11 @@ public:
 		layout()->addWidget(mCameraTargetCombo);
 	}
 
-	void setCameraControllerSelector(const sim::CameraControllerSelectorPtr& cameraControllerSelector)
+	void setCamera(const sim::EntityPtr& camera)
 	{
+		mCamera = camera;
+		sim::CameraControllerSelectorPtr cameraControllerSelector = camera ? getCameraControllerSelector(*camera) : nullptr;
+
 		// Clear
 		mCameraModeCombo->disconnect();
 		mCameraTargetCombo->disconnect();
@@ -747,6 +759,7 @@ public:
 		{
 			mCameraModeCombo->setEnabled(false);
 			mCameraTargetCombo->setEnabled(false);
+			mTargetListModel->setEntityFilter(&entityPredicateAlwaysFalse);
 			return;
 		}
 
@@ -805,14 +818,23 @@ private:
 		{
 			mTargetListModel->setEntityFilter(isPlanet);
 		}
+		else if (mCamera)
+		{
+			mTargetListModel->setEntityFilter([cameraName = getName(*mCamera)] (const sim::Entity& entity) {
+				return getPosition(entity).has_value()
+					&& entity.getFirstComponent<TemplateNameComponent>() != nullptr
+					&& getName(entity) != cameraName;
+			});
+		}
 		else
 		{
-			mTargetListModel->setEntityFilter(isNamedEntityWithPosition);
+			mTargetListModel->setEntityFilter(&entityPredicateAlwaysFalse);
 		}
 	}
 
 private:
 	sim::World* mWorld;
+	sim::EntityPtr mCamera;
 	QComboBox* mCameraModeCombo;
 	QComboBox* mCameraTargetCombo;
 	EntityListModel* mTargetListModel;
@@ -1153,17 +1175,9 @@ void MainWindow::setCamera(const sim::EntityPtr& simCamera)
 	if (mCurrentSimCamera != simCamera)
 	{
 		mCurrentSimCamera = simCamera;
-		vis::CameraPtr visCamera;
-		sim::CameraControllerSelectorPtr selector;
-		if (mCurrentSimCamera)
-		{
-			visCamera = getFirstVisCamera(*mCurrentSimCamera);
-			if (auto controller = mCurrentSimCamera->getFirstComponent<CameraControllerComponent>())
-			{
-				selector = std::dynamic_pointer_cast<sim::CameraControllerSelector>(controller->cameraController);
-			}
-		}
-		mCameraControllerWidget->setCameraControllerSelector(selector);
+		mCameraControllerWidget->setCamera(mCurrentSimCamera);
+
+		vis::CameraPtr visCamera = mCurrentSimCamera ? getFirstVisCamera(*mCurrentSimCamera) : nullptr;
 		mViewport->setCamera(visCamera);
 
 		mCameraCombo->setCurrentText(simCamera ? QString::fromStdString(getName(*simCamera)) : "");
