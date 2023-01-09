@@ -16,12 +16,12 @@ uniform sampler2D coverageDetailSampler2;
 
 float calcDensityLowRes2(sampler2D cloudSampler, vec2 uv)
 {
-	float cloudType;
 	float lod = 0.0;
 	float coverageBase = sampleBaseCloudCoverage(cloudSampler, uv);
-	float coverageDetail = sampleCoverageDetail(coverageDetailSampler2, uv, lod, cloudType);
+	vec4 coverageDetail = sampleCoverageDetail(coverageDetailSampler2, uv, lod);
 
-	float density = calcCloudDensityLowRes(coverageBase, coverageDetail, /* heightMultiplier */ 1.0).r;
+	vec4 d = calcCloudDensityLowRes(coverageBase, coverageDetail, /* heightMultiplier */ vec4(0.8));
+	float density = dot(d, vec4(1.0));
 	return clamp(remap(density, 0.4, 0.6, 0.0, 1.0), 0.0, 1.0);
 }
 
@@ -29,7 +29,7 @@ float sampleCloudShadowMask(sampler2D cloudSampler, vec2 cloudTexCoord, vec3 lig
 {
 	vec2 cloudProjectionWorldDistance = vec2(lightDirection.xy) * cloudAltitude / max(0.05, -lightDirection.z);
 	vec2 uv = offsetCloudUvByWorldDistance(cloudTexCoord, cloudProjectionWorldDistance);
-	float mask = 1.0 - calcDensityLowRes2(cloudSampler, uv);
+	float mask = 1.0 - 0.95*calcDensityLowRes2(cloudSampler, uv);
 	return mask;
 }
 
@@ -50,7 +50,7 @@ float sampleCloudAlphaAtPositionRelPlanet(sampler2D cloudSampler, vec3 positionR
 float sampleCloudShadowMaskAtCloudsUv(sampler2D cloudSampler, vec2 uv, float altitude, vec3 lightDirection)
 {
 	float mask = sampleCloudShadowMask(cloudSampler, uv, lightDirection);
-	return mix(mask, 1.0, clamp(remapNormalized(altitude, 2000, 5000), 0.0, 1.0)); // TODO: use actual cloud heights
+	return mix(mask, 1.0, clamp(remapNormalized(altitude, 1000, 5000), 0.0, 1.0)); // TODO: use actual cloud heights
 }
 
 float sampleCloudShadowMaskAtPositionRelPlanet(sampler2D cloudSampler, vec3 positionRelPlanet, vec3 lightDirection)

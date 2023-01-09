@@ -36,6 +36,7 @@ public:
 		osg::Uniform* bottomLeftDir;
 		osg::Uniform* bottomRightDir;
 		osg::Uniform* upscaleFactor;
+		osg::Uniform* jitterOffset;
 	};
 
 	void updatePreRender(const CameraRenderContext& context) override;

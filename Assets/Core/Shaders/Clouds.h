@@ -37,12 +37,9 @@ vec2 cloudUvFromPosRelPlanet(vec3 positionRelPlanetPlanetAxes)
 	return offsetCloudUvByWorldDistance(uv, cloudDisplacementMeters);
 }
 
-float sampleCoverageDetail(sampler2D coverageDetailSampler, vec2 uv, float lod, out float cloudType)
+vec4 sampleCoverageDetail(sampler2D coverageDetailSampler, vec2 uv, float lod)
 {
-	vec4 c = textureLod(coverageDetailSampler, uv.xy * vec2(300.0, 150.0), lod);
-	float coverageDetail = c.r;
-	cloudType = c.b*c.b;
-	return coverageDetail;
+	return pow(textureLod(coverageDetailSampler, uv.xy * vec2(300.0, 150.0), lod), vec4(1,3,2,1));
 }
 
 float sampleBaseCloudCoverage(sampler2D cloudSampler, vec2 uv)
@@ -69,35 +66,28 @@ float coverageModulation(float coverage, float detail, float filterWidth)
 	return clamp(remapNormalized(detail*(1.0-filterWidth)+filterWidth, f, f+filterWidth), 0.0, 1.0);
 }
 
-vec2 coverageModulation(vec2 coverage, vec2 detail, vec2 filterWidth)
+vec4 coverageModulation(vec4 coverage, vec4 detail, vec4 filterWidth)
 {
-	vec2 f = vec2(1.0) - coverage;
-	return clamp(remapNormalized(detail*(vec2(1.0)-filterWidth)+filterWidth, f, f+filterWidth), vec2(0.0), vec2(1.0));
+	vec4 f = vec4(1) - coverage;
+	return clamp(remapNormalized(detail*(vec4(1)-filterWidth)+filterWidth, f, f+filterWidth), vec4(0), vec4(1));
 }
 
-float cloudCoverageModulationFilterWidth = 0.6;
+vec4 cloudCoverageModulationFilterWidth = vec4(0.6);
 
-float calcCloudDensityHull(float coverageBase, float coverageDetail, float heightMultiplier)
+vec4 calcCloudDensityHull(float coverageBase, vec4 coverageDetail, vec4 heightMultiplier)
 {
-	float coverage = coverageBase * heightMultiplier;
+	vec4 coverage = coverageBase * heightMultiplier;
 	return coverageModulation(coverage, coverageDetail, cloudCoverageModulationFilterWidth);
 }
 
-//! @return x component is the low-res density with equivelent average density to the expected post-erosion high res density.
-//!   This value is useful as a low res proxy for the high res density.
-//! @return y component is the low-res density pre-erosion by high res noise.
-//!   This value be useful for calculating the high res density by applying erosion.
-//! the final high res density by applying erosion to it.
-vec2 calcCloudDensityLowRes(float coverageBase, float coverageDetail, float heightMultiplier)
+vec4 calcCloudDensityLowRes(float coverageBase, vec4 coverageDetail, vec4 heightMultiplier)
 {
-	vec2 coverage = vec2(coverageBase * heightMultiplier);
-
-	// Eroding the low detail density by high detail textures results in reduction of cloud coverage.
-	// We need to subtract this amount from the low detail coverage to match the high detail result.
-	float erosionCompensation = 0.14;
-	coverage.x = max(0.0, coverage.x-erosionCompensation);
-
-	return coverageModulation(coverage, vec2(coverageDetail), vec2(cloudCoverageModulationFilterWidth));
+	// Since the cloud shapes are contained within the hull,
+	// we need to scale the coverage detail by this fudge factor so that the low res
+	// clouds will have the same approximate shape as the high res clouds.
+	float erosionCompensation = 0.5;
+	
+	return calcCloudDensityHull(coverageBase, coverageDetail*erosionCompensation, heightMultiplier);
 }
 
 #endif // CLOUDS_H

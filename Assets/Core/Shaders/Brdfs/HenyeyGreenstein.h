@@ -24,7 +24,9 @@ float watooHenyeyGreenstein(float cosAngle)
 {
 	// Tuned to match The "Watoo" phase function for clouds, from Bouthors et al.
 	// See http://wiki.nuaj.net/index.php?title=Clouds
-	return dot(henyeyGreenstein(cosAngle, vec4(-0.2, 0.3, 0.96, 0)), vec4(0.5, 0.5, 0.03, 0.0));
+	vec4 phaseG = vec4(-0.2, 0.3, 0.96, 0);
+	vec4 weights = vec4(0.5, 0.5, 0.03, 0);
+	return dot(henyeyGreenstein(cosAngle, phaseG), weights);
 }
 
 #endif // HENYEY_GREENSTEIN_H

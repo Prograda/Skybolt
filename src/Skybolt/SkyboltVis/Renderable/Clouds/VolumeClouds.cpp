@@ -55,6 +55,7 @@ static osg::StateSet* createStateSet(const osg::ref_ptr<osg::Program>& program, 
 	stateSet->addUniform(uniforms.topRightDir);
 	stateSet->addUniform(uniforms.bottomLeftDir);
 	stateSet->addUniform(uniforms.bottomRightDir);
+	stateSet->addUniform(uniforms.jitterOffset);
 
 #ifdef WIREFRAME
 	osg::PolygonMode * polygonMode = new osg::PolygonMode;
@@ -145,6 +146,8 @@ VolumeClouds::VolumeClouds(const VolumeCloudsConfig& config) :
 	// Although the upscaling factor is 4x we use a factor of 3x here to prevent excessive jittering.
 	mUniforms.upscaleFactor = new osg::Uniform("upscaleTextureLodFactor", mApplyTemporalUpscalingJitter ? 3.f : 1.f);
 
+	mUniforms.jitterOffset = new osg::Uniform("jitterOffset", osg::Vec2f(0.f, 0.f));
+
 	osg::StateSet* stateSet = createStateSet(config.program, mUniforms, config.cloudsTexture);
 
 	osg::Vec2f pos(0,0);
@@ -210,6 +213,8 @@ void VolumeClouds::updatePreRender(const CameraRenderContext& context)
 			proj(2, 0) += mJitterOffset.x() * 2.f;
 			proj(2, 1) += mJitterOffset.y() * 2.f;
 		}
+
+		mUniforms.jitterOffset->set(mJitterOffset);
 
 		osg::Matrixf viewProj = camera.getViewMatrix() * proj;
 		osg::Matrixf viewProjInv = osg::Matrix::inverse(viewProj);

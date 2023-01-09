@@ -32,4 +32,9 @@ vec3 remapNormalized(vec3 originalValue, vec3 originalMin, vec3 originalMax)
 	return (originalValue - originalMin) / (originalMax - originalMin);
 }
 
+vec4 remapNormalized(vec4 originalValue, vec4 originalMin, vec4 originalMax)
+{
+	return (originalValue - originalMin) / (originalMax - originalMin);
+}
+
 #endif // REMAP_H

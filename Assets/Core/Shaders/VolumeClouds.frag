@@ -29,40 +29,36 @@ uniform vec3 cameraPosition;
 uniform vec3 lightDirection;
 uniform vec3 cameraCenterDirection;
 uniform vec3 ambientLightColor;
-uniform int frameNumber;
 uniform float upscaleTextureLodFactor;
+uniform vec2 jitterOffset;
 
 // Cloud geometry heights for each cloud type
+const float cloudLayerMinHeight = 1000;
 const float cloudLayerMaxHeight = 7000;
-const float cloudLayerMinHeight = 2000;
-const vec2 cloudTopZeroDensityHeight = vec2(2500, 7000);
-const vec2 cloudBottomZeroDensity = vec2(2000, 2000);
-const vec2 cloudOcclusionStrength = vec2(0.25, 0.5);
-const vec2 cloudDensityMultiplier = vec2(0.005, 0.02);
+const vec4 cloudBottomZeroDensity = vec4(1000, 4100, 6700, 0);
+const vec4 cloudTopZeroDensityHeight = vec4(2000, 5000, 7000, 0);
+const vec4 cloudDensityMultiplier = vec4(0.03, 0.02, 0.0005, 0);
+const vec4 cloudOcclusionStrength = vec4(0.1, 0.1, 0, 0);
+const vec4 cloudNoiseStrength = vec4(0.2, 0.2, 0.15, 0);
 
-const vec3 noiseFrequencyScale = vec3(0.00015);
+const vec3 noiseFrequencyScale = vec3(0.0003);
 
 // Returns an apprxomate semicircle over x in range [0, 1]
-float semicircle(float x)
+vec4 semicircle(vec4 x)
 {
-	float a = clamp(x * 2.0 - 1.0, -1, 1);
-	return (1 - a*a);
+	vec4 a = clamp(x * vec4(2) - vec4(1), -vec4(1), vec4(1));
+	return vec4(1) - a*a;
 }
 
-float biasedSemiCircle(float x, float bias)
+vec4 biasedSemiCircle(vec4 x, vec4 bias)
 {
-	float a = pow((bias-x)/(1-bias), 3);
-	float b = pow((x-bias)/(bias), 3);
-	return 1.0 + (x > bias ? a : b);
+	return semicircle(pow(x, bias));
 }
 
-float calcHeightMultiplier(float height, float cloudType)
+vec4 calcHeightMultiplier(float height)
 {
-	float bottom = mix(cloudBottomZeroDensity.x, cloudBottomZeroDensity.y, cloudType);
-	float top = mix(cloudTopZeroDensityHeight.x, cloudTopZeroDensityHeight.y, cloudType);
-	float h = remapNormalized(height, bottom, top);
-	//return semicircle(h);
-	return biasedSemiCircle(h, 0.2);
+	vec4 h = remapNormalized(vec4(height), cloudBottomZeroDensity, cloudTopZeroDensityHeight);
+	return biasedSemiCircle(h, vec4(0.5));
 }
 
 const int iterations = 1000;
@@ -71,55 +67,43 @@ const float maximumStepSize = 500;
 const float stepSizeGrowthFactor = 1.002;
 const float maxRenderDistance = 300000;
 
-float sampleDensityHull(vec2 uv, float height, out float cloudType, float lod)
+float sampleDensityHull(vec2 uv, float height, float lod)
 {
 	float coverageBase = sampleBaseCloudCoverage(globalAlphaSampler, uv);
-	float coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod, cloudType);
-	cloudType *= coverageBase; // aesthetic hack
-	float heightMultiplier = calcHeightMultiplier(height, cloudType);
-	return calcCloudDensityHull(coverageBase, coverageDetail, heightMultiplier);
+	vec4 coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod);
+	vec4 heightMultiplier = calcHeightMultiplier(height);
+	vec4 d = calcCloudDensityHull(coverageBase, coverageDetail, heightMultiplier);
+	return dot(d, vec4(1));
 }
 
-vec2 sampleDensityLowRes(vec2 uv, float height, out float cloudType, float lod)
+vec4 sampleDensityLowRes(vec2 uv, float height, float lod)
 {
 	float coverageBase = sampleBaseCloudCoverage(globalAlphaSampler, uv);
-	float coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod, cloudType);
-	cloudType *= coverageBase; // aesthetic hack
-	float heightMultiplier = calcHeightMultiplier(height, cloudType);
+	vec4 coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod);
+	vec4 heightMultiplier = calcHeightMultiplier(height);
 	return calcCloudDensityLowRes(coverageBase, coverageDetail, heightMultiplier);
 }
 
-const float cloudChaos = 0.8;
-
 //! @param lod is 0 for maximum detail. Detail falls off with log2 (as per mipmap lod level)
-float calcDensity(vec3 pos, vec2 uv, float lod, float height, out float cloudType)
+float calcDensity(vec3 pos, vec2 uv, float lod, float height)
 {
-	vec2 densityAtLods = sampleDensityLowRes(uv, height, cloudType, lod);
-	float density = densityAtLods.r;
+	vec4 density = sampleDensityLowRes(uv, height, lod);
+	
+	float lowDetailNoise = 1 - textureLod(noiseVolumeSampler, pos*noiseFrequencyScale*0.57, 0).r;
+	density  *= min(vec4(1), pow(mix(vec4(1), 1.5*vec4(lowDetailNoise), cloudNoiseStrength), vec4(15)));
 	
 	// Apply detail
 	float detailBlend = lod*0.3;
 	if (detailBlend < 1)
 	{
-		float noise = textureLod(noiseVolumeSampler, pos*noiseFrequencyScale, 0).r;
+		float noise = textureLod(noiseVolumeSampler, pos*noiseFrequencyScale*1.3, 0).r;
 		
-		float filteredNoise = min(0.9, cloudChaos * noise);
-		float highResDensity = clamp(remapNormalized(densityAtLods.g, filteredNoise, 1.0), 0.0, 1.0);
-		density = mix(density, highResDensity, 1.0 - detailBlend);
-		
-//#define ENABLE_HIGH_DETAIL_CLOUDS
-#ifdef ENABLE_HIGH_DETAIL_CLOUDS
-		float highDetailBlend = lod*10;
-		if (highDetailBlend < 1)
-		{
-			noise = 0.9*textureLod(noiseVolumeSampler, pos * noiseFrequencyScale * 3, 0).r;
-			float higherResDensity = clamp(remapNormalized(density, noise, 1.0), 0.0, 1.0);
-			density = mix(density, higherResDensity, 1.0 - highDetailBlend);
-		}
-#endif
+		float filteredNoise = pow((1.0-noise), 6)*0.4;
+		vec4 highResDensity = clamp(remapNormalized(density, vec4(filteredNoise), vec4(1)), vec4(0), vec4(1));
+		density = mix(density, highResDensity, vec4(1) - vec4(detailBlend));
 	}
 	
-	return density * mix(cloudDensityMultiplier.x, cloudDensityMultiplier.y, cloudType);
+	return dot(density, cloudDensityMultiplier);
 }
 
 const vec3 RANDOM_VECTORS[6] = vec3[6]
@@ -138,11 +122,12 @@ const float SAMPLE_SEGMENT_LENGTHS[6] = float[6](1, 1, 2, 4, 8, 16);
 const int lightSampleCount = 6;
 const vec3 albedo = vec3(0.95);
 
-const float powderStrength = 0.1; // TODO: get this looking right
-const float scatterSampleDistanceScale = 25;
+const float powderScale = 300.0;
+const float powderExponent = 0.2;
 const float scatterDistanceMultiplier = 0.5; // less than 1 to fake multi-scattering
+const float scatterSampleDistanceScale = 200;
 
-vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradiance, float lod, float height, float cloudType)
+vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradiance, float lod, float height, float density)
 {
 	float Texponent = 0.0;
 	float powderTexponent = 0.0;
@@ -154,21 +139,20 @@ vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradian
 		vec3 lightSamplePos = pos + (lightDir + RANDOM_VECTORS[i] * 0.3) * SAMPLE_DISTANCES[i] * scatterSampleDistanceScale;
 		float sampleHeight = length(lightSamplePos) - innerRadius;
 		vec2 sampleUv = cloudUvFromPosRelPlanet(lightSamplePos);
-		float sampleOutCloudType;
-		float density = calcDensity(lightSamplePos, sampleUv, lod, sampleHeight, sampleOutCloudType);
+		float density = calcDensity(lightSamplePos, sampleUv, lod, sampleHeight);
 		Texponent -= density * scatterDistance * scatterDistanceMultiplier;
-		powderTexponent -= density * scatterDistance * 2;
 	}
 
 	float T = exp(Texponent);
-	float powderT = exp(powderTexponent);
 	
-	vec2 occlusionByType = clamp(remap(vec2(height), cloudBottomZeroDensity, cloudTopZeroDensityHeight, vec2(0.0), vec2(1.0)), vec2(0.0), vec2(1.0));
-	occlusionByType = occlusionByType * cloudOcclusionStrength + (1.0 - cloudOcclusionStrength);
-	float occlusion = mix(occlusionByType.x, occlusionByType.y, cloudType);
+	vec4 occlusionByType = clamp(vec4(1) - remapNormalized(vec4(height), cloudBottomZeroDensity, cloudTopZeroDensityHeight), vec4(0), vec4(1));
+	occlusionByType *= cloudOcclusionStrength;
+	float occlusion = max(0, 1 - dot(occlusionByType, vec4(1.0)));
+	vec3 K = occlusion * sunIrradiance * albedo;
 
 	vec3 radiance = vec3(0);
-	for (int N = 0; N < 3; ++N) // multi scattering octaves
+	float albedoMScat = 1;
+	for (int N = 0; N < 2; ++N) // multi scattering octaves
 	{
 		// Calculate multi-scattering approximation coefficeints for technique described in
 		// "Oz: The Great and Volumetric"
@@ -176,18 +160,21 @@ vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradian
 		// and also used in "Physically Based Sky, Atmosphere and Cloud Rendering in Frostbite"
 		// https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
 	
-		float albedoMScat = pow(0.5, N);
 		float extinctionMScat = albedoMScat;
 		float hgMScat = albedoMScat;
 	
 		// Now perform single scattering calc modified by the coefficients for fake multiscattering
 		float beer = pow(T, extinctionMScat);
-		float powder = 1.0 - powderStrength * pow(powderT, extinctionMScat);
+		float powder = min(1.0, pow(density * powderScale, powderExponent));
 		
-		radiance += occlusion * sunIrradiance * albedo * albedoMScat * beer * powder * mix(oneOnFourPi, hg, hgMScat);
+		radiance += K * albedoMScat * beer * powder * mix(oneOnFourPi, hg, hgMScat);
+		albedoMScat *= 0.5;
 	}
-	radiance += ambientLightColor;
-	return radiance;
+	// Fudge factors to account for missing energy from not considering higher multiscattering octaves (N=inf)
+	const float multiScatterTailA = 1.1;
+	const vec3 multiScatterTailB = occlusion * sunIrradiance * 0.01;
+
+	return multiScatterTailA * radiance + multiScatterTailB + ambientLightColor;
 }
 
 float texelsPerPixelAtDistance(float distance)
@@ -198,7 +185,7 @@ float texelsPerPixelAtDistance(float distance)
 float effectiveZeroT = 0.01;
 float effectiveZeroDensity = 0.00001;
 
-vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, float rayStartTexelsPerPixel, vec3 lightDir, vec3 sunIrradiance, out float meanCloudFrontDistance)
+vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, float rayStartTexelsPerPixel, vec3 lightDir, vec3 sunIrradiance, out float meanCloudDistance)
 {
 	float cosAngle = dot(lightDir, dir);
 	float hg = watooHenyeyGreenstein(cosAngle);
@@ -224,13 +211,12 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, float rayStartTexel
 		
 		vec2 uv = cloudUvFromPosRelPlanet(pos);
 		float height = length(pos) - innerRadius;
-		float outCloudType;
 		
-        float density = calcDensity(pos + vec3(cloudDisplacementMeters.xy,0), uv, lod, height, outCloudType);
+        float density = calcDensity(pos + vec3(cloudDisplacementMeters.xy,0), uv, lod, height);
 		
 		if (density > effectiveZeroDensity)
 		{
-			vec3 radiance = radianceLowRes(pos, uv, lightDir, hg, sunIrradiance, lod, height, outCloudType) * density;
+			vec3 radiance = radianceLowRes(pos, uv, lightDir, hg, sunIrradiance, lod, height, density) * density;
 #define ENERGY_CONSERVING_INTEGRATION
 #ifdef ENERGY_CONSERVING_INTEGRATION
 			const float clampedDensity = max(density, 0.0000001);
@@ -246,8 +232,8 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, float rayStartTexel
 			totalRadiance += radiance * stepSize * T;
 			T *= exp(-density * stepSize);
 #endif
-			sumTransmissionWeightedDistance += T * t;
-			sumTransmissionWeights += T;
+			sumTransmissionWeightedDistance += (1-T) * t;
+			sumTransmissionWeights += (1-T);
 		}
 		else
 		{
@@ -267,8 +253,7 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, float rayStartTexel
 				
 				uv = cloudUvFromPosRelPlanet(pos);
 				float height = length(pos) - innerRadius;
-				float outCloudType;
-				float density = sampleDensityHull(uv, height, outCloudType, lod);
+				float density = sampleDensityHull(uv, height, lod);
 				
 				// If no longer in empty space, go back one step and break
 				if (density > effectiveZeroDensity)
@@ -296,7 +281,7 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, float rayStartTexel
 		}
     }
 
-	meanCloudFrontDistance = (sumTransmissionWeights > 0) ? (sumTransmissionWeightedDistance / sumTransmissionWeights) : -1.0;
+	meanCloudDistance = (sumTransmissionWeights > 0) ? (sumTransmissionWeightedDistance / sumTransmissionWeights) : -1.0;
 	
     return vec4(totalRadiance, 1.0-max(0.0, remapNormalized(T, effectiveZeroT, 1.0)));
 }
@@ -425,7 +410,7 @@ void main()
 	float stepSize = initialStepSize;
 	stepSize = min(stepSize + rayNear / 4000, maximumStepSize);
 	
-	rayNear += stepSize * random(gl_FragCoord.xy);
+	rayNear += stepSize * random(gl_FragCoord.xy + jitterOffset);
 
 	vec3 positionRelCameraWS = rayNear * rayDir;
 
@@ -449,7 +434,7 @@ void main()
 	
 //#define DEBUG_VOLUME
 #ifdef DEBUG_VOLUME
-	colorOut.rgb = vec3(checker(cloudsUv*vec2(2,1), 100));
+	colorOut.rgb = vec3(checker(cloudsUv*vec2(2,1), 1000));
 	colorOut.a = 1;
 	depthOut = calcLogZNdc(dot(rayDir * rayNear, cameraCenterDirection));
 	return;
@@ -457,27 +442,27 @@ void main()
 
 	float lowResBlend = (lod - 2.0)*0.25;
 
-	float meanCloudFrontDistance; // negative value means no samples
+	float meanCloudDistance; // negative value means no samples
 	if (lowResBlend < 1.0)
 	{
 		float rayStartTexelsPerPixel = pow(2, lod);
-		colorOut = march(positionRelPlanetPlanetAxes, rayDirPlanetAxes, stepSize, rayFar-rayNear, rayStartTexelsPerPixel, lightDirPlanetAxes, directIrradiance, meanCloudFrontDistance);
+		colorOut = march(positionRelPlanetPlanetAxes, rayDirPlanetAxes, stepSize, rayFar-rayNear, rayStartTexelsPerPixel, lightDirPlanetAxes, directIrradiance, meanCloudDistance);
 	}
 	else
 	{
-		meanCloudFrontDistance = -1;
+		meanCloudDistance = -1;
 	}
 	
-	bool hasSample = (meanCloudFrontDistance >= 0.0);
+	bool hasSample = (meanCloudDistance >= 0.0);
 	
 	float logZ;
 	if (hasSample)
 	{	
-		meanCloudFrontDistance += rayNear;
+		meanCloudDistance += rayNear;
 		{
 			// Apply 'aerial perspective'
 			vec3 transmittance;
-			vec3 cloudFrontPositionRelPlanet = cameraPositionRelPlanet + meanCloudFrontDistance * rayDir;
+			vec3 cloudFrontPositionRelPlanet = cameraPositionRelPlanet + meanCloudDistance * rayDir;
 
 			// Decrease inscattering as a function of sky occlusion due to clouds.
 			// This curve is a fudge, but gives plausible looking results.
@@ -491,7 +476,7 @@ void main()
 			float weight = min(1.0, colorOut.a * colorOut.a * colorOut.a);
 			colorOut.rgb = mix(colorOut.rgb, colorOut.rgb * transmittance + skyRadianceToPoint, weight);
 		}
-		logZ = calcLogZNdc(dot(rayDir * meanCloudFrontDistance, cameraCenterDirection));
+		logZ = calcLogZNdc(dot(rayDir * meanCloudDistance, cameraCenterDirection));
 	}
 	else
 	{
