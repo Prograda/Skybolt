@@ -50,7 +50,7 @@ public:
 	void addToolWindow(const QString& windowName, QWidget* window);
 	void raiseToolWindow(QWidget* widget);
 
-	QMenu* addVisibilityFilterableSubMenu(QMenu& parent, const QString& text, skybolt::EntityVisibilityFilterable* filterable) const;
+	QMenu* addVisibilityFilterableSubMenu(const QString& text, skybolt::EntityVisibilityFilterable* filterable) const;
 
 	std::optional<PickedSceneObject> pickSceneObjectAtPointInWindow(const QPointF& position, const EntitySelectionPredicate& predicate = &EntitySelectionPredicateAlways) const;
 	std::optional<skybolt::sim::Vector3> pickPointOnPlanetAtPointInWindow(const QPointF& position) const;
@@ -107,7 +107,7 @@ private:
 
 	void setProjectFilename(const QString& filename);
 
-	void addViewportMenuActions(QMenu& menu);
+	void addViewportMenuActions();
 
 	void setCameraTarget(skybolt::sim::Entity* target);
 

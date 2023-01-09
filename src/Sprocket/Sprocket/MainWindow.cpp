@@ -542,7 +542,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 		}
 	}
 
-	addViewportMenuActions(*ui->menuView);
+	addViewportMenuActions();
 
 	connect(mOsgWidget, &OsgWidget::mouseDown, this, [this](Qt::MouseButton button, const QPointF& position) {
 		onViewportMouseDown(button, position);
@@ -1458,9 +1458,9 @@ static QAction* addCheckedAction(QMenu& menu, const QString& text, std::function
 	return action;
 }
 
-QMenu* MainWindow::addVisibilityFilterableSubMenu(QMenu& parent, const QString& text, EntityVisibilityFilterable* filterable) const
+QMenu* MainWindow::addVisibilityFilterableSubMenu(const QString& text, EntityVisibilityFilterable* filterable) const
 {
-	QMenu* menu = parent.addMenu(text);
+	QMenu* menu = ui->menuView->addMenu(text);
 
 	QActionGroup* alignmentGroup = new QActionGroup(menu);
 
@@ -1485,11 +1485,11 @@ QMenu* MainWindow::addVisibilityFilterableSubMenu(QMenu& parent, const QString& 
 	return menu;
 }
 
-void MainWindow::addViewportMenuActions(QMenu& menu)
+void MainWindow::addViewportMenuActions()
 {
-	addVisibilityFilterableSubMenu(menu, "Labels", mVisNameLabels.get());
-	addVisibilityFilterableSubMenu(menu, "Forces", mForcesVisBinding.get());
-	addVisibilityFilterableSubMenu(menu, "Orbits", mVisOrbits.get());
+	addVisibilityFilterableSubMenu("Labels", mVisNameLabels.get());
+	addVisibilityFilterableSubMenu("Forces", mForcesVisBinding.get());
+	addVisibilityFilterableSubMenu("Orbits", mVisOrbits.get());
 }
 
 glm::dmat4 MainWindow::calcCurrentViewProjTransform() const

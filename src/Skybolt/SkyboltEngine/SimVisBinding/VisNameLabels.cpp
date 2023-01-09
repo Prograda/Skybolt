@@ -8,6 +8,7 @@
 #include "GeocentricToNedConverter.h"
 #include "TemplateNameComponent.h"
 #include <SkyboltSim/Components/NameComponent.h>
+#include <SkyboltVis/OsgGeometryHelpers.h>
 #include <SkyboltVis/VisibilityCategory.h>
 #include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <osg/Depth>
@@ -68,12 +69,11 @@ std::optional<osg::MatrixTransform*> VisNameLabels::createObject(const sim::Enti
 		if (!name.empty())
 		{
 			osgText::Text* text = new osgText::Text();
-			text->setFont("fonts/verdana.ttf");
+			static osg::ref_ptr<osgText::Font> font = osgText::readRefFontFile("fonts/verdana.ttf"); // static so we only load the font once
+			text->setFont(font);
 			text->setText(name);
 			text->setCharacterSize(0.12); // scaled in shader to be approximately font point size / 100
-			text->setUseDisplayList(false);
-			text->setUseVertexBufferObjects(true);
-			text->setUseVertexArrayObject(true);
+			vis::configureDrawable(*text);
 			text->setCullingActive(false);
 
 			osg::Geode* geode = new osg::Geode();

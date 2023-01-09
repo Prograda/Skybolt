@@ -42,22 +42,6 @@ static std::optional<Orbit> getOrbit(const Entity& entity, double julianDate)
 	{
 		return controller->orbit;
 	}
-	else if (const auto& body = entity.getFirstComponent<DynamicBodyComponent>())
-	{
-		if (const auto& node = entity.getFirstComponent<Node>())
-		{
-			Vector3 planetPosition = math::dvec3Zero();
-
-			Quaternion orientation = getEquatorialToEcefRotation(julianDate);
-
-			CreateOrbitFromEclipticCoordinatesArgs args;
-			args.planetMass = 5.972e24; // earth
-			args.bodyPosition = orientation * (node->getPosition() - planetPosition);
-			args.bodyVelocity = orientation * body->getLinearVelocity();
-			args.bodyMass = body->getMass();
-			return createOrbitFromEclipticCoordinates(args);
-		}
-	}
 	return std::nullopt;
 }
 
