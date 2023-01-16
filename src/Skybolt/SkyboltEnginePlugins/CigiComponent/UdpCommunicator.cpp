@@ -4,8 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#define _SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING // Ignore boost/asio warnings
 #include "UdpCommunicator.h"
 
+#ifdef WIN32
+#define _WIN32_WINNT 0x0601 // Boost/asio requires the windows platform target to be set
+#endif
 #include <boost/asio.hpp>
 
 using boost::asio::ip::udp;

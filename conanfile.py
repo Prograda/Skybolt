@@ -7,6 +7,7 @@ class SkyboltConan(ConanFile):
     settings = "os", "compiler", "arch", "build_type"
     options = {
         "enable_bullet": [True, False],
+        "enable_cigi": [True, False],
         "enable_fft_ocean": [True, False],
         "enable_python": [True, False],
         "enable_sprocket": [True, False],
@@ -16,6 +17,7 @@ class SkyboltConan(ConanFile):
     }
     default_options = {
         "enable_bullet": False,
+        "enable_cigi": False,
         "enable_fft_ocean": True,
         "enable_python": False,
         "enable_sprocket": False,
@@ -64,6 +66,9 @@ class SkyboltConan(ConanFile):
         if self.options.enable_bullet:
             self.requires("bullet3/3.22a@_/_")
 
+        if self.options.enable_cigi:
+            self.include_package("cigicl", "4.0.6a")
+
         if self.options.enable_fft_ocean:
             self.include_package("mufft", "1.0.0")
             self.include_package("xsimd", "7.4.10")
@@ -91,6 +96,9 @@ class SkyboltConan(ConanFile):
         if self.options.enable_bullet:
             cmake.definitions["BUILD_BULLET_PLUGIN"] = "true"
 
+        if self.options.enable_cigi:
+            cmake.definitions["BUILD_CIGI_COMPONENT_PLUGIN"] = "true"
+
         if self.options.enable_fft_ocean:
             cmake.definitions["BUILD_FFT_OCEAN_PLUGIN"] = "true"
 
@@ -113,7 +121,7 @@ class SkyboltConan(ConanFile):
     def package_info(self):
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.names["cmake_find_package"] = "Skybolt"
-        self.cpp_info.libs = ["AircraftHud", "MapAttributesConverter", "SkyboltCommon", "SkyboltEngine", "SkyboltSim", "SkyboltVis"]
+        self.cpp_info.libs = ["AircraftHud", "SkyboltEngine", "SkyboltVis", "SkyboltSim", "SkyboltCommon"]
 		
         if self.options.enable_fft_ocean and not self.options.shared_plugins:
             self.cpp_info.libs.append("FftOcean")

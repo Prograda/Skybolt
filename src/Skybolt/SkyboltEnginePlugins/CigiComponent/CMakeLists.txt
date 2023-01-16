@@ -5,10 +5,6 @@ include_directories("./")
 include_directories("../")
 include_directories("../../")
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_AUTOMOC ON)
-find_package(Qt5 COMPONENTS Core REQUIRED)
-
 find_package(cigicl REQUIRED)
 include_directories(${cigicl_INCLUDE_DIR})
 
@@ -16,7 +12,6 @@ set(LIBS
 SkyboltEngine
 ${cigicl_LIBRARIES}
 )
-add_definitions(-DCCL_DLL)
 
 add_library(${TARGET_NAME} ${SKYBOLT_PLUGINS_LIBRARY_TYPE} ${SrcFiles})
 

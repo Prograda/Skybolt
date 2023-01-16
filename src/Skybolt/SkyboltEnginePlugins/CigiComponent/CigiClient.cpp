@@ -286,8 +286,8 @@ void CigiClient::update()
 				camera = mWorld->createCamera();
 				mCameras[id] = camera;
 			}
-			camera->setHorizontalFieldOfView((packet.GetFOVLeft() + packet.GetFOVRight()) * math::degToRadD());
-			camera->setVerticalFieldOfView((packet.GetFOVTop() + packet.GetFOVBottom()) * math::degToRadD());
+			camera->setHorizontalFieldOfView((packet.GetFOVLeft() + packet.GetFOVRight()) * math::degToRadF());
+			camera->setVerticalFieldOfView((packet.GetFOVTop() + packet.GetFOVBottom()) * math::degToRadF());
 		});
 	}
 }
