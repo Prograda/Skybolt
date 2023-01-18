@@ -7,15 +7,19 @@ import shutil
 from subprocess import Popen, PIPE, STDOUT
 import re
 
-transformNames = [
-	"Main",
-	"Fuselage",
-	"MainRotor",
-	"TailRotor"
-]
+def hasExportableMeshesInHierarchy(object):
+	if object.type == 'MESH' and not object.name.lower().endswith('no_export'):
+		return True
+	    
+	for c in object.children:
+		if hasExportableMeshesInHierarchy(c):
+			return True
+												
+	return False
 
 class ExportSceneToSkyboltProperties(bpy.types.PropertyGroup):
-    assetName = bpy.props.StringProperty(name="Asset Name")
+	assetName : bpy.props.StringProperty(name="Asset Name")
+	outputDir : bpy.props.StringProperty(name="Output Dir", default="//export", subtype = 'DIR_PATH')
 
 class ExportSceneToSkybolt(bpy.types.Operator):
 	"""Exports scene to IVE files and textures which can be read by Skybolt.
@@ -26,37 +30,42 @@ objects parented under transforms with recognized names."""
 	
 	@classmethod
 	def poll(self, context):
-		properties = context.scene.exportSceneToObjectProperties
+		properties = context.scene.exportSceneToSkyboltProperties
 		return properties != None and properties.assetName != ""
 	
 	def execute(self, context):
 
-		assetName = context.scene.exportSceneToObjectProperties.assetName
-	
-		directory = os.path.dirname(bpy.data.filepath)
-		directory = os.path.join(directory, 'export')
+		self.osgConvPath = self.findOsgConvExecutable()
+		if self.osgConvPath == None:
+			self.report({'ERROR'}, "Could not find osgconv application in path")
+			return {'CANCELLED'}
+
+		props = context.scene.exportSceneToSkyboltProperties
+		assetName = props.assetName
+
+		directory = bpy.path.abspath(props.outputDir).replace('\\', '/')
+		print(directory)
 		os.makedirs(directory, exist_ok=True)
 		
-		for transformName in transformNames:
-			if transformName in bpy.data.objects:
-				transform = bpy.data.objects[transformName]
-				
-				partName = assetName + "_" + transformName
-				
-				filenameWithoutExtension = directory + "/" + partName
-				
-				self.exportHierarchyToObj(context, transform, filenameWithoutExtension + ".obj")
-				self.exportTexturesInMtlFile(filenameWithoutExtension + ".mtl")
-				self.convertObjToIve(directory, partName)
+		for object in bpy.data.scenes['Scene'].collection.objects:
+                    if hasExportableMeshesInHierarchy(object):
+                        partName = assetName + "_" + object.name
+
+                        filenameWithoutExtension = directory + "/" + partName
+                        
+                        self.exportHierarchyToObj(context, object, filenameWithoutExtension + ".obj")
+                        self.exportTexturesInMtlFile(filenameWithoutExtension + ".mtl")
+                        self.convertObjToIve(directory, partName)
 
 		return {'FINISHED'}
 	
+
 	def findOsgConvExecutable(self):
-		names = ["osgconv.exe", "osgconvrd.exe"]
+		names = ["osgconv.exe", "osgconvrd.exe", "osgconv"]
 		for name in names:
 			if shutil.which(name):
 				return name
-		self.report({'ERROR'}, "Could not find osgconv application in path")
+		return None
 	
 	def convertObjToIve(self, directory, name):
 		
@@ -65,15 +74,15 @@ objects parented under transforms with recognized names."""
 		# as different geodes, MERGE_GEODES is required as well.
 		os.environ["OSG_OPTIMIZER"] = "DEFAULT_OPTIMIZATIONS|MERGE_GEODES|MERGE_GEOMETRY"
 		
-		outputFilename = directory + "/" + name + ".ive"
+		outputFilename = directory + "/" + name + ".osgb"
 		args = [
-			self.findOsgConvExecutable(),
+			self.osgConvPath,
 			'-O',
-			'noTexturesInIVEFile',
+			'WriteImageHint=UseExternal',
 			directory + "/" + name + ".obj",
 			outputFilename]
 		
-		print("Converting OBJ to IVE with args: " + str(args))
+		print("Converting OBJ to OSGB with args: " + str(args))
 		
 		p = Popen(args, cwd=directory, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
 		result = str(p.stdout.read())
@@ -87,11 +96,11 @@ objects parented under transforms with recognized names."""
 			if obj.visible_get():
 				obj.select_set(True)
 
-	def exportHierarchyToObj(self, context, transform, outFilename):
+	def exportHierarchyToObj(self, context, object, outFilename):
 		bpy.ops.object.select_all(action='DESELECT')
-		self.selectVisibleChildrenRecursive(transform)
+		self.selectVisibleChildrenRecursive(object)
 		
-		originMatrix =  transform.matrix_world
+		originMatrix =  object.matrix_world
 
 		self.exportSelectedToObj(context, originMatrix, outFilename)
 		

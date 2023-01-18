@@ -67,9 +67,11 @@ class SkyboltToolPanel(bpy.types.Panel):
 		# Export Scene
 		box = layout.box()
 		
-		props = context.scene.exportSceneToObjectProperties
+		props = context.scene.exportSceneToSkyboltProperties
 		row = box.row()
 		row.prop(props, "assetName")
+		row = box.row()
+		row.prop(props, "outputDir")
 		
 		row = box.row()
 		row.operator("wm.export_scene_to_skybolt")

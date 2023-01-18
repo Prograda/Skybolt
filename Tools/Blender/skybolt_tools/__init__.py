@@ -29,13 +29,13 @@ def register():
 	for cls in classes:
 		bpy.utils.register_class(cls)
 
-	bpy.types.Scene.exportSceneToObjectProperties = bpy.props.PointerProperty(type=export_skybolt.ExportSceneToSkyboltProperties)
+	bpy.types.Scene.exportSceneToSkyboltProperties = bpy.props.PointerProperty(type=export_skybolt.ExportSceneToSkyboltProperties)
 
 def unregister():
 	for cls in classes:
 		bpy.utils.unregister_class(cls)
 
-	del bpy.types.Scene.exportSceneToObjectProperties
+	del bpy.types.Scene.exportSceneToSkyboltProperties
 
 if __name__ == "__main__":
 	register()
