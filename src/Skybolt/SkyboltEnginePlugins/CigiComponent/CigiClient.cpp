@@ -195,7 +195,11 @@ void CigiClient::processEntityCtrlV4(const CigiEntityCtrlV4& packet)
 		{
 			entity = it->second;
 		}
-		entity->setVisible(packet.GetEntityState() == CigiBaseEntityCtrl::Active);
+
+		if (entity)
+		{
+			entity->setVisible(packet.GetEntityState() == CigiBaseEntityCtrl::Active);
+		}
 	}
 	else if (packet.GetEntityState() == CigiBaseEntityCtrl::Remove || packet.GetEntityState() == CigiBaseEntityCtrl::Destroyed)
 	{
