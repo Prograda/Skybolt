@@ -7,6 +7,7 @@ OPTION(BUILD_CIGI_COMPONENT_PLUGIN "Build CIGI Component Plugin")
 if (BUILD_CIGI_COMPONENT_PLUGIN)
 	add_subdirectory(CigiComponent)
 	add_subdirectory(CigiComponentTests)
+	add_subdirectory(CigiTestHost)
 endif()
 
 OPTION(BUILD_FFT_OCEAN_PLUGIN "Build FFT Ocean Plugin")
