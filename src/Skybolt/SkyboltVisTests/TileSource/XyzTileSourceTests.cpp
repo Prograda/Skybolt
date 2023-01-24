@@ -23,7 +23,7 @@ static fs::path getTemporaryDirectory()
 	return fs::temp_directory_path() / "SkyboltTests";
 }
 
-static XyzTileSource createXyzTileSource(XyzTileSourceConfig::ImageType type = XyzTileSourceConfig::ImageType::Color)
+static XyzTileSource createXyzTileSource(std::optional<HeightMapElevationRerange> elevationRerange = {})
 {
 	fs::create_directories(getTemporaryDirectory());
 
@@ -31,7 +31,7 @@ static XyzTileSource createXyzTileSource(XyzTileSourceConfig::ImageType type = X
 	config.urlTemplate = (getTemporaryDirectory() / "{key}_{z}_{x}_{y}.png").string();
 	config.apiKey = "testKey";
 	config.levelRange = IntRangeInclusive(0, 2);
-	config.imageType = type;
+	config.elevationRerange = std::move(elevationRerange);
 
 	return XyzTileSource(config);
 }
@@ -65,7 +65,7 @@ TEST_CASE("Test tile loaded from XYZ tile source")
 
 TEST_CASE("Test height map tile loaded from XYZ elevation tile source")
 {
-	XyzTileSource source = createXyzTileSource(XyzTileSourceConfig::ImageType::Elevation);
+	XyzTileSource source = createXyzTileSource(getDefaultEarthRerange());
 
 	// Load existing image succeeds
 	int elevationValue = 23;
@@ -76,6 +76,7 @@ TEST_CASE("Test height map tile loaded from XYZ elevation tile source")
 
 	auto rerange = getHeightMapElevationRerange(*image);
 	REQUIRE(rerange);
+	CHECK(rerange == getDefaultEarthRerange());
 
 	auto bounds = getHeightMapElevationBounds(*image);
 	REQUIRE(bounds);

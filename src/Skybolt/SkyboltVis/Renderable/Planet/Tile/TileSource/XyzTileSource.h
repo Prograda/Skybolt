@@ -6,6 +6,7 @@
 
 #pragma once
 #include "TileSourceWithMinMaxLevel.h"
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h"
 
 namespace skybolt {
 namespace vis {
@@ -27,14 +28,7 @@ struct XyzTileSourceConfig
 	YOrigin yOrigin = YOrigin::Top;
 
 	IntRangeInclusive levelRange;
-
-	enum class ImageType
-	{
-		Color,
-		Elevation
-	};
-
-	ImageType imageType = ImageType::Color; //!< Which image type to produce
+	std::optional<HeightMapElevationRerange> elevationRerange; //!< If provided, treat images as heightmaps storing elevation with the given rerange
 };
 
 class XyzTileSource : public TileSourceWithMinMaxLevel
@@ -53,7 +47,7 @@ public:
 	{
 		static const std::string pngStr = "png";
 		static const std::string pngxStr = "pngx";
-		return mImageType == XyzTileSourceConfig::ImageType::Color ? pngStr : pngxStr;
+		return mElevationRerange ? pngxStr : pngStr;
 	}
 
 private:
@@ -64,7 +58,7 @@ private:
 	const XyzTileSourceConfig::YOrigin mYOrigin;
 	const std::string mApiKey;
 	const std::string mCacheSha;
-	const XyzTileSourceConfig::ImageType mImageType;
+	std::optional<HeightMapElevationRerange> mElevationRerange;
 };
 
 } // namespace vis

@@ -26,7 +26,7 @@ XyzTileSource::XyzTileSource(const XyzTileSourceConfig& config) :
 	mYOrigin(config.yOrigin),
 	mApiKey(config.apiKey),
 	mCacheSha(skybolt::calcSha1(config.urlTemplate)),
-	mImageType(config.imageType)
+	mElevationRerange(config.elevationRerange)
 {
 }
 
@@ -40,7 +40,7 @@ bool XyzTileSource::validate() const
 		return false;
 	}
 
-	if (mImageType == XyzTileSourceConfig::ImageType::Elevation)
+	if (mElevationRerange)
 	{
 		if (image->getPixelFormat() != GL_LUMINANCE)
 		{
@@ -68,7 +68,7 @@ osg::ref_ptr<osg::Image> XyzTileSource::createImage(const QuadTreeTileKey& key, 
 	osg::ref_ptr<osg::Image> image = readImageWithoutWarnings(toUrl(key));
 	if (image)
 	{
-		if (mImageType == XyzTileSourceConfig::ImageType::Elevation)
+		if (mElevationRerange)
 		{
 			if (!isHeightMapDataFormat(*image))
 			{
@@ -76,15 +76,14 @@ osg::ref_ptr<osg::Image> XyzTileSource::createImage(const QuadTreeTileKey& key, 
 			}
 			image->setInternalTextureFormat(getHeightMapInternalTextureFormat());
 
-			const HeightMapElevationRerange& rerange = getDefaultEarthRerange();
-			setHeightMapElevationRerange(*image, rerange);
+			setHeightMapElevationRerange(*image, *mElevationRerange);
 
 			HeightMapElevationBounds bounds = emptyHeightMapElevationBounds();
 			uint16_t* p = reinterpret_cast<uint16_t*>(image->data());
 			int elementCount = image->s() * image->t();
 			for (int i = 0; i < elementCount; ++i)
 			{
-				expand(bounds, getElevationForColorValue(rerange, *p));
+				expand(bounds, getElevationForColorValue(*mElevationRerange, *p));
 			}
 			setHeightMapElevationBounds(*image, bounds);
 		}

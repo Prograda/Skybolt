@@ -91,6 +91,15 @@ static IntRangeInclusive readLevelRange(const nlohmann::json& json)
 	return IntRangeInclusive(minLevel, maxLevel);
 }
 
+static HeightMapElevationRerange readElevationRerange(const nlohmann::json& json)
+{
+	if (json.array().size() != 2)
+	{
+		throw std::runtime_error("Elevation range was not in form [min, max]");
+	}
+	return rerangeElevationFromUInt16WithElevationBounds(json.array().front(), json.array().back());
+}
+
 void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)
 {
 	ApiKeys keys = registry.getApiKeys();
@@ -107,7 +116,11 @@ void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)
 		xyzConfig.yOrigin = readOptionalOrDefault(json, "yTileOriginAtBottom", false) ? XyzTileSourceConfig::YOrigin::Bottom : XyzTileSourceConfig::YOrigin::Top;
 		xyzConfig.apiKey = apiKey;
 		xyzConfig.levelRange = readLevelRange(json);
-		xyzConfig.imageType = readOptionalOrDefault(json, "produceElevation", false) ? XyzTileSourceConfig::ImageType::Elevation : XyzTileSourceConfig::ImageType::Color;
+
+		ifChildExists(json, "elevationBounds", [&] (const nlohmann::json& v) {
+			xyzConfig.elevationRerange = readElevationRerange(v);
+		});
+
 		auto source = std::make_shared<XyzTileSource>(xyzConfig);
 		source->validate();
 		return source;
