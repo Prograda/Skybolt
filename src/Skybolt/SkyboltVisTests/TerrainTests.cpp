@@ -16,6 +16,7 @@
 #include <SkyboltVis/Renderable/Planet/Terrain.h>
 #include <SkyboltVis/Renderable/Planet/Tile/HeightMapElevationBounds.h>
 #include <SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h>
+#include <SkyboltVis/RenderOperation/ViewportStateSet.h>
 #include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <SkyboltVis/Window/OffscreenViewer.h>
 
@@ -128,7 +129,10 @@ TEST_CASE("Terrain heightfield renderable")
 	viewer->getCamera()->setClearColor(osg::Vec4(0, 0, 0, 0));
 
 	Camera sceneCamera(/* aspectRatio */ 1.0);
-	Scene scene(camera->getOrCreateStateSet());
+
+	osg::ref_ptr<ViewportStateSet> stateSet = new ViewportStateSet();
+	camera->setStateSet(stateSet);
+	Scene scene(stateSet);
 	scene.setAmbientLightColor(osg::Vec3f(1.f, 1.f, 1.f));
 
 	float epsilon = 2.f / 256.f;
@@ -145,6 +149,8 @@ TEST_CASE("Terrain heightfield renderable")
 		sceneCamera.setOrientation(quat);
 		sceneCamera.updateOsgCameraGeometry(*camera);
 		updateScene(scene, sceneCamera, *image);
+
+		stateSet->update(sceneCamera);
 
 		// Render
 		viewer->frame();
@@ -180,6 +186,8 @@ TEST_CASE("Terrain heightfield renderable")
 		sceneCamera.updateOsgCameraGeometry(*camera);
 		sceneCamera.setFovY(0.02); // narrow FOV to approximate orthographic projection
 		updateScene(scene, sceneCamera, *image);
+
+		stateSet->update(sceneCamera);
 
 		// Render
 		viewer->frame();
@@ -224,6 +232,8 @@ TEST_CASE("Terrain heightfield renderable")
 		sceneCamera.updateOsgCameraGeometry(*camera);
 		sceneCamera.setFovY(0.02); // narrow FOV to approximate orthographic projection
 		updateScene(scene, sceneCamera, *image);
+
+		stateSet->update(sceneCamera);
 
 		// Render
 		viewer->frame();
