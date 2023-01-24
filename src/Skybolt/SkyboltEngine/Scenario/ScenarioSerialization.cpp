@@ -159,7 +159,7 @@ static sim::EntityPtr loadEntity(World& world, EntityFactory& factory, const std
 		setVelocity(*body, readVector3(object));
 	});
 
-	body->setDynamicsEnabled(json.at("dynamicsEnabled").get<bool>());
+	body->setDynamicsEnabled(readOptionalOrDefault(json, "dynamicsEnabled", true));
 
 	return body;
 }
