@@ -44,18 +44,19 @@ objects parented under transforms with recognized names."""
 		assetName = props.assetName
 
 		directory = bpy.path.abspath(props.outputDir).replace('\\', '/')
-		print(directory)
+
 		os.makedirs(directory, exist_ok=True)
 		
-		for object in bpy.data.scenes['Scene'].collection.objects:
-                    if hasExportableMeshesInHierarchy(object):
-                        partName = assetName + "_" + object.name
+		for object in bpy.data.objects:
+			if object.parent == None:
+				if hasExportableMeshesInHierarchy(object):
+					partName = assetName + "_" + object.name
 
-                        filenameWithoutExtension = directory + "/" + partName
-                        
-                        self.exportHierarchyToObj(context, object, filenameWithoutExtension + ".obj")
-                        self.exportTexturesInMtlFile(filenameWithoutExtension + ".mtl")
-                        self.convertObjToIve(directory, partName)
+					filenameWithoutExtension = directory + "/" + partName
+
+					self.exportHierarchyToObj(context, object, filenameWithoutExtension + ".obj")
+					self.exportTexturesInMtlFile(filenameWithoutExtension + ".mtl")
+					self.convertObjToIve(directory, partName)
 
 		return {'FINISHED'}
 	
