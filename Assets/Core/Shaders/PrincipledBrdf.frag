@@ -13,6 +13,7 @@
 #pragma import_defines ( ENABLE_NORMAL_MAP )
 #pragma import_defines ( ENABLE_SPECULAR_MAP )
 #pragma import_defines ( ENABLE_ROUGHNESS_MAP )
+#pragma import_defines ( ENABLE_OCCLUSION_ROUGHNESS_METALNESS_MAP )
 #pragma import_defines ( ENABLE_SHADOWS )
 #pragma import_defines ( ENABLE_SPECULAR )
 #pragma import_defines ( UNIFORM_ALBEDO )
@@ -37,8 +38,8 @@ out vec4 color;
 
 uniform vec3 lightDirection;
 uniform vec3 ambientLightColor;
-uniform vec3 specularityUniform;
-uniform float roughnessUniform;
+uniform vec3 specularity;
+uniform float roughness;
 
 #ifdef UNIFORM_ALBEDO
 	uniform vec4 albedoColor;
@@ -49,6 +50,7 @@ uniform float roughnessUniform;
 uniform sampler2D normalSampler;
 uniform sampler2D specularSampler;
 uniform sampler2D roughnessSampler;
+uniform sampler2D occlusionRoughnessMetalnessSampler; // TODO: support Metalness
 uniform sampler2D environmentSampler;
 
 #ifdef ENABLE_DEPTH_OFFSET
@@ -76,15 +78,20 @@ void main()
 	float dotNV = saturate(dot(normal, viewDirection));
 
 #ifdef ENABLE_SPECULAR_MAP
-	vec3 specularity = texture(specularSampler, texCoord.xy).rgb * 0.08; // specular rescaled by 0.08 as per Disney BRDF
+	vec3 sampledSpecularity = texture(specularSampler, texCoord.xy).rgb * 0.08; // specular rescaled by 0.08 as per Disney BRDF
 #else
-	vec3 specularity = specularityUniform;
+	vec3 sampledSpecularity = specularity;
 #endif
 
 #ifdef ENABLE_ROUGHNESS_MAP
-	float roughness = texture(roughnessSampler, texCoord.xy).r;
+	float sampledRoughness = texture(roughnessSampler, texCoord.xy).r;
 #else
-	float roughness = roughnessUniform;
+#ifdef ENABLE_OCCLUSION_ROUGHNESS_METALNESS_MAP
+	vec4 occlusionRoughnessMetalness = texture(occlusionRoughnessMetalnessSampler, texCoord.xy);
+	float sampledRoughness = occlusionRoughnessMetalness.g;
+#else
+	float sampledRoughness = roughness;
+#endif
 #endif
 
 #ifdef ENABLE_SHADOWS
@@ -105,9 +112,9 @@ void main()
 		args.viewDirection = viewDirection;
 		args.irradiance = visibleSunIrradiance;
 	#ifdef ENABLE_SPECULAR
-		args.specularF0 = specularity;
+		args.specularF0 = sampledSpecularity;
 	#endif
-		args.roughness = roughness;
+		args.roughness = sampledRoughness;
 		
 		directResult = evalPrincipledBrdfDirectionalLight(args);
 	}
@@ -121,14 +128,21 @@ void main()
 		args.viewDirection = viewDirection;
 		args.groundIrradiance = calcGroundIrradiance(scattering.sunIrradiance, scattering.skyIrradiance, lightDirection);
 		args.skyIrradiance = scattering.skyIrradiance;
+
 	#ifdef ENABLE_SPECULAR
-		args.specularF0 = specularity;
+		args.specularF0 = sampledSpecularity;
 	#endif
-		args.roughness = roughness;
+		args.roughness = sampledRoughness;
 		
 		environmentResult = evalPrincipledBrdfEnvironmentLight(args, environmentSampler);
+
+	#ifdef ENABLE_OCCLUSION_ROUGHNESS_METALNESS_MAP
+		// Apply occlusion
+		environmentResult.diffuse *= occlusionRoughnessMetalness.r;
+		environmentResult.specular *= occlusionRoughnessMetalness.r;
+	#endif
 	}
-	
+
 #ifdef UNIFORM_ALBEDO
 	vec4 albedo = albedoColor;
 #else
@@ -136,7 +150,7 @@ void main()
 #endif
 	color.a = albedo.a;
 
-	color.rgb = albedo.rgb * (directResult.diffuse * lightVisibility + environmentResult.diffuse + ambientLightColor);
+	color.rgb = albedo.rgb * (directResult.diffuse + environmentResult.diffuse + ambientLightColor);
 #ifdef ENABLE_SPECULAR
 	color.rgb += directResult.specular + environmentResult.specular;
 #endif

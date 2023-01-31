@@ -201,11 +201,38 @@ static void registerAssetSearchDirectory(const std::string& filename)
 	}
 }
 
+static vis::ModelFactory::TextureRole toTextureRole(const std::string& str)
+{
+	static std::map<std::string, vis::ModelFactory::TextureRole> items = {
+		{ "albedo", vis::ModelFactory::TextureRole::Albedo },
+		{ "normal", vis::ModelFactory::TextureRole::Normal },
+		{ "occlusionRoughnessMetalness", vis::ModelFactory::TextureRole::OcclusionRoughnessMetalness }
+	};
+	if (auto i = items.find(str); i != items.end())
+	{
+		return i->second;
+	}
+	throw std::runtime_error("Invalud texture role: " + str);
+}
+
+static std::vector<vis::ModelFactory::TextureRole> readTextureRoles(const nlohmann::json& json)
+{
+	std::vector<vis::ModelFactory::TextureRole> roles;
+
+	auto textureRoleStrings = readOptionalVector(json, "textureRoles", std::vector<std::string>({"albedo", "normal"}));
+	for (const std::string& roleString : textureRoleStrings)
+	{
+		roles.push_back(toTextureRole(roleString));
+	}
+	return roles;
+}
+
 static vis::ModelPtr createVisualModel(const nlohmann::json& json, vis::ModelFactory& factory)
 {
 	std::string filename = json.at("model").get<std::string>();
+	std::vector<vis::ModelFactory::TextureRole> textureRoles = readTextureRoles(json);
 	vis::ModelConfig config;
-	config.node = factory.createModel(filename);
+	config.node = factory.createModel(filename, textureRoles);
 
 	registerAssetSearchDirectory(getParentDirectory(filename));
 

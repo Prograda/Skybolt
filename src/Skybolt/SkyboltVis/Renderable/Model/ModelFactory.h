@@ -29,7 +29,14 @@ class ModelFactory : public DefaultRootNode
 public:
 	ModelFactory(const ModelFactoryConfig &config);
 	
-	osg::ref_ptr<osg::Node> createModel(const std::string& filename);
+	enum class TextureRole
+{
+	Albedo,
+	Normal,
+	OcclusionRoughnessMetalness
+};
+
+	osg::ref_ptr<osg::Node> createModel(const std::string& filename, const std::vector<TextureRole>& textureRoles);
 
 private:
 	NamedStateSetModifiers mStateSetModifiers;

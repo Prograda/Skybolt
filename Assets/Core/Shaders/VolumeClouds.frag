@@ -37,9 +37,9 @@ const float cloudLayerMinHeight = 1000;
 const float cloudLayerMaxHeight = 7000;
 const vec4 cloudBottomZeroDensity = vec4(1000, 4100, 6700, 0);
 const vec4 cloudTopZeroDensityHeight = vec4(2000, 5000, 7000, 0);
-const vec4 cloudDensityMultiplier = vec4(0.03, 0.02, 0.0005, 0);
+const vec4 cloudDensityMultiplier = vec4(0.03, 0.02, 0.0002, 0);
 const vec4 cloudOcclusionStrength = vec4(0.1, 0.1, 0, 0);
-const vec4 cloudNoiseStrength = vec4(0.2, 0.2, 0.15, 0);
+const vec4 cloudNoiseStrength = vec4(0.2, 0.2, 0.1, 0);
 
 const vec3 noiseFrequencyScale = vec3(0.0003);
 

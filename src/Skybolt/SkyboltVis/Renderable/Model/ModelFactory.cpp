@@ -52,49 +52,68 @@ public:
 	virtual void apply(osg::StateSet& stateSet) = 0;
 };
 
-enum class TextureUnitIndexTypes
-{
-	Albedo,
-	Normal
-};
-
-static osg::Texture* getTextureOfType(osg::StateSet& stateSet, TextureUnitIndexTypes type)
-{
-	int typeInt = int(type);
-	if (typeInt < stateSet.getTextureAttributeList().size())
-	{
-		osg::StateAttribute* sa = stateSet.getTextureAttribute(typeInt, osg::StateAttribute::TEXTURE);
-		osg::Texture* texture = dynamic_cast<osg::Texture*>(sa);
-		if (texture)
-		{
-			return texture;
-		}
-	}
-	return nullptr;
-}
-
 // Traverses node hierarchy and sets internal format of textures to an equivalent sRGB format
 class TexturePreparer : public StateSetVisitor
 {
 public:
+	TexturePreparer(const std::vector<ModelFactory::TextureRole>& textureRoles) :
+		mTextureRoles(textureRoles)
+	{
+	}
+
 	void apply(osg::StateSet& stateSet) override
 	{
-		osg::Texture* texture = getTextureOfType(stateSet, TextureUnitIndexTypes::Albedo);
-		if (texture)
-		{
-			texture->setInternalFormat(toSrgbInternalFormat(texture->getInternalFormat()));
-		}
+		int count = std::min(mTextureRoles.size(), stateSet.getTextureAttributeList().size());
 
-		texture = getTextureOfType(stateSet, TextureUnitIndexTypes::Normal);
-		if (texture)
+		for (int i = 0; i < count; ++i)
 		{
-			stateSet.setDefine("ENABLE_NORMAL_MAP");
-			stateSet.addUniform(createUniformSampler2d("normalSampler", 1));
-			hasNormalMap = true;
+			osg::StateAttribute* sa = stateSet.getTextureAttribute(i, osg::StateAttribute::TEXTURE);
+			osg::Texture* texture = dynamic_cast<osg::Texture*>(sa);
+			if (texture)
+			{
+				switch (mTextureRoles[i])
+				{
+				case ModelFactory::TextureRole::Albedo:
+				{
+					texture->setInternalFormat(toSrgbInternalFormat(texture->getInternalFormat()));
+					break;
+				}
+				case ModelFactory::TextureRole::Normal:
+				{
+					stateSet.setDefine("ENABLE_NORMAL_MAP");
+					stateSet.addUniform(createUniformSampler2d("normalSampler", i));
+					hasNormalMap = true;
+					break;
+				}
+				case ModelFactory::TextureRole::OcclusionRoughnessMetalness:
+					stateSet.setDefine("ENABLE_OCCLUSION_ROUGHNESS_METALNESS_MAP");
+					stateSet.addUniform(createUniformSampler2d("occlusionRoughnessMetalnessSampler", i));
+					break;
+				}
+			}
 		}
 	}
 
 	bool hasNormalMap = false;
+
+private:
+	osg::Texture* getTextureOfType(osg::StateSet& stateSet, ModelFactory::TextureRole textureRole) const
+	{
+		int typeInt = int(textureRole);
+		if (typeInt < stateSet.getTextureAttributeList().size())
+		{
+			osg::StateAttribute* sa = stateSet.getTextureAttribute(typeInt, osg::StateAttribute::TEXTURE);
+			osg::Texture* texture = dynamic_cast<osg::Texture*>(sa);
+			if (texture)
+			{
+				return texture;
+			}
+		}
+		return nullptr;
+	}
+
+private:
+	std::vector<ModelFactory::TextureRole> mTextureRoles;
 };
 
 // Converts from Blinn-Phong 'shininess' (specular exponent) to Beckmann roughness
@@ -162,7 +181,7 @@ ModelFactory::ModelFactory(const ModelFactoryConfig &config) :
 	assert(mDefaultProgram);
 }
 
-osg::ref_ptr<osg::Node> ModelFactory::createModel(const std::string& filename)
+osg::ref_ptr<osg::Node> ModelFactory::createModel(const std::string& filename, const std::vector<TextureRole>& textureRoles)
 {
 	static std::map<std::string, osg::ref_ptr<osg::Node>> modelCache;
 	auto it = modelCache.find(filename);
@@ -174,7 +193,7 @@ osg::ref_ptr<osg::Node> ModelFactory::createModel(const std::string& filename)
 			throw skybolt::Exception("Could not load OSG model: " + filename);
 		}
 
-		TexturePreparer modifier;
+		TexturePreparer modifier(textureRoles);
 		model->accept(modifier);
 
 		{
