@@ -17,3 +17,4 @@ add_library(${TARGET_NAME} SHARED ${SrcFiles})
 target_link_libraries (${TARGET_NAME} ${LIBS})
 
 set_editor_plugin_target_properties(${TARGET_NAME})
+skybolt_plugin_install(${TARGET_NAME})
