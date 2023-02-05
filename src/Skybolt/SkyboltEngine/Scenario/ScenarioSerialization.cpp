@@ -14,6 +14,7 @@
 #include "Scenario.h"
 #include <SkyboltEngine/EntityFactory.h>
 #include <SkyboltEngine/TemplateNameComponent.h>
+#include <SkyboltEngine/VisObjectsComponent.h>
 #include <SkyboltSim/Components/AttachmentComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
@@ -25,6 +26,8 @@
 #include <SkyboltSim/CameraController/Zoomable.h>
 #include <SkyboltSim/JsonHelpers.h>
 #include <SkyboltSim/World.h>
+#include <SkyboltVis/Renderable/Planet/Planet.h>
+#include <SkyboltVis/Renderable/Water/WaterMaterial.h>
 #include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltCommon/StringVector.h>
@@ -185,6 +188,18 @@ static void loadEntityComponents(World& world, sim::Entity& entity, const nlohma
 			findAndAttachEntityByName(entity, world, name);
 		}
 	}
+
+	if (vis::Planet* planet = getFirstVisObject<vis::Planet>(entity).get(); planet)
+	{
+		ifChildExists(json, "planet", [&] (const nlohmann::json& j) {
+			if (const auto& material = planet->getWaterMaterial(); material)
+			{
+				ifChildExists(j, "waveHeight", [&]  (const nlohmann::json& j) {
+					material->setWaveHeight(j.get<double>());
+				});
+			}
+		});
+	}
 }
 
 void loadEntities(World& world, EntityFactory& factory, const nlohmann::json& json)
@@ -305,6 +320,16 @@ static nlohmann::json saveEntity(const Entity& entity, const std::string& templa
 		if (selector)
 		{
 			json["cameraController"] = saveCameraController(*selector);
+		}
+	}
+
+	if (vis::Planet* planet = getFirstVisObject<vis::Planet>(entity).get(); planet)
+	{
+		if (const auto& material = planet->getWaterMaterial(); material)
+		{
+			nlohmann::json planetJson;
+			planetJson["waveHeight"] = material->getWaveHeight();
+			json["planet"] = planetJson;
 		}
 	}
 
