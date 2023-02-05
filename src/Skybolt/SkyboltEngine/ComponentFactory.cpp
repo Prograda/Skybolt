@@ -103,8 +103,8 @@ static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryCon
 
 	MainRotorComponentConfig config;
 	config.params = params;
-	config.node = entity->getFirstComponent<Node>().get();
-	config.body = entity->getFirstComponent<DynamicBodyComponent>().get();
+	config.node = entity->getFirstComponentRequired<Node>().get();
+	config.body = entity->getFirstComponentRequired<DynamicBodyComponent>().get();
 	config.positionRelBody = readVector3(json.at("positionRelBody"));
 	config.orientationRelBody = readQuaternion(json.at("orientationRelBody"));
 	config.cyclicInput = inputsComponent->createOrGet("stick", glm::vec2(0), posNegUnitRange<glm::vec2>());
@@ -129,8 +129,8 @@ static sim::ComponentPtr loadTailRotor(Entity* entity, const ComponentFactoryCon
 
 	PropellerComponentConfig config;
 	config.params = params;
-	config.node = entity->getFirstComponent<Node>().get();
-	config.body = entity->getFirstComponent<DynamicBodyComponent>().get();
+	config.node = entity->getFirstComponentRequired<Node>().get();
+	config.body = entity->getFirstComponentRequired<DynamicBodyComponent>().get();
 	config.positionRelBody = readVector3(json.at("positionRelBody"));
 	config.orientationRelBody = readQuaternion(json.at("orientationRelBody"));
 	config.input = entity->getFirstComponentRequired<ControlInputsComponent>()->createOrGet("pedal", 0.0f, posNegUnitRange<float>());

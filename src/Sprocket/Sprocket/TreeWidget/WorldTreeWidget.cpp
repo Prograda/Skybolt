@@ -372,7 +372,10 @@ std::vector<TreeItem*> WorldTreeWidget::getCurrentSelection() const
 	std::vector<TreeItem*> r;
 	for (auto i : selected)
 	{
-		r.push_back(mModel->getTreeItem(i));
+		if (TreeItem* item = mModel->getTreeItem(i); item)
+		{
+			r.push_back(item);
+		}
 	}
 	return r;
 }

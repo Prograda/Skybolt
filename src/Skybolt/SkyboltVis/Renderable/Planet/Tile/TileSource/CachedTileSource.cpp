@@ -42,7 +42,7 @@ osg::ref_ptr<osg::Image> CachedTileSource::createImage(const skybolt::QuadTreeTi
 		{
 			image = readImageWithoutWarnings(filename);
 		}
-		if (isHeightMapDataFormat(*image))
+		if (image && isHeightMapDataFormat(*image))
 		{
 			image->setInternalTextureFormat(getHeightMapInternalTextureFormat());
 		}
