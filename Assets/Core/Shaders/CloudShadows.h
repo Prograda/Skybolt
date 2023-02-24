@@ -17,7 +17,7 @@ uniform sampler2D coverageDetailSampler2;
 float calcDensityLowRes2(sampler2D cloudSampler, vec2 uv)
 {
 	float lod = 0.0;
-	float coverageBase = sampleBaseCloudCoverage(cloudSampler, uv);
+	vec4 coverageBase = sampleBaseCloudCoverage(cloudSampler, uv);
 	vec4 coverageDetail = sampleCoverageDetail(coverageDetailSampler2, uv, lod);
 
 	vec4 d = calcCloudDensityLowRes(coverageBase, coverageDetail, /* heightMultiplier */ vec4(0.8));

@@ -69,7 +69,7 @@ const float maxRenderDistance = 300000;
 
 float sampleDensityHull(vec2 uv, float height, float lod)
 {
-	float coverageBase = sampleBaseCloudCoverage(globalAlphaSampler, uv);
+	vec4 coverageBase = sampleBaseCloudCoverage(globalAlphaSampler, uv);
 	vec4 coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod);
 	vec4 heightMultiplier = calcHeightMultiplier(height);
 	vec4 d = calcCloudDensityHull(coverageBase, coverageDetail, heightMultiplier);
@@ -78,7 +78,7 @@ float sampleDensityHull(vec2 uv, float height, float lod)
 
 vec4 sampleDensityLowRes(vec2 uv, float height, float lod)
 {
-	float coverageBase = sampleBaseCloudCoverage(globalAlphaSampler, uv);
+	vec4 coverageBase = sampleBaseCloudCoverage(globalAlphaSampler, uv);
 	vec4 coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod);
 	vec4 heightMultiplier = calcHeightMultiplier(height);
 	return calcCloudDensityLowRes(coverageBase, coverageDetail, heightMultiplier);
