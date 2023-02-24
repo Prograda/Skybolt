@@ -32,7 +32,7 @@ jobs:
     - name: Install conan
       run: |
         python3 -m pip install --upgrade pip
-        pip3 install conan
+        pip3 install "conan>=1.55,<2"
     - name: Add conan remotes
       run: |
         conan config set general.revisions_enabled=1
