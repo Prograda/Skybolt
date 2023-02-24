@@ -12,6 +12,7 @@ in vec4 osg_Vertex;
 
 out vec3 vertCameraWorldDir;
 out float cameraAltitude;
+out vec2 screenCoord;
 
 uniform vec3 cameraPosition;
 uniform vec3 topLeftDir;
@@ -23,7 +24,7 @@ void main()
 {
 	gl_Position = osg_Vertex * vec4(2) - vec4(1);
 	
-	vec2 screenCoord = osg_Vertex.xy;
+	screenCoord = osg_Vertex.xy;
 	vec3 topDir = mix(topLeftDir, topRightDir, screenCoord.x);
 	vec3 bottomDir = mix(bottomLeftDir, bottomRightDir, screenCoord.x);
 	vertCameraWorldDir = mix(topDir, bottomDir, screenCoord.y);

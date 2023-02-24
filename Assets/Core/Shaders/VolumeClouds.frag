@@ -17,6 +17,7 @@
 
 in vec3 vertCameraWorldDir;
 in float cameraAltitude;
+in vec2 screenCoord;
 
 layout(location = 0) out vec4 colorOut;
 layout(location = 1) out float depthOut;
@@ -24,6 +25,7 @@ layout(location = 1) out float depthOut;
 uniform sampler2D globalAlphaSampler;
 uniform sampler2D coverageDetailSampler;
 uniform sampler3D noiseVolumeSampler;
+uniform sampler2D sceneDepthSampler;
 
 uniform vec3 cameraPosition;
 uniform vec3 lightDirection;
@@ -405,6 +407,12 @@ void main()
 			colorOut = vec4(0.0);
 			depthOut = 1.0;
 			return;
+	}
+
+	if (cameraAltitude < cloudLayerMaxHeight)
+	{
+		float logZNdc = texture(sceneDepthSampler, screenCoord + jitterOffset).r;
+		rayFar = min(rayFar, calcClipSpaceWFromLogZNdc(logZNdc));
 	}
 
 	float stepSize = initialStepSize;

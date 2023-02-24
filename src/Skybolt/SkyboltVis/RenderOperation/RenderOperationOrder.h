@@ -22,8 +22,8 @@ enum class RenderOperationOrder
 	EnvironmentMap,
 	WaterMaterial,
 	ShadowMap,
-	Clouds,
 	MainPass,
+	Clouds,
 	FinalComposite,
 	Hud
 };

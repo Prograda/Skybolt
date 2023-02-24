@@ -44,8 +44,14 @@ public: // RenderTarget interface
 		return mColorTextures;
 	}
 
+	const osg::ref_ptr<osg::Texture>& getDepthTexture() const
+	{
+		return mDepthTexture;
+	}
+
 private:
 	std::vector<osg::ref_ptr<osg::Texture>> mColorTextures;
+	osg::ref_ptr<osg::Texture> mDepthTexture;
 	std::vector<TextureFactory> mColorTextureFactories;
 	std::optional<TextureFactory> mDepthTextureFactory;
 	int mMultisampleSampleCount;

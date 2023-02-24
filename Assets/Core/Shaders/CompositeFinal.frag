@@ -6,15 +6,29 @@
 
 #version 330 core
 
+#pragma import_defines(ENABLE_CLOUDS)
+
 #include "ToneMapping.h"
 
 in vec3 texCoord;
-uniform sampler2D inputSampler;
+uniform sampler2D mainColorTexture;
+uniform sampler2D cloudsColorTexture;
 
 out vec4 color;
 
 void main()
 {
-	color = texture(inputSampler, texCoord.xy);
+	color = texture(mainColorTexture, texCoord.xy);
+	
+#ifdef ENABLE_CLOUDS
+	// Composite clouds
+	vec4 cloudsColor = texture(cloudsColorTexture, texCoord.xy);
+	
+	// Square the color value stored in the texture to undo the sqrt that was applied when the texture was written to.
+	// This gets us back into linear color space.
+	cloudsColor.rgba *= cloudsColor.rgba;
+	color = color * (1.0 - cloudsColor.a) + cloudsColor; // composite with pre-multiplied alpha
+#endif
+	
 	color.rgb = toneMap(color.rgb);
 }

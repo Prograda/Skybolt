@@ -59,8 +59,6 @@ private:
 	std::unique_ptr<class CascadedShadowMapGenerator> mShadowMapGenerator;
 
 	osg::ref_ptr<CloudsTemporalUpscaling> mCloudsUpscaling; //!< May be null
-	std::shared_ptr<VolumeCloudsComposite> mCloudsComposite;
-	bool mCloudsCompositeInScene = false;
 
 	CameraPtr mCamera;
 };

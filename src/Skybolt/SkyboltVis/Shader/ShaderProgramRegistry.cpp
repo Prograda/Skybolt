@@ -47,10 +47,6 @@ static ShaderProgramSourceFilesRegistry createShaderProgramSourceFilesRegistry()
 			{ osg::Shader::VERTEX, "Shaders/ScreenQuad.vert" },
 			{ osg::Shader::FRAGMENT, "Shaders/CloudsTemporalUpscaling.frag" }
 		}},
-		{ "compositeClouds", {
-			{ osg::Shader::VERTEX, "Shaders/ScreenQuad.vert" },
-			{ osg::Shader::FRAGMENT, "Shaders/CompositeClouds.frag" }
-		}},
 		{ "compositeFinal", {
 			{ osg::Shader::VERTEX, "Shaders/ScreenQuad.vert" },
 			{ osg::Shader::FRAGMENT, "Shaders/CompositeFinal.frag" }

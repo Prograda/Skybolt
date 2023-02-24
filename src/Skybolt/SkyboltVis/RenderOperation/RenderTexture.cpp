@@ -77,8 +77,8 @@ void RenderTexture::updatePreRender(const RenderContext& renderContext)
 
 		if (mDepthTextureFactory)
 		{
-			auto texture = (*mDepthTextureFactory)(osg::Vec2i(width, height));
-			mOsgCamera->attach(osg::Camera::DEPTH_BUFFER, texture);
+			mDepthTexture = (*mDepthTextureFactory)(osg::Vec2i(width, height));
+			mOsgCamera->attach(osg::Camera::DEPTH_BUFFER, mDepthTexture);
 		}
 	}
 }

@@ -12,12 +12,12 @@
 
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/GlobalSamplerUnit.h"
+#include "SkyboltVis/OsgStateSetHelpers.h"
 #include "SkyboltVis/Scene.h"
 #include "SkyboltVis/Renderable/ScreenQuad.h"
 #include "SkyboltVis/Renderable/Atmosphere/Bruneton/BruentonAtmosphereRenderOperation.h"
 #include "SkyboltVis/Renderable/Clouds/CloudsRenderTexture.h"
 #include "SkyboltVis/Renderable/Clouds/CloudsTemporalUpscaling.h"
-#include "SkyboltVis/Renderable/Clouds/VolumeCloudsComposite.h"
 #include "SkyboltVis/Renderable/Planet/Planet.h"
 #include "SkyboltVis/Renderable/Water/WaterMaterialRenderOperation.h"
 #include "SkyboltVis/RenderOperation/RenderEnvironmentMap.h"
@@ -129,11 +129,19 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 	}
 
 	// Clouds
+	osg::ref_ptr<RenderOperation> cloudsTarget;
 	{
 		osg::ref_ptr<RenderTexture> clouds = createCloudsRenderTexture(mScene);
+
+		mSequence->addOperation(createRenderOperationFunction([this, clouds] (const RenderContext& context) {
+			clouds->getOrCreateStateSet()->setTextureAttribute(4, mMainPassTexture->getDepthTexture());
+		}), (int)RenderOperationOrder::Clouds);
+		clouds->getOrCreateStateSet()->addUniform(createUniformSampler2d("sceneDepthSampler", 4));
+
 		mSequence->addOperation(clouds, (int)RenderOperationOrder::Clouds);
 
-		osg::ref_ptr<RenderOperation> cloudsTarget = clouds;
+
+		cloudsTarget = clouds;
 		if (config.cloudRenderingParams.enableTemporalUpscaling)
 		{
 			CloudsTemporalUpscalingConfig upscalingConfig;
@@ -146,33 +154,21 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 
 			cloudsTarget = mCloudsUpscaling;
 		}
-
-		VolumeCloudsCompositeConfig compositeConfig;
-		compositeConfig.compositorProgram = config.programs->getRequiredProgram("compositeClouds");
-		compositeConfig.colorTexture = cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[0];
-		compositeConfig.depthTexture = cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[1];
-
-		mCloudsComposite = std::make_shared<VolumeCloudsComposite>(compositeConfig);
-		// Because each Viewport may add a mCloudsComposite to the vis::Scene, there will be multiple in the scene,
-		// but we should only render each for their own camera.
-		// FIXME: This is a hack. Ideally the compositing wouldn't be done in the main scene pass, but we do it here
-		// for now so that the clouds can be composited before rendering the main scene transparent objects.
-		mCloudsComposite->_getNode()->addCullCallback(new CameraOnlyCallback(mMainPassTexture->getOsgCamera()));
-
-		mSequence->addOperation(createRenderOperationFunction([this, cloudsTarget] (const RenderContext& context) {
-			mCloudsComposite->setColorTexture(cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[0]);
-			mCloudsComposite->setDepthTexture(cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[1]);
-		}), (int)RenderOperationOrder::Clouds);
 	}
 
 	mSequence->addOperation(mMainPassTexture, (int)RenderOperationOrder::MainPass);
 
-	mSequence->addOperation(createRenderOperationFunction([this] (const RenderContext& context) {
+	mSequence->addOperation(createRenderOperationFunction([this, cloudsTarget] (const RenderContext& context) {
 		if (!mMainPassTexture->getOutputTextures().empty())
 		{
-			mFinalRenderTarget->getOrCreateStateSet()->setTextureAttributeAndModes(0, mMainPassTexture->getOutputTextures().front());
+			auto ss = mFinalRenderTarget->getOrCreateStateSet();
+			ss->setTextureAttribute(0, mMainPassTexture->getOutputTextures().front());
+			ss->addUniform(createUniformSampler2d("mainColorTexture", 0));
+
+			ss->setTextureAttribute(1, cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[0]);
+			ss->addUniform(createUniformSampler2d("cloudsColorTexture", 1));
 		}
-	}), (int)RenderOperationOrder::MainPass);
+	}), (int)RenderOperationOrder::FinalComposite);
 
 	mSequence->addOperation(mFinalRenderTarget, (int)RenderOperationOrder::FinalComposite);
 
@@ -184,7 +180,6 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 
 DefaultRenderCameraViewport::~DefaultRenderCameraViewport()
 {
-	mScene->removeObject(mCloudsComposite);
 }
 
 void DefaultRenderCameraViewport::setCamera(const CameraPtr& camera)
@@ -220,6 +215,10 @@ void DefaultRenderCameraViewport::updatePreRender(const RenderContext& renderCon
 	}
 
 	mCamera->setAspectRatio(vis::calcAspectRatio(renderContext));
+
+	// TODO: we should clear all non-persistant defines before merging.
+	// We should probably be using the scene node hierarchy to implicly merge state rather than explicitly calling merge.
+	mViewportStateSet->removeDefine("ENABLE_CLOUDS");
 	mViewportStateSet->update(*mCamera);
 	mViewportStateSet->merge(*mScene->getStateSet());
 
@@ -228,20 +227,6 @@ void DefaultRenderCameraViewport::updatePreRender(const RenderContext& renderCon
 	if (mShadowMapGenerator)
 	{
 		mShadowMapGenerator->update(*mCamera, -mScene->getPrimaryLightDirection(), mScene->getWrappedNoiseOrigin());
-	}
-
-	bool cloudsVisible = getCloudsVisible(*mScene);
-	if (cloudsVisible != mCloudsCompositeInScene)
-	{
-		mCloudsCompositeInScene = cloudsVisible;
-		if (cloudsVisible)
-		{
-			mScene->addObject(mCloudsComposite);
-		}
-		else
-		{
-			mScene->removeObject(mCloudsComposite);
-		}
 	}
 }
 
