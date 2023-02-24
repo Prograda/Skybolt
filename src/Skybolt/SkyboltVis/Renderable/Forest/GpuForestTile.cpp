@@ -12,6 +12,7 @@
 #include "SkyboltVis/OsgMathHelpers.h"
 #include "SkyboltVis/OsgStateSetHelpers.h"
 #include "SkyboltVis/Scene.h"
+#include "SkyboltVis/VisibilityCategory.h"
 #include "SkyboltVis/Shader/ShaderProgramRegistry.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <osg/Geode>
@@ -27,6 +28,8 @@ namespace vis {
 
 GpuForestTile::GpuForestTile(const osg::ref_ptr<osg::Texture2D>& heightMap, const osg::ref_ptr<osg::Texture2D>& attributeMap, const std::shared_ptr<BillboardForest>& forest, const osg::Vec2f& tileWorldSizeMeters)
 {
+	mTransform->setNodeMask(vis::VisibilityCategory::defaultCategories | vis::VisibilityCategory::shadowCaster);
+
 	osg::StateSet* stateSet = mTransform->getOrCreateStateSet();
 	stateSet->addUniform(new osg::Uniform("tileWorldSize", tileWorldSizeMeters));
 

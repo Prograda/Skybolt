@@ -10,6 +10,7 @@
 #include "SkyboltVis/Camera.h"
 #include "SkyboltVis/OsgGeometryHelpers.h"
 #include "SkyboltVis/OsgTextureHelpers.h"
+#include "SkyboltVis/VisibilityCategory.h"
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -104,6 +105,7 @@ osg::Geode* createGeode(osg::Geometry* geometry)
 
 BillboardForest::BillboardForest(const std::vector<Tree>& trees, osg::ref_ptr<osg::Program> sideProgram, osg::ref_ptr<osg::Program> topProgram, float maxVisibilityRange, const osg::Vec2& tileBoundsMeters, int subTileCount)
 {
+	mTransform->setNodeMask(vis::VisibilityCategory::defaultCategories | vis::VisibilityCategory::shadowCaster);
 	addGeodes(*mTransform, trees, sideProgram, topProgram, maxVisibilityRange, tileBoundsMeters, subTileCount);
 }
 
