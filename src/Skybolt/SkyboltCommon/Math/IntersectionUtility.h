@@ -42,6 +42,14 @@ void intersectRayGrid(const Grid& grid, const glm::vec2 &origin, const glm::vec2
 //! @returns Returns distances to intersections t0 and t1. Sets t0 to -1 if there was no intersection.
 std::optional<std::pair<float, float>> intersectRaySphere(const glm::vec3& r0, const glm::vec3& rd, const glm::vec3& s0, float sr);
 
+//! @param r0 specifies ray origin
+//! @param rd specifies normalized ray direction
+//! @param rl specifies ray segment length
+//! @param s0 specifies sphere center
+//! @param sr specifies sphere radius
+//! @returns Returns distances to intersections t0 and t1. Sets t0 to -1 if there was no intersection.
+std::optional<std::pair<float, float>> intersectRaySegmentSphere(const glm::vec3& r0, const glm::vec3& rd, float rl, const glm::vec3& s0, float sr);
+
 template <typename T>
 float nearestPointOnLine(const T &lineP0, const T &lineP1, const T &point)
 {

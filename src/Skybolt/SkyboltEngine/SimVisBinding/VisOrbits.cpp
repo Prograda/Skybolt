@@ -6,7 +6,6 @@
 
 #include "VisOrbits.h"
 #include "GeocentricToNedConverter.h"
-#include <SkyboltSim/Components/DynamicBodyComponent.h>
 #include <SkyboltSim/Components/OrbitComponent.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Physics/Astronomy.h>
@@ -47,7 +46,7 @@ static std::optional<Orbit> getOrbit(const Entity& entity, double julianDate)
 
 static bool hasOrbit(const Entity& entity)
 {
-	return entity.getFirstComponent<OrbitComponent>() || entity.getFirstComponent<DynamicBodyComponent>();
+	return entity.getFirstComponent<OrbitComponent>() != nullptr;
 }
 
 void VisOrbits::syncVis(const GeocentricToNedConverter& converter)

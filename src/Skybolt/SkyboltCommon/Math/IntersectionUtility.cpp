@@ -57,7 +57,7 @@ bool intersectRayAabb(const glm::vec3 &origin, const glm::vec3 &direction, const
 	return true;
 }
 
-bool intersectRayAabb2d(const glm::vec2 &origin, const glm::vec2 &direction, const Box2 &box, float &hitDistance)
+bool intersectRayAabb(const glm::vec2 &origin, const glm::vec2 &direction, const Box2 &box, float &hitDistance)
 {
 	// do collision detection using Slabs method
 	hitDistance = negInfinity();
@@ -107,7 +107,7 @@ void intersectRayGrid(const Grid& grid, const glm::vec2& origin, const glm::vec2
 	// Early out with ray vs AABB
 	float t;
 	Box2 box(glm::vec2(0.0f), grid.cellSize * glm::vec2(grid.countX, grid.countY));
-	if (!intersectRayAabb2d(origin, direction, box, t))
+	if (!intersectRayAabb(origin, direction, box, t))
 		return;
 
 	glm::vec2 pos = origin - grid.origin;
@@ -203,6 +203,16 @@ std::optional<std::pair<float, float>> intersectRaySphere(const glm::vec3& r0, c
     }
 	float sqrtDet = sqrt(det);
 	return std::make_pair((-b - sqrtDet) * 0.5f, (-b + sqrtDet) * 0.5f);
+}
+
+std::optional<std::pair<float, float>> intersectRaySegmentSphere(const glm::vec3& r0, const glm::vec3& rd, float rl, const glm::vec3& s0, float sr)
+{
+	auto result = intersectRaySphere(r0, rd, s0, sr);
+	if (result && result->first >= 0 && result->first < rl)
+	{
+		return result;
+	}
+	return std::nullopt;
 }
 
 } // namespace skybolt

@@ -48,6 +48,7 @@
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/Spatial/Geocentric.h>
+#include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Physics/Astronomy.h>
 #include <SkyboltSim/System/SimStepper.h>
 #include <SkyboltSim/System/System.h>
@@ -68,6 +69,7 @@
 #include <SkyboltCommon/File/OsDirectories.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
 #include <SkyboltCommon/Json/WriteJsonFile.h>
+#include <SkyboltCommon/Math/IntersectionUtility.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltCommon/StringVector.h>
 #include <SkyboltCommon/Range.h>
@@ -1482,18 +1484,37 @@ QMenu* MainWindow::addVisibilityFilterableSubMenu(const QString& text, EntityVis
 		filterable->setVisibilityPredicate(EntityVisibilityFilterable::visibilityOff);
 	});
 
+	auto hasLineOfSight = [this](const Entity& entity) {
+		if (const auto& entityPosition = getPosition(entity); entityPosition)
+		{
+			// FIXME: We shouldn't assume position is in geocetric coordinates, or earth radius
+			const auto cameraPosition = *getPosition(*mCurrentSimCamera);
+			Vector3 camToEntityDir = *entityPosition - cameraPosition;
+			double length = glm::length(camToEntityDir);
+			camToEntityDir /= length;
+
+			double effectivePlanetRadius = sim::earthRadius() - 10000; // use a slightly smaller radius for robustness
+			return !intersectRaySegmentSphere(cameraPosition, camToEntityDir, length, Vector3(0,0,0), effectivePlanetRadius);
+		}
+		return false;
+	};
+
 	QAction* onAction = addCheckedAction(*menu, "Show All", [=](bool checked) {
-		filterable->setVisibilityPredicate(EntityVisibilityFilterable::visibilityOn);
+		filterable->setVisibilityPredicate(hasLineOfSight);
 	});
 
 	QAction* selectedAction = addCheckedAction(*menu, "Show Selected", [=](bool checked) {
-		filterable->setVisibilityPredicate([=](const Entity& entity) {return mSelectedEntity.lock().get()  == &entity; });
+		filterable->setVisibilityPredicate([=](const Entity& entity) {
+			return (mSelectedEntity.lock().get() == &entity) &&
+				hasLineOfSight(entity);
+		});
 	});
 
 	alignmentGroup->addAction(offAction);
 	alignmentGroup->addAction(onAction);
 	alignmentGroup->addAction(selectedAction);
 
+	filterable->setVisibilityPredicate(hasLineOfSight);
 	onAction->setChecked(true);
 
 	return menu;
