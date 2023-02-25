@@ -8,6 +8,7 @@
 #include "SkyboltEngine/Sequence/Interpolator/CubicBSplineInterpolator.h"
 #include "SkyboltEngine/Sequence/Interpolator/LinearInterpolator.h"
 #include <SkyboltSim/World.h>
+#include <SkyboltSim/Components/DynamicBodyComponent.h>
 #include <assert.h>
 
 namespace skybolt {
@@ -95,10 +96,7 @@ EntityStateSequenceController::EntityStateSequenceController(const std::shared_p
 
 EntityStateSequenceController::~EntityStateSequenceController()
 {
-	if (mEntity)
-	{
-		mEntity->removeListener(this);
-	}
+	setEntity(nullptr);
 }
 
 SequenceStatePtr EntityStateSequenceController::getState() const
@@ -122,17 +120,32 @@ SequenceStatePtr EntityStateSequenceController::getState() const
 
 void EntityStateSequenceController::setEntity(sim::Entity* entity)
 {
-	if (mEntity)
+	if (entity != mEntity)
 	{
-		mEntity->removeListener(this);
-	}
+		if (mEntity)
+		{
+			mEntity->removeListener(this);
+
+			if (auto body = mEntity->getFirstComponent<sim::DynamicBodyComponent>(); body)
+			{
+				// FIXME: This is a hack to restore disable dynamic enabled/disabled state after being controlled by a sequence
+				body->setDynamicsEnabled(true);
+			}
+		}
 	
-	mEntity = entity;
-	entityChanged(mEntity);
+		mEntity = entity;
+		entityChanged(mEntity);
 	
-	if (entity)
-	{
-		entity->addListener(this);
+		if (entity)
+		{
+			entity->addListener(this);
+
+			if (auto body = entity->getFirstComponent<sim::DynamicBodyComponent>(); body)
+			{
+				// FIXME: This is a hack to disable dynamic bodies that are being controlled by a sequence
+				body->setDynamicsEnabled(false);
+			}
+		}
 	}
 }
 
