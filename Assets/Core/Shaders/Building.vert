@@ -53,5 +53,5 @@ void main()
 	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
 
 	shadowTexCoord = (shadowProjectionMatrix0 * positionWS).xyz;
-	colorMultiplier = vec3(0.6 + 0.5 * randomFast1d(osg_MultiTexCoord0.w));
+	colorMultiplier = vec3(0.15 + 0.7 * randomFast1d(osg_MultiTexCoord0.w));
 }

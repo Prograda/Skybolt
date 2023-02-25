@@ -30,7 +30,7 @@ uniform vec3 lightDirection;
 uniform vec3 ambientLightColor;
 
 const float shininess = 32;
-const float specularity = 0.3;
+const float specularity = 0.05;
 
 void main()
 {
