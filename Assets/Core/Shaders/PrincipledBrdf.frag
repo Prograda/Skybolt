@@ -53,6 +53,8 @@ uniform sampler2D roughnessSampler;
 uniform sampler2D occlusionRoughnessMetalnessSampler; // TODO: support Metalness
 uniform sampler2D environmentSampler;
 
+const float roughnessMapPower = 0.35;
+
 #ifdef ENABLE_DEPTH_OFFSET
 	uniform float depthOffset;
 #endif
@@ -88,7 +90,7 @@ void main()
 #else
 #ifdef ENABLE_OCCLUSION_ROUGHNESS_METALNESS_MAP
 	vec4 occlusionRoughnessMetalness = texture(occlusionRoughnessMetalnessSampler, texCoord.xy);
-	float sampledRoughness = occlusionRoughnessMetalness.g;
+	float sampledRoughness = pow(occlusionRoughnessMetalness.g, roughnessMapPower);
 #else
 	float sampledRoughness = roughness;
 #endif
