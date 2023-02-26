@@ -57,4 +57,16 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 	return result;
 }
 
+template <class PluginT, class PluginConfigT>
+std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadPluginFactories(const std::vector<std::string>& directoryPaths)
+{
+	std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> result;
+	for (const auto& path : directoryPaths)
+	{
+		auto plugins = loadPluginFactories<PluginT, PluginConfigT>(path);
+		result.insert(result.begin(), plugins.begin(), plugins.end());
+	}
+	return result;
+}
+
 } // namespace skybolt

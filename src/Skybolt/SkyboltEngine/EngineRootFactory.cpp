@@ -30,11 +30,9 @@ T getOptionalNodeOrDefaultWithWarning(const json& j, const std::string& name, co
 
 std::unique_ptr<EngineRoot> EngineRootFactory::create(const boost::program_options::variables_map& params)
 {
+	std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(getDefaultPluginDirs());
+
 	nlohmann::json settings = readEngineSettings(params);
-
-	std::string pluginsDir = getExecutablePath().append("plugins").string();
-	std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(pluginsDir);
-
 	return create(enginePluginFactories, settings);
 }
 
@@ -46,6 +44,17 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFa
 	config.tileSourceFactoryRegistryConfig.cacheDirectory = "Cache";
 	config.engineSettings = settings;
 	return std::make_unique<EngineRoot>(config);
+}
+
+std::vector<std::string> EngineRootFactory::getDefaultPluginDirs()
+{
+	std::vector<std::string> pluginDirs = { getExecutablePath().append("plugins").string() };
+	if (const char* path = std::getenv("SKYBOLT_PLUGINS_PATH"); path)
+	{
+		auto paths = file::splitByPathListSeparator(std::string(path));
+		pluginDirs.insert(pluginDirs.begin(), paths.begin(), paths.end());
+	}
+	return pluginDirs;
 }
 
 } // namespace skybolt
