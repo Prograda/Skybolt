@@ -69,27 +69,19 @@ const float maximumStepSize = 500;
 const float stepSizeGrowthFactor = 1.002;
 const float maxRenderDistance = 300000;
 
-float sampleDensityHull(vec2 uv, float height, float lod)
+DensityHullSample sampleDensityHull(vec2 uv, float height, float lod)
 {
-	vec4 coverageBase = sampleBaseCloudCoverage(globalAlphaSampler, uv);
-	vec4 coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod);
-	vec4 heightMultiplier = calcHeightMultiplier(height);
-	vec4 d = calcCloudDensityHull(coverageBase, coverageDetail, heightMultiplier);
-	return dot(d, vec4(1));
-}
-
-vec4 sampleDensityLowRes(vec2 uv, float height, float lod)
-{
-	vec4 coverageBase = sampleBaseCloudCoverage(globalAlphaSampler, uv);
-	vec4 coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod);
-	vec4 heightMultiplier = calcHeightMultiplier(height);
-	return calcCloudDensityLowRes(coverageBase, coverageDetail, heightMultiplier);
+	DensityHullSample s;
+	s.coverageBase = sampleBaseCloudCoverage(globalAlphaSampler, uv);
+	s.coverageDetail = sampleCoverageDetail(coverageDetailSampler, uv, lod);
+	s.heightMultiplier = calcHeightMultiplier(height);
+	return s;
 }
 
 //! @param lod is 0 for maximum detail. Detail falls off with log2 (as per mipmap lod level)
-float calcDensity(vec3 pos, vec2 uv, float lod, float height)
+float calcDensity(DensityHullSample s, vec3 pos, float lod)
 {
-	vec4 density = sampleDensityLowRes(uv, height, lod);
+	vec4 density = calcCloudDensityLowRes(s);
 	
 	float lowDetailNoise = 1 - textureLod(noiseVolumeSampler, pos*noiseFrequencyScale*0.57, 0).r;
 	density  *= min(vec4(1), pow(mix(vec4(1), 1.5*vec4(lowDetailNoise), cloudNoiseStrength), vec4(15)));
@@ -141,7 +133,7 @@ vec3 radianceLowRes(vec3 pos, vec2 uv, vec3 lightDir, float hg, vec3 sunIrradian
 		vec3 lightSamplePos = pos + (lightDir + RANDOM_VECTORS[i] * 0.3) * SAMPLE_DISTANCES[i] * scatterSampleDistanceScale;
 		float sampleHeight = length(lightSamplePos) - innerRadius;
 		vec2 sampleUv = cloudUvFromPosRelPlanet(lightSamplePos);
-		float density = calcDensity(lightSamplePos, sampleUv, lod, sampleHeight);
+		float density = calcDensity(sampleDensityHull(sampleUv, sampleHeight, lod), lightSamplePos, lod);
 		Texponent -= density * scatterDistance * scatterDistanceMultiplier;
 	}
 
@@ -203,67 +195,58 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, float rayStartTexel
 	float sumTransmissionWeightedDistance = 0.0;
 	float sumTransmissionWeights = 0.0;
 	
-    // Do the actual raymarching
+    // Do the raymarching
     float t = 0.0;
 	bool lastStep = false;
     for (int i = 0; i < iterations; ++i)
-	{	
+	{
 		vec3 pos = start + dir * t;
 		float lod = log2(max(1.0, rayStartTexelsPerPixel + texelsPerPixelAtDistance(t)));
 		
 		vec2 uv = cloudUvFromPosRelPlanet(pos);
 		float height = length(pos) - innerRadius;
-		
-        float density = calcDensity(pos + vec3(cloudDisplacementMeters.xy,0), uv, lod, height);
-		
-		if (density > effectiveZeroDensity)
+			
+		// Sample density hull
+		DensityHullSample densityHullSample = sampleDensityHull(uv, height, lod);
+		vec4 d = calcCloudDensityHull(densityHullSample);
+			
+		// If empty space, take a big step
+		if (dot(d, vec4(1)) <= effectiveZeroDensity)
 		{
-			vec3 radiance = radianceLowRes(pos, uv, lightDir, hg, sunIrradiance, lod, height, density) * density;
-#define ENERGY_CONSERVING_INTEGRATION
-#ifdef ENERGY_CONSERVING_INTEGRATION
-			const float clampedDensity = max(density, 0.0000001);
-
-			// Energy conserving intergation from https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
-			float transmittance = exp(-density * stepSize);
-
-			vec3 integScatt = (radiance - radiance * transmittance) / clampedDensity;
-
-			totalRadiance += T * integScatt;
-			T *= transmittance;
-#else
-			totalRadiance += radiance * stepSize * T;
-			T *= exp(-density * stepSize);
-#endif
-			sumTransmissionWeightedDistance += (1-T) * t;
-			sumTransmissionWeights += (1-T);
+			float bigStepSize = mix(stepSize, maximumStepSize, min(1.0, lod));
+			t += bigStepSize;
 		}
 		else
 		{
-			// Skip empty space
-			float bigStepSize = mix(stepSize, maximumStepSize, min(1.0, lod));
-			for(;i < iterations; ++i)
+			// Integrate
+			float density = calcDensity(densityHullSample, pos + vec3(cloudDisplacementMeters.xy,0), lod);
+			
+			if (density > effectiveZeroDensity)
 			{
-				t += bigStepSize;
-				if (t > tMax)
-				{
-					break;
-				}
-				
-				vec3 pos = start + dir * t;
-				lod = log2(max(1.0, rayStartTexelsPerPixel + texelsPerPixelAtDistance(t)));
-				bigStepSize = mix(stepSize, maximumStepSize, min(1.0, lod));
-				
-				uv = cloudUvFromPosRelPlanet(pos);
-				float height = length(pos) - innerRadius;
-				float density = sampleDensityHull(uv, height, lod);
-				
-				// If no longer in empty space, go back one step and break
-				if (density > effectiveZeroDensity)
-				{
-					t -= bigStepSize;
-					break;
-				}
+				vec3 radiance = radianceLowRes(pos, uv, lightDir, hg, sunIrradiance, lod, height, density) * density;
+	#define ENERGY_CONSERVING_INTEGRATION
+	#ifdef ENERGY_CONSERVING_INTEGRATION
+				const float clampedDensity = max(density, 0.0000001);
+
+				// Energy conserving intergation from https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/s2016-pbs-frostbite-sky-clouds-new.pdf
+				float transmittance = exp(-density * stepSize);
+
+				vec3 integScatt = (radiance - radiance * transmittance) / clampedDensity;
+
+				totalRadiance += T * integScatt;
+				T *= transmittance;
+	#else
+				totalRadiance += radiance * stepSize * T;
+				T *= exp(-density * stepSize);
+	#endif
+				float transmissionWeight = transmittance * T;
+				sumTransmissionWeightedDistance += transmissionWeight * t;
+				sumTransmissionWeights += transmissionWeight;
 			}
+			
+			// Take a small step
+			stepSize *= stepSizeGrowthFactor;
+			t += stepSize;
 		}
 
         // early ray termination
@@ -274,8 +257,6 @@ vec4 march(vec3 start, vec3 dir, float stepSize, float tMax, float rayStartTexel
 			break;
 		}
 		
-		stepSize *= stepSizeGrowthFactor;
-		t += stepSize;
 		if (t > tMax)
 		{
 			t = tMax;
@@ -416,8 +397,6 @@ void main()
 	}
 
 	float stepSize = initialStepSize;
-	stepSize = min(stepSize + rayNear / 4000, maximumStepSize);
-	
 	rayNear += stepSize * random(gl_FragCoord.xy + jitterOffset);
 
 	vec3 positionRelCameraWS = rayNear * rayDir;

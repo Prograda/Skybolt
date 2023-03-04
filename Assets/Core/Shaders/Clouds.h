@@ -74,20 +74,34 @@ vec4 coverageModulation(vec4 coverage, vec4 detail, vec4 filterWidth)
 
 vec4 cloudCoverageModulationFilterWidth = vec4(0.6);
 
-vec4 calcCloudDensityHull(vec4 coverageBase, vec4 coverageDetail, vec4 heightMultiplier)
+struct DensityHullSample
 {
-	vec4 coverage = coverageBase * heightMultiplier;
-	return coverageModulation(coverage, coverageDetail, cloudCoverageModulationFilterWidth);
+	vec4 coverageBase;
+	vec4 coverageDetail;
+	vec4 heightMultiplier;
+};
+
+vec4 calcCloudDensityHull(DensityHullSample s)
+{
+	vec4 coverage = s.coverageBase * s.heightMultiplier;
+	return coverageModulation(coverage, s.coverageDetail, cloudCoverageModulationFilterWidth);
 }
 
-vec4 calcCloudDensityLowRes(vec4 coverageBase, vec4 coverageDetail, vec4 heightMultiplier)
+// Calculates density hull eroded by a scale factor.
+// scale of 1 gives no errosion. Scale of 0 gives total erosion.
+vec4 calcCloudDensityErodedHull(DensityHullSample s, float scale)
+{
+	vec4 coverage = s.coverageBase * s.heightMultiplier;
+	return coverageModulation(coverage, s.coverageDetail * scale, cloudCoverageModulationFilterWidth);
+}
+
+vec4 calcCloudDensityLowRes(DensityHullSample s)
 {
 	// Since the cloud shapes are contained within the hull,
 	// we need to scale the coverage detail by this fudge factor so that the low res
 	// clouds will have the same approximate shape as the high res clouds.
-	float erosionCompensation = 0.5;
-
-	return calcCloudDensityHull(coverageBase, coverageDetail*erosionCompensation, heightMultiplier);
+	float scale = 0.5;
+	return calcCloudDensityErodedHull(s, scale);
 }
 
 #endif // CLOUDS_H

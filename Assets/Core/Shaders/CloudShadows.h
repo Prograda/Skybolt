@@ -17,10 +17,12 @@ uniform sampler2D coverageDetailSampler2;
 float calcDensityLowRes2(sampler2D cloudSampler, vec2 uv)
 {
 	float lod = 0.0;
-	vec4 coverageBase = sampleBaseCloudCoverage(cloudSampler, uv);
-	vec4 coverageDetail = sampleCoverageDetail(coverageDetailSampler2, uv, lod);
+	DensityHullSample s;
+	s.coverageBase = sampleBaseCloudCoverage(cloudSampler, uv);
+	s.coverageDetail = sampleCoverageDetail(coverageDetailSampler2, uv, lod);
+	s.heightMultiplier = vec4(0.8);
 
-	vec4 d = calcCloudDensityLowRes(coverageBase, coverageDetail, /* heightMultiplier */ vec4(0.8));
+	vec4 d = calcCloudDensityLowRes(s);
 	float density = dot(d, vec4(1.0));
 	return clamp(remap(density, 0.4, 0.6, 0.0, 1.0), 0.0, 1.0);
 }
