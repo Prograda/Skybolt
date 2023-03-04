@@ -38,40 +38,55 @@ void main()
 {
 	ivec2 texCoordInt = ivec2(gl_FragCoord.x/4, gl_FragCoord.y/4);
 	vec4 srcColor = texelFetch(colorTextureSrc, texCoordInt, 0);
-
-	// Calculate min and max color of 3x3 box around source sample point
-	// based on https://www.elopezr.com/temporal-aa-and-the-quest-for-the-holy-trail/
-	vec4 minColor = srcColor;
-	vec4 maxColor = srcColor;
-
-	for (int i = 0; i < neighborClampingTapCount; ++i)
-	{
-		ivec2 neighborTexCoord = texCoordInt + neighborClampingOffsets[i];
-		
-		vec4 color = texelFetch(colorTextureSrc, texCoordInt + neighborClampingOffsets[i], 0);
-		minColor = min(minColor, color); // Take min and max
-		maxColor = max(maxColor, color);
-	}
-	
-	// Calculate sample point in previous frame
 	float logZNdc = texture(depthTextureSrc, texCoord.xy).r;
-	float clipSpaceW = calcClipSpaceWFromLogZNdc(logZNdc);
-
-	vec4 pos = reprojectionMatrix * vec4((texCoord.xy * 2.0 - 1.0) * clipSpaceW, -clipSpaceW, 1.0);
-	vec2 prevTexCoord = pos.xy / -pos.z * 0.5 + 0.5;
-
-	if (prevTexCoord.x < 0 || prevTexCoord.x > 1 || prevTexCoord.y < 0 || prevTexCoord.y > 1)
+		
+	int bayerValue = int(bayerIndex[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4]);
+	if (bayerValue == (frameNumber % 16))
 	{
-		colorOut = texture(colorTextureSrc, texCoord.xy - jitterOffset);
+		// Use new data
+		colorOut = srcColor;
 	}
 	else
 	{
-		vec4 prevColor = sampleTextureCatmullRom(colorTexturePrev, prevTexCoord.xy);
-		prevColor = clamp(prevColor, minColor, maxColor);
+		// No new data available. Reproject previous frame's data.
 	
-		float bayerValue = bayerIndex[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4];
-		colorOut = mix(prevColor, srcColor, (int(bayerValue) == (frameNumber % 16)) ? 1.0 : 0.0);
-	}
+		// Calculate min and max color of 3x3 box around source sample point
+		// based on https://www.elopezr.com/temporal-aa-and-the-quest-for-the-holy-trail/
 
+		// Calculate sample point in previous frame
+		float clipSpaceW = calcClipSpaceWFromLogZNdc(logZNdc);
+
+		vec4 pos = reprojectionMatrix * vec4((texCoord.xy * 2.0 - 1.0) * clipSpaceW, -clipSpaceW, 1.0);
+		vec2 prevTexCoord = pos.xy / -pos.z * 0.5 + 0.5;
+
+		if (prevTexCoord.x < 0 || prevTexCoord.x > 1 || prevTexCoord.y < 0 || prevTexCoord.y > 1)
+		{
+			// Reseacle texture coodinates to account for texture dimensions non divisible by 4
+			vec2 texCoordRescale = 0.25 * textureSize(colorTexturePrev, 0) / textureSize(colorTextureSrc, 0);
+			//vec2 texCoordRescale = 0.25 * textureDims / vec2(int(textureDims.x / 4), int(textureDims.y / 4));
+		
+			// Sample source texture at coordinate corresponding screen coordinate
+			colorOut = texture(colorTextureSrc, texCoord.xy * texCoordRescale - jitterOffset);
+		}
+		else
+		{
+			vec4 minColor = srcColor;
+			vec4 maxColor = srcColor;
+			
+			for (int i = 0; i < neighborClampingTapCount; ++i)
+			{
+				ivec2 neighborTexCoord = texCoordInt + neighborClampingOffsets[i];
+				
+				vec4 color = texelFetch(colorTextureSrc, texCoordInt + neighborClampingOffsets[i], 0);
+				minColor = min(minColor, color); // Take min and max
+				maxColor = max(maxColor, color);
+			}
+		
+			vec4 prevColor = sampleTextureCatmullRom(colorTexturePrev, prevTexCoord.xy);
+			prevColor = clamp(prevColor, minColor, maxColor);
+		
+			colorOut = prevColor;
+		}
+	}
 	depthOut = logZNdc;
 }
