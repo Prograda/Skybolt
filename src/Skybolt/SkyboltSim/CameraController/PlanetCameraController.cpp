@@ -48,7 +48,7 @@ void PlanetCameraController::update(float dt)
 
 	float yawDelta = msYawRate * mInput.panSpeed * dt;
 	float pitchDelta = msPitchRate * mInput.tiltSpeed * dt;
-	float zoomDelta = (mInput.zoomSpeed + mInput.forwardSpeed * 1000.0) * dt * msZoomRate;
+	float zoomDelta = (mInput.zoomSpeed + mInput.forwardSpeed * 1000.f) * dt * msZoomRate;
 	mZoom = skybolt::math::clamp(mZoom + zoomDelta, 0.0f, 1.0f);
 
 	float maxDistance = mParams.maxDistOnRadius * (float)planet->radius;

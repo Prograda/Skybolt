@@ -10,6 +10,7 @@
 #include <SkyboltEngine/WindowUtil.h>
 #include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
+#include <SkyboltEngine/VisObjectsComponent.h>
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/CameraController/CameraController.h>
@@ -30,6 +31,8 @@
 
 #include <SkyboltVis/Rect.h>
 #include <SkyboltVis/VisRoot.h>
+#include <SkyboltVis/Renderable/Planet/Planet.h>
+#include <SkyboltVis/Renderable/Water/WaterMaterial.h>
 #include <SkyboltVis/RenderOperation/DefaultRenderCameraViewport.h>
 #include <SkyboltVis/RenderOperation/RenderOperationSequence.h>
 #include <SkyboltVis/Window/CaptureScreenshot.h>
@@ -103,6 +106,17 @@ static Vector3 normalizeFunc(const Vector3& v)
 	return glm::normalize(v);
 }
 
+static void setWaveHeight(sim::Entity& entity, double height)
+{
+	if (vis::Planet* planet = getFirstVisObject<vis::Planet>(entity).get(); planet)
+	{
+		if (const auto& material = planet->getWaterMaterial(); material)
+		{
+			material->setWaveHeight(height);
+		}
+	}
+}
+
 static bool attachCameraToWindowWithEngine(sim::Entity& camera, vis::Window& window, EngineRoot& engineRoot)
 {
 	vis::CameraPtr visCamera = getVisCamera(camera);
@@ -133,6 +147,10 @@ static bool render(EngineRoot& engineRoot, vis::VisRoot& visRoot)
 static py::array_t<std::uint8_t> captureScreenshotToImage(vis::VisRoot& visRoot)
 {
 	osg::ref_ptr<osg::Image> image = vis::captureScreenshot(visRoot);
+	if (!image)
+	{
+		throw std::runtime_error("Could not capture screenshot");
+	}
 
 	const int channelCount = image->getPixelSizeInBits() / 8;
 	const std::size_t size = image->s() * image->t() * channelCount;
@@ -354,4 +372,5 @@ PYBIND11_MODULE(skybolt, m) {
 	m.def("moveDistanceAndBearing", &moveDistanceAndBearing);
 	m.def("transformToScreenSpace", &transformToScreenSpace);
 	m.def("findObjectByName", &findObjectByName);
+	m.def("setWaveHeight", &setWaveHeight);
 }
