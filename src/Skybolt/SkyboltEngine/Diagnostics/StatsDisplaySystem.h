@@ -16,6 +16,7 @@
 
 namespace osgViewer {
 	class View;
+	class ViewerBase;
 }
 
 namespace skybolt {
@@ -24,7 +25,7 @@ class StatsDisplaySystem : public sim::System
 {
 public:
 	//! Displays the viewer's stats on the given camera
-	StatsDisplaySystem(osgViewer::View* view, const osg::ref_ptr<osg::Camera>& camera);
+	StatsDisplaySystem(osgViewer::ViewerBase* viewer, osgViewer::View* view, const osg::ref_ptr<osg::Camera>& camera);
 	~StatsDisplaySystem();
 
 	void setVisible(bool visible);

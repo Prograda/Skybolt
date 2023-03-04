@@ -8,7 +8,7 @@
 #include <SkyboltVis/VisRoot.h>
 #include <SkyboltVis/Window/EmbeddedWindow.h>
 
-#include <osgViewer/CompositeViewer>
+#include <osgViewer/ViewerBase>
 #include <QKeyEvent>
 
 using namespace skybolt;
@@ -34,7 +34,7 @@ OsgWidget::OsgWidget(const DisplaySettings& displaySettings, QWidget* parent):
 	setFocusPolicy(Qt::StrongFocus);
 
 	// Since Qt manages the OpenGL context, ensure OSG renders on the Qt thread
-	mVisRoot->getViewer().setThreadingModel(osgViewer::Viewer::SingleThreaded);
+	mVisRoot->getViewer().setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
 
 	EmbeddedWindowConfig config;
 	config.rect = RectI(0, 0, width(), height());
@@ -48,6 +48,11 @@ OsgWidget::OsgWidget(const DisplaySettings& displaySettings, QWidget* parent):
 
 OsgWidget::~OsgWidget()
 {
+}
+
+skybolt::vis::VisRoot* OsgWidget::getVisRoot() const
+{
+	return mVisRoot.get();
 }
 
 skybolt::vis::Window* OsgWidget::getWindow() const

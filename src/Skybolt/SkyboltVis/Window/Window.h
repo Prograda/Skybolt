@@ -11,7 +11,7 @@
 #include "SkyboltVis/RenderContext.h"
 #include "SkyboltVis/RenderOperation/RenderOperationSequence.h"
 
-#include <osgViewer/Viewer>
+#include <osgViewer/View>
 #include <set>
 
 namespace skybolt {

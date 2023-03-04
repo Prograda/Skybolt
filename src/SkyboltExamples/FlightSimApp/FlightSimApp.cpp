@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
 
 //#define SHOW_STATS
 #ifdef SHOW_STATS
-		engineRoot->systemRegistry->push_back(std::make_shared<StatsDisplaySystem>(&window->getViewer(), overlayCamera));
+		engineRoot->systemRegistry->push_back(std::make_shared<StatsDisplaySystem>(&visRoot->getViewer(), window->getView(), overlayCamera));
 #endif
 
 		// Create entities

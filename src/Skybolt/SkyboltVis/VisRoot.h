@@ -14,6 +14,7 @@
 
 namespace osgViewer {
 class CompositeViewer;
+class ViewerBase;
 }
 
 namespace skybolt {
@@ -27,8 +28,8 @@ public:
 	//! @returns false if window has been closed
 	bool render();
 
-	osgViewer::CompositeViewer& getViewer() const { return *mViewer; }
-	std::weak_ptr<osgViewer::CompositeViewer> getViewerPtr() const {return mViewer;}
+	osgViewer::ViewerBase& getViewer() const;
+	std::weak_ptr<osgViewer::ViewerBase> getViewerPtr() const;
 
 	void addWindow(const WindowPtr& window);
 	void removeWindow(const WindowPtr& window);

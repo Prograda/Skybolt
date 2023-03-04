@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
 
 //#define SHOW_STATS
 #ifdef SHOW_STATS
-		engineRoot->systemRegistry->push_back(std::make_shared<StatsDisplaySystem>(*window));
+		engineRoot->systemRegistry->push_back(std::make_shared<StatsDisplaySystem>(&visRoot->getViewer(), window->getView(), viewport->getFinalRenderTarget()->getOsgCamera()));
 #endif
 
 		// Create entities

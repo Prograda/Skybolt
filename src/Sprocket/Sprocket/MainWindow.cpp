@@ -58,6 +58,7 @@
 #include <SkyboltVis/DisplaySettings.h>
 #include <SkyboltVis/Shader/OsgShaderHelpers.h>
 #include <SkyboltVis/Scene.h>
+#include <SkyboltVis/VisRoot.h>
 #include <SkyboltVis/Renderable/Planet/Planet.h>
 #include <SkyboltVis/Renderable/Arrows.h>
 #include <SkyboltVis/RenderOperation/DefaultRenderCameraViewport.h>
@@ -372,7 +373,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	mOsgWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(mOsgWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
 
-	mStatsDisplaySystem = std::make_shared<StatsDisplaySystem>(mOsgWidget->getWindow()->getView(), mViewport->getFinalRenderTarget()->getOsgCamera());
+	mStatsDisplaySystem = std::make_shared<StatsDisplaySystem>(&mOsgWidget->getVisRoot()->getViewer(), mOsgWidget->getWindow()->getView(), mViewport->getFinalRenderTarget()->getOsgCamera());
 	mStatsDisplaySystem->setVisible(false);
 	mEngineRoot->systemRegistry->push_back(mStatsDisplaySystem);
 

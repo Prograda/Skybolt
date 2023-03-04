@@ -21,6 +21,7 @@ public:
 	OsgWidget(const skybolt::vis::DisplaySettings& displaySettings, QWidget* parent = 0);
 	~OsgWidget() override;
 
+	skybolt::vis::VisRoot* getVisRoot() const;
 	skybolt::vis::Window* getWindow() const;
 
 signals:

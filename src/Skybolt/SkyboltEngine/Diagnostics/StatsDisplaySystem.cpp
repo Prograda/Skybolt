@@ -13,10 +13,10 @@
 
 namespace skybolt {
 
-StatsDisplaySystem::StatsDisplaySystem(osgViewer::View* view, const osg::ref_ptr<osg::Camera>& camera) :
+StatsDisplaySystem::StatsDisplaySystem(osgViewer::ViewerBase* viewer, osgViewer::View* view, const osg::ref_ptr<osg::Camera>& camera) :
 	mCamera(camera)
 {
-	mViewerStats = view->getStats();
+	mViewerStats = const_cast<osg::Stats*>(viewer->getViewerStats());
 	mCameraStats = view->getCamera()->getStats();
 
 	mViewerStats->collectStats("frame_rate", true);
@@ -52,6 +52,22 @@ void StatsDisplaySystem::setVisible(bool visible)
 	}
 }
 
+std::optional<double> getMinAttribute(const osg::Stats& stats, const std::string& name)
+{
+	std::optional<double> minValue;
+	int earliest = stats.getEarliestFrameNumber();
+	int latest = stats.getLatestFrameNumber();
+	for (int i = earliest; i <= latest; ++i)
+	{
+		double value;
+		if (stats.getAttribute(i, name, value))
+		{
+			minValue = minValue ? std::min(*minValue, value) : value;
+		}
+	}
+	return minValue;
+}
+
 void StatsDisplaySystem::updatePostDynamics(const System::StepArgs& args)
 {
 	osg::Viewport* viewport = mCamera->getViewport();
@@ -59,16 +75,19 @@ void StatsDisplaySystem::updatePostDynamics(const System::StepArgs& args)
 
 	mStatsHud->clear();
 
-	int line = 0;
-	int frameNumber = mViewerStats->getLatestFrameNumber() - 1;
-
-	auto attributes = mViewerStats->getAttributeMap(frameNumber);
-	auto attributes2 = mCameraStats->getAttributeMap(frameNumber);
+	auto attributes = mViewerStats->getAttributeMap(mViewerStats->getLatestFrameNumber() - 1);
+	auto attributes2 = mCameraStats->getAttributeMap(mCameraStats->getLatestFrameNumber() - 1);
 	attributes.insert(attributes2.begin(), attributes2.end());
+
+	double value;
+	mViewerStats->getAveragedAttribute("Frame rate", value, /* average in inverse space */ true);
+	attributes["Avg frame rate"] = value;
+	attributes["Min frame rate"] = getMinAttribute(*mViewerStats, "Frame rate").value_or(0);
 
 	const float lineHeight = 0.05f;
 	const float textSize = lineHeight * 0.8f;
 
+	int line = 0;
 	for (const auto& value : attributes)
 	{
 		mStatsHud->drawText(glm::vec2(-0.9f, 0.9f - line * lineHeight), value.first + ": " + std::to_string(value.second), 0.0f, textSize);
