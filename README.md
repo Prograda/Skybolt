@@ -1,3 +1,4 @@
+
 # Skybolt Engine
 Skybolt is a real-time planetary environment rendering engine, designed for flight simulators, aerospace R&D, and geospatial applications. Skybolt is written in C++, based on OpenSceneGraph, and supports CIGI for communicating with host applications. Skybolt also features a Python API for easy integration with science and engineering research tools.
 
@@ -23,132 +24,40 @@ The Skybolt repository includes Sprocket, a GUI application providing a sandbox 
 
 ## Contact
 Skybolt created and maintained by Matthew Reid.
-To submit a bug report, please [raise an issue on the GitHub repository](https://github.com/Piraxus/Skybolt/issues).
-For other queries, please use the [contact form](https://piraxus.com/contact) on the [Piraxus website](https://piraxus.com).
+To submit a bug report, please [raise an issue on the GitHub repository](https://github.com/Prograda/Skybolt/issues).
+For other queries, please our [contact form](https://prograda.com/contact).
 
 ## License
 This project is licensed under the Mozilla Public License Version 2.0 - see the [License.txt](License.txt) file for details.
 
-## Example Usage (C++)
-```cpp
-// Create engine
-auto params = EngineCommandLineParser::parse(argc, argv);
-std::unique_ptr<EngineRoot> root = EngineRootFactory::create(params);
-
-// Create camera
-EntityFactory& entityFactory = *root->entityFactory;
-World& world = *root->simWorld;
-EntityPtr simCamera = entityFactory.createEntity("Camera");
-world.addEntity(simCamera);
-
-// Attach camera to window
-auto window = std::make_unique<StandaloneWindow>(RectI(0, 0, 1080, 720));
-osg::ref_ptr<vis::RenderTarget> viewport = createAndAddViewportToWindowWithEngine(*window, *root);
-viewport->setCamera(getVisCamera(*simCamera));
-
-// Create input
-auto inputPlatform = std::make_shared<InputPlatformOsg>(window->getViewerPtr());
-std::vector<LogicalAxisPtr> axes = CameraInputSystem::createDefaultAxes(*inputPlatform);
-root->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, window.get(), axes));
-root->systemRegistry->push_back(std::make_shared<CameraInputSystem>(window.get(), simCamera, inputPlatform, axes));
-
-// Create entities
-world.addEntity(entityFactory.createEntity("SunBillboard"));
-world.addEntity(entityFactory.createEntity("MoonBillboard"));
-world.addEntity(entityFactory.createEntity("Stars"));
-
-EntityPtr planet = entityFactory.createEntity("PlanetEarth");
-world.addEntity(planet);
-
-// Point camera at planet
-auto cameraController = simCamera->getFirstComponentRequired<CameraControllerComponent>()->cameraController;
-cameraController->setTarget(planet.get());
-
-// Run loop
-runMainLoop(*window, *root, UpdateLoop::neverExit);
-```
-## Example Usage (Python)
-```python
-import skybolt as sb
-
-window = sb.StandaloneWindow(sb.RectI(0,0,800,600))
-engine = sb.createEngineRootWithDefaults()
-
-camera = engine.entityFactory.createEntity("Camera")
-engine.world.addEntity(camera);
-
-sb.attachCameraToWindowWithEngine(camera, window, engine)
-
-engine.world.addEntity(engine.entityFactory.createEntity("SunBillboard"))
-engine.world.addEntity(engine.entityFactory.createEntity("MoonBillboard"))
-engine.world.addEntity(engine.entityFactory.createEntity("Stars"))
-
-earth = engine.entityFactory.createEntity("PlanetEarth")
-engine.world.addEntity(earth);
-
-controller = camera.getFirstComponentOfType("CameraControllerComponent").cameraController
-controller.setTarget(earth)
-controller.selectController("Globe")
-
-sb.render(engine, window)
-```
-
-## Projects and Dependencies
-This repository contains multiple projects, described below, which can be enabled/disabled in CMake. Each project has a different set of dependencies. You only need to obtain dependencies for projects you wish to build. Header-only dependencies can be obtained from the [SkyboltDependenciesHeaderOnly](https://github.com/Piraxus/SkyboltDependenciesHeaderOnly) repository for convenience.
-
-### Skybolt Engine (Required)
-The core engine libraries.
-Requires:
-* [Boost](www.boost.com)
-* [GLM (header only)](https://github.com/g-truc/glm)
-* [nlohmann/json (header only)](https://github.com/nlohmann/json)
-* [OpenSceneGraph](https://github.com/openscenegraph/OpenSceneGraph)
-
-### Skybolt Python Bindings
-Python bindings for Skybolt.
-Requires:
-* [Python](https://www.python.org)
-* [pybind11 (header only)](https://github.com/pybind/pybind11)
-
-### Bullet Physics Engine Plugin
-Skybolt plugin providing a rigid body dynamics component for entities by integrating the Bullet physics engine.
-Requires:
-* [bullet3](https://github.com/bulletphysics/bullet3)
-
-### CIGI Plugin
-Skybolt plugin providing a means for host applications to drive the simulation via the Common Image Generator Interface (CIGI).
-Requires:
-* [CIGI Class Library](http://cigi.sourceforge.net/product_ccl.php)
-
-### FFT Ocean Plugin
-Skybolt plugin simulating ocean waves with FFT.
-Requires:
-* [muFFT](https://github.com/Themaister/muFFT)
-* [Xsimd (header only)](https://github.com/xtensor-stack/xsimd)
-
-### JSBSim Plugin
-Skybolt plugin providing an aircraft dynamics component for entities by integrating the JSBSim dynamics engine.
-Requires:
-* [JSBSim Library](https://github.com/JSBSim-Team/jsbsim)
-
-### Sprocket
-GUI application for creating, editing and running simulation scenarios, and performing analysis.
-Requires:
-* [OpenInputSystem](https://github.com/wgois/OIS)
-* [Qt](https://www.qt.io)
-* [ToolWindowManager](https://github.com/Riateche/toolwindowmanager)
-
-#### SequenceEditor Plugin (Experimental)
-Experimental plugin providing a GUI for editing animated sequences.
-Requires:
-* [Qwt](https://github.com/opencor/qwt)
-
-### MapFeaturesConverter Tool
-Application for converting Open Street Map data to Skybolt feature tile format.
-* [ReadOSM](https://www.gaia-gis.it/fossil/readosm/index)
+## Usage Examples
+* [Minimal Example (C++)](src/SkyboltExamples/MinimalApp/MinimalApp.cpp)
+* [Minimal Example (Python)](src/SkyboltExamples/MinimalPython/MinimalPython.py)
+* [Flight Sim App (C++)](src/SkyboltExamples/FlightSimApp/FlightSimApp.cpp)
 
 ## Building
-Use CMake to configure and generate a build. Optional projects within the repository can be enabled/disabled with CMake BUILD_xxx properties as desired.
+Skybolt uses the [CMake](https://cmake.org) meta-build system, and supports the [Conan](https://conan.io/) package manager. Using Conan usage is optional but strongly encouraged, as it automates dependency acquisition  and build configuration.
+
+A list of skybolt dependencies can be found in [conanfile.py](conanfile.py).
+
+### Building With Conan
+#### Install Conan
+Conan can be installed with [pip](https://pypi.org/project/pip): ```pip3 install conan```.
+#### Installing Skybolt's Dependencies
+To install dependencies with default Skybolt configuraion:
+```
+conan install %SKYBOLT_SOURCE% --install-folder=%SKYBOLT_BUILD%
+```
+To use a custom configuration instead, configuration options may be supplied with the -o argument, for example:
+```
+conan install %SKYBOLT_SOURCE% --install-folder=%SKYBOLT_BUILD% -o openscenegraph-mr:shared=True -o enable_python=True -o enable_sprocket=True -o enable_bullet=True -o enable_cigi=True
+```
+Please refer to [conanfile.py](conanfile.py) for a full list of available configuration options.
+#### Building Skybolt
+Once dependencies have been installed, Skybolt CMake project can be generated and compiled with:
+```
+conan build %SKYBOLT_SOURCE% --build-folder=%SKYBOLT_BUILD%
+```
 
 ## Installing Asset Packages
 At runtime, Skybolt uses assets such as meshes, textures, and shaders. These assets are organized into packages. Each package is a folder containing a hierarchy of asset files on disk.
@@ -163,11 +72,11 @@ To run Skybolt, you must ensure the required packages are avilable to Skybolt us
 Skybolt cannot run without the Core package. It is located under /Assets in this repository.
 
 ### SkyboltAssets Packages (Required for Example Applications)
-Additional packages for running the example applications are located in the [SkyboltAssets](https://github.com/Piraxus/SkyboltAssets) repository. SkyboltAssets uses [DVC](https://dvc.org) for remote storage and retrieval of large files which are not stored in the git repository itself.
+Additional packages for running the example applications are located in the [SkyboltAssets](https://github.com/Prograda/SkyboltAssets) repository. SkyboltAssets uses [DVC](https://dvc.org) for remote storage and retrieval of large files which are not stored in the git repository itself.
 
 To checkout the SktboltAssets repository:
 1. If you do not already have DVC installed, run `pip install dvc[s3]` to install with [pip](https://pypi.org/project/pip)
-2. Clone [SkyboltAssets](https://github.com/Piraxus/SkyboltAssets) and checkout desired git branch/tag
+2. Clone [SkyboltAssets](https://github.com/Prograda/SkyboltAssets) and checkout desired git branch/tag
 3. Run `dvc pull` command in the SkyboltAssets root directory to fetch the remote files
 
 ### NLCD Land Cover (Optional)
@@ -177,6 +86,8 @@ Land cover tiles for USA. Used by Skybolt to place trees on terrain in forest ar
 Map features (buildings, roads, lakes etc) for the city of Seattle. These features were generated from OpenStreetMap data using the MapFeaturesConverter tool. This package can be downloaded [here](https://f000.backblazeb2.com/file/skybolt/Seattle_1_1_0.zip).
 
 ## Running
+### Plugins
+By default, Skybolt searches for plugins in the /plugins folder in the application executable's directory. Additional plugin search locations can be specified with the SKYBOLT_PLUGINS_PATH environment variable.
 ### Settings
 Engine settings are stored in a json file, which may be manually edited with a text editor, or edited in Sprocket with the Tools->Settings dialog.
 An example settings file template is available in this repository under src/SkyboltExamples/ExamplesCommon/ExampleSettings.json.
