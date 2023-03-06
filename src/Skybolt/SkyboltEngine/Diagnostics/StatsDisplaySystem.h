@@ -34,6 +34,7 @@ public:
 
 private:
 	osg::ref_ptr<osg::Camera> mCamera;
+	osgViewer::View* mView;
 	osg::Stats* mViewerStats;
 	osg::Stats* mCameraStats;
 	osg::ref_ptr<class VisHud> mStatsHud;

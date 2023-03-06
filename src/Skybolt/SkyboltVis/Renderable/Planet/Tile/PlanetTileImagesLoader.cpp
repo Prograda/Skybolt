@@ -17,6 +17,7 @@
 //#define ENABLE_TILE_IMAGE_LOADER_PROFILING
 #ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
 #include <cxxtimer/cxxtimer.hpp>
+#include <iostream>
 #endif
 
 using namespace skybolt;
@@ -119,7 +120,7 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 		}
 
 #ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
-		std::cout << "Height," << key.level << "," << timer.count() << std::endl;
+		std::cout << "Height@" << key.level << ": " << timer.count() << std::endl;
 		timer.reset();
 		timer.start();
 #endif
@@ -150,7 +151,7 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 		}
 
 #ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
-		std::cout << "Land," << key.level << "," << timer.count() << std::endl;
+		std::cout << "Land@" << key.level << ": " << timer.count() << std::endl;
 		timer.reset();
 		timer.start();
 #endif
@@ -175,7 +176,7 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 		}
 
 	#ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
-		std::cout << "Albedo," << key.level << "," << timer.count() << std::endl;
+		std::cout << "Albedo@" << key.level << ": " << timer.count() << std::endl;
 		timer.reset();
 		timer.start();
 	#endif
@@ -210,7 +211,7 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 		}
 
 #ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
-		printf("Attribute, %i, %i\n", key.level, timer.count());
+		std::cout << "Attribute@" << key.level << ": " << timer.count();
 		timer.reset();
 		timer.start();
 #endif

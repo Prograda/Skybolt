@@ -19,7 +19,8 @@ nlohmann::json createDefaultEngineSettings()
 		"mapbox": ""
 	},
 	"display": {
-		"multiSampleCount": 4
+		"multiSampleCount": 4,
+		"texturePoolSizeMB": 512
 	},
 	"shadows": {
 		"enabled": true,
@@ -48,6 +49,10 @@ vis::DisplaySettings getDisplaySettingsFromEngineSettings(const nlohmann::json& 
 	{
 		const auto& j = it.value();
 		readOptionalToVar(j, "multiSampleCount", s.multiSampleCount);
+		if (readOptionalToVar(j, "texturePoolSizeMB", s.texturePoolSizeBytes))
+		{
+			s.texturePoolSizeBytes *= 1024 * 1024;
+		}
 	}
 	return s;
 }

@@ -44,6 +44,7 @@ VisRoot::VisRoot(const DisplaySettings& settings) :
 	forwardOsgLogToBoost();
 
 	osg::DisplaySettings::instance()->setNumMultiSamples(settings.multiSampleCount);
+	osg::DisplaySettings::instance()->setMaxTexturePoolSize(settings.texturePoolSizeBytes);
 
 	osg::setNotifyLevel(osg::WARN);
 	mViewer->setKeyEventSetsDone(0); // disable default 'escape' key binding to quit the application
@@ -75,7 +76,6 @@ std::weak_ptr<osgViewer::ViewerBase> VisRoot::getViewerPtr() const
 void VisRoot::addWindow(const WindowPtr& window)
 {
 	assert(!VectorUtility::findFirst(mWindows, window));
-
 	mViewer->addView(window->getView());
 	mWindows.push_back(window);
 
@@ -84,6 +84,14 @@ void VisRoot::addWindow(const WindowPtr& window)
 	if (!mViewer->isRealized())
 	{
 		mViewer->realize();
+	}
+
+	// FIXME: Workaround for OSG bug where maxTexturePoolSize is not set for graphics contexts created after viewer realize,
+	// or for situations where OSG never calls realize() e.g embedded windows with external GL context.
+	if (auto gc = window->getView()->getCamera()->getGraphicsContext(); gc && gc->getState())
+	{
+		size_t size = osg::DisplaySettings::instance()->getMaxTexturePoolSize();
+		gc->getState()->setMaxTexturePoolSize(size);
 	}
 }
 

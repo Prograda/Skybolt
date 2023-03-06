@@ -10,12 +10,18 @@
 #include <SkyboltVis/RenderOperation/RenderTarget.h>
 #include <SkyboltVis/Window/Window.h>
 #include <osgViewer/View>
-
+#include <osg/Texture>
+#include <osg/ContextData>
 namespace skybolt {
 
+
 StatsDisplaySystem::StatsDisplaySystem(osgViewer::ViewerBase* viewer, osgViewer::View* view, const osg::ref_ptr<osg::Camera>& camera) :
-	mCamera(camera)
+	mCamera(camera),
+	mView(view)
 {
+	assert(mCamera);
+	assert(mView);
+
 	mViewerStats = const_cast<osg::Stats*>(viewer->getViewerStats());
 	mCameraStats = view->getCamera()->getStats();
 
@@ -68,6 +74,26 @@ std::optional<double> getMinAttribute(const osg::Stats& stats, const std::string
 	return minValue;
 }
 
+// Derive from ContextData to provide a getter that works across DLL boundaries.
+// osg::ContextData::get() uses typeid which gives different results in different DLLs.
+// To overcome this, we provide get_bugFix() which is a slower but correct implementation.
+// TODO: Fix this in OSG
+struct ContextData_bugFix : public osg::ContextData
+{
+        template<typename T>
+        T* get_bugFix()
+        {
+			for (const auto& i : _managerMap)
+			{
+				if (auto r = dynamic_cast<T*>(i.second.get()); r)
+				{
+					return r;
+				}
+			}
+			return nullptr;
+        }
+};
+
 void StatsDisplaySystem::updatePostDynamics(const System::StepArgs& args)
 {
 	osg::Viewport* viewport = mCamera->getViewport();
@@ -83,6 +109,18 @@ void StatsDisplaySystem::updatePostDynamics(const System::StepArgs& args)
 	mViewerStats->getAveragedAttribute("Frame rate", value, /* average in inverse space */ true);
 	attributes["Avg frame rate"] = value;
 	attributes["Min frame rate"] = getMinAttribute(*mViewerStats, "Frame rate").value_or(0);
+
+	auto graphicsContext = mView->getCamera()->getGraphicsContext();
+	if (graphicsContext && graphicsContext->getState())
+	{
+		int id = graphicsContext->getState()->getContextID();
+		auto contextData = static_cast<ContextData_bugFix*>(osg::getContextData(id));
+		if (auto mgr = contextData->get_bugFix<osg::TextureObjectManager>(); mgr)
+		{
+			attributes["Tex usage (MB): "] = mgr->getCurrTexturePoolSize() / (1024 * 1024);
+			attributes["Tex pool capacity (MB): "] = mgr->getMaxTexturePoolSize() / (1024 * 1024);
+		}
+	}
 
 	const float lineHeight = 0.05f;
 	const float textSize = lineHeight * 0.8f;
