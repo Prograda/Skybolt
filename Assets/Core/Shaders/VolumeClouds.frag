@@ -390,10 +390,11 @@ void main()
 			return;
 	}
 
-	if (cameraAltitude < cloudLayerMaxHeight)
+	if (cameraAltitude < cloudLayerMaxHeight * 10)
 	{
-		float logZNdc = texture(sceneDepthSampler, screenCoord + jitterOffset).r;
-		rayFar = min(rayFar, calcClipSpaceWFromLogZNdc(logZNdc));
+		float logZNdc = textureLod(sceneDepthSampler, screenCoord + jitterOffset, 0).r;
+		float sceneDepthAlongRay = calcClipSpaceWFromLogZNdc(logZNdc) / dot(rayDir, cameraCenterDirection);
+		rayFar = min(rayFar, sceneDepthAlongRay);
 	}
 
 	float stepSize = initialStepSize;
