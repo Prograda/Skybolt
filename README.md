@@ -43,6 +43,7 @@ A list of skybolt dependencies can be found in [conanfile.py](conanfile.py).
 ### Building With Conan
 #### Install Conan
 Conan can be installed with [pip](https://pypi.org/project/pip): ```pip3 install conan```.
+
 #### Installing Skybolt's Dependencies
 To install dependencies with default Skybolt configuraion:
 ```
@@ -86,13 +87,17 @@ Land cover tiles for USA. Used by Skybolt to place trees on terrain in forest ar
 Map features (buildings, roads, lakes etc) for the city of Seattle. These features were generated from OpenStreetMap data using the MapFeaturesConverter tool. This package can be downloaded [here](https://f000.backblazeb2.com/file/skybolt/Seattle_1_1_0.zip).
 
 ## Running
-### Plugins
-By default, Skybolt searches for plugins in the /plugins folder in the application executable's directory. Additional plugin search locations can be specified with the SKYBOLT_PLUGINS_PATH environment variable.
 ### Settings
 Engine settings are stored in a json file, which may be manually edited with a text editor, or edited in Sprocket with the Tools->Settings dialog.
 An example settings file template is available in this repository under src/SkyboltExamples/ExamplesCommon/ExampleSettings.json.
 
-The settings file can be loaded by example applications with the --settingsFile commandline option. If the option is not specified, a default Settings.json in the Operating System user's home directory will be used. On windows, this is located at C:/Users/<Username>/AppData/Local/Skybolt/Settings.json.
+The settings file can be loaded by example applications with the --settingsFile commandline option. If the option is not specified, a default Settings.json in the Operating System user's home directory will be used. On windows, this is located at C:/Users/%USERNAME%/AppData/Local/Skybolt/Settings.json.
+
+### Environment Variables
+* SKYBOLT_PLUGINS_PATH sets plugin search locations. The /plugins folder in the application executable's directory is searched in additional to this path.
+* SKYBOLT_CACHE_DIR sets the directory where cached terrain tiles are read from and written to. If not set, the default directory is C:/Users/%USERNAME%/AppData/Local/Skybolt/Cache
+* SKYBOLT_ASSETS_PATH sets the search locations for asset packages. 
+* SKYBOLT_MAX_CORES sets the maximum number of CPU cores the engine may use. If not set, all cores are used.
 
 ### Using third party Map APIs
 By default, the PlanetEarth entity uses mapbox for albedo and elevation data. To use mapbox, you must acquire an API key from https://mapbox.com

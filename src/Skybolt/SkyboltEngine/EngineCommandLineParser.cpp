@@ -46,17 +46,16 @@ std::optional<nlohmann::json> EngineCommandLineParser::readSettings(const boost:
 	else
 	{
 		settingsFilename = file::getAppUserDataDirectory("Skybolt").append("Settings.json");
-		BOOST_LOG_TRIVIAL(info) << "No --settingsFile program argument specified. Using default settings file location: '" << settingsFilename << "'";
 	}
 
 	if (std::filesystem::exists(settingsFilename))
 	{
-		BOOST_LOG_TRIVIAL(info) << "Reading settings file '" << settingsFilename << "'";
+		BOOST_LOG_TRIVIAL(info) << "Reading settings file '" << settingsFilename.string() << "'";
 		return readJsonFile(settingsFilename.string());
 	}
 	else
 	{
-		BOOST_LOG_TRIVIAL(warning) << "Settings file not found: '" << settingsFilename << "'";
+		BOOST_LOG_TRIVIAL(warning) << "Settings file not found: '" << settingsFilename.string() << "'";
 	}
 	return std::nullopt;
 }
