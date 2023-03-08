@@ -20,6 +20,7 @@
 #include <px_sched/px_sched.h>
 
 #include <osgDB/Registry>
+#include <boost/algorithm/string.hpp>
 #include <boost/log/trivial.hpp>
 #include <optional>
 
@@ -131,7 +132,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 			"Please refer to Skybolt documentation for information about setting this variable.";
 	}
 
-	bool foundCoreAssets = false;
+	std::set<std::string> requiredPackages = {"Core", "Globe"};
 	for (const auto& assetSearchPath : assetSearchPaths)
 	{
 		file::Paths folders = file::findFoldersInDirectory(assetSearchPath);
@@ -142,16 +143,14 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 			registerAssetPackage(folder.string());
 			BOOST_LOG_TRIVIAL(info) << "Registered asset package: " << folderName;
 
-			if (folderName == "Core")
-			{
-				foundCoreAssets = true;
-			}
+			requiredPackages.erase(folderName);
 		}
 	}
 
-	if (!foundCoreAssets)
+	if (!requiredPackages.empty())
 	{
-		throw std::runtime_error("Could not find 'Core' assets package. Ensure working directory or SKYBOLT_ASSETS_PATH is set correctly. "
+		std::string packagesString = boost::algorithm::join(requiredPackages, ", ");
+		throw std::runtime_error("Could not find asset packages: {" + packagesString + "}. Ensure working directory and/or SKYBOLT_ASSETS_PATH is set correctly. "
 			"Please refer to Skybolt documentation for information about finding assets.");
 	}
 
