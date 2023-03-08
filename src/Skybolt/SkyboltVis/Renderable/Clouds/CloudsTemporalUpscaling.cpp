@@ -23,6 +23,7 @@ CloudsTemporalUpscaling::CloudsTemporalUpscaling(const CloudsTemporalUpscalingCo
 	mDepthTextureProvider(config.depthTextureProvider)
 {
 	mReprojectionMatrixUniform = new osg::Uniform("reprojectionMatrix", osg::Matrixf());
+	mInvReprojectionMatrixUniform = new osg::Uniform("invReprojectionMatrix", osg::Matrixf());
 	mFrameNumberUniform = new osg::Uniform("frameNumber", 0);
 	mJitterOffsetUniform = new osg::Uniform("jitterOffset", osg::Vec2f(0.f, 0.f));
 
@@ -37,6 +38,7 @@ CloudsTemporalUpscaling::CloudsTemporalUpscaling(const CloudsTemporalUpscalingCo
 
 		mStateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
 		mStateSet->addUniform(mReprojectionMatrixUniform);
+		mStateSet->addUniform(mInvReprojectionMatrixUniform);
 		mStateSet->addUniform(mFrameNumberUniform);
 		mStateSet->addUniform(mJitterOffsetUniform);
 	}
@@ -120,6 +122,7 @@ void CloudsTemporalUpscaling::updatePreRender(const RenderContext& context)
 		osg::Matrix modelViewProjXy = modelMatrix * camera.getViewMatrix() * projXy;
 
 		mReprojectionMatrixUniform->set(osg::Matrix::inverse(modelViewProjXy) * mPrevFrameModelViewProjXyMatrix);
+		mInvReprojectionMatrixUniform->set(osg::Matrix::inverse(mPrevFrameModelViewProjXyMatrix) * modelViewProjXy);
 		mPrevFrameModelViewProjXyMatrix = modelViewProjXy;
 			
 		mFrameNumberUniform->set(context.frameNumber);

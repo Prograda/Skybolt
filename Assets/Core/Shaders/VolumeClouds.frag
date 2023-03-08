@@ -390,7 +390,8 @@ void main()
 			return;
 	}
 
-	if (cameraAltitude < cloudLayerMaxHeight * 10)
+	float rayFarSansSceneDepth = rayFar;
+	if (cameraAltitude < cloudLayerMaxHeight * 40)
 	{
 		float logZNdc = textureLod(sceneDepthSampler, screenCoord + jitterOffset, 0).r;
 		float sceneDepthAlongRay = calcClipSpaceWFromLogZNdc(logZNdc) / dot(rayDir, cameraCenterDirection);
@@ -399,6 +400,7 @@ void main()
 
 	float stepSize = initialStepSize;
 	rayNear += stepSize * random(gl_FragCoord.xy + jitterOffset);
+	rayNear = min(rayNear - 0.0001, rayFar);
 
 	vec3 positionRelCameraWS = rayNear * rayDir;
 
@@ -468,7 +470,7 @@ void main()
 	}
 	else
 	{
-		logZ = calcLogZNdc(dot(rayDir * rayFar, cameraCenterDirection));
+		logZ = calcLogZNdc(dot(rayDir * rayFarSansSceneDepth, cameraCenterDirection));
 	}
 
 	if (lowResBlend > 0)

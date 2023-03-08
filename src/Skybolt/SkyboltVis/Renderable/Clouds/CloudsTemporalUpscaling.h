@@ -40,6 +40,7 @@ private:
 	TextureProvider mDepthTextureProvider;
 	osg::ref_ptr<RenderTexture> mUpscaledColorTexture[2];
 	osg::ref_ptr<osg::Uniform> mReprojectionMatrixUniform;
+	osg::ref_ptr<osg::Uniform> mInvReprojectionMatrixUniform;
 	osg::ref_ptr<osg::Uniform> mFrameNumberUniform;
 	osg::ref_ptr<osg::Uniform> mJitterOffsetUniform;
 	osg::ref_ptr<osg::StateSet> mStateSet;

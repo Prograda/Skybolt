@@ -57,7 +57,6 @@ typedef std::shared_ptr<Positionable> PositionablePtr;
 typedef std::shared_ptr<PropellerComponent> PropellerComponentPtr;
 typedef std::shared_ptr<System> SystemPtr;
 typedef std::shared_ptr<TriangleMeshShapeData> TriangleMeshShapeDataPtr;
-typedef std::shared_ptr<World> WorldPtr;
 
 } // namespace sim
 } // namespace skybolt

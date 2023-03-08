@@ -153,6 +153,12 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 			upscalingConfig.scene = mScene;
 			upscalingConfig.upscalingProgram = config.programs->getRequiredProgram("cloudsTemporalUpscaling");
 			mCloudsUpscaling = new CloudsTemporalUpscaling(upscalingConfig);
+
+			mSequence->addOperation(createRenderOperationFunction([this] (const RenderContext& context) {
+				mCloudsUpscaling->getOrCreateStateSet()->setTextureAttribute(4, mMainPassTexture->getDepthTexture());
+			}), (int)RenderOperationOrder::Clouds);
+			mCloudsUpscaling->getOrCreateStateSet()->addUniform(createUniformSampler2d("sceneDepthSampler", 4));
+
 			mSequence->addOperation(mCloudsUpscaling, (int)RenderOperationOrder::Clouds);
 
 			cloudsTarget = mCloudsUpscaling;
