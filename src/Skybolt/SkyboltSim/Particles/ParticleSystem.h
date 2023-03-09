@@ -27,10 +27,10 @@ struct Particle
 	Vector3 position;
 	Vector3 velocity;
 	float radius;
-	float age = 0;
-	float initialAlpha = 1;
-	float alpha = 1;
-	float temperatureDegreesCelcius = 0;
+	float age;
+	float initialAlpha;
+	float alpha;
+	float temperatureDegreesCelcius;
 };
 
 class ParticleSystemOperation

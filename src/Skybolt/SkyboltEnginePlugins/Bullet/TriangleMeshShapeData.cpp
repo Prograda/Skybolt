@@ -13,7 +13,7 @@ namespace sim {
 TriangleMeshShapeData::TriangleMeshShapeData(float* vertices, int vertexCount, int* indices, int indexCount)
 {
 	bool use3dBitIndices = (indexCount > 65535);
-	mMesh = new btTriangleMesh(use3dBitIndices);
+	mMesh = std::make_unique<btTriangleMesh>(use3dBitIndices);
 	mMesh->preallocateVertices(vertexCount);
 	mMesh->preallocateIndices(indexCount);
 
@@ -30,15 +30,12 @@ TriangleMeshShapeData::TriangleMeshShapeData(float* vertices, int vertexCount, i
 	}
 }
 
-TriangleMeshShapeData::~TriangleMeshShapeData()
-{
-	delete mMesh;
-}
+TriangleMeshShapeData::~TriangleMeshShapeData() = default;
 
 btBvhTriangleMeshShape* TriangleMeshShapeData::createShape() const
 {
 	// true for using quantization; true for building the BVH
-	return new btBvhTriangleMeshShape(mMesh, true, true);
+	return new btBvhTriangleMeshShape(mMesh.get(), true, true);
 }
 
 } // namespace sim

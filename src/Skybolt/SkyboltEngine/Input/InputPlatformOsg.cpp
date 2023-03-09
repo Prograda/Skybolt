@@ -244,16 +244,16 @@ public:
 		}
 	}
 
-	virtual size_t getButtonCount() const { return (size_t)KC_ENUM_COUNT; }
-	virtual bool isButtonPressed(size_t i) const
+	size_t getButtonCount() const override { return (size_t)KC_ENUM_COUNT; }
+	bool isButtonPressed(size_t i) const override
 	{
 		return mEnabled && mPressedKeys.find((KeyCode)i) != mPressedKeys.end();
 	}
 
-	virtual size_t getAxisCount() const { return 0; }
-	virtual float getAxisState(size_t i) const { assert(0); return 0.0f; }
+	size_t getAxisCount() const override { return 0; }
+	float getAxisState(size_t i) const override { assert(0); return 0.0f; }
 
-	virtual const std::string& getName() const
+	const std::string& getName() const override
 	{
 		static std::string keyboard = "Keyboard";
 		return keyboard;

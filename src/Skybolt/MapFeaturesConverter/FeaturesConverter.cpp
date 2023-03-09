@@ -163,13 +163,6 @@ Units toUnits(const std::string& str)
 	}
 }
 
-struct ValueWithUnits
-{
-	double value;
-	Units unit;
-	
-};
-
 static double convert(double value, Units from, Units to)
 {
 	return value * conversionsToMeters[from] / conversionsToMeters[to];
@@ -389,7 +382,7 @@ static int parseWay(const void* user_data, const readosm_way* way)
 				int levels = 1;
 				try
 				{
-					std::stoi(levelsTag->value);
+					levels = std::stoi(levelsTag->value);
 				}
 				catch (const std::invalid_argument&)
 				{
@@ -573,12 +566,12 @@ std::vector<LatLonPoints> readMultiPolygonRelation(const readosm_relation& relat
 int parseRelation(const void* user_data, const readosm_relation* relation)
 {
 	ParserData& data = *(ParserData*)user_data;
-	std::vector<FeaturePtr>& features = data.features;
 
 	if (getTagValueString(*relation, "natural") == "water")
 	{
 		std::vector<LatLonPoints> polygons = readMultiPolygonRelation(*relation, data);
 
+		std::vector<FeaturePtr>& features = data.features;
 		for (const LatLonPoints& polygon : polygons)
 		{
 			auto water = std::make_shared<Water>();

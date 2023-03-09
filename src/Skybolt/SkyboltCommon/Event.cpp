@@ -27,12 +27,12 @@ void EventEmitter::removeEventListener(EventListener* listener)
 		if (it->second.empty()) // Remove EventId if there are no registered listeners left
 		{
 			ListenerMap::iterator killIt = it;
-			it++;
+			++it;
 			mListenerMap.erase(killIt);
 		}
 		else
 		{
-			it++;
+			++it;
 		}
 	}
 

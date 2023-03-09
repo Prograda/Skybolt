@@ -128,6 +128,9 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 		addShadowMapsToStateSet(mShadowMapGenerator->getTextures(), *ss, int(GlobalSamplerUnit::ShadowCascade0));
 	}
 
+	// Main pass
+	mSequence->addOperation(mMainPassTexture, (int)RenderOperationOrder::MainPass);
+
 	// Clouds
 	osg::ref_ptr<RenderOperation> cloudsTarget;
 	{
@@ -155,8 +158,6 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 			cloudsTarget = mCloudsUpscaling;
 		}
 	}
-
-	mSequence->addOperation(mMainPassTexture, (int)RenderOperationOrder::MainPass);
 
 	mSequence->addOperation(createRenderOperationFunction([this, cloudsTarget] (const RenderContext& context) {
 		if (!mMainPassTexture->getOutputTextures().empty())

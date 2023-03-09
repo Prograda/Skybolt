@@ -91,7 +91,6 @@ static void convertSrgbToTexturizerMap(osg::Image& image)
 	osg::Vec4f averageLinearSpace = vis::srgbToLinear(vis::averageSrgbColor(image, alphaRejectionThreshold));
 
 	osg::Vec4f color;
-	size_t pixels = 0;
 	for (size_t t = 0; t < image.t(); ++t)
 	{
 		for (size_t s = 0; s < image.s(); ++s)
@@ -117,7 +116,7 @@ public:
 		assert(mAttachedBody);
 	}
 
-	void syncVis(const GeocentricToNedConverter& converter)
+	void syncVis(const GeocentricToNedConverter& converter) override
 	{
 		Vector3 pos = mAttachedBody->getPosition() + mAttachedBody->getOrientation() * mRotor->getPositionRelBody();
 
@@ -141,7 +140,7 @@ public:
 	{
 	}
 
-	void syncVis(const GeocentricToNedConverter& converter)
+	void syncVis(const GeocentricToNedConverter& converter) override
 	{
 		Vector3 pos = mAttachedBody->getPosition() + mAttachedBody->getOrientation() * mPropeller->getPositionRelBody();
 
@@ -558,7 +557,6 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 		}
 	}
 
-	std::optional<vis::ForestParams> forestParams;
 	{
 		auto it = json.find("forest");
 		if (it != json.end())
@@ -635,10 +633,10 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 				if (it != mContext.componentFactoryRegistry->end())
 				{
 					ComponentFactoryPtr factory = it->second;
-					auto component = factory->create(entity.get(), componentFactoryContext, content);
-					if (component)
+					auto newComponent = factory->create(entity.get(), componentFactoryContext, content);
+					if (newComponent)
 					{
-						entity->addComponent(component);
+						entity->addComponent(newComponent);
 					}
 				}
 			}

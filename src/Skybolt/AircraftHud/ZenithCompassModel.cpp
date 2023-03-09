@@ -44,7 +44,6 @@ void ZenithCompassModel::draw(const glm::vec2 &center, float rotation)
 	for (int angle = 0; angle < 360; angle += 90)
 	{
 		float angleRad = skybolt::math::degToRadF() * (float)angle + rotation;
-		float lineLength = (angle % 90 == 0) ? 0.01f : 0.005f;
 
 		glm::vec2 dir = math::vec2Rotate(glm::vec2(0, 1), angleRad);
 

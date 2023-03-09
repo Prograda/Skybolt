@@ -49,7 +49,6 @@ void FuselageComponent::updatePreDynamicsSubstep(TimeReal dt)
 	Vector3 lift;
 
 	float alphaDelta = mAngleOfAttack - mParams.zeroLiftAlpha;
-	float absAlphaDelta = std::abs(alphaDelta);
 
 	float liftCoeff;
 	if (std::abs(alphaDelta) > mParams.stallAlpha)

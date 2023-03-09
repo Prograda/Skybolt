@@ -64,12 +64,12 @@ public:
 
 	sim::PositionPtr getPosition() const override
 	{
-		auto pos = std::make_shared<sim::GeocentricPosition>();
+		sim::Vector3 pos;
 		for (int i = 0; i < 3; ++i)
 		{
-			pos->position[i] = mValues[i]->text().toDouble();
+			pos[i] = mValues[i]->text().toDouble();
 		}
-		return pos;
+		return std::make_shared<sim::GeocentricPosition>(pos);
 	}
 
 private:
@@ -98,11 +98,11 @@ public:
 
 	sim::PositionPtr getPosition() const override
 	{
-		auto pos = std::make_shared<sim::LatLonAltPosition>();
-		pos->position.lat = mValues[0]->text().toDouble() * math::degToRadD();
-		pos->position.lon = mValues[1]->text().toDouble() * math::degToRadD();
-		pos->position.alt = mValues[2]->text().toDouble();
-		return pos;
+		sim::LatLonAlt lla(
+			mValues[0]->text().toDouble() * math::degToRadD(),
+			mValues[1]->text().toDouble() * math::degToRadD(),
+			mValues[2]->text().toDouble());
+		return std::make_shared<sim::LatLonAltPosition>(lla);
 	}
 
 private:

@@ -45,7 +45,6 @@ TEST_CASE("getKeyLonLatBounds")
 	key.x = 1;
 	key.y = 0;
 
-	float epsilon = 1e-7f;
 	auto bounds = getKeyLonLatBounds<osg::Vec2>(key);
 	auto boundsSwapped = getKeyLatLonBounds<osg::Vec2>(key);
 	CHECK(bounds.minimum.x() == boundsSwapped.minimum.y());

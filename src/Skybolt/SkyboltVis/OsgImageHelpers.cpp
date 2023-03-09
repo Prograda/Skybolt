@@ -215,7 +215,7 @@ static osg::Vec4f componentWiseMax(const osg::Vec4f& a, const osg::Vec4f& b)
 
 void normalize(osg::Image& image)
 {
-	float inf = std::numeric_limits<float>::infinity();
+	constexpr float inf = std::numeric_limits<float>::infinity();
 	osg::Vec4f cMin(inf, inf, inf, inf);
 	osg::Vec4f cMax(0, 0, 0, 0);
 

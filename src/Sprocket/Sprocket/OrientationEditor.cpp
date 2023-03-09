@@ -65,12 +65,12 @@ public:
 
 	sim::OrientationPtr getOrientation() const override
 	{
-		auto ori = std::make_shared<sim::GeocentricOrientation>();
+		glm::dquat ori;
 		for (int i = 0; i < 4; ++i)
 		{
-			ori->orientation[i] = mValues[i]->text().toDouble();
+			ori[i] = mValues[i]->text().toDouble();
 		}
-		return ori;
+		return std::make_shared<sim::GeocentricOrientation>(ori);
 	}
 
 private:
@@ -101,14 +101,12 @@ public:
 
 	sim::OrientationPtr getOrientation() const override
 	{
-		auto ori = std::make_shared<sim::LtpNedOrientation>();
 		glm::dvec3 rpy;
 		for (int i = 0; i < 3; ++i)
 		{
 			rpy[i] = mValues[i]->text().toDouble() * math::degToRadD();
 		}
-		ori->orientation = math::quatFromEuler(rpy);
-		return ori;
+		return std::make_shared<sim::LtpNedOrientation>(math::quatFromEuler(rpy));
 	}
 
 private:

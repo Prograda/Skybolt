@@ -148,6 +148,11 @@ osg::ref_ptr<osg::Image> SphericalMercatorToPlateCarreeTileSource::createImage(c
 		}
 	}
 
+	if (tiles.empty())
+	{
+		return nullptr;
+	}
+
 	// Composite the Spherical Mercator tiles into a single Plate Carree tile and return it.
 	osg::ref_ptr<osg::Image> composite(new osg::Image);
 	composite->allocateImage(256, 256, 1, pixelFormat, type);

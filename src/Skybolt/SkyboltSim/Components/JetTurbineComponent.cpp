@@ -20,9 +20,7 @@ JetTurbineComponent::JetTurbineComponent(const JetTurbineParams& params, const C
 
 void JetTurbineComponent::updatePreDynamicsSubstep(TimeReal dt)
 {
-	float desiredRpm = mInput->value;
-
-	// 1st order lag function
+	// First order lag function
 	float delta = (mInput->value - mEngineRpm) * mParams.rpmResponseRate;
 	mEngineRpm += std::min(mParams.maxRpmDelta, std::max(mParams.minRpmDelta, delta)) * dt;
 }

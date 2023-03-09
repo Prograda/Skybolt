@@ -7,6 +7,7 @@
 #include "Position.h"
 #include "Geocentric.h"
 #include "GreatCircle.h"
+#include <SkyboltCommon/Math/MathUtility.h>
 #include <assert.h>
 
 namespace skybolt {
@@ -23,9 +24,7 @@ GeocentricPosition toGeocentric(const Position& position)
 		case Position::TypeLatLonAlt:
 		{
 			const LatLonAltPosition& lla = static_cast<const LatLonAltPosition&>(position);
-			GeocentricPosition result;
-			result.position = llaToGeocentric(lla.position, earthRadius());
-			return result;
+			return GeocentricPosition(llaToGeocentric(lla.position, earthRadius()));
 		}
 		case Position::TypeNed:
 		{
@@ -35,7 +34,7 @@ GeocentricPosition toGeocentric(const Position& position)
 		default:
 			assert(!"Not implemented");
 	}
-	return GeocentricPosition();
+	return GeocentricPosition(math::dvec3Zero());
 }
 
 LatLonAltPosition toLatLonAlt(const Position& position)
@@ -45,10 +44,7 @@ LatLonAltPosition toLatLonAlt(const Position& position)
 	case Position::TypeGeocentric:
 	{
 		const GeocentricPosition& geocentricPos = static_cast<const GeocentricPosition&>(position);
-		LatLonAltPosition result;
-		result.position = geocentricToLla(geocentricPos.position, earthRadius());
-		return result;
-
+		return LatLonAltPosition(geocentricToLla(geocentricPos.position, earthRadius()));
 	}
 	case Position::TypeLatLonAlt:
 	{
@@ -62,7 +58,7 @@ LatLonAltPosition toLatLonAlt(const Position& position)
 	default:
 		assert(!"Not implemented");
 	}
-	return LatLonAltPosition();
+	return LatLonAltPosition(LatLonAlt{});
 }
 
 } // namespace skybolt

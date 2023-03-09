@@ -124,7 +124,6 @@ static void drawVSlider(VisHud& hud, const glm::vec2& position, float height, co
 
 static void drawControlInputs(VisHud& hud, const glm::vec2& position, const ControlInputsComponent& controlInputsComponents)
 {
-	float halfTickWidth = 0.01f;
 	float size = 0.1f;
 	float margin = 0.02f;
 

@@ -92,8 +92,10 @@ public:
 		while (!mTerminateGeneratorThread)
 		{
 			// Wait for generation request
-			std::unique_lock<std::mutex> lock(mGeneratorRequestMutex);
-			mGeneratorRequestCV.wait(lock, [this] {return mGeneratorRequest || mTerminateGeneratorThread; });
+			{
+				std::unique_lock<std::mutex> lock(mGeneratorRequestMutex);
+				mGeneratorRequestCV.wait(lock, [this] {return mGeneratorRequest || mTerminateGeneratorThread; });
+			}
 
 			if (mTerminateGeneratorThread)
 			{

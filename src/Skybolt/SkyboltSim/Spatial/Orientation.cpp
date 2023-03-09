@@ -8,6 +8,7 @@
 #include "SimMath.h"
 #include "Geocentric.h"
 #include "GreatCircle.h"
+#include <SkyboltCommon/Math/MathUtility.h>
 #include <assert.h>
 
 namespace skybolt {
@@ -29,14 +30,12 @@ GeocentricOrientation toGeocentric(const Orientation& orientation, const LatLon&
 
 			sim::Quaternion oriRelLtp = ori.orientation;
 
-			GeocentricOrientation result;
-			result.orientation = ltpOriRelGeocentric * oriRelLtp;
-			return result;
+			return GeocentricOrientation(ltpOriRelGeocentric * oriRelLtp);
 		}
 		default:
 			assert(!"Not implemented");
 	}
-	return GeocentricOrientation();
+	return GeocentricOrientation(math::quatIdentity());
 }
 
 LtpNedOrientation toLtpNed(const Orientation& orientation, const LatLon& latLon)
@@ -51,9 +50,7 @@ LtpNedOrientation toLtpNed(const Orientation& orientation, const LatLon& latLon)
 
 		sim::Quaternion geocentricOri = ori.orientation;
 
-		LtpNedOrientation result;
-		result.orientation = glm::inverse(ltpOriRelGeocentric) * geocentricOri;
-		return result;
+		return LtpNedOrientation(glm::inverse(ltpOriRelGeocentric) * geocentricOri);
 	}
 	case Orientation::TypeLtpNed:
 	{
@@ -62,7 +59,7 @@ LtpNedOrientation toLtpNed(const Orientation& orientation, const LatLon& latLon)
 	default:
 		assert(!"Not implemented");
 	}
-	return LtpNedOrientation();
+	return LtpNedOrientation(math::quatIdentity());
 }
 
 } // namespace skybolt

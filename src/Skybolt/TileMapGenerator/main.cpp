@@ -114,7 +114,7 @@ int main_dem()
 	{
 		std::string dir = "DEM/GLOBE";
 
-		double latitudes[5] = {
+		const double latitudes[5] = {
 			-math::halfPiD(),
 			-math::halfPiD() + math::piD() * double(4800) / double(21600),
 			-math::halfPiD() + math::piD() * double(10800) / double(21600),

@@ -39,8 +39,6 @@ Orbit createOrbitFromEclipticCoordinates(const CreateOrbitFromEclipticCoordinate
 	{
 		orbit.inclination = acos(angularMom.z / angularMomLength);
 
-		double specOrbitalEnergy = speed * speed / 2 - mu / radius;
-
 		double nodeVecLength = glm::length(nodeVec);
 
 		if (nodeVecLength == 0.0)

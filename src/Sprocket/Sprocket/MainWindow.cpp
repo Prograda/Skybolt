@@ -138,7 +138,6 @@ public:
 	}
 
 private:
-	sim::Entity* mEntity;
 	vis::Scene* mScene;
 	VariantPropertyPtr mFov;
 	VariantPropertyPtr mAmbientLight;

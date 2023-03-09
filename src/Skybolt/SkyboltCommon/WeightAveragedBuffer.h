@@ -14,7 +14,7 @@ namespace skybolt {
 class WeightAveragedBuffer
 {
 public:
-	WeightAveragedBuffer(unsigned int size);
+	explicit WeightAveragedBuffer(unsigned int size);
 	inline void setSize(unsigned int size) {mSize = size;}
 
 	void addValue(float value);

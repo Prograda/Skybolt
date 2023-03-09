@@ -60,7 +60,6 @@ public:
 	virtual void setCollisionsEnabled(bool enabled) = 0;
 
 protected:
-	World* mWorld;
 	std::vector<AppliedForce> mForces;
 };
 

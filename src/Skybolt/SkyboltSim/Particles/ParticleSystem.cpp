@@ -59,6 +59,7 @@ Particle ParticleEmitter::createParticle(const Vector3& emitterVelocity, float t
 	particle.guid = mNextParticleId++;
 	particle.position = mParams.positionable->getPosition() + velocityRelEmitter * double(timeOffset);
 	particle.velocity = emitterVelocity + velocityRelEmitter;
+	particle.age = 0;
 	particle.radius = mParams.radius;
 	particle.initialAlpha = alpha * mEmissionAlphaMultiplier;
 	particle.alpha = particle.initialAlpha;
@@ -151,7 +152,7 @@ void ParticleIntegrator::update(float dt, std::vector<Particle>& particles)
 
 	// Calculate wind velocity and damping factor
 	std::optional<sim::Vector3> windVelocity;
-	double velocityDamping;
+	double velocityDamping = 0;
 	{
 		sim::Vector3 position = particles.front().position;
 		sim::Entity* planet = mParams.nearestPlanetProvider(position);

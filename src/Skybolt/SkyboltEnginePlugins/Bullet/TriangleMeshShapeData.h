@@ -23,7 +23,7 @@ public:
 	btBvhTriangleMeshShape* createShape() const;
 
 private:
-	btTriangleMesh* mMesh;
+	std::unique_ptr<btTriangleMesh> mMesh;
 };
 
 } // namespace sim

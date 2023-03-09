@@ -129,7 +129,7 @@ static sim::AttachmentComponent* findFreeAttachmentAcceptingEntityTemplate(const
 	return nullptr;
 }
 
-static void findAndAttachEntityByName(Entity& parent, const World& world, const std::string& name)
+static void findAndAttachEntityByName(const Entity& parent, const World& world, const std::string& name)
 {
 	Entity* target = findObjectInWorld(world, name);
 	if (target)

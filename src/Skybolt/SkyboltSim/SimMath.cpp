@@ -32,13 +32,13 @@ Matrix3 getOrientationFromDirection(const Vector3& direction)
 
 DistReal posInfinity()
 {
-	auto r = std::numeric_limits<DistReal>::infinity();
+	constexpr auto r = std::numeric_limits<DistReal>::infinity();
 	return r;
 }
 
 DistReal negInfinity()
 {
-	auto r = -std::numeric_limits<DistReal>::infinity();
+	constexpr auto r = -std::numeric_limits<DistReal>::infinity();
 	return r;
 }
 

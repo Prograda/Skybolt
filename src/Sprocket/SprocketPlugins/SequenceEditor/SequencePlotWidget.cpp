@@ -163,7 +163,6 @@ static void replotCurve(CurveData& data, const StateSequenceControllerPtr& contr
 	{
 		double firstTime = sequence->times.front();
 		double lastTime = sequence->times.back();
-		double range = lastTime - firstTime;
 
 		static const size_t pointCount = 100;
 		for (size_t i = 0; i < pointCount; ++i)
@@ -212,7 +211,7 @@ void SequencePlotWidget::setSequenceController(const skybolt::StateSequenceContr
 		curve->detach();
 	}
 
-	for (auto& markers : mCurvePointMakers)
+	for (const auto& markers : mCurvePointMakers)
 	{
 		for (auto& marker : *markers)
 		{

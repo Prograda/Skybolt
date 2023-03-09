@@ -36,7 +36,6 @@ struct PositionRelPlanet : Position
 struct GeocentricPosition : Position
 {
 	GeocentricPosition(const Vector3& position) : Position(TypeGeocentric), position(position) {}
-	GeocentricPosition() : Position(TypeGeocentric) {}
 
 	Vector3 position;
 };
@@ -44,7 +43,6 @@ struct GeocentricPosition : Position
 struct LatLonAltPosition : Position
 {
 	LatLonAltPosition(const LatLonAlt& position) : Position(TypeLatLonAlt), position(position) {}
-	LatLonAltPosition() : Position(TypeLatLonAlt) {}
 
 	LatLonAlt position;
 };
@@ -54,7 +52,6 @@ struct NedPosition : Position
 {
 	NedPosition(const Vector3& position, std::shared_ptr<PositionRelPlanet>& origin) :
 		Position(TypeNed), position(position), origin(origin) {}
-	NedPosition() : Position(TypeNed) {}
 
 	Vector3 position;
 	std::shared_ptr<PositionRelPlanet> origin; //!< never null

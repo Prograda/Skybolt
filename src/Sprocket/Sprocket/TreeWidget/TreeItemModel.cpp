@@ -33,9 +33,9 @@ void TreeItemModel::insertChildren(TreeItem& item, int position, const std::vect
 	if (children.empty())
 		return;
 
-	for (const TreeItemPtr& item : children)
+	for (const TreeItemPtr& child : children)
 	{
-		mItems.insert(item.get());
+		mItems.insert(child.get());
 	}
 
 	beginInsertRows(index(&item), position, position + (int)children.size() - 1);

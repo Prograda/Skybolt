@@ -34,8 +34,7 @@ void PropellerComponent::updatePreDynamicsSubstep(TimeReal dt)
 	// Apply control input
 	float desiredPitch = getUnitNormalized(*mInput) * mParams.pitchRange + mParams.minPitch;
 
-	 // 1st order lag function of peddle input
-	float targetDelta = desiredPitch - mPitch;
+	 // First order lag function of peddle input
 	mPitch += desiredPitch - mPitch * std::min(1.0f, mParams.pitchResponseRate * dt);
 	mRpm = mDriverRpm * mParams.rpmMultiplier;
 

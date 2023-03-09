@@ -32,7 +32,6 @@ struct Orientation
 struct GeocentricOrientation : Orientation //! Local-tangent-plane North-east-down
 {
 	GeocentricOrientation(const Quaternion& orientation) : Orientation(TypeGeocentric), orientation(orientation) {}
-	GeocentricOrientation() : Orientation(TypeGeocentric) {}
 
 	Quaternion orientation;
 };
@@ -40,7 +39,6 @@ struct GeocentricOrientation : Orientation //! Local-tangent-plane North-east-do
 struct LtpNedOrientation : Orientation //! Local-tangent-plane North-east-down
 {
 	LtpNedOrientation(const Quaternion& orientation) : Orientation(TypeLtpNed), orientation(orientation) {}
-	LtpNedOrientation() : Orientation(TypeLtpNed) {}
 
 	Quaternion orientation;
 };
