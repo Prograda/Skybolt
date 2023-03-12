@@ -34,13 +34,15 @@ class SkyboltConan(ConanFile):
     no_copy_source = True
 
     requires = [
-		"boost/1.75.0@_/_",
-		"catch2/2.13.8@_/_",
-		"cpp-httplib/0.10.1@_/_",
-		"earcut/2.2.3@_/_",
-		"glm/0.9.9.8@_/_",
-		"nlohmann_json/3.10.5@_/_",
-		"zlib/1.2.12@_/_" # Indirect dependency. Specified to resolve version clash between boost and freetype.
+        "boost/1.75.0@_/_",
+        "catch2/2.13.8@_/_",
+        "cpp-httplib/0.10.1@_/_",
+        "earcut/2.2.3@_/_",
+        "glm/0.9.9.8@_/_",
+        "nlohmann_json/3.10.5@_/_",
+        "zlib/1.2.13@_/_", # Indirect dependency. Specified to resolve version clash between qt and openscenegraph.
+        "libjpeg/9e@_/_", # Indirect dependency. Specified to resolve version clash between qt and openscenegraph.
+        "zstd/1.5.4" # Indirect dependency. Specified to resolve version clash between libtiff and libmysqlclient.
 	]
 
     def include_package(self, name, version, subfolder=None):
