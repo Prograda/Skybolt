@@ -528,7 +528,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 		config.factory = mEngineRoot->entityFactory.get();
 		config.itemTypes = itemTypes;
 		config.scenario = &scenario;
-		config.contextActions = adaptToTreeItems(mContextActions);
+		config.contextActions = mContextActions;
 
 		mWorldTreeWidget = new WorldTreeWidget(config);
 		QObject::connect(mWorldTreeWidget, &WorldTreeWidget::selectionChanged, this, &MainWindow::explorerSelectionChanged);
@@ -1292,29 +1292,30 @@ void MainWindow::setPropertiesModel(PropertiesModelPtr properties)
 	mPropertiesEditor->setModel(mPropertiesModel);
 }
 
-void MainWindow::setSelectedEntity(std::weak_ptr<skybolt::sim::Entity> entity)
+void MainWindow::setSelectedEntity(skybolt::sim::EntityId entityId)
 {
-	mSelectedEntity = entity;
+	mSelectedEntityId = entityId;
 	std::set<sim::Entity*> selection;
-	if (auto e = entity.lock(); e)
+	auto entity = mEngineRoot->simWorld->getEntityById(entityId);
+	if (entity)
 	{
-		selection.insert(e.get());
+		selection.insert(entity);
 	}
 	mVisSelectedEntityIcon->setEntities(selection);
 	
 	mWorldTreeWidget->blockSignals(true); // prevent tree widget signaling explorerSelectionChanged
-	mWorldTreeWidget->setSelectedEntity(entity.lock().get());
+	mWorldTreeWidget->setSelectedEntity(entity);
 	mWorldTreeWidget->blockSignals(false);
 }
 
 void MainWindow::explorerSelectionChanged(const TreeItem& item)
 {
-	setSelectedEntity(std::weak_ptr<skybolt::sim::Entity>());
+	setSelectedEntity(nullEntityId());
 
 	if (auto entityItem = dynamic_cast<const EntityTreeItem*>(&item))
 	{
 		setSelectedEntity(entityItem->data);
-		setPropertiesModel(std::make_shared<EntityPropertiesModel>(mSelectedEntity.lock().get()));
+		setPropertiesModel(std::make_shared<EntityPropertiesModel>( mEngineRoot->simWorld->getEntityById(mSelectedEntityId)));
 	}
 	else if (auto scenarioItem = dynamic_cast<const ScenarioTreeItem*>(&item))
 	{
@@ -1350,17 +1351,18 @@ MainWindow::ViewportClickHandler MainWindow::getDefaultViewportClickHandler()
 		}
 		else if (button == Qt::MouseButton::MiddleButton)
 		{
-			std::weak_ptr<skybolt::sim::Entity> selectedEntity;
+			skybolt::sim::EntityId selectedEntityId = nullEntityId();
 			auto hasNamePredicate = [] (const skybolt::sim::Entity& e) { return !getName(e).empty(); };
 			
 			if (std::optional<PickedSceneObject> object = pickSceneObjectAtPointInWindow(position, hasNamePredicate); object)
 			{
-				selectedEntity = object->entity;
+				selectedEntityId = object->entity->getId();
 			}
-			if (selectedEntity.lock() != mSelectedEntity.lock())
+			if (selectedEntityId != mSelectedEntityId)
 			{
-				setSelectedEntity(selectedEntity);
-				setPropertiesModel(selectedEntity.lock() ? std::make_shared<EntityPropertiesModel>(selectedEntity.lock().get()) : nullptr);
+				setSelectedEntity(selectedEntityId);
+				sim::Entity* selectedEntity = mEngineRoot->simWorld->getEntityById(selectedEntityId);
+				setPropertiesModel(selectedEntity ? std::make_shared<EntityPropertiesModel>(selectedEntity) : nullptr);
 			}
 		}
 	};
@@ -1378,7 +1380,7 @@ void MainWindow::showContextMenu(const QPoint& point)
 	if (auto intersection = pickPointOnPlanetAtPointInWindow(point); intersection)
 	{
 		ActionContext context;
-		context.entity = mSelectedEntity.lock().get();
+		context.entity = mEngineRoot->simWorld->getEntityById(mSelectedEntityId);
 		context.point = *intersection;
 
 		for (const auto& contextAction : mContextActions)
@@ -1507,7 +1509,7 @@ QMenu* MainWindow::addVisibilityFilterableSubMenu(const QString& text, EntityVis
 
 	QAction* selectedAction = addCheckedAction(*menu, "Show Selected", [=](bool checked) {
 		filterable->setVisibilityPredicate([=](const Entity& entity) {
-			return (mSelectedEntity.lock().get() == &entity) &&
+			return (mSelectedEntityId == entity.getId()) &&
 				hasLineOfSight(entity);
 		});
 	});

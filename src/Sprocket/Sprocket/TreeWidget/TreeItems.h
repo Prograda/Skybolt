@@ -30,7 +30,7 @@ struct TreeItemT : public TreeItem
 };
 
 typedef TreeItemT<void*> SimpleTreeItem;
-typedef TreeItemT<std::weak_ptr<skybolt::sim::Entity>> EntityTreeItem;
+typedef TreeItemT<skybolt::sim::EntityId> EntityTreeItem;
 typedef TreeItemT<skybolt::Scenario*> ScenarioTreeItem;
 
 struct TreeItemType

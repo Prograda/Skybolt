@@ -8,6 +8,7 @@
 
 #include "SkyboltSimFwd.h"
 #include "Component.h"
+#include "EntityId.h"
 #include "SimMath.h"
 #include <SkyboltCommon/Exception.h>
 #include <SkyboltCommon/Listenable.h>
@@ -30,7 +31,7 @@ public:
 class Entity : public skybolt::Listenable<EntityListener>
 {
 public:
-	Entity();
+	explicit Entity(const EntityId& id);
 	virtual ~Entity();
 
 	void updatePreDynamics(TimeReal dt, TimeReal dtWallClock);
@@ -74,7 +75,10 @@ public:
 		return component;
 	}
 
+	const EntityId& getId() const { return mId; }
+
 private:
+	const EntityId mId; //!< Globally unique ID of entity
 	TypedItemContainer<Component> mComponents;
 	bool mDynamicsEnabled = true;
 };
@@ -89,5 +93,4 @@ void setOrientation(Entity& entity, const Quaternion& orientation);
 void setVelocity(Entity& entity, const Vector3& velocity);
 
 } // namespace sim
-
 } // namespace skybolt

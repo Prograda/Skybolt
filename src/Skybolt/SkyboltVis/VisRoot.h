@@ -29,7 +29,6 @@ public:
 	bool render();
 
 	osgViewer::ViewerBase& getViewer() const;
-	std::weak_ptr<osgViewer::ViewerBase> getViewerPtr() const;
 
 	void addWindow(const WindowPtr& window);
 	void removeWindow(const WindowPtr& window);

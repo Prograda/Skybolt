@@ -26,17 +26,23 @@ World::~World()
 
 void World::addEntity(const EntityPtr& entity)
 {
+	assert(entity);
+	assert(!getEntityById(entity->getId()));
+
 	if (mDestructing)
 	{
 		return;
 	}
 
 	mEntities.push_back(entity);
+	mIdToEntityMap[entity->getId()] = entity;
 	CALL_LISTENERS(entityAdded(entity));
 }
 
 void World::removeEntity(Entity* entity)
 {
+	assert(entity);
+
 	if (mDestructing)
 	{
 		return;
@@ -51,6 +57,7 @@ void World::removeEntity(Entity* entity)
 		EntityPtr objectPtr = *it;
 		CALL_LISTENERS(entityAboutToBeRemoved(objectPtr));
 		mEntities.erase(it);
+		mIdToEntityMap.erase(entity->getId());
 		CALL_LISTENERS(entityRemoved(objectPtr));
 	}
 }
@@ -61,6 +68,15 @@ void World::removeAllEntities()
 	{
 		removeEntity(mEntities.front().get());
 	}
+}
+
+Entity* World::getEntityById(EntityId id) const
+{
+	if (auto i = mIdToEntityMap.find(id); i != mIdToEntityMap.end())
+	{
+		return i->second.get();
+	}
+	return nullptr;
 }
 
 Vector3 World::calcGravity(const Vector3& position, double mass) const

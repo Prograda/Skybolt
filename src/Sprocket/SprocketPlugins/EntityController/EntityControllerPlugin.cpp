@@ -354,7 +354,7 @@ public:
 	{
 		if (auto entityItem = dynamic_cast<const EntityTreeItem*>(&item))
 		{
-			sim::Entity* entity = entityItem->data.lock().get();
+			sim::Entity* entity = mEngineRoot->simWorld->getEntityById(entityItem->data);
 			mEntityControllerWidget->setEntity(entity);
 			mJoystickInputSystem->setEntity(entity);
 		}

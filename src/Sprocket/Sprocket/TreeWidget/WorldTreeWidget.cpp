@@ -249,7 +249,7 @@ WorldTreeWidget::WorldTreeWidget(const WorldTreeWidgetConfig& config) :
 			TreeItem* baseItem = mModel->getTreeItem(index);
 			if (EntityTreeItem* item = dynamic_cast<EntityTreeItem*>(baseItem))
 			{
-				mWorld->removeEntity(item->data.lock().get());
+				mWorld->removeEntity(mWorld->getEntityById(item->data));
 			}
 			else
 			{
@@ -333,7 +333,7 @@ static std::shared_ptr<EntityTreeItem> createEntityTreeItem(const sim::EntityPtr
 	if (!name.empty())
 	{
 		QIcon nodeIcon = getDefaultIconFactory().createIcon(IconFactory::Icon::Node);
-		return std::make_shared<EntityTreeItem>(nodeIcon, QString::fromStdString(name), entity);
+		return std::make_shared<EntityTreeItem>(nodeIcon, QString::fromStdString(name), entity->getId());
 	}
 	return nullptr;
 }
@@ -481,7 +481,7 @@ bool WorldTreeWidget::isDeletable(const TreeItem& item) const
 {
 	if (const EntityTreeItem* entityTreeItem = dynamic_cast<const EntityTreeItem*>(&item))
 	{
-		if (auto e = entityTreeItem->data.lock(); e)
+		if (auto e = mWorld->getEntityById(entityTreeItem->data); e)
 		{
 			return !e->getFirstComponent<sim::ProceduralLifetimeComponent>().get();
 		}
@@ -490,16 +490,34 @@ bool WorldTreeWidget::isDeletable(const TreeItem& item) const
 	return true;
 }
 
+static ActionContext toActionContext(const sim::World& world, const TreeItem& item)
+{
+	ActionContext context;
+	if (auto entityTreeItem = dynamic_cast<const EntityTreeItem*>(&item); entityTreeItem)
+	{
+		context.entity = world.getEntityById(entityTreeItem->data);
+	}
+	return context;
+}
+
 void WorldTreeWidget::showContextMenu(TreeItem& item, const QPoint& point)
 {
 	QMenu menu;
 
-	for (const TreeItemContextActionPtr& action : mContextActions)
+	for (const DefaultContextActionPtr& action : mContextActions)
 	{
-		if (action->handles(item))
+		ActionContext context = toActionContext(*mWorld, item);
+		if (action->handles(context))
 		{
-			TreeItem* itemPtr = &item;
-			menu.addAction(QString::fromStdString(action->getName()), [action, itemPtr]() { action->execute(*itemPtr); });
+			menu.addAction(QString::fromStdString(action->getName()), [this, &item, action]() {
+				// Confirm that the action is still supported before executing,
+				// as the context might have changed since the action was created.
+				ActionContext context = toActionContext(*mWorld, item);
+				if (action->handles(context))
+				{
+					action->execute(context);
+				}
+			});
 		}
 	}
 

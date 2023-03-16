@@ -19,7 +19,7 @@ constexpr double epsilon = 1e-14;
 
 TEST_CASE("Get Entity Transform")
 {
-    auto entity = std::make_shared<Entity>();
+	auto entity = std::make_shared<Entity>(EntityId({1, 1}));
 
 	CHECK(getTransform(*entity) == std::nullopt);
 

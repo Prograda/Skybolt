@@ -14,8 +14,10 @@
 namespace skybolt {
 namespace sim {
 
-Entity::Entity()
+Entity::Entity(const EntityId& id) :
+	mId(id)
 {
+	assert(mId != nullEntityId());
 }
 
 Entity::~Entity()

@@ -14,7 +14,7 @@
 
 struct ActionContext
 {
-	skybolt::sim::Entity* entity; //!< Can be null
+	skybolt::sim::Entity* entity = nullptr; //!< Can be null
 	std::optional<skybolt::sim::Vector3> point;
 };
 

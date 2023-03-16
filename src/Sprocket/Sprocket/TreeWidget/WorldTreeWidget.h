@@ -8,7 +8,7 @@
 
 #include "TreeItemModel.h"
 #include "TreeItems.h"
-#include "TreeItemContextAction.h"
+#include "Sprocket/ContextAction/ActionContext.h"
 
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltSim/World.h>
@@ -24,7 +24,7 @@ struct WorldTreeWidgetConfig
 	skybolt::EntityFactory* factory;
 	std::vector<TreeItemType> itemTypes;
 	skybolt::Scenario* scenario;
-	std::vector<TreeItemContextActionPtr> contextActions;
+	std::vector<DefaultContextActionPtr> contextActions;
 };
 
 class WorldTreeWidget : public QWidget, skybolt::sim::WorldListener, skybolt::sim::EntityListener
@@ -67,7 +67,7 @@ private:
 
 private:
 	skybolt::sim::World* mWorld;
-	const std::vector<TreeItemContextActionPtr> mContextActions;
+	const std::vector<DefaultContextActionPtr> mContextActions;
 	std::vector<TreeItemType> mItemTypes;
 	TreeItemModel* mModel;
 	QTreeView* mView;

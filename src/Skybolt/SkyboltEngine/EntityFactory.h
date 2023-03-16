@@ -8,6 +8,7 @@
 
 #include "ComponentFactory.h"
 #include "SkyboltEngineFwd.h"
+#include <SkyboltSim/EntityId.h>
 #include <SkyboltSim/SimMath.h>
 #include <SkyboltVis/VisFactory.h>
 #include <SkyboltVis/SkyboltVisFwd.h>
@@ -54,8 +55,9 @@ public:
 
 	std::string createUniqueObjectName(const std::string& baseName) const;
 
-private:
+	sim::EntityId generateNextEntityId() const;
 
+private:
 	sim::EntityPtr createSun() const;
 	sim::EntityPtr createMoon() const;
 	sim::EntityPtr createStars() const;
@@ -69,6 +71,7 @@ private:
 	TemplateJsonMap mTemplateJsonMap;
 
 	Context mContext;
+	mutable sim::EntityId mNextEntityId{1,0};
 };
 
 } // namespace skybolt

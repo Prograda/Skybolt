@@ -602,7 +602,7 @@ typedef std::function<void(Entity*, const EntityFactory::Context&, VisObjectsCom
 
 EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const std::string& instanceName, const Vector3& position, const Quaternion& orientation) const
 {
-	EntityPtr entity = std::make_shared<sim::Entity>();
+	EntityPtr entity = std::make_shared<sim::Entity>(generateNextEntityId());
 
 	entity->addComponent(ComponentPtr(new NameComponent(instanceName, mContext.namedObjectRegistry, entity.get())));
 
@@ -761,7 +761,7 @@ EntityPtr EntityFactory::createSun() const
 	osg::ref_ptr<osg::BlendFunc> blendFunc = new osg::BlendFunc;
 	ss->setAttributeAndModes(blendFunc);
 
-	EntityPtr object(new Entity());
+	EntityPtr object(new Entity(generateNextEntityId()));
 	object->addComponent(std::make_shared<Node>());
 
 	float diameterScale = 1.15f; // account for disk in texture being slightly smaller than texture size
@@ -797,7 +797,7 @@ EntityPtr EntityFactory::createMoon() const
 	osg::Uniform* moonPhaseUniform = new osg::Uniform("moonPhase", 0.5f);
 	ss->addUniform(moonPhaseUniform);
 
-	EntityPtr object(new Entity());
+	EntityPtr object(new Entity(generateNextEntityId()));
 	object->addComponent(std::make_shared<Node>());
 
 	vis::RootNodePtr node(new vis::CameraRelativeBillboard(ss, moonDiameter, moonDiameter, moonDistance));
@@ -822,7 +822,7 @@ EntityPtr EntityFactory::createStars() const
 
 	auto calcStarfieldEclipticPosition = [](double julianDate) { return LatLon(0, 0); };
 
-	EntityPtr object(new Entity());
+	EntityPtr object(new Entity(generateNextEntityId()));
 	object->addComponent(std::make_shared<Node>());
 
 	SimVisBindingsComponentPtr simVisBindingComponent(new SimVisBindingsComponent);
@@ -844,7 +844,7 @@ EntityPtr EntityFactory::createPolyline() const
 
 	vis::PolylinePtr polyline(new vis::Polyline(params));
 
-	EntityPtr object(new Entity());
+	EntityPtr object(new Entity(generateNextEntityId()));
 	object->addComponent(std::make_shared<Node>());
 
 	SimVisBindingsComponentPtr simVisBindingComponent(new SimVisBindingsComponent);
@@ -872,3 +872,8 @@ std::string EntityFactory::createUniqueObjectName(const std::string& baseName) c
 	throw skybolt::Exception("Could not create unique object name from base name: " + baseName);
 }
 
+sim::EntityId EntityFactory::generateNextEntityId() const
+{
+	++mNextEntityId.entityId;
+	return mNextEntityId;
+}

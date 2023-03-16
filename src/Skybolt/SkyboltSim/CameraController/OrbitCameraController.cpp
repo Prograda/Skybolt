@@ -54,12 +54,15 @@ static Quaternion safeSlerp(const Quaternion& a, const Quaternion& b, double t)
 
 void OrbitCameraController::updatePostDynamicsSubstep(TimeReal dtSubstep)
 {
-	Quaternion orientation = *getOrientation(*mTarget);
-	if (mSmoothedTargetOrientation)
+	if (mTarget)
 	{
-		orientation = safeSlerp(*mSmoothedTargetOrientation, orientation, (double)calcFirstOrderLagInterpolationFactor(dtSubstep, mLagTimeConstant));
+		Quaternion orientation = *getOrientation(*mTarget);
+		if (mSmoothedTargetOrientation)
+		{
+			orientation = safeSlerp(*mSmoothedTargetOrientation, orientation, (double)calcFirstOrderLagInterpolationFactor(dtSubstep, mLagTimeConstant));
+		}
+		mSmoothedTargetOrientation = orientation;
 	}
-	mSmoothedTargetOrientation = orientation;
 }
 
 void OrbitCameraController::update(float dt)

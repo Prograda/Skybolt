@@ -90,7 +90,7 @@ protected:
 
 	virtual void update();
 
-	virtual void setSelectedEntity(std::weak_ptr<skybolt::sim::Entity> entity);
+	virtual void setSelectedEntity(skybolt::sim::EntityId entityId);
 	virtual void setPropertiesModel(PropertiesModelPtr properties);
 
 private:
@@ -163,5 +163,5 @@ private:
 	ViewportClickHandler mViewportClickHandler = getDefaultViewportClickHandler();
 	osg::ref_ptr<skybolt::vis::RenderOperation> mRenderOperationVisualization;
 
-	std::weak_ptr<skybolt::sim::Entity> mSelectedEntity;
+	skybolt::sim::EntityId mSelectedEntityId = skybolt::sim::nullEntityId();
 };

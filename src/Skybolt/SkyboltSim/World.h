@@ -39,8 +39,13 @@ public:
 	typedef std::vector<EntityPtr> Entities;
 	inline const Entities &getEntities() const { return mEntities; }
 
+	//! @return null if entity not found
+	Entity* getEntityById(EntityId id) const;
+
 private:
 	Entities mEntities;
+	std::map<EntityId, EntityPtr> mIdToEntityMap;
+
 	bool mDestructing = false;
 };
 

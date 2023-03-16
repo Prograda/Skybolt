@@ -68,11 +68,6 @@ osgViewer::ViewerBase& VisRoot::getViewer() const
 	return *mViewer;
 }
 
-std::weak_ptr<osgViewer::ViewerBase> VisRoot::getViewerPtr() const
-{
-	return mViewer;
-}
-
 void VisRoot::addWindow(const WindowPtr& window)
 {
 	assert(!VectorUtility::findFirst(mWindows, window));

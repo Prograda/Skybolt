@@ -25,7 +25,7 @@ TreeItem* TreeItemModel::getTreeItem(const QModelIndex &index) const
 
 void TreeItemModel::addChildren(TreeItem& item, const std::vector<TreeItemPtr>& children)
 {
-	insertChildren(item, item.mChildren.size(), children);
+	insertChildren(item, int(item.mChildren.size()), children);
 }
 
 void TreeItemModel::insertChildren(TreeItem& item, int position, const std::vector<TreeItemPtr>& children)
