@@ -197,10 +197,10 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 					}
 					return image;
 				});
-			}
-			if (!images->attributeMapImage->image)
-			{
-				images->attributeMapImage = std::nullopt;
+				if (!images->attributeMapImage->image)
+				{
+					images->attributeMapImage = std::nullopt;
+				}
 			}
 		}
 		else if (!images->attributeMapImage && false) // Experimental. If enabled, attribute map will be generated from the albedo map, otherwise no attributes will be used.
