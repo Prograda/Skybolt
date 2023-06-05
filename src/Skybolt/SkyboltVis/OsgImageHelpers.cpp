@@ -71,19 +71,26 @@ GLuint toSrgbInternalFormat(GLuint format)
 	case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
 	case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT:
 		return GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
+	case 0:
+		return 0;
+	case 1: // Prior to OpenGL 3.0, the number of components could be specified explicitly with values 1,2,3,4
+	case GL_LUMINANCE:
+	case GL_LUMINANCE8:
+		return GL_SLUMINANCE8;
+	case 2:
+	case GL_LUMINANCE_ALPHA:
+	case GL_LUMINANCE8_ALPHA8:
+		return GL_SLUMINANCE8_ALPHA8;
+	case 3:
 	case GL_RGB:
 	case GL_RGB8:
 	case GL_SRGB8:
 		return GL_SRGB8;
+	case 4:
 	case GL_RGBA:
 	case GL_RGBA8:
 	case GL_SRGB8_ALPHA8:
 		return GL_SRGB8_ALPHA8;
-	case GL_LUMINANCE:
-	case GL_LUMINANCE8:
-		return GL_SLUMINANCE8;
-	case 0:
-		return 0;
 	default:
 		assert(!"Not implemented");
 	}
