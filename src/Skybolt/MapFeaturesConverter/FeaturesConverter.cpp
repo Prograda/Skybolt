@@ -9,7 +9,7 @@
 #include <SkyboltVis/Renderable/Planet/Features/PlanetFeaturesHelpers.h>
 #include <SkyboltCommon/Exception.h>
 #include <SkyboltCommon/Math/MathUtility.h>
-#include <readosm/readosm.h>
+#include <readosm.h>
 #include <sstream>
 #include <map>
 #include <set>

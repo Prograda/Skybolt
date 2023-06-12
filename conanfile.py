@@ -9,6 +9,7 @@ class SkyboltConan(ConanFile):
         "enable_bullet": [True, False],
         "enable_cigi": [True, False],
         "enable_fft_ocean": [True, False],
+        "enable_map_features_converter": [True, False],
         "enable_python": [True, False],
         "enable_sprocket": [True, False],
         "shared": [True, False],
@@ -19,6 +20,7 @@ class SkyboltConan(ConanFile):
         "enable_bullet": False,
         "enable_cigi": False,
         "enable_fft_ocean": True,
+        "enable_map_features_converter": True,
         "enable_python": False,
         "enable_sprocket": False,
         "qt:shared": True, # Use shared Qt to avoid Qt's LGPL viral static linking
@@ -75,6 +77,9 @@ class SkyboltConan(ConanFile):
             self.include_package("mufft", "1.0.0")
             self.include_package("xsimd", "7.4.10")
 
+        if self.options.enable_map_features_converter:
+            self.requires("readosm/1.1.0a@_/_")
+
         if self.options.enable_python:
             self.requires("pybind11/2.9.1@_/_")
             
@@ -103,6 +108,9 @@ class SkyboltConan(ConanFile):
 
         if self.options.enable_fft_ocean:
             cmake.definitions["BUILD_FFT_OCEAN_PLUGIN"] = "true"
+
+        if self.options.enable_map_features_converter:
+            cmake.definitions["BUILD_MAP_FEATURES_CONVERTER"] = "true"
 
         if self.options.enable_python:
             cmake.definitions["BUILD_PYTHON_BINDINGS"] = "true"
