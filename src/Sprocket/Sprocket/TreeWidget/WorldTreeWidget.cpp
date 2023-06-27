@@ -187,7 +187,6 @@ WorldTreeWidget::WorldTreeWidget(const WorldTreeWidgetConfig& config) :
 	mContextActions(config.contextActions),
 	mItemTypes(config.itemTypes)
 {
-	assert(!mItemTypes.empty());
 	setLayout(new QVBoxLayout);
 
 	QToolBar* toolbar = new QToolBar();
