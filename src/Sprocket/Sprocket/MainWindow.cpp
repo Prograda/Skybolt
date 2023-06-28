@@ -1374,25 +1374,27 @@ void MainWindow::onViewportMouseDown(Qt::MouseButton button, const QPointF& posi
 
 void MainWindow::showContextMenu(const QPoint& point)
 {
-   QMenu contextMenu(tr("Context menu"), this);
+	QMenu contextMenu(tr("Context menu"), this);
+	if (auto intersection = pickPointOnPlanetAtPointInWindow(point); intersection)
+	{
+		ActionContext context;
+		context.entity = mSelectedEntity.lock().get();
+		context.point = *intersection;
 
-   if (auto intersection = pickPointOnPlanetAtPointInWindow(point); intersection)
-   {
-	   ActionContext context;
-	   context.entity = mSelectedEntity.lock().get();
-	   context.point = *intersection;
-
-	   for (const auto& contextAction : mContextActions)
-	   {
-		   if (contextAction->handles(context))
-		   {
+		for (const auto& contextAction : mContextActions)
+		{
+			if (contextAction->handles(context))
+			{
 				auto action = new QAction(QString::fromStdString(contextAction->getName()), this);
 				connect(action, &QAction::triggered, this, [&] { contextAction->execute(context); });
 				contextMenu.addAction(action);
-		   }
-	   }
-	   contextMenu.exec(mOsgWidget->mapToGlobal(point));
-   }
+			}
+		}
+		if (!contextMenu.actions().empty())
+		{
+			contextMenu.exec(mOsgWidget->mapToGlobal(point));
+		}
+	}
 }
 
 void MainWindow::addToolWindow(const QString& windowName, QWidget* window)
