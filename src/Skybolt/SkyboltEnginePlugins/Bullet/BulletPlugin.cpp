@@ -16,6 +16,7 @@
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/Components/ControlInputsComponent.h>
 #include <SkyboltSim/Components/Node.h>
+#include <SkyboltSim/Components/OceanComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/JsonHelpers.h>
 #include <SkyboltSim/System/System.h>
@@ -54,7 +55,7 @@ public:
 	std::shared_ptr<AsyncPlanetAltitudeProvider> mProvider;
 };
 
-static btCollisionShape* loadPlanetCollisionShape(const PlanetComponent& planet)
+static btCollisionShape* loadPlanetCollisionShape(const PlanetComponent& planet, const OceanComponent* ocean = nullptr)
 {
 	// TODO: dispose of the shapes
 	btCompoundShape* compoundShape = new btCompoundShape();
@@ -65,7 +66,7 @@ static btCollisionShape* loadPlanetCollisionShape(const PlanetComponent& planet)
 		compoundShape->addChildShape(btTransform::getIdentity(), shape);
 	}
 
-	if (planet.hasOcean)
+	if (ocean)
 	{
 		// Add sphere to provide collision detection against ocean
 		compoundShape->addChildShape(btTransform::getIdentity(), new btSphereShape(planet.radius));
@@ -139,7 +140,8 @@ public:
 		(*mComponentFactoryRegistry)[planetKinematicBodyComponentName] = std::make_shared<ComponentFactoryFunctionAdapter>([this](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) {
 			auto node = entity->getFirstComponentRequired<Node>().get();
 			auto planet = entity->getFirstComponentRequired<PlanetComponent>().get();
-			btCollisionShape* shape = loadPlanetCollisionShape(*planet);
+			auto ocean = entity->getFirstComponent<OceanComponent>().get();
+			btCollisionShape* shape = loadPlanetCollisionShape(*planet, ocean);
 			return std::make_shared<KinematicBody>(mBulletWorld.get(), node, shape, CollisionGroupMasks::terrain);
 		});
 

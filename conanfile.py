@@ -42,6 +42,7 @@ class SkyboltConan(ConanFile):
         "earcut/2.2.3@_/_",
         "glm/0.9.9.8@_/_",
         "nlohmann_json/3.10.5@_/_",
+		"rttr/0.9.6@_/_",
         "zlib/1.2.13@_/_", # Indirect dependency. Specified to resolve version clash between qt and openscenegraph.
         "libjpeg/9e@_/_", # Indirect dependency. Specified to resolve version clash between qt and openscenegraph.
         "zstd/1.5.4" # Indirect dependency. Specified to resolve version clash between libtiff and libmysqlclient.

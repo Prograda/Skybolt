@@ -53,7 +53,7 @@ protected:
 
 struct SimVisBindingsComponent : public sim::Component
 {
-	std::vector <SimVisBindingPtr> bindings;
+	std::vector<SimVisBindingPtr> bindings;
 };
 
 typedef std::shared_ptr<SimVisBindingsComponent> SimVisBindingsComponentPtr;

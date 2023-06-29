@@ -6,34 +6,22 @@
 
 #pragma once
 
-#include "Sprocket/PropertyEditor.h"
+#include "Sprocket/Property/PropertyModel.h"
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltSim/Entity.h>
-#include <SkyboltVis/SkyboltVisFwd.h>
-#include <SkyboltCommon/Updatable.h>
 
-class EntityPropertiesModel : public PropertiesModel, public skybolt::Updatable, public skybolt::sim::EntityListener
+class EntityPropertiesModel : public PropertiesModel, public skybolt::sim::EntityListener
 {
 public:
 	EntityPropertiesModel(skybolt::sim::Entity* entity = nullptr);
 	~EntityPropertiesModel();
 
-	void update() override;
 	void setEntity(skybolt::sim::Entity* entity);
 
 private:
 	void onDestroy(skybolt::sim::Entity* entity) override;
 
 private:
-	void addLayerProperties(const skybolt::vis::PlanetTileSources& config, const std::string& name);
-
-	typedef std::function<void(QtProperty&)> PropertyUpdater;
-	typedef std::function<void(QtProperty&)> PropertyApplier;
-	void addProperty(const QtPropertyPtr& property, PropertyUpdater updater);
-	void addProperty(const QtPropertyPtr& property, PropertyUpdater updater, PropertyApplier applier);
-
-private:
 	skybolt::sim::Entity* mEntity;
-	std::map<QtPropertyPtr, PropertyUpdater> mPropertyUpdaters;
-	std::map<QtPropertyPtr, PropertyApplier> mPropertyAppliers;
+	bool mCurrentlyUpdating = false;
 };

@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-
 #pragma once
 
 #include "SkyboltSim/Component.h"
+#include "SkyboltSim/Reflection.h"
 
 namespace skybolt {
 namespace sim {
@@ -23,13 +23,20 @@ struct CameraState
 
 class CameraComponent : public Component
 {
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(Component)
 public:
 	const CameraState &getState() const {return mState;}
 	CameraState &getState() { return mState; }
 
+	// Conveniance methods
+	float getFovY() { return mState.fovY; }
+	void setFovY(float v) { mState.fovY = v; }
+
 private:
 	CameraState mState;
 };
+
+SKYBOLT_REFLECT_EXTERN(CameraComponent)
 
 } // namespace sim
 } // namespace skybolt

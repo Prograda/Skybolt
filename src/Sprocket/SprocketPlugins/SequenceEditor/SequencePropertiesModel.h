@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Sprocket/PropertyEditor.h>
+#include <Sprocket/Property/PropertyEditor.h>
 #include <SkyboltEngine/Sequence/SequenceController.h>
 
 struct SequenceProperty : public QtProperty

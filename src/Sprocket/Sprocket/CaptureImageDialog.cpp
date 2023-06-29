@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "CaptureImageDailog.h"
-#include "PropertyEditor.h"
+#include "Property/PropertyEditor.h"
 #include "QDialogHelpers.h"
 
 #include <QProgressDialog>

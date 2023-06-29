@@ -23,6 +23,7 @@ class BulletWorld;
 
 class BulletDynamicBodyComponent : public DynamicBodyComponent
 {
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(DynamicBodyComponent);
 public:
 	BulletDynamicBodyComponent(BulletWorld* world, Node* node, Real mass, const btVector3 &momentOfInertia, btCollisionShape* shape,
 		const btVector3 &velocity, int collisionGroupMask, int collisionFilterMask);

@@ -28,6 +28,7 @@
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/Node.h>
+#include <SkyboltSim/Components/OceanComponent.h>
 #include <SkyboltSim/Components/ParticleSystemComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/Components/PropellerComponent.h>
@@ -575,6 +576,21 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 
 	entity->addComponent(simVisBindingComponent);
 
+	entity->addComponent(visObjectsComponent);
+	visObjectsComponent->addObject(visObject);
+
+	{
+		auto altitudeProvider = config.planetTileSources ? std::make_shared<vis::TileAsyncPlanetAltitudeProvider>(context.scheduler, config.planetTileSources->elevation, elevationMaxLodLevel) : nullptr;
+		auto planetComponent = std::make_shared<PlanetComponent>(planetRadius, altitudeProvider);
+		planetComponent->atmosphere = config.atmosphereConfig ? std::optional<Atmosphere>(createEarthAtmosphere()) : std::nullopt; // TODO: use planet specific atmospheric parameters
+		entity->addComponent(planetComponent);
+	}
+
+	if (hasOcean)
+	{
+		entity->addComponent(std::make_shared<OceanComponent>());
+	}
+
 	SimVisBindingPtr simVis(new PlanetVisBinding(context.julianDateProvider, entity, visObject));
 	simVisBindingComponent->bindings.push_back(simVis);
 
@@ -583,14 +599,6 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 		auto binding = std::make_shared<WakeBinding>(context.simWorld, visObject->getWaterMaterial());
 		simVisBindingComponent->bindings.push_back(binding);
 	}
-
-	entity->addComponent(visObjectsComponent);
-	visObjectsComponent->addObject(visObject);
-
-	auto altitudeProvider = config.planetTileSources ? std::make_shared<vis::TileAsyncPlanetAltitudeProvider>(context.scheduler, config.planetTileSources->elevation, elevationMaxLodLevel) : nullptr;
-	auto planetComponent = std::make_shared<PlanetComponent>(planetRadius, hasOcean, altitudeProvider);
-	planetComponent->atmosphere = config.atmosphereConfig ? std::optional<Atmosphere>(createEarthAtmosphere()) : std::nullopt; // TODO: use planet specific atmospheric parameters
-	entity->addComponent(planetComponent);
 
 	entity->addComponent(ComponentPtr(new NameComponent("Earth", context.namedObjectRegistry, entity)));
 

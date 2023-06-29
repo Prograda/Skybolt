@@ -6,11 +6,14 @@ include_directories("../")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
+
+find_package(rttr REQUIRED)
+
 set(LIBRARIES
+	RTTR::Core_Lib
 	SkyboltCommon
 )
-
-add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 
 target_link_libraries(${LIB_NAME} ${LIBRARIES})
 

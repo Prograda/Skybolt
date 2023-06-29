@@ -6,8 +6,10 @@
 
 #pragma once
 
-#include "SprocketFwd.h"
-#include "TableRecord.h"
+#include "Sprocket/SprocketFwd.h"
+#include "Sprocket/TableRecord.h"
+#include <SkyboltCommon/Updatable.h>
+
 #include <QWidget>
 #include <memory>
 #include <typeindex>
@@ -81,7 +83,7 @@ typedef std::shared_ptr<VariantProperty> VariantPropertyPtr;
 typedef std::shared_ptr<EnumProperty> EnumPropertyPtr;
 typedef std::shared_ptr<TableProperty> TablePropertyPtr;
 
-class PropertiesModel : public QObject
+class PropertiesModel : public QObject, public skybolt::Updatable
 {
 	Q_OBJECT
 public:
@@ -89,7 +91,16 @@ public:
 	PropertiesModel(const std::vector<QtPropertyPtr>& properties);
 	~PropertiesModel() {}
 
+	void update() override;
+
 	virtual std::vector<QtPropertyPtr> getProperties() const { return mProperties; }
+
+	using QtPropertyUpdater = std::function<void(QtProperty&)> ;
+	using QtPropertyApplier = std::function<void(const QtProperty&)>;
+
+	//! @param updater is regularly called update the value of QtProperty from an external model
+	//! @param applier is called when a QtProperty value should be applied to an external model (e.g. if the user pressent 'Enter' key in a text box
+	void addProperty(const QtPropertyPtr& property, QtPropertyUpdater updater = nullptr, QtPropertyApplier applier = nullptr);
 
 	static VariantPropertyPtr createVariantProperty(const QString& name, const QVariant& value);
 	static EnumPropertyPtr createEnumProperty(const QString& name, const QStringList& values, int value = 0);
@@ -100,28 +111,6 @@ signals:
 
 protected:
 	std::vector<QtPropertyPtr> mProperties;
-};
-
-using PropertyEditorWidgetFactory = std::function<QWidget*(QtProperty& property)>;
-using PropertyEditorWidgetFactoryMap = std::map<std::type_index, PropertyEditorWidgetFactory>;
-
-class PropertyEditor : public QWidget
-{
-	Q_OBJECT
-public:
-	PropertyEditor(const PropertyEditorWidgetFactoryMap& factoryMap, QWidget* parent = nullptr);
-
-	void setModel(const PropertiesModelPtr& model);
-
-private slots:
-	void modelReset(PropertiesModel* model);
-
-private:
-	QWidget* createEditorInEnabledState(QtProperty& property);
-	QWidget* createEditor(QtProperty& property);
-
-private:
-	PropertiesModelPtr mModel;
-	QGridLayout* mGridLayout;
-	PropertyEditorWidgetFactoryMap mFactoryMap;
+	std::map<QtPropertyPtr, QtPropertyUpdater> mPropertyUpdaters;
+	bool mCurrentlyUpdating = false;
 };

@@ -5,7 +5,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "PlanetVisBinding.h"
+#include <SkyboltSim/Entity.h>
+#include <SkyboltSim/Components/OceanComponent.h>
 #include <SkyboltVis/Renderable/Planet/Planet.h>
+#include <SkyboltVis/Renderable/Water/WaterMaterial.h>
 
 namespace skybolt {
 
@@ -18,7 +21,16 @@ void PlanetVisBinding::syncVis(const GeocentricToNedConverter& converter)
 {
 	SimpleSimVisBinding::syncVis(converter);
 
-	static_cast<vis::Planet*>(mVisObjects.front().object.get())->setJulianDate(mDateProvider());
+	auto visPlanet = static_cast<vis::Planet*>(mVisObjects.front().object.get());
+	visPlanet->setJulianDate(mDateProvider());
+
+	if (auto ocean = mEntity->getFirstComponent<sim::OceanComponent>(); ocean)
+	{
+		if (const auto& material = visPlanet->getWaterMaterial(); material)
+		{
+			material->setWaveHeight(ocean->waveHeight);
+		}
+	}
 }
 
 } // namespace skybolt

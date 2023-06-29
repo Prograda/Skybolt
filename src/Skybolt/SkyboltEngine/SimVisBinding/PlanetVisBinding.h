@@ -7,6 +7,7 @@
 #pragma once
 
 #include "SimVisBinding.h"
+#include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltVis/SkyboltVisFwd.h>
 
 namespace skybolt {

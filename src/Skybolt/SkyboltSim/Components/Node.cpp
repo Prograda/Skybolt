@@ -8,7 +8,14 @@
 #include "Node.h"
 #include "SkyboltSim/Entity.h"
 
-using namespace skybolt::sim;
+namespace skybolt::sim {
+
+SKYBOLT_REFLECT(Node)
+{
+	rttr::registration::class_<Node>("Node")
+		.property("position", &Node::_getPositionConstRef, &Node::setPosition)
+		.property("orientation", &Node::_getOrientationConstRef, &Node::setOrientation);
+}
 
 Node::Node(const Vector3 &localPosition, const Quaternion &localOrientation) :
 	mPosition(localPosition),
@@ -29,3 +36,5 @@ void Node::setOrientation(const Quaternion &orientation)
 {
 	mOrientation = orientation;
 }
+
+} // namespace skybolt::sim

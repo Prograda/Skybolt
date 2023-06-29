@@ -11,21 +11,23 @@
 #include <SkyboltSim/Physics/Atmosphere.h>
 #include "SkyboltSim/SkyboltSimFwd.h"
 
+#include <variant>
+
 namespace skybolt {
 namespace sim {
 
-struct PlanetComponent : public sim::Component
+struct PlanetComponent : public Component
 {
-	PlanetComponent(double radius, bool hasOcean, const std::shared_ptr<AsyncPlanetAltitudeProvider>& altitudeProvider) :
+public:
+	PlanetComponent(double radius, const std::shared_ptr<AsyncPlanetAltitudeProvider>& altitudeProvider) :
 		radius(radius),
-		hasOcean(hasOcean),
 		altitudeProvider(altitudeProvider)
 	{
 	}
 
 	const double radius;
-	const bool hasOcean;
 	const std::shared_ptr<AsyncPlanetAltitudeProvider> altitudeProvider; //!< Null if the planet has no terrain
+	
 	std::optional<Atmosphere> atmosphere;
 };
 

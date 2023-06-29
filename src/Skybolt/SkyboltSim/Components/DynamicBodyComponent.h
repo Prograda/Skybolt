@@ -29,6 +29,7 @@ struct AppliedForce
 // Emits CollisionEvent upon collision
 class DynamicBodyComponent : public Component
 {
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(Component);
 public:
 	virtual void setLinearVelocity(const Vector3& v) = 0;
 	virtual Vector3 getLinearVelocity() const = 0;
@@ -62,6 +63,8 @@ public:
 protected:
 	std::vector<AppliedForce> mForces;
 };
+
+SKYBOLT_REFLECT_EXTERN(DynamicBodyComponent)
 
 } // namespace sim
 } // namespace skybolt

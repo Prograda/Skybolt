@@ -9,14 +9,14 @@
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltEngine/Scenario/Scenario.h>
 
-#include "PropertyEditor.h"
+#include "Sprocket/Property/PropertyModel.h"
 
 class ScenarioPropertiesModel : public PropertiesModel
 {
 public:
 	ScenarioPropertiesModel(skybolt::Scenario* scenario);
 
-	void update();
+	void update() override;
 
 private:
 	skybolt::Scenario* mScenario;

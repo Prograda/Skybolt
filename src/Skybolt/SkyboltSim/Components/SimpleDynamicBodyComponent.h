@@ -13,6 +13,7 @@ namespace sim {
 
 class SimpleDynamicBodyComponent : public DynamicBodyComponent
 {
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(DynamicBodyComponent);
 public:
 	SimpleDynamicBodyComponent(Node* node, Real mass, const Vector3& momentofInertia);
 	void setLinearVelocity(const Vector3& v) override { mLinearVelocity = v; }
