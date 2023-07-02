@@ -62,8 +62,11 @@ private:
 class MyCigiCamera : public CigiCamera
 {
 public:
-	MyCigiCamera(const sim::EntityPtr& entity) : mEntity(entity)
+	MyCigiCamera(const sim::World* world, const sim::EntityPtr& entity) :
+		mWorld(world),
+		mEntity(entity)
 	{
+		assert(mWorld);
 		mCameraComponent = mEntity->getFirstComponent<sim::CameraComponent>();
 	}
 
@@ -73,14 +76,14 @@ public:
 		{
 			if (parent)
 			{
-				auto targetEntity = static_cast<MyCigiEntity*>(parent.get())->mEntity;
+				auto parentEntity = static_cast<MyCigiEntity*>(parent.get())->mEntity;
 
 				AttachmentParams params;
 				params.positionRelBody = math::dvec3Zero();
 				params.orientationRelBody = math::dquatIdentity();
 
-				mAttachmentComponent = std::make_shared<AttachmentComponent>(params, mEntity.get());
-				mAttachmentComponent->resetTarget(targetEntity.get());
+				mAttachmentComponent = std::make_shared<AttachmentComponent>(params, mWorld, mEntity.get());
+				mAttachmentComponent->setParentEntityId(parentEntity->getId());
 				mEntity->addComponent(mAttachmentComponent);
 			}
 			else
@@ -111,6 +114,7 @@ public:
 		mCameraComponent->getState().fovY = fov;
 	}
 
+	const sim::World* mWorld;
 	sim::EntityPtr mEntity;
 	CigiEntityPtr mParent;
 	std::shared_ptr<sim::CameraComponent> mCameraComponent;
@@ -158,7 +162,7 @@ public:
 		entity->addComponent(std::make_shared<ParentReferenceComponent>(mCigiGatewayEntity));
 		entity->addComponent(std::make_shared<ProceduralLifetimeComponent>());
 		mEngineRoot->scenario->world.addEntity(entity);
-		return std::make_shared<MyCigiCamera>(entity);
+		return std::make_shared<MyCigiCamera>(&mEngineRoot->scenario->world, entity);
 	}
 
 	void destroyCamera(const CigiCameraPtr& cigiCamera) override

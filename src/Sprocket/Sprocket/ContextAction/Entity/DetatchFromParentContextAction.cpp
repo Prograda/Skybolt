@@ -5,26 +5,20 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "DetatchFromParentContextAction.h"
-#include <SkyboltEngine/TemplateNameComponent.h>
 #include <SkyboltSim/Components/AttachmentComponent.h>
-#include <SkyboltSim/Components/ParentReferenceComponent.h>
 
 using namespace skybolt;
 using namespace skybolt::sim;
 
 bool DetatchFromParentContextAction::handles(const Entity& entity) const
 {
-	auto templateNameComponent = entity.getFirstComponent<TemplateNameComponent>();
-	if (templateNameComponent)
-	{
-		return getParentAttachment(entity) != nullptr;
-	}
-	return false;
+	auto templateNameComponent = entity.getFirstComponent<AttachmentComponent>();
+	return  templateNameComponent && templateNameComponent->getParentEntityId() != nullEntityId();
 }
 
 void DetatchFromParentContextAction::execute(Entity& entity) const
 {
-	AttachmentComponentPtr attachment = getParentAttachment(entity);
+	AttachmentComponentPtr attachment = entity.getFirstComponent<AttachmentComponent>();
 	assert(attachment);
-	attachment->resetTarget(nullptr);
+	entity.removeComponent(attachment);
 }

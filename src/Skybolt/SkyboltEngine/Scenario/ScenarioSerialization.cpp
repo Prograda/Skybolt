@@ -111,33 +111,6 @@ static Entity* findObjectInWorld(const World& world, const std::string& name)
 	return nullptr;
 }
 
-static sim::AttachmentComponent* findFreeAttachmentAcceptingEntityTemplate(const Entity& entity, const std::string& templateName)
-{
-	for (auto component : entity.getComponentsOfType<sim::AttachmentComponent>())
-	{
-		if (!component->getTarget() && component->getEntityTemplate() == templateName)
-		{
-			return component.get();
-		}
-	}
-	return nullptr;
-}
-
-static void findAndAttachEntityByName(const Entity& parent, const World& world, const std::string& name)
-{
-	Entity* target = findObjectInWorld(world, name);
-	if (target)
-	{
-		if (auto templateNameComponent = target->getFirstComponent<TemplateNameComponent>())
-		{
-			if (AttachmentComponent* attachment = findFreeAttachmentAcceptingEntityTemplate(parent, templateNameComponent->name))
-			{
-				attachment->resetTarget(target);
-			}
-		}
-	}
-}
-
 static sim::EntityPtr loadEntity(World& world, EntityFactory& factory, const std::string& name, const nlohmann::json& json)
 {
 	std::string templateName = json.at("template");
@@ -174,15 +147,6 @@ static void loadEntityComponents(World& world, sim::Entity& entity, const nlohma
 		}
 	}
 
-	if (auto i = json.find("attachments"); i != json.end())
-	{
-		skybolt::StringVector attachments = loadEntityAttachments(i.value());
-		for (const std::string& name : attachments)
-		{
-			findAndAttachEntityByName(entity, world, name);
-		}
-	}
-
 	if (vis::Planet* planet = getFirstVisObject<vis::Planet>(entity).get(); planet)
 	{
 		ifChildExists(json, "planet", [&] (const nlohmann::json& j) {
@@ -212,19 +176,6 @@ void loadEntities(World& world, EntityFactory& factory, const nlohmann::json& js
 		loadEntityComponents(world, *entities[i], entity);
 		++i;
 	}
-}
-
-static nlohmann::json saveEntityAttachments(const Entity& entity)
-{
-	nlohmann::json json;
-	for (auto attachment : entity.getComponentsOfType<AttachmentComponent>())
-	{
-		if (Entity* target = attachment->getTarget())
-		{
-			json.push_back(getName(*target));
-		}
-	}
-	return json;
 }
 
 static std::string getName(const sim::CameraController& controller, const CameraModes& mCameraModes)
@@ -287,7 +238,6 @@ static nlohmann::json saveEntity(const Entity& entity, const std::string& templa
 	nlohmann::json json;
 	json["template"] = templateName;
 	json["dynamicsEnabled"] = entity.isDynamicsEnabled();
-	writeIfNotEmpty(json, "attachments", saveEntityAttachments(entity));
 
 	auto position = getPosition(entity);
 	if (position)

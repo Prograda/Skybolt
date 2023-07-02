@@ -208,11 +208,10 @@ static sim::ComponentPtr loadDynamicBody(Entity* entity, const ComponentFactoryC
 static sim::ComponentPtr loadAttachment(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	sim::AttachmentParams params;
-	params.entityTemplate = json.at("entityTemplate").get<std::string>();
 	params.positionRelBody = readVector3(json.at("positionRelBody"));
 	params.orientationRelBody = readOptionalQuaternion(json, "orientationRelBody");
 
-	return std::make_shared<AttachmentComponent>(params, entity);
+	return std::make_shared<AttachmentComponent>(params, context.simWorld, entity);
 }
 
 static sim::ComponentPtr loadCamera(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)

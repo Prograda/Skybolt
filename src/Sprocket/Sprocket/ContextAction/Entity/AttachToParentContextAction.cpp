@@ -6,11 +6,10 @@
 
 #include "AttachToParentContextAction.h"
 #include "Sprocket/QtUtil/QtDialogUtil.h"
-#include <SkyboltEngine/TemplateNameComponent.h>
+#include <SkyboltSim/World.h>
 #include <SkyboltSim/Components/AttachmentComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
-#include <SkyboltSim/Components/ParentReferenceComponent.h>
-#include <SkyboltSim/World.h>
+#include <SkyboltCommon/Math/MathUtility.h>
 
 #include <QComboBox>
 
@@ -19,31 +18,21 @@ using namespace skybolt::sim;
 
 bool AttachToParentContextAction::handles(const Entity& entity) const
 {
-	auto templateNameComponent = entity.getFirstComponent<TemplateNameComponent>();
-	if (templateNameComponent)
-	{
-		return getParentAttachment(entity) == nullptr;
-	}
-	return false;
+	return true;
 }
 
 void AttachToParentContextAction::execute(Entity& entity) const
 {
-	std::string templateName = entity.getFirstComponent<TemplateNameComponent>()->name;
-
 	QComboBox* comboBox = new QComboBox();
-	std::map<QString, AttachmentComponentPtr> candidateAttachments;
+	std::map<QString, EntityId> candidateParentIds;
 	for (const sim::EntityPtr& candidateParent : mWorld->getEntities())
 	{
-		auto components = candidateParent->getComponentsOfType<sim::AttachmentComponent>();
-		for (auto component : components)
+		std::string name = sim::getName(*candidateParent);
+		if (!name.empty() && name != sim::getName(entity))
 		{
-			if (!component->getTarget() && component->getEntityTemplate() == templateName)
-			{
-				QString name = QString::fromStdString(sim::getName(*candidateParent));
-				candidateAttachments[name] = component;
-				comboBox->addItem(name);
-			}
+			QString qtName = QString::fromStdString(name);
+			candidateParentIds[qtName] = candidateParent->getId();
+			comboBox->addItem(qtName);
 		}
 	}
 
@@ -51,11 +40,21 @@ void AttachToParentContextAction::execute(Entity& entity) const
 
 	if (dialog->exec() == QDialog::Accepted)
 	{
-		auto i = candidateAttachments.find(comboBox->currentText());
-		if (i != candidateAttachments.end())
+		auto i = candidateParentIds.find(comboBox->currentText());
+		if (i != candidateParentIds.end())
 		{
-			auto attachment = i->second;
-			attachment->resetTarget(&entity);
+			auto parentEntityId = i->second;
+			sim::AttachmentComponentPtr attachment = entity.getFirstComponent<AttachmentComponent>();
+			if (!attachment)
+			{
+				AttachmentParams params;
+				params.positionRelBody = math::vec3Zero();
+				params.orientationRelBody = math::quatIdentity();
+				attachment = std::make_shared<AttachmentComponent>(params, mWorld, &entity);
+				entity.addComponent(attachment);
+			}
+
+			attachment->setParentEntityId(parentEntityId);
 		}
 	}
 }
