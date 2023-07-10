@@ -14,7 +14,7 @@ namespace sim {
 class AttachmentComponent;
 struct AttachmentPoint;
 class CameraController;
-class CameraControllerSelector;
+class CameraControllerComponent;
 class CameraComponent;
 struct CameraState;
 class Component;
@@ -42,7 +42,7 @@ class World;
 typedef std::shared_ptr<AttachmentComponent> AttachmentComponentPtr;
 typedef std::shared_ptr<AttachmentPoint> AttachmentPointPtr;
 typedef std::shared_ptr<CameraController> CameraControllerPtr;
-typedef std::shared_ptr<CameraControllerSelector> CameraControllerSelectorPtr;
+typedef std::shared_ptr<CameraControllerComponent> CameraControllerComponentPtr;
 typedef std::shared_ptr<Component> ComponentPtr;
 typedef std::shared_ptr<Entity> EntityPtr;
 typedef std::shared_ptr<MainRotorComponent> MainRotorComponentPtr;

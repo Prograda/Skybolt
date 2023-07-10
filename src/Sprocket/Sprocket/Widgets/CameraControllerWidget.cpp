@@ -30,15 +30,6 @@ static bool entityPredicateAlwaysFalse(const sim::Entity& entity)
 	return false;
 }
 
-static sim::CameraControllerSelectorPtr getCameraControllerSelector(const sim::Entity& entity)
-{	
-	if (auto controller = entity.getFirstComponent<sim::CameraControllerComponent>())
-	{
-		return std::dynamic_pointer_cast<sim::CameraControllerSelector>(controller->cameraController);
-	}
-	return nullptr;
-}
-
 CameraControllerWidget::CameraControllerWidget(sim::World* world, QWidget* parent) :
 	mWorld(world),
 	QWidget(parent)
@@ -66,7 +57,7 @@ CameraControllerWidget::CameraControllerWidget(sim::World* world, QWidget* paren
 void CameraControllerWidget::setCamera(sim::Entity* camera)
 {
 	mCamera = camera;
-	sim::CameraControllerSelectorPtr cameraControllerSelector = camera ? getCameraControllerSelector(*camera) : nullptr;
+	sim::CameraControllerComponentPtr cameraController = camera ? camera->getFirstComponent<sim::CameraControllerComponent>() : nullptr;
 
 	// Clear
 	mCameraModeCombo->disconnect();
@@ -74,7 +65,7 @@ void CameraControllerWidget::setCamera(sim::Entity* camera)
 	mCameraModeCombo->clear();
 	mControllerConnections.clear();
 
-	if (!cameraControllerSelector)
+	if (!cameraController)
 	{
 		mCameraModeCombo->setEnabled(false);
 		mCameraTargetCombo->setEnabled(false);
@@ -86,21 +77,21 @@ void CameraControllerWidget::setCamera(sim::Entity* camera)
 	mCameraTargetCombo->setEnabled(true);
 
 	// Mode combo
-	for (const auto& item : cameraControllerSelector->getControllers())
+	for (const auto& item : cameraController->getControllers())
 	{
 		mCameraModeCombo->addItem(QString::fromStdString(item.first));
 	}
 
-	const std::string& currentControllerName = cameraControllerSelector->getSelectedControllerName();
+	const std::string& currentControllerName = cameraController->getSelectedControllerName();
 	mCameraModeCombo->setCurrentText(QString::fromStdString(currentControllerName));
 	updateTargetFilterForControllerName(currentControllerName);
 
 	connect(mCameraModeCombo, &QComboBox::currentTextChanged, [=](const QString& text)
 	{
-		cameraControllerSelector->selectController(text.toStdString());
+		cameraController->selectController(text.toStdString());
 	});
 
-	mControllerConnections.push_back(cameraControllerSelector->controllerSelected.connect([this](const std::string& name) {
+	mControllerConnections.push_back(cameraController->controllerSelected.connect([this](const std::string& name) {
 		mCameraModeCombo->blockSignals(true);
 		mCameraModeCombo->setCurrentText(QString::fromStdString(name));
 		mCameraModeCombo->blockSignals(false);
@@ -109,7 +100,7 @@ void CameraControllerWidget::setCamera(sim::Entity* camera)
 	}));
 
 	// Target combo
-	if (auto target = cameraControllerSelector->getTarget())
+	if (auto target = cameraController->getTarget())
 	{
 		mCameraTargetCombo->setCurrentText(QString::fromStdString(sim::getName(*target)));
 	}
@@ -119,11 +110,11 @@ void CameraControllerWidget::setCamera(sim::Entity* camera)
 		sim::Entity* object = mWorld->findObjectByName(text.toStdString());
 		if (object)
 		{
-			cameraControllerSelector->setTarget(object);
+			cameraController->setTarget(object);
 		}
 	});
 
-	mControllerConnections.push_back(cameraControllerSelector->targetChanged.connect([this](sim::Entity* target) {
+	mControllerConnections.push_back(cameraController->targetChanged.connect([this](sim::Entity* target) {
 		mCameraTargetCombo->blockSignals(true);
 		mCameraTargetCombo->setCurrentText(target ? QString::fromStdString(sim::getName(*target)) : "");
 		mCameraTargetCombo->blockSignals(false);

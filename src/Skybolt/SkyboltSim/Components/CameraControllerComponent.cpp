@@ -12,25 +12,37 @@
 
 #include "CameraControllerComponent.h"
 #include "SkyboltSim/CameraController/CameraController.h"
+#include "SkyboltSim/CameraController/CameraControllerSelector.h"
 #include <assert.h>
 
 namespace skybolt {
 namespace sim {
 
-CameraControllerComponent::CameraControllerComponent(const CameraControllerPtr& cameraController) :
-	cameraController(cameraController)
+SKYBOLT_REFLECT(CameraControllerComponent)
 {
-	assert(cameraController);
+	rttr::registration::class_<CameraControllerComponent>("CameraControllerComponent")
+		.property("selectedController", &CameraControllerComponent::getSelectedControllerName, &CameraControllerComponent::selectController);
+}
+
+CameraControllerComponent::CameraControllerComponent(const ControllersMap& controllers) :
+	CameraControllerSelector(controllers)
+{
 }
 
 void CameraControllerComponent::updatePostDynamicsSubstep(TimeReal dtSubstep)
 {
-	cameraController->updatePostDynamicsSubstep(dtSubstep);
+	if (getSelectedController())
+	{
+		getSelectedController()->updatePostDynamicsSubstep(dtSubstep);
+	}
 }
 
 void CameraControllerComponent::updateAttachments(TimeReal dt, TimeReal dtWallClock)
 {
-	cameraController->update(dtWallClock);
+	if (getSelectedController())
+	{
+		getSelectedController()->update(dtWallClock);
+	}
 }
 
 } // namespace sim

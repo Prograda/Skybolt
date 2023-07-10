@@ -41,7 +41,7 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 		addProperty(createVariantProperty(QLatin1String("name"), QString()), [this](QtProperty& property) {
 			static_cast<VariantProperty&>(property).setValue(QString::fromStdString(getName(*mEntity)));
 		});
-		
+
 		for (const sim::ComponentPtr& component : mEntity->getComponents())
 		{
 			RttrInstanceGetter getter = [component] { return component; };

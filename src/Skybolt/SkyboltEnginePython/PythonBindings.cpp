@@ -281,8 +281,7 @@ PYBIND11_MODULE(skybolt, m) {
 			[](CameraComponent& c, const CameraState& state) { CameraState& s = c.getState(); s = state; },
 			py::return_value_policy::reference_internal);
 
-	py::class_<CameraControllerComponent, std::shared_ptr<CameraControllerComponent>, Component>(m, "CameraControllerComponent")
-		.def_property_readonly("cameraController", [](const CameraControllerComponent& c) { return c.cameraController.get(); }, py::return_value_policy::reference_internal);
+	py::class_<CameraControllerComponent, std::shared_ptr<CameraControllerComponent>, Component, CameraControllerSelector>(m, "CameraControllerComponent");
 
 	py::class_<ProceduralLifetimeComponent, std::shared_ptr<ProceduralLifetimeComponent>, Component>(m, "ProceduralLifetimeComponent")
 		.def(py::init());
@@ -291,9 +290,10 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("getTarget", &CameraController::getTarget)
 		.def("setTarget", &CameraController::setTarget);
 
-	py::class_<CameraControllerSelector, CameraController>(m, "CameraControllerSelector")
+	py::class_<CameraControllerSelector>(m, "CameraControllerSelector")
 		.def("selectController", &CameraControllerSelector::selectController)
-		.def("getSelectedControllerName", &CameraControllerSelector::getSelectedControllerName);
+		.def("getSelectedControllerName", &CameraControllerSelector::getSelectedControllerName)
+		.def("setTarget", &CameraControllerSelector::setTarget);
 
 	py::class_<Entity, std::shared_ptr<Entity>>(m, "Entity")
 		.def("getName", [](Entity* entity) { return getName(*entity); })

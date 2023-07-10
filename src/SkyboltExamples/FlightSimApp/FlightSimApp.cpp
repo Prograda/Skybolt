@@ -75,7 +75,7 @@ static std::vector<LogicalAxisPtr> createHelicopterInputAxesKeyboard(const Input
 class CameraViewSelector : public EventListener
 {
 public:
-	CameraViewSelector(const CameraControllerSelectorPtr& cameraController, const std::shared_ptr<HudSystem>& hudSystem, const std::function<void(bool)>& hudVisibilitySwitch) :
+	CameraViewSelector(const CameraControllerComponentPtr& cameraController, const std::shared_ptr<HudSystem>& hudSystem, const std::function<void(bool)>& hudVisibilitySwitch) :
 		mCameraController(cameraController),
 		mHudSystem(hudSystem),
 		mHudVisibilitySwitch(hudVisibilitySwitch)
@@ -113,7 +113,7 @@ public:
 	}
 
 private:
-	CameraControllerSelectorPtr mCameraController;
+	CameraControllerComponentPtr mCameraController;
 	std::shared_ptr<HudSystem> mHudSystem;
 	std::function<void(bool)> mHudVisibilitySwitch;
 };
@@ -161,8 +161,7 @@ int main(int argc, char *argv[])
 
 		// Configure external view camera controller
 		auto cameraControllerComponent = simCamera->getFirstComponentRequired<CameraControllerComponent>();
-		auto cameraController = std::static_pointer_cast<CameraControllerSelector>(cameraControllerComponent->cameraController);
-		auto orbitController = cameraController->getControllerOfType<OrbitCameraController>();
+		auto orbitController = cameraControllerComponent->getControllerOfType<OrbitCameraController>();
 		orbitController->setLagTimeConstant(0.3);
 		orbitController->setTargetOffset(sim::Vector3(0, 0, -3));
 		orbitController->setZoom(0.8);
@@ -176,15 +175,14 @@ int main(int argc, char *argv[])
 		viewport->setCamera(getVisCamera(*simCamera));
 		visRoot->addWindow(window);
 
-		CameraControllerSelectorPtr cameraController2;
+		CameraControllerComponentPtr cameraControllerComponent2;
 		if (params.count("multiwindow"))
 		{
 			sim::EntityPtr simCamera2 = engineRoot->entityFactory->createEntity("Camera");
 			engineRoot->scenario->world.addEntity(simCamera2);
 			
-			auto cameraControllerComponent2 = simCamera2->getFirstComponentRequired<CameraControllerComponent>();
-			cameraController2 = std::static_pointer_cast<CameraControllerSelector>(cameraControllerComponent2->cameraController);
-			cameraController2->selectController("Follow");
+			cameraControllerComponent2 = simCamera2->getFirstComponentRequired<CameraControllerComponent>();
+			cameraControllerComponent2->selectController("Follow");
 
 			vis::WindowPtr window2 = std::make_unique<vis::StandaloneWindow>(vis::RectI(1080, 0, 1080, 720));
 			osg::ref_ptr<vis::RenderCameraViewport> viewport2 = createAndAddViewportToWindowWithEngine(*window2, *engineRoot);
@@ -217,7 +215,7 @@ int main(int argc, char *argv[])
 			hudSystem->setEnabled(visible);
 		};
 
-		auto cameraViewSelector = std::make_shared<CameraViewSelector>(cameraController, hudSystem, hudVisibilitySwitch);
+		auto cameraViewSelector = std::make_shared<CameraViewSelector>(cameraControllerComponent, hudSystem, hudVisibilitySwitch);
 		inputPlatform->getEventEmitter()->addEventListener<KeyEvent>(cameraViewSelector.get());
 
 		auto helpDisplayToggleEventListener = std::make_shared<HelpDisplayToggleEventListener>(helpDisplay);
@@ -241,11 +239,11 @@ int main(int argc, char *argv[])
 		// Configure systems for player's aircraft
 		entityInputSystem->setEntity(aircraft);
 		hudSystem->setEntity(aircraft.get());
-		cameraController->setTarget(aircraft.get());
+		cameraControllerComponent->setTarget(aircraft.get());
 
-		if (cameraController2)
+		if (cameraControllerComponent2)
 		{
-			cameraController2->setTarget(aircraft.get());
+			cameraControllerComponent2->setTarget(aircraft.get());
 		}
 
 		// Set time of day

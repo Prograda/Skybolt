@@ -8,6 +8,7 @@
 #include "Input/InputPlatform.h"
 #include "Input/LogicalAxis.h"
 #include "SimVisBinding/CameraSimVisBinding.h"
+#include <SkyboltSim/CameraController/CameraControllerSelector.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltVis/Camera.h>
 #include <SkyboltVis/Window/Window.h>
@@ -53,15 +54,13 @@ void CameraInputSystem::updatePostDynamics(const System::StepArgs& args)
 	auto cameraControllerComponent = mCamera->getFirstComponent<sim::CameraControllerComponent>();
 	if (cameraControllerComponent)
 	{
-		cameraControllerComponent->cameraController->setInput(mInput);
+		if (auto controller = cameraControllerComponent->getSelectedController(); controller)
+		{
+			controller->setInput(mInput);
+		}
 	}
 
 	mInput = CameraController::Input::zero();
-
-	if (cameraControllerComponent)
-	{
-		cameraControllerComponent->cameraController->update(args.dtWallClock);
-	}
 }
 
 void CameraInputSystem::setInputEnabled(bool enabled)

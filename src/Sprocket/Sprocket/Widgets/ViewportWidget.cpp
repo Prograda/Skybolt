@@ -130,9 +130,12 @@ void ViewportWidget::update()
 	{
 		simVisSystem->setSceneOriginProvider(SimVisSystem::sceneOriginFromEntity(&mEngineRoot->scenario->world, mCurrentSimCamera->getId()));
 
-		if (auto controller = mCurrentSimCamera->getFirstComponent<sim::CameraControllerComponent>())
+		if (auto controller = mCurrentSimCamera->getFirstComponent<sim::CameraControllerComponent>(); controller)
 		{
-			controller->cameraController->setInput(mViewportInput->getInput());
+			if (controller->getSelectedController())
+			{
+				controller->getSelectedController()->setInput(mViewportInput->getInput());
+			}
 		}
 	}
 }
@@ -284,9 +287,12 @@ void ViewportWidget::setCameraTarget(sim::Entity* target)
 	if (mCurrentSimCamera)
 	{
 		vis::CameraPtr visCamera = getFirstVisCamera(*mCurrentSimCamera);
-		if (auto controller = mCurrentSimCamera->getFirstComponent<sim::CameraControllerComponent>())
+		if (auto controller = mCurrentSimCamera->getFirstComponent<sim::CameraControllerComponent>(); controller)
 		{
-			controller->cameraController->setTarget(target);
+			if (controller->getSelectedController())
+			{
+				controller->getSelectedController()->setTarget(target);
+			}
 		}
 	}
 }

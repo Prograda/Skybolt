@@ -24,6 +24,7 @@
 #include <SkyboltEngine/UpdateLoop/UpdateLoopUtility.h>
 
 #include <SkyboltSim/World.h>
+#include <SkyboltSim/CameraController/CameraControllerSelector.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/System/System.h>
@@ -43,7 +44,7 @@ using namespace skybolt;
 using namespace skybolt::sim;
 using namespace skybolt::vis;
 
-static void createEntities(const EntityFactory& entityFactory, World& world, CameraController& cameraController)
+static void createEntities(const EntityFactory& entityFactory, World& world, CameraControllerSelector& cameraControllerSelector)
 {
 	world.addEntity(entityFactory.createEntity("Stars"));
 	world.addEntity(entityFactory.createEntity("SunBillboard"));
@@ -52,7 +53,7 @@ static void createEntities(const EntityFactory& entityFactory, World& world, Cam
 	EntityPtr planet = entityFactory.createEntity("PlanetEarth");
 	world.addEntity(planet);
 
-	cameraController.setTarget(planet.get());
+	cameraControllerSelector.setTarget(planet.get());
 }
 
 static osg::ref_ptr<HelpDisplayRenderOperation> createHelpDisplay()
@@ -111,7 +112,7 @@ int main(int argc, char *argv[])
 #endif
 
 		// Create entities
-		createEntities(*engineRoot->entityFactory, engineRoot->scenario->world, *simCamera->getFirstComponentRequired<CameraControllerComponent>()->cameraController);
+		createEntities(*engineRoot->entityFactory, engineRoot->scenario->world, *simCamera->getFirstComponentRequired<CameraControllerComponent>());
 
 		// Run loop
 		runMainLoop(*visRoot, *engineRoot, UpdateLoop::neverExit);

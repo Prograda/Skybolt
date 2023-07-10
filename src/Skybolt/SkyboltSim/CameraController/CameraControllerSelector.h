@@ -13,15 +13,15 @@
 namespace skybolt {
 namespace sim {
 
-class CameraControllerSelector : public CameraController
+class CameraControllerSelector
 {
 public:
 	typedef std::map<std::string, CameraControllerPtr> ControllersMap;
-	CameraControllerSelector(sim::Entity* camera, const ControllersMap& controllers);
+	CameraControllerSelector(const ControllersMap& controllers);
 
 	void selectController(const std::string& name);
 	
-	std::string getSelectedControllerName() const
+	const std::string& getSelectedControllerName() const
 	{
 		return mSelectedName;
 	}
@@ -36,10 +36,7 @@ public:
 		return mControllers;
 	}
 
-	void addController(const std::string& name, const CameraControllerPtr& controller)
-	{
-		mControllers[name] = controller;
-	}
+	void addController(const std::string& name, const CameraControllerPtr& controller);
 
 	template <class T>
 	T* getControllerOfType() const
@@ -55,21 +52,17 @@ public:
 		return nullptr;
 	}
 
+	void setTarget(Entity* target);
+	Entity* getTarget() const { return mTarget; }
+
 	boost::signals2::signal<void(const std::string&)> controllerSelected;
 	boost::signals2::signal<void(Entity*)> targetChanged;
-
-public:
-	// CameraController interface
-	void updatePostDynamicsSubstep(float dtSubstep);
-	void update(float dt) override;
-	void setInput(const Input& input) override;
-	Entity* getTarget() const override;
-	void setTarget(Entity* target) override;
 
 private:
 	ControllersMap mControllers;
 	std::string mSelectedName;
 	CameraControllerPtr mSelectedController;
+	Entity* mTarget = nullptr;
 };
 
 } // namespace sim

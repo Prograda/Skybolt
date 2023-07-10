@@ -14,22 +14,23 @@
 #pragma once
 
 #include "SkyboltSim/Component.h"
+#include "SkyboltSim/CameraController/CameraControllerSelector.h"
 #include "SkyboltSim/SkyboltSimFwd.h"
 #include <map>
 
 namespace skybolt {
 namespace sim {
 
-class CameraControllerComponent : public Component
+class CameraControllerComponent : public CameraControllerSelector, public Component
 {
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(Component)
 public:
-	CameraControllerComponent(const CameraControllerPtr& cameraController);
-
+	CameraControllerComponent(const ControllersMap& controllers);
 	void updatePostDynamicsSubstep(TimeReal dtSubstep) override;
 	void updateAttachments(TimeReal dt, TimeReal dtWallClock) override;
-
-	CameraControllerPtr cameraController;
 };
+
+SKYBOLT_REFLECT_EXTERN(CameraControllerComponent)
 
 } // namespace sim
 } // namespace skybolt

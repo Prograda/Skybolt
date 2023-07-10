@@ -269,9 +269,9 @@ static sim::ComponentPtr loadCameraController(Entity* entity, const ComponentFac
 		controllers["Null"] = controller;
 	}
 
-	auto selector = std::make_shared<CameraControllerSelector>(entity, controllers);
-	selector->selectController("Globe");
-	return std::make_shared<CameraControllerComponent>(selector);
+	auto component = std::make_shared<CameraControllerComponent>(controllers);
+	component->selectController("Globe");
+	return component;
 }
 
 static sim::ComponentPtr loadControlInputs(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)

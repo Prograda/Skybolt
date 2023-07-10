@@ -12,8 +12,7 @@
 using namespace skybolt;
 using namespace skybolt::sim;
 
-CameraControllerSelector::CameraControllerSelector(sim::Entity* camera, const ControllersMap& controllers) :
-	CameraController(camera),
+CameraControllerSelector::CameraControllerSelector(const ControllersMap& controllers) :
 	mControllers(controllers)
 {
 	assert(!mControllers.empty());
@@ -45,27 +44,10 @@ void CameraControllerSelector::selectController(const std::string& name)
 	}
 }
 
-void CameraControllerSelector::updatePostDynamicsSubstep(float dtSubstep)
+void CameraControllerSelector::addController(const std::string& name, const CameraControllerPtr& controller)
 {
-	if (mSelectedController)
-		mSelectedController->updatePostDynamicsSubstep(dtSubstep);
-}
-
-void CameraControllerSelector::update(float dt)
-{
-	if (mSelectedController)
-		mSelectedController->update(dt);
-}
-
-void CameraControllerSelector::setInput(const Input& input)
-{
-	if (mSelectedController)
-		mSelectedController->setInput(input);
-}
-
-Entity* CameraControllerSelector::getTarget() const
-{
-	return mSelectedController ? mSelectedController->getTarget() : nullptr;
+	mControllers[name] = controller;
+	controller->setTarget(mTarget);
 }
 
 void CameraControllerSelector::setTarget(Entity* target)

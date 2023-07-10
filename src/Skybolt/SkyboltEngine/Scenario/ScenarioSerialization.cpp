@@ -140,10 +140,7 @@ static void loadEntityComponents(World& world, sim::Entity& entity, const nlohma
 	{
 		if (auto i = json.find("cameraController"); i != json.end())
 		{
-			if (auto selector = dynamic_cast<CameraControllerSelector*>(cameraControllerComponent->cameraController.get()))
-			{
-				loadCameraController(*selector, world, i.value());
-			}
+			loadCameraController(*cameraControllerComponent, world, i.value());
 		}
 	}
 
@@ -194,11 +191,6 @@ static nlohmann::json saveCameraController(CameraControllerSelector& cameraContr
 {
 	nlohmann::json j;
 	j["mode"] = cameraControllerSelector.getSelectedControllerName();
-
-	if (cameraControllerSelector.getTarget())
-	{
-		j["target"] = getName(*cameraControllerSelector.getTarget());
-	}
 
 	nlohmann::json modes;
 	for (const auto& item : cameraControllerSelector.getControllers())
@@ -260,11 +252,7 @@ static nlohmann::json saveEntity(const Entity& entity, const std::string& templa
 	auto cameraController = entity.getFirstComponent<CameraControllerComponent>();
 	if (cameraController)
 	{
-		auto selector = dynamic_cast<CameraControllerSelector*>(cameraController->cameraController.get());
-		if (selector)
-		{
-			json["cameraController"] = saveCameraController(*selector);
-		}
+		json["cameraController"] = saveCameraController(*cameraController);
 	}
 
 	if (vis::Planet* planet = getFirstVisObject<vis::Planet>(entity).get(); planet)
