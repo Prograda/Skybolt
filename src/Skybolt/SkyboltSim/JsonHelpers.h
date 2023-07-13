@@ -13,6 +13,7 @@
 #pragma once
 
 #include "SimMath.h"
+#include "SkyboltSim/Spatial/LatLon.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <nlohmann/json.hpp>
 
@@ -61,6 +62,16 @@ inline Quaternion readOptionalQuaternion(const nlohmann::json& j, const std::str
 		return readQuaternion(*i);
 	}
 	return math::dquatIdentity();
+}
+
+inline LatLon readLatLon(const nlohmann::json& j)
+{
+	return LatLon(j[0].get<double>() * skybolt::math::degToRadD(), j[1].get<double>() * skybolt::math::degToRadD());
+}
+
+inline nlohmann::json writeJson(const LatLon& v)
+{
+	return {v.lat * skybolt::math::radToDegD(), v.lon * skybolt::math::radToDegD()};
 }
 
 inline void writeIfNotEmpty(nlohmann::json& object, const std::string& key, const nlohmann::json& v)

@@ -19,7 +19,7 @@ TEST_CASE("Read and write image with user data")
 	// Create image with user data
 	osg::ref_ptr<osg::Image> image = new osg::Image();
 	image->allocateImage(1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE);
-	image->setColor(osg::Vec4(0.1, 0.2, 0.3, 0.4), 0, 0);
+	image->setColor(osg::Vec4(0.1f, 0.2f, 0.3f, 0.4f), 0, 0);
 	image->setUserValue("testData", 123);
 
 	// Write image to stream

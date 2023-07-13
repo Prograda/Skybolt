@@ -306,7 +306,7 @@ void MainWindow::open(const QString& filename)
 void MainWindow::loadProject(const nlohmann::json& json)
 {
 	ifChildExists(json, "scenario", [this] (const nlohmann::json& child) {
-		loadScenario(*mEngineRoot->scenario, child);
+		readScenario(*mEngineRoot->scenario, child);
 	});
 
 	ifChildExists(json, "windowGeometry", [this] (const nlohmann::json& child) {
@@ -320,7 +320,7 @@ void MainWindow::loadProject(const nlohmann::json& json)
 	});
 
 	ifChildExists(json, "entities", [this] (const nlohmann::json& child) {
-		loadEntities(mEngineRoot->scenario->world, *mEngineRoot->entityFactory, child);
+		readEntities(mEngineRoot->scenario->world, *mEngineRoot->entityFactory, child);
 	});
 
 	emit projectLoaded(json);
@@ -337,10 +337,10 @@ void MainWindow::save(QFile& file)
 
 void MainWindow::saveProject(nlohmann::json& json) const
 {
-	json["scenario"] = saveScenario(*mEngineRoot->scenario);
+	json["scenario"] = writeScenario(*mEngineRoot->scenario);
 	json["windows"] = toByteArray(mToolWindowManager->saveState()).toBase64().toStdString();
 	json["windowGeometry"] = saveGeometry().toBase64().toStdString();
-	json["entities"] = saveEntities(mEngineRoot->scenario->world);
+	json["entities"] = writeEntities(mEngineRoot->scenario->world);
 
 	emit projectSaved(json);
 }

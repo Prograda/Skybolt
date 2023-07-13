@@ -13,14 +13,21 @@ namespace sim {
 
 class LatLonSettable
 {
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION();
 public:
 	virtual ~LatLonSettable() = default;
-	virtual LatLon getLatLon() const { return mLatLon; }
+	virtual const LatLon& getLatLon() const { return mLatLon; }
 	virtual void setLatLon(const LatLon& latLon) { mLatLon = latLon; }
 
 protected:
 	LatLon mLatLon = LatLon(0,0);
 };
+
+SKYBOLT_REFLECT_INLINE(LatLonSettable)
+{
+	rttr::registration::class_<LatLonSettable>("LatLonSettable")
+		.property("latLon", &LatLonSettable::getLatLon, &LatLonSettable::setLatLon);
+}
 
 } // namespace sim
 } // namespace skybolt

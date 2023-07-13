@@ -4,6 +4,9 @@ add_source_group_tree(. SOURCE_FILES)
 
 include_directories("../")
 
+find_package(Boost COMPONENTS log REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
@@ -11,6 +14,7 @@ add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 find_package(rttr REQUIRED)
 
 set(LIBRARIES
+	${Boost_LIBRARIES}
 	RTTR::Core_Lib
 	SkyboltCommon
 )

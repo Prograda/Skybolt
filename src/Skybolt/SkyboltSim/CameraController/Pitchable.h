@@ -6,11 +6,14 @@
 
 #pragma once
 
+#include <SkyboltSim/Reflection.h>
+
 namespace skybolt {
 namespace sim {
 
 class Pitchable
 {
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION();
 public:
 	~Pitchable() = default;
 	virtual double getPitch() const { return mPitch; }
@@ -19,6 +22,12 @@ public:
 protected:
 	double mPitch = 0;
 };
+
+SKYBOLT_REFLECT_INLINE(Pitchable)
+{
+	rttr::registration::class_<Pitchable>("Pitchable")
+		.property("pitch", &Pitchable::getPitch, &Pitchable::setPitch);
+}
 
 } // namespace sim
 } // namespace skybolt

@@ -21,7 +21,8 @@ namespace sim {
 SKYBOLT_REFLECT(CameraControllerComponent)
 {
 	rttr::registration::class_<CameraControllerComponent>("CameraControllerComponent")
-		.property("selectedController", &CameraControllerComponent::getSelectedControllerName, &CameraControllerComponent::selectController);
+		.property("selectedController", &CameraControllerComponent::getSelectedControllerName, &CameraControllerComponent::selectController)
+		.property_readonly("controllers", &CameraControllerComponent::getControllers);
 }
 
 CameraControllerComponent::CameraControllerComponent(const ControllersMap& controllers) :

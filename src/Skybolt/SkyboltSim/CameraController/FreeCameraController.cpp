@@ -11,8 +11,7 @@
 
 #include <SkyboltCommon/Math/MathUtility.h>
 
-using namespace skybolt;
-using namespace skybolt::sim;
+namespace skybolt::sim {
 
 FreeCameraController::FreeCameraController(Entity* camera, const Params& params) :
 	CameraController(camera),
@@ -43,3 +42,5 @@ void FreeCameraController::update(float dt)
 	Vector3 position = mNodeComponent->getPosition() + orientation * vel * (double)dt;
 	mNodeComponent->setPosition(position);
 }
+
+} // namespace skybolt::sim

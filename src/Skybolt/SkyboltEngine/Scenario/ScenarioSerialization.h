@@ -4,12 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright 2012-2019 Matthew Paul Reid
-*
-* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-
 #pragma once
 
 #include <SkyboltEngine/SkyboltEngineFwd.h>
@@ -19,12 +13,12 @@
 
 namespace skybolt {
 
-void loadScenario(Scenario& scenario, const nlohmann::json& value);
+void readScenario(Scenario& scenario, const nlohmann::json& value);
 
-nlohmann::json saveScenario(const Scenario& scenario);
+nlohmann::json writeScenario(const Scenario& scenario);
 
-void loadEntities(sim::World& world, EntityFactory& factory, const nlohmann::json& value);
+void readEntities(sim::World& world, EntityFactory& factory, const nlohmann::json& value);
 
-nlohmann::json saveEntities(const sim::World& world);
+nlohmann::json writeEntities(const sim::World& world);
 
 } // namespace skybolt

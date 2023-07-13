@@ -8,15 +8,13 @@
 #pragma once
 
 #include "CameraController.h"
-#include "LatLonSettable.h"
-#include "Pitchable.h"
-#include "Zoomable.h"
 
 namespace skybolt {
 namespace sim {
 
 class NullCameraController : public CameraController
 {
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(CameraController);
 public:
 	NullCameraController(Entity* camera) : CameraController(camera) {}
 };

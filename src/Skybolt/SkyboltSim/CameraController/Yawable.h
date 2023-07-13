@@ -9,16 +9,23 @@
 namespace skybolt {
 namespace sim {
 
-	class Yawable
-	{
-	public:
-		virtual ~Yawable() = default;
-		virtual double getYaw() const { return mYaw; }
-		virtual void setYaw(double yaw) { mYaw = yaw; }
+class Yawable
+{
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION();
+public:
+	virtual ~Yawable() = default;
+	virtual double getYaw() const { return mYaw; }
+	virtual void setYaw(double yaw) { mYaw = yaw; }
 
-	protected:
-		double mYaw = 0;
-	};
+protected:
+	double mYaw = 0;
+};
+
+SKYBOLT_REFLECT_INLINE(Yawable)
+{
+	rttr::registration::class_<Yawable>("Yawable")
+		.property("pitch", &Yawable::getYaw, &Yawable::setYaw);
+}
 
 } // namespace sim
 } // namespace skybolt

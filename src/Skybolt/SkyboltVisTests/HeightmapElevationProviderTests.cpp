@@ -37,7 +37,7 @@ TEST_CASE("Test HeightMapElevationProvider returns correct elevations")
 
 	HeightMapElevationProvider provider(image, rerange, bounds);
 
-	const float epsilon = 0.01;
+	const float epsilon = 0.01f;
 
 	// Check height at opposite corners
 	CHECK(provider.get(1, 2) == Approx(0).margin(epsilon));

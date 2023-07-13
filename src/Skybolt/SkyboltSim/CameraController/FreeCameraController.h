@@ -12,8 +12,9 @@
 namespace skybolt {
 namespace sim {
 
-class FreeCameraController : public sim::CameraController, public Pitchable, public Yawable, public Zoomable
+class FreeCameraController : public CameraController, public Pitchable, public Yawable, public Zoomable
 {
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(CameraController, Pitchable, Yawable, Zoomable);
 public:
 	struct Params
 	{

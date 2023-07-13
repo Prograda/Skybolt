@@ -327,6 +327,7 @@ QToolBar* ViewportWidget::createViewportToolBar(const std::function<std::string(
 	{
 		QToolButton* toolButton = new QToolButton(this);
 		toolButton->setText("Filter");
+		toolButton->setToolTip("Filter");
 		toolButton->setIcon(getSprocketIcon(SprocketIcon::Filter));
 		toolButton->setMenu(mFilterMenu);
 		toolButton->setPopupMode(QToolButton::InstantPopup);

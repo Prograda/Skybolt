@@ -13,46 +13,47 @@
 namespace skybolt {
 namespace sim {
 
-	class CameraController : public EntityListener
+class CameraController : public EntityListener
+{
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION();
+public:
+	struct Input
 	{
-	public:
-		struct Input
+		static Input zero()
 		{
-			static Input zero()
-			{
-				return {0,0,0,0,0,false,false};
-			}
+			return {0,0,0,0,0,false,false};
+		}
 
-			float forwardSpeed; //!< Range [-1, 1]
-			float rightSpeed; //!< Range [-1, 1]
-			float panSpeed; //!< Range [-1, 1]
-			float tiltSpeed; //!< Range [-1, 1]
-			float zoomSpeed; //!< Range [-1, 1]
-			bool modifier1Pressed;
-			bool modifier2Pressed;
-		};
-
-		CameraController(Entity* camera);
-		virtual ~CameraController();
-
-		virtual void updatePostDynamicsSubstep(TimeReal dtSubstep) {}
-		virtual void update(float dt) {}
-		virtual void setInput(const Input& input) {}
-
-		virtual Entity* getTarget() const { return mTarget; }
-		virtual void setTarget(Entity* target);
-
-		virtual void setActive(bool active) { mActive = active; }
-
-	private:
-		void onDestroy(Entity* entity) override;
-
-	protected:
-		sim::Node* mNodeComponent;
-		CameraComponent* mCameraComponent;
-		Entity* mTarget = nullptr;
-		bool mActive = false;
+		float forwardSpeed; //!< Range [-1, 1]
+		float rightSpeed; //!< Range [-1, 1]
+		float panSpeed; //!< Range [-1, 1]
+		float tiltSpeed; //!< Range [-1, 1]
+		float zoomSpeed; //!< Range [-1, 1]
+		bool modifier1Pressed;
+		bool modifier2Pressed;
 	};
+
+	CameraController(Entity* camera);
+	virtual ~CameraController();
+
+	virtual void updatePostDynamicsSubstep(TimeReal dtSubstep) {}
+	virtual void update(float dt) {}
+	virtual void setInput(const Input& input) {}
+
+	virtual Entity* getTarget() const { return mTarget; }
+	virtual void setTarget(Entity* target);
+
+	virtual void setActive(bool active) { mActive = active; }
+
+private:
+	void onDestroy(Entity* entity) override;
+
+protected:
+	sim::Node* mNodeComponent;
+	CameraComponent* mCameraComponent;
+	Entity* mTarget = nullptr;
+	bool mActive = false;
+};
 
 } // namespace sim
 } // namespace skybolt

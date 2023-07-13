@@ -24,16 +24,12 @@
 
 //! This macro allows reflection to be defined in the header file
 #define SKYBOLT_REFLECT_INLINE(cls)                                                                          \
-	template <typename T>                                                                                    \
-	extern void rttr_auto_register_reflection_function_t();                                                  \
-	template <>                                                                                              \
-	void rttr_auto_register_reflection_function_t<cls>();                                                    \
+	void rttr_auto_register_reflection_function_##cls();                                                     \
 	static const int auto_register__##cls = []() {                                                           \
-		rttr_auto_register_reflection_function_t<cls>();                                                     \
+		rttr_auto_register_reflection_function_##cls();                                                      \
 		return 0;                                                                                            \
 	}();                                                                                                     \
-	template <>                                                                                              \
-	inline void rttr_auto_register_reflection_function_t<cls>()
+	inline void rttr_auto_register_reflection_function_##cls()
 
 //! This macro goes in the header file and allows reflection to be defined in the cpp file using SKYBOLT_REFLECT
 #define SKYBOLT_REFLECT_EXTERN(cls)                                                                          \
