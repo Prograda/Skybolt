@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "AboutContextAction.h"
-#include "Sprocket/QDialogHelpers.h"
+#include "Sprocket/QtDialogUtil.h"
 #include <SkyboltSim/Components/AssetDescriptionComponent.h>
 
 #include <QComboBox>

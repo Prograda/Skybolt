@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "MoveToAirportContextAction.h"
-#include "Sprocket/QDialogHelpers.h"
+#include "Sprocket/QtDialogUtil.h"
 #include <SkyboltEngine/TemplateNameComponent.h>
 #include <SkyboltSim/Components/DynamicBodyComponent.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>

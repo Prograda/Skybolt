@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <Sprocket/EditorPlugin.h>
-#include <Sprocket/QtHelpers.h>
+#include <Sprocket/QtLayoutUtil.h>
 
 #include <SkyboltSim/Components/ControlInputsComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>

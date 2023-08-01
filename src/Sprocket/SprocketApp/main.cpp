@@ -4,29 +4,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include <Sprocket/UiApplication.h>
+#include <Sprocket/ApplicationUtil.h>
 #include <Sprocket/EditorPlugin.h>
+#include <Sprocket/EngineSettingsSerialization.h>
 #include <Sprocket/MainWindow.h>
 #include <Sprocket/SprocketModel.h>
 #include <Sprocket/ThirdParty/DarkStyle.h>
 #include <Sprocket/Viewport/OsgWidget.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
+#include <SkyboltEngine/EngineRootFactory.h>
+#include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/GetExecutablePath.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltCommon/Stringify.h>
 
 using namespace skybolt;
 
-class Application : public UiApplication
+class Application : public QApplication
 {
 public:
 	Application(const std::vector<PluginFactory>& enginePluginFactories, const std::vector<EditorPluginFactory>& editorPluginFactories, int argc, char* argv[]) :
-		UiApplication(argc, argv)
+		QApplication(argc, argv)
 	{
 		QCoreApplication::addLibraryPath(QCoreApplication::applicationDirPath() + "/qtplugins");
 
 		setStyle(new DarkStyle);
-		mMainWindow.reset(new MainWindow(enginePluginFactories, editorPluginFactories));
+
+		QSettings settings(QApplication::applicationName());
+		nlohmann::json engineSettings = readOrCreateEngineSettingsFile(settings);
+		std::shared_ptr<EngineRoot> engineRoot = EngineRootFactory::create(enginePluginFactories, engineSettings);
+
+		mMainWindow.reset(new MainWindow([&] {
+			MainWindowConfig c;
+			c.engineRoot = engineRoot;
+			c.editorPluginFactories = editorPluginFactories;
+			return c;
+		}()));
 
 		try
 		{
@@ -84,9 +97,9 @@ int main(int argc, char *argv[])
 		std::vector<EditorPluginFactory> editorPluginFactories = loadPluginFactories<EditorPlugin, EditorPluginConfig>(pluginsDir);
 		Application application(enginePluginFactories, editorPluginFactories, argc, argv);
 
-		if (!UiApplication::supportsOpenGl())
+		if (!applicationSupportsOpenGl())
 		{
-			UiApplication::printError("This program requires OpenGL to run.");
+			displayApplicationError("This program requires OpenGL to run.");
 			return 1;
 		}
 
@@ -94,11 +107,11 @@ int main(int argc, char *argv[])
 	}
 	catch (const std::exception &e)
 	{
-		UiApplication::printError(e.what());
+		displayApplicationError(e.what());
 	}
 	catch (...)
 	{
-		UiApplication::printError("Exception caught in main");
+		displayApplicationError("Exception caught in main");
 	}
 
 	return 0; 

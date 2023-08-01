@@ -9,9 +9,10 @@
 
 #include "CaptureImageDailog.h"
 #include "EditorPlugin.h"
+#include "EngineSettingsSerialization.h"
 #include "IconFactory.h"
 #include "InputPlatformOis.h"
-#include "QDialogHelpers.h"
+#include "QtDialogUtil.h"
 #include "RecentFilesMenuPopulator.h"
 #include "SprocketModel.h"
 #include "SettingsEditor.h"
@@ -26,7 +27,6 @@
 #include "Viewport/VisEntityIcons.h"
 #include "Viewport/OsgWidget.h"
 
-#include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/EngineStats.h>
 #include <SkyboltEngine/TemplateNameComponent.h>
@@ -67,8 +67,6 @@
 #include <SkyboltVis/Shader/ShaderSourceFileChangeMonitor.h>
 #include <SkyboltVis/Window/CaptureScreenshot.h>
 #include <SkyboltVis/Window/Window.h>
-#include <SkyboltCommon/File/OsDirectories.h>
-#include <SkyboltCommon/Json/ReadJsonFile.h>
 #include <SkyboltCommon/Json/WriteJsonFile.h>
 #include <SkyboltCommon/Math/IntersectionUtility.h>
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -261,62 +259,6 @@ void mapContainer(const Source& c, Result& result, Functor &&f)
 	std::transform(std::begin(c), std::end(c), std::inserter(result, std::end(result)), f);
 }
 
-QString settingsFilenameKey = "settingsFilename";
-
-// Read the engine settings file if it already exists, otherwise prompts user to create one.
-// The engine settings file is different to the QSettings, the former configures the engine
-// while the latter configures UI defaults.
-static nlohmann::json readOrCreateEngineSettingsFile(QWidget* parent, QSettings& settings)
-{
-	nlohmann::json result = createDefaultEngineSettings();
-	QString settingsFilename = settings.value(settingsFilenameKey).toString();
-
-	while (settingsFilename.isEmpty() || !QFile(settingsFilename).exists())
-	{
-		QMessageBox box;
-		box.setWindowTitle("Settings");
-		box.setText("Settings file required to run.\nClick Create to create a new file, or Load to load an existing file");
-		QAbstractButton* createButton = box.addButton("Create...", QMessageBox::YesRole);
-		QAbstractButton* loadButton = box.addButton("Load...", QMessageBox::YesRole);
-
-		box.exec();
-		if (box.clickedButton() == createButton)
-		{
-			auto appUserDataDir = file::getAppUserDataDirectory("Skybolt");
-			settingsFilename = QString::fromStdString(appUserDataDir.append("Settings.json").string());
-
-			settingsFilename = QFileDialog::getSaveFileName(parent, "Create Settings File", settingsFilename, "Json (*.json)");
-
-			if (!settingsFilename.isEmpty())
-			{
-				// Create file
-				settings.setValue(settingsFilenameKey, settingsFilename);
-				std::filesystem::create_directories(file::Path(settingsFilename.toStdString()).parent_path());
-				writeJsonFile(result, settingsFilename.toStdString());
-				return result;
-			}
-		}
-		else if (box.clickedButton() == loadButton)
-		{
-			settingsFilename = QFileDialog::getOpenFileName(parent, "Load Settings File", settingsFilename, "Json (*.json)");
-		 	settings.setValue(settingsFilenameKey, settingsFilename);
-
-			if (!settingsFilename.isEmpty())
-			{
-				break;
-			}
-		}
-		else
-		{
-			throw std::runtime_error("Settings file not specified. Program will now exit.");
-		}
-	}
-
-	// Load file
-	result.update(readJsonFile(settingsFilename.toStdString()));
-	return result;
-}
-
 static osg::ref_ptr<osg::Texture> createEntitySelectionIcon(int width = 32)
 {
 	int height = width;
@@ -338,11 +280,14 @@ static osg::ref_ptr<osg::Texture> createEntitySelectionIcon(int width = 32)
 	return new osg::Texture2D(image);
 }
 
-MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, const std::vector<EditorPluginFactory>& editorPluginFactories, QWidget *parent, Qt::WindowFlags flags) :
-	QMainWindow(parent, flags),
+MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
+	QMainWindow(windowConfig.parent, windowConfig.flags),
 	ui(new Ui::MainWindow),
+	mEngineRoot(windowConfig.engineRoot),
 	mSettings(QApplication::applicationName())
 {
+	assert(mEngineRoot);
+
 	RecentFilesMenuPopulator::FileOpener fileOpener = [this](const QString& filename) {
 		open(filename);
 	};
@@ -352,12 +297,9 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 	mViewMenuToolWindowSeparator = ui->menuView->addSeparator();
 	mRecentFilesMenuPopulator.reset(new RecentFilesMenuPopulator(ui->menuRecentFiles, &mSettings, fileOpener));
 
-	mEngineSettings = readOrCreateEngineSettingsFile(this, mSettings);
-
-	mEngineRoot = EngineRootFactory::create(enginePluginFactories, mEngineSettings);
 	mSimStepper = std::make_unique<SimStepper>(mEngineRoot->systemRegistry);
 
-	mOsgWidget = new OsgWidget(getDisplaySettingsFromEngineSettings(mEngineSettings), this);
+	mOsgWidget = new OsgWidget(getDisplaySettingsFromEngineSettings(mEngineRoot->engineSettings), this);
 
 	mViewport = new vis::DefaultRenderCameraViewport([&]{
 		vis::DefaultRenderCameraViewportConfig c;
@@ -493,7 +435,7 @@ MainWindow::MainWindow(const std::vector<PluginFactory>& enginePluginFactories, 
 		config.inputPlatform = mInputPlatform;
 		config.dataSeriesRegistry = std::make_shared<DataSeriesRegistry>();
 
-		mapContainer(editorPluginFactories, mPlugins, [config](const EditorPluginFactory& factory) {
+		mapContainer(windowConfig.editorPluginFactories, mPlugins, [config](const EditorPluginFactory& factory) {
 			return factory(config);
 		});
 	}
@@ -1248,9 +1190,9 @@ void MainWindow::captureImage()
 
 void MainWindow::editEngineSettings()
 {
-	QString settingsFilename = mSettings.value(settingsFilenameKey).toString();
+	QString settingsFilename = mSettings.value(getSettingsFilenameKey()).toString();
 
-	SettingsEditor editor(settingsFilename, mEngineSettings, this);
+	SettingsEditor editor(settingsFilename, mEngineRoot->engineSettings, this);
 	auto dialog = createDialog(&editor, "Settings");
 	dialog->setMinimumWidth(500);
 	dialog->setMinimumHeight(500);
@@ -1258,7 +1200,7 @@ void MainWindow::editEngineSettings()
 	if (dialog->exec() == QDialog::Accepted)
 	{
 		settingsFilename = editor.getSettingsFilename();
-		mSettings.setValue(settingsFilenameKey, settingsFilename);
+		mSettings.setValue(getSettingsFilenameKey(), settingsFilename);
 		writeJsonFile(editor.getJson(), settingsFilename.toStdString());
 	}
 }

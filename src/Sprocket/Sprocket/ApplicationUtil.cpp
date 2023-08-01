@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "UiApplication.h"
+#include "ApplicationUtil.h"
 
 #include <QMessageBox>
 #include <QtOpenGL/QGLFormat>
@@ -14,13 +14,7 @@
 
 #include <iostream>
 
-
-UiApplication::UiApplication(int argc, char* argv[]) :
-	QApplication(argc, argv)
-{
-}
-
-void UiApplication::printError(const std::string &error)
+void displayApplicationError(const std::string &error)
 {
 	std::cout << "Error: " << error << std::endl;
 	// Linux TODO
@@ -28,7 +22,9 @@ void UiApplication::printError(const std::string &error)
 	MessageBox(NULL, error.c_str(), "Exception", 0);
 	#endif
 }
-bool UiApplication::supportsOpenGl()
+
+
+bool applicationSupportsOpenGl()
 {
 	return QGLFormat::hasOpenGL();
-}
+};

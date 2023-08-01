@@ -6,7 +6,7 @@
 
 #include "EntityChooserDialogFactory.h"
 #include <SkyboltSim/World.h>
-#include "QDialogHelpers.h"
+#include "QtDialogUtil.h"
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/World.h>
 

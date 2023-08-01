@@ -31,14 +31,20 @@ class WorldTreeWidget;
 namespace Ui { class MainWindow; }
 namespace skybolt { class VisEntityIcons; }
 
-class Application;
+struct MainWindowConfig
+{
+	std::shared_ptr<skybolt::EngineRoot> engineRoot; //!< Never null
+	std::vector<EditorPluginFactory> editorPluginFactories;
+	QWidget *parent = nullptr;
+	Qt::WindowFlags flags = Qt::WindowFlags();
+};
 
 class MainWindow : public QMainWindow, public skybolt::EventListener
 {
 	Q_OBJECT
 
 public:
-	MainWindow(const std::vector<skybolt::PluginFactory>& enginePluginFactories, const std::vector<EditorPluginFactory>& pluginFactories, QWidget *parent = 0, Qt::WindowFlags flags = Qt::WindowFlags());
+	MainWindow(const MainWindowConfig& config);
 	~MainWindow();
 
 	skybolt::EngineRoot* getEngineRoot() const { return mEngineRoot.get(); }
@@ -114,7 +120,7 @@ private:
 	glm::dmat4 calcCurrentViewProjTransform() const;
 
 private:
-	std::unique_ptr<skybolt::EngineRoot> mEngineRoot;
+	std::shared_ptr<skybolt::EngineRoot> mEngineRoot;
 	std::unique_ptr<SprocketModel> mSprocketModel;
 	std::unique_ptr<skybolt::sim::SimStepper> mSimStepper;
 	std::unique_ptr<Ui::MainWindow> ui;
@@ -154,7 +160,6 @@ private:
 	WorldTreeWidget* mWorldTreeWidget = nullptr;
 
 	QSettings mSettings;
-	nlohmann::json mEngineSettings;
 	std::unique_ptr<class RecentFilesMenuPopulator> mRecentFilesMenuPopulator;
 
 	std::vector<EditorPluginPtr> mPlugins;

@@ -6,7 +6,7 @@
 
 #include "CaptureImageDailog.h"
 #include "Property/PropertyEditor.h"
-#include "QDialogHelpers.h"
+#include "QtDialogUtil.h"
 
 #include <QProgressDialog>
 #include <filesystem>
