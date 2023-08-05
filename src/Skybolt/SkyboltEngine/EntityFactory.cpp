@@ -285,7 +285,7 @@ static void loadVisualCamera(Entity* entity, const EntityFactory::Context& conte
 static void loadParticleSystem(Entity* entity, const EntityFactory::Context& context, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
 	NearestPlanetProvider nearestPlanetProvider = [world = context.simWorld] (const Vector3& position) {
-		return findNearestEntityWithComponent<sim::PlanetComponent>(world->getEntities(), position);
+		return findNearestEntityWithComponent<sim::PlanetComponent>(world->getEntities(), position).get();
 	};
 
 	ParticleEmitter::Params emitterParams;

@@ -39,7 +39,7 @@ void SimVisSystem::updatePostDynamics(const System::StepArgs& args)
 	Vector3 origin = mSceneOriginProvider();
 
 	// Get nearest planet
-	sim::Entity* planet = findNearestEntityWithComponent<sim::PlanetComponent>(mWorld->getEntities(), origin);
+	sim::Entity* planet = findNearestEntityWithComponent<sim::PlanetComponent>(mWorld->getEntities(), origin).get();
 	std::optional<GeocentricToNedConverter::PlanetPose> planetPose;
 	if (planet)
 	{

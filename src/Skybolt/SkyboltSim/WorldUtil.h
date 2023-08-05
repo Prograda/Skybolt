@@ -13,9 +13,9 @@ namespace skybolt {
 namespace sim {
 
 template <class ComponentT>
-sim::Entity* findNearestEntityWithComponent(const std::vector<EntityPtr>& entities, const sim::Vector3& position)
+sim::EntityPtr findNearestEntityWithComponent(const std::vector<EntityPtr>& entities, const sim::Vector3& position)
 {
-	sim::Entity* result = nullptr;
+	sim::EntityPtr result = nullptr;
 	double resultDistanceSq = 0;
 	for (const sim::EntityPtr& entity : entities)
 	{
@@ -28,7 +28,7 @@ sim::Entity* findNearestEntityWithComponent(const std::vector<EntityPtr>& entiti
 				double distanceSq = glm::dot(diff, diff);
 				if (!result || distanceSq < resultDistanceSq)
 				{
-					result = entity.get();
+					result = entity;
 					resultDistanceSq = distanceSq;
 				}
 			}

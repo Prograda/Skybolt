@@ -39,17 +39,20 @@ sim::Vector3 screenToWorldDirection(const sim::Vector3& origin, const glm::dmat4
 	return glm::normalize(sim::Vector3(point) - origin);
 }
 
-std::optional<sim::Vector3> pickPointOnPlanet(const skybolt::sim::World& world, const sim::Vector3& origin, const glm::dmat4& invViewProjTransform, const glm::vec2& pointNdc)
+std::optional<PickedSceneObject> pickPointOnPlanet(const skybolt::sim::World& world, const sim::Vector3& origin, const glm::dmat4& invViewProjTransform, const glm::vec2& pointNdc)
 {
 	sim::Vector3 dir = screenToWorldDirection(origin, invViewProjTransform, pointNdc);
-	if (sim::Entity* entity = sim::findNearestEntityWithComponent<sim::PlanetComponent>(world.getEntities(), origin); entity)
+	if (const sim::EntityPtr& entity = sim::findNearestEntityWithComponent<sim::PlanetComponent>(world.getEntities(), origin); entity)
 	{
 		if (auto position = getPosition(*entity); position)
 		{
 			auto component = entity->getFirstComponentRequired<sim::PlanetComponent>();
 			if (auto r = intersectRaySphere(origin, dir, *position, component->radius); r)
 			{
-				return origin + glm::inverse(*getOrientation(*entity)) * (dir * double(r->first));
+				return PickedSceneObject({
+					entity,
+					origin + glm::inverse(*getOrientation(*entity)) * (dir * double(r->first))
+				});
 			}
 		}
 	}
@@ -86,6 +89,13 @@ SceneObjectPicker createSceneObjectPicker(const sim::World* world)
 					}
 				}
 			}
+		}
+
+		if (!pickedObject)
+		{
+			glm::dmat4 invViewProjTransform = glm::inverse(viewProjTransform);
+			glm::dvec3 origin(invViewProjTransform[3][0], invViewProjTransform[3][1], invViewProjTransform[3][2]);
+			pickedObject = pickPointOnPlanet(*world, origin, invViewProjTransform, pointNdc);
 		}
 
 		return pickedObject;

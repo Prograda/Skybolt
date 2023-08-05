@@ -1278,7 +1278,8 @@ std::optional<sim::Vector3> MainWindow::pickPointOnPlanetAtPointInWindow(const Q
 {
    glm::vec2 pointNdc = glm::vec2(float(position.x()) / mOsgWidget->width(), float(position.y()) / mOsgWidget->height());
    sim::Vector3 camPosition = *getPosition(*mCurrentSimCamera);
-   return pickPointOnPlanet(*mEngineRoot->simWorld, camPosition, glm::inverse(calcCurrentViewProjTransform()), pointNdc);
+   std::optional<PickedSceneObject> object = pickPointOnPlanet(*mEngineRoot->simWorld, camPosition, glm::inverse(calcCurrentViewProjTransform()), pointNdc);
+   return object ? object->position : std::optional<sim::Vector3>();
 }
 
 MainWindow::ViewportClickHandler MainWindow::getDefaultViewportClickHandler()
