@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TableEditorWidget.h"
-#include "IconFactory.h"
+#include "Icon/SprocketIcons.h"
 #include <QBoxLayout>
 #include <QToolBar>
 #include <QToolButton>
@@ -21,11 +21,11 @@ TableEditorWidget::TableEditorWidget(const QStringList& fieldNames, QWidget* par
 	QToolBar* toolbar = new QToolBar();
 
 	QToolButton* createButton = new QToolButton();
-	createButton->setIcon(getDefaultIconFactory().createIcon(IconFactory::Icon::Add));
+	createButton->setIcon(getSprocketIcon(SprocketIcon::Add));
 	toolbar->addWidget(createButton);
 
 	QToolButton* deleteButton = new QToolButton();
-	deleteButton->setIcon(getDefaultIconFactory().createIcon(IconFactory::Icon::Remove));
+	deleteButton->setIcon(getSprocketIcon(SprocketIcon::Remove));
 	deleteButton->setEnabled(false);
 	toolbar->addWidget(deleteButton);
 

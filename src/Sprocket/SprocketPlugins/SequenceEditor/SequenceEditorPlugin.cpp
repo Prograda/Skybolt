@@ -9,7 +9,7 @@
 #include "SequencePlotWidget.h"
 #include "SequenceSerializer.h"
 #include <Sprocket/EditorPlugin.h>
-#include <Sprocket/IconFactory.h>
+#include <Sprocket/Icon/SprocketIcons.h>
 #include <Sprocket/JsonHelpers.h>
 #include <Sprocket/Entity/EntityChooserDialogFactory.h>
 #include <SkyboltEngine/EngineRoot.h>
@@ -30,7 +30,7 @@ using SequenceTreeItem = TreeItemT<StateSequenceControllerPtr>;
 
 static void addItem(Registry<TreeItem>& registry, const StateSequenceControllerPtr& controller, const QString& name)
 {
-	QIcon icon = getDefaultIconFactory().createIcon(IconFactory::Icon::Sequence);
+	QIcon icon = getSprocketIcon(SprocketIcon::Sequence);
 	registry.add(std::make_shared<SequenceTreeItem>(icon, name, controller));
 }
 
@@ -107,7 +107,7 @@ public:
 			setTime(time);
 		}));
 
-		QIcon icon = getDefaultIconFactory().createIcon(IconFactory::Icon::Sequence);
+		QIcon icon = getSprocketIcon(SprocketIcon::Sequence);
 
 		{
 			TreeItemType type(typeid(SequenceTreeItem));

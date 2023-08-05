@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TimeControlWidget.h"
-#include "IconFactory.h"
+#include "Icon/SprocketIcons.h"
 #include <QLayout>
 #include <QStyle>
 #include <QToolBar>
@@ -16,13 +16,13 @@ TimeControlWidget::TimeControlWidget(QWidget* parent) :
 	QWidget(parent),
 	mSource(nullptr)
 {
-	mPlayAction = new QAction(getDefaultIconFactory().createIcon(IconFactory::Icon::Play), tr("Play"), this);
+	mPlayAction = new QAction(getSprocketIcon(SprocketIcon::Play), tr("Play"), this);
 	mPlayAction->setShortcut(tr("Ctrl+P"));
 
-	mForwardAction = new QAction(getDefaultIconFactory().createIcon(IconFactory::Icon::FastForward), tr("Forward"), this);
+	mForwardAction = new QAction(getSprocketIcon(SprocketIcon::FastForward), tr("Forward"), this);
 	mForwardAction->setShortcut(tr("Ctrl+F"));
 	
-	mBackwardAction = new QAction(getDefaultIconFactory().createIcon(IconFactory::Icon::FastRewind), tr("Backward"), this);
+	mBackwardAction = new QAction(getSprocketIcon(SprocketIcon::FastRewind), tr("Backward"), this);
 	mBackwardAction->setShortcut(tr("Ctrl+B"));
 
 	QToolBar *bar = new QToolBar;
@@ -72,10 +72,10 @@ void TimeControlWidget::setTimeSource(TimeSource* source)
 			switch (state)
 			{
 			case TimeSource::StatePlaying:
-				mPlayAction->setIcon(getDefaultIconFactory().createIcon(IconFactory::Icon::Pause));
+				mPlayAction->setIcon(getSprocketIcon(SprocketIcon::Pause));
 				break;
 			case TimeSource::StateStopped:
-				mPlayAction->setIcon(getDefaultIconFactory().createIcon(IconFactory::Icon::Play));
+				mPlayAction->setIcon(getSprocketIcon(SprocketIcon::Play));
 				break;
 			default:
 				break;

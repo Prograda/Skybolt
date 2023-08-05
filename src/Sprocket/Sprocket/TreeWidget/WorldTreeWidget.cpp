@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "WorldTreeWidget.h"
-#include "IconFactory.h"
+#include "Icon/SprocketIcons.h"
 
 #include <SkyboltEngine/EntityFactory.h>
 #include <SkyboltEngine/Scenario/Scenario.h>
@@ -192,11 +192,11 @@ WorldTreeWidget::WorldTreeWidget(const WorldTreeWidgetConfig& config) :
 	QToolBar* toolbar = new QToolBar();
 
 	QToolButton* createButton = new QToolButton();
-	createButton->setIcon(getDefaultIconFactory().createIcon(IconFactory::Icon::Add));
+	createButton->setIcon(getSprocketIcon(SprocketIcon::Add));
 	toolbar->addWidget(createButton);
 
 	QToolButton* deleteButton = new QToolButton();
-	deleteButton->setIcon(getDefaultIconFactory().createIcon(IconFactory::Icon::Remove));
+	deleteButton->setIcon(getSprocketIcon(SprocketIcon::Remove));
 	deleteButton->setEnabled(false);
 	toolbar->addWidget(deleteButton);
 
@@ -205,7 +205,7 @@ WorldTreeWidget::WorldTreeWidget(const WorldTreeWidgetConfig& config) :
 	createButton->setMenu(menu);
 	createButton->setPopupMode(QToolButton::InstantPopup);
 
-	TreeItemPtr rootItem(new RootItem(getDefaultIconFactory().createIcon(IconFactory::Icon::Folder)));
+	TreeItemPtr rootItem(new RootItem(getSprocketIcon(SprocketIcon::Folder)));
 	mModel = new TreeItemModel(rootItem, this);
 	mView = new QTreeView;
 	mView->setModel(mModel);
@@ -269,7 +269,7 @@ WorldTreeWidget::WorldTreeWidget(const WorldTreeWidgetConfig& config) :
 		}
 	});
 
-	QIcon folderIcon = getDefaultIconFactory().createIcon(IconFactory::Icon::Folder);
+	QIcon folderIcon = getSprocketIcon(SprocketIcon::Folder);
 
 	mWorld->addListener(this);
 
@@ -332,7 +332,7 @@ static std::shared_ptr<EntityTreeItem> createEntityTreeItem(const sim::EntityPtr
 	std::string name = getName(*entity);
 	if (!name.empty())
 	{
-		QIcon nodeIcon = getDefaultIconFactory().createIcon(IconFactory::Icon::Node);
+		QIcon nodeIcon = getSprocketIcon(SprocketIcon::Node);
 		return std::make_shared<EntityTreeItem>(nodeIcon, QString::fromStdString(name), entity->getId());
 	}
 	return nullptr;

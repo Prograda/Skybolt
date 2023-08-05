@@ -10,7 +10,6 @@
 #include "CaptureImageDailog.h"
 #include "EditorPlugin.h"
 #include "EngineSettingsSerialization.h"
-#include "IconFactory.h"
 #include "InputPlatformOis.h"
 #include "QtDialogUtil.h"
 #include "RecentFilesMenuPopulator.h"
@@ -20,6 +19,7 @@
 #include "TimelineWidget.h"
 #include "DataSeries/DataSeries.h"
 #include "ContextAction/CreateContextActions.h"
+#include "Icon/SprocketIcons.h"
 #include "Entity/EntityCreatorWidget.h"
 #include "Entity/EntityListModel.h"
 #include "Entity/EntityPropertiesModel.h"
@@ -810,7 +810,7 @@ QToolBar* MainWindow::createViewportToolBar()
 		toolbar->addWidget(mCameraControllerWidget);
 	}
 
-	QIcon icon = getDefaultIconFactory().createIcon(IconFactory::Icon::Settings);
+	QIcon icon = getSprocketIcon(SprocketIcon::Settings);
 	vis::ScenePtr Scene = mEngineRoot->scene;
 	toolbar->addAction(icon, "Settings", [=] {
 		if (mCurrentSimCamera)
