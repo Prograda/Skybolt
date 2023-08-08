@@ -8,7 +8,7 @@
 #include <SkyboltEngine/SimVisBinding/GeocentricToNedConverter.h>
 #include <SkyboltVis/VisibilityCategory.h>
 #include <SkyboltVis/Shader/ShaderProgramRegistry.h>
-#include <SkyboltCommon/MapUtility.h>
+#include <SkyboltCommon/ContainerUtility.h>
 #include <osg/Depth>
 #include <osg/Geode>
 #include <osgText/Text>
@@ -30,7 +30,7 @@ void VisEntityAttachables::syncVis(const GeocentricToNedConverter& converter)
 void VisEntityAttachables::setEntities(std::set<sim::Entity*> entities)
 {
 	// Remove old entities
-	removeIf(mEntityTransforms, [&](const auto& i) {
+	eraseIf(mEntityTransforms, [&](const auto& i) {
 		bool shouldRemove = (entities.find(i.first) == entities.end());
 		if (shouldRemove)
 		{

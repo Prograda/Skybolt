@@ -8,8 +8,7 @@
 
 #include "Sprocket/Property/PropertyEditor.h"
 #include "Sprocket/SprocketFwd.h"
-#include "Sprocket/DataSeries/DataSeries.h"
-#include "Sprocket/TreeWidget/WorldTreeWidget.h"
+#include "Sprocket/Widgets/WorldTreeWidget.h"
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltCommon/File/FileLocator.h>
 #include <QString>
@@ -29,7 +28,6 @@ struct EditorPluginConfig
 	skybolt::EngineRoot* engineRoot;
 	skybolt::file::FileLocator fileLocator;
 	skybolt::InputPlatformPtr inputPlatform;
-	std::shared_ptr<DataSeriesRegistry> dataSeriesRegistry;
 };
 
 class BOOST_SYMBOL_VISIBLE EditorPlugin

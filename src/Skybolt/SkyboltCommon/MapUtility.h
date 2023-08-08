@@ -22,19 +22,4 @@ std::optional<ValueT> findOptional(const std::map<KeyT, ValueT>& m, const KeyT& 
 	return std::nullopt;
 }
 
-template <typename ContainerT, typename PredicateT>
-void removeIf(ContainerT& items, const PredicateT& predicate) {
-	for (auto it = items.begin(); it != items.end(); )
-	{
-		if (predicate(*it))
-		{
-			it = items.erase(it);
-		}
-		else
-		{
-			++it;
-		}
-	}
-}
-
 } // namespace skybolt

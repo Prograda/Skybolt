@@ -70,7 +70,7 @@ osgViewer::ViewerBase& VisRoot::getViewer() const
 
 void VisRoot::addWindow(const WindowPtr& window)
 {
-	assert(!VectorUtility::findFirst(mWindows, window));
+	assert(!findFirst(mWindows, window));
 	mViewer->addView(window->getView());
 	mWindows.push_back(window);
 
@@ -92,7 +92,7 @@ void VisRoot::addWindow(const WindowPtr& window)
 
 void VisRoot::removeWindow(const WindowPtr& window)
 {
-	VectorUtility::eraseFirst(mWindows, window);
+	eraseFirst(mWindows, window);
 	mViewer->removeView(window->getView());
 }
 

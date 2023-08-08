@@ -47,7 +47,7 @@ void AttachToParentContextAction::execute(Entity& entity) const
 		}
 	}
 
-	auto dialog = createDialog(comboBox, "Choose Entity");
+	auto dialog = createDialogModal(comboBox, "Choose Entity");
 
 	if (dialog->exec() == QDialog::Accepted)
 	{

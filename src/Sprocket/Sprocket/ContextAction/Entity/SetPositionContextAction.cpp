@@ -5,8 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "SetPositionContextAction.h"
-#include "PositionEditor.h"
 #include "Sprocket/QtDialogUtil.h"
+#include "Widgets/PositionEditor.h"
 #include <SkyboltEngine/TemplateNameComponent.h>
 #include <SkyboltSim/Spatial/LatLon.h>
 #include <SkyboltSim/Spatial/Position.h>
@@ -34,7 +34,7 @@ void SetPositionContextAction::execute(Entity& entity) const
 
 	PositionEditor* editor = new PositionEditor();
 	editor->setPosition(std::make_shared<GeocentricPosition>(*position));
-	auto dialog = createDialog(editor, "Set Position");
+	auto dialog = createDialogModal(editor, "Set Position");
 
 	if (dialog->exec() == QDialog::Accepted)
 	{

@@ -59,7 +59,7 @@ bool MoveToAirportContextAction::handles(const Entity& entity) const
 void MoveToAirportContextAction::execute(Entity& entity) const
 {
 	AirportChooser* airportChooser = new AirportChooser(mAirports);
-	auto dialog = createDialog(airportChooser, "Move to Airport");
+	auto dialog = createDialogModal(airportChooser, "Move to Airport");
 
 	if (dialog->exec() == QDialog::Accepted)
 	{

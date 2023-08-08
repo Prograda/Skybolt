@@ -37,7 +37,7 @@ void showCaptureImageSequenceDialog(const FrameImageWriter& frameImageWriter, co
 	PropertyEditor* editor = new PropertyEditor({});
 	editor->setModel(properties);
 
-	std::shared_ptr<QDialog> dialog = createDialog(editor, "Capture Image Sequence");
+	std::shared_ptr<QDialog> dialog = createDialogModal(editor, "Capture Image Sequence");
 	if (dialog->exec() == QDialog::Accepted)
 	{
 		int frameCount = frameRate->value.toDouble() * std::max(0.0, (endTime->value.toDouble() - startTime->value.toDouble()));

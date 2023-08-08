@@ -12,15 +12,10 @@
 class EditorPlugin;
 class EntityChooserDialogFactory;
 struct EditorPluginConfig;
-struct DataSeries;
 class PropertiesModel;
-class PythonScript;
-class Script;
 
-typedef std::shared_ptr<DataSeries> DataSeriesPtr;
 typedef std::shared_ptr<EditorPlugin> EditorPluginPtr;
 typedef std::shared_ptr<EntityChooserDialogFactory> EntityChooserDialogFactoryPtr;
 typedef std::shared_ptr<PropertiesModel> PropertiesModelPtr;
-typedef std::shared_ptr<Script> ScriptPtr;
 
 typedef std::function<EditorPluginPtr(const EditorPluginConfig&)> EditorPluginFactory;

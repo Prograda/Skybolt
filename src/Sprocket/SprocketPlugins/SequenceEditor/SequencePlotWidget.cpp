@@ -5,7 +5,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "SequencePlotWidget.h"
-#include <Sprocket/PlotColors.h>
 #include <SkyboltEngine/TimeSource.h>
 #include <SkyboltEngine/Sequence/EntityStateSequenceController.h>
 #include <QBoxLayout>
@@ -201,6 +200,25 @@ static void replotPoints(QwtPlot* plot, const std::shared_ptr<PointMarkers>& mar
 	}
 }
 
+// Generated with http://tools.medialab.sciences-po.fr/iwanthue
+static std::vector<QColor> plotColors = {
+	QColor("#d44e2d"),
+	QColor("#6a78e0"),
+	QColor("#76bd5c"),
+	QColor("#cca63a"),
+	QColor("#43343c"),
+	QColor("#a4da39"),
+	QColor("#bc557e"),
+	QColor("#879fc0"),
+	QColor("#ae5944"),
+	QColor("#cd54b9"),
+	QColor("#62c09e"),
+	QColor("#8f46d6"),
+	QColor("#92925c"),
+	QColor("#614a98"),
+	QColor("#aca79e")
+};
+
 void SequencePlotWidget::setSequenceController(const skybolt::StateSequenceControllerPtr& controller)
 {
 	// Remove previous plot items
@@ -231,8 +249,6 @@ void SequencePlotWidget::setSequenceController(const skybolt::StateSequenceContr
 	{
 		curves = {};
 	}
-
-	const auto& plotColors = getPlotColors();
 
 	int curveIndex = 0;
 	for (const auto& c : curves)

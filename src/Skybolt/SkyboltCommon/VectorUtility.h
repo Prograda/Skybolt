@@ -13,48 +13,44 @@
 
 namespace skybolt {
 
-class VectorUtility
+//! Erases element at index by overwriting it with a copy of the last element
+//! and popping the last element. The order of the vector is not preserved.
+template <typename T>
+static void fastUnstableErase(std::vector<T>& v, size_t index)
 {
-public:
-	// Erases element at index by overwriting it with a copy of the last element
-	// and popping the last element. The order of the vector is not preserved.
-	template <typename T>
-	static void fastUnstableErase(std::vector<T>& v, size_t index)
+	assert(index < v.size());
+
+	if (v.size() == 1)
 	{
-		assert(index < v.size());
-
-		if (v.size() == 1)
-		{
-			v.clear();
-			return;
-		}
-
-		// Copy last item to index
-		size_t last = v.size() - 1;
-		v[index] = v[last];
-		v.pop_back();
+		v.clear();
+		return;
 	}
 
-	template <typename T>
-	static T* findFirst(std::vector<T>& v, const T& t)
-	{
-		typename std::vector<T>::iterator it = std::find(v.begin(), v.end(), t);
-		if (it != v.end())
-		{
-			&*it;
-		}
-		return nullptr;
-	}
+	// Copy last item to index
+	size_t last = v.size() - 1;
+	v[index] = v[last];
+	v.pop_back();
+}
 
-	template <typename T>
-	static void eraseFirst(std::vector<T>& v, const T& t)
+template <typename T>
+static T* findFirst(std::vector<T>& v, const T& t)
+{
+	typename std::vector<T>::iterator it = std::find(v.begin(), v.end(), t);
+	if (it != v.end())
 	{
-		typename std::vector<T>::iterator it = std::find(v.begin(), v.end(), t);
-		if (it != v.end())
-		{
-			v.erase(it);
-		}
+		&*it;
 	}
-};
+	return nullptr;
+}
+
+template <typename T>
+static void eraseFirst(std::vector<T>& v, const T& t)
+{
+	typename std::vector<T>::iterator it = std::find(v.begin(), v.end(), t);
+	if (it != v.end())
+	{
+		v.erase(it);
+	}
+}
 
 } // namespace skybolt

@@ -10,4 +10,6 @@
 #include <QString>
 #include <memory>
 
-std::shared_ptr<QDialog> createDialog(QWidget* content, const QString& title);
+std::shared_ptr<QDialog> createDialogModal(QWidget* content, const QString& title);
+
+QDialog* createDialogNonModal(QWidget* content, const QString& title, QWidget* parent = nullptr);

@@ -7,8 +7,8 @@
 #pragma once
 
 #include "SprocketFwd.h"
-#include "TreeWidget/WorldTreeWidget.h"
 #include "Viewport/SceneObjectPicker.h"
+#include "Widgets/WorldTreeWidget.h"
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Plugin/PluginHelpers.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
@@ -69,7 +69,6 @@ public slots:
 	void newScenario();
 
 private slots:
-	void newEntityTemplate();
 	void open();
 	void save();
 	void saveAs();

@@ -198,7 +198,7 @@ public:
 
 	~BulletPlugin()
 	{
-		VectorUtility::eraseFirst(*mSystemRegistry, mBulletSystem);
+		eraseFirst(*mSystemRegistry, mBulletSystem);
 		mComponentFactoryRegistry->erase(dynamicBodyComponentName);
 		mComponentFactoryRegistry->erase(planetKinematicBodyComponentName);
 	}

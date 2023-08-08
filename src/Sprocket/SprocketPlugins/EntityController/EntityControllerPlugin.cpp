@@ -341,7 +341,7 @@ public:
 
 	~EntityControllerPlugin()
 	{
-		VectorUtility::eraseFirst<sim::SystemPtr>(*mEngineRoot->systemRegistry, mJoystickInputSystem);
+		eraseFirst<sim::SystemPtr>(*mEngineRoot->systemRegistry, mJoystickInputSystem);
 		delete mToolWindow.widget;
 	}
 

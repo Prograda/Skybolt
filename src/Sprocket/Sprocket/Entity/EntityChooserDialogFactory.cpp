@@ -41,7 +41,7 @@ skybolt::sim::EntityPtr EntityChooserDialogFactory::chooseEntity() const
 	QListWidget* list = new QListWidget();
 	list->addItems(items);
 
-	std::shared_ptr<QDialog> dialog = createDialog(list, "Choose Entity");
+	std::shared_ptr<QDialog> dialog = createDialogModal(list, "Choose Entity");
 	if (dialog->exec() == QDialog::Accepted)
 	{
 		QModelIndex index = list->currentIndex();

@@ -5,8 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "SetOrientationContextAction.h"
-#include "OrientationEditor.h"
 #include "Sprocket/QtDialogUtil.h"
+#include "Widgets/OrientationEditor.h"
 #include <SkyboltEngine/TemplateNameComponent.h>
 #include <SkyboltSim/Spatial/LatLon.h>
 #include <SkyboltSim/Spatial/Orientation.h>
@@ -40,7 +40,7 @@ void SetOrientationContextAction::execute(Entity& entity) const
 
 	OrientationEditor* editor = new OrientationEditor();
 	editor->setOrientation(std::make_shared<GeocentricOrientation>(*orientation), latLon);
-	auto dialog = createDialog(editor, "Set Orientation");
+	auto dialog = createDialogModal(editor, "Set Orientation");
 
 	if (dialog->exec() == QDialog::Accepted)
 	{

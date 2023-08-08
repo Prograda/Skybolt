@@ -14,10 +14,6 @@
 #include "QtDialogUtil.h"
 #include "RecentFilesMenuPopulator.h"
 #include "SprocketModel.h"
-#include "SettingsEditor.h"
-#include "TimeControlWidget.h"
-#include "TimelineWidget.h"
-#include "DataSeries/DataSeries.h"
 #include "ContextAction/CreateContextActions.h"
 #include "Icon/SprocketIcons.h"
 #include "Entity/EntityCreatorWidget.h"
@@ -25,7 +21,13 @@
 #include "Entity/EntityPropertiesModel.h"
 #include "Scenario/ScenarioPropertiesModel.h"
 #include "Viewport/VisEntityIcons.h"
+#include "Viewport/ViewportInput.h"
+#include "Viewport/ViewportPropertiesModel.h"
 #include "Viewport/OsgWidget.h"
+#include "Widgets/CameraControllerWidget.h"
+#include "Widgets/SettingsEditor.h"
+#include "Widgets/TimeControlWidget.h"
+#include "Widgets/TimelineWidget.h"
 
 #include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/EngineStats.h>
@@ -67,6 +69,7 @@
 #include <SkyboltVis/Shader/ShaderSourceFileChangeMonitor.h>
 #include <SkyboltVis/Window/CaptureScreenshot.h>
 #include <SkyboltVis/Window/Window.h>
+#include <SkyboltCommon/ContainerUtility.h>
 #include <SkyboltCommon/Json/WriteJsonFile.h>
 #include <SkyboltCommon/Math/IntersectionUtility.h>
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -89,9 +92,6 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMessageBox>
-#include <QPushButton>
-#include <QSortFilterProxyModel>
-#include <QTableView>
 #include <QTimer>
 #include <QToolBar>
 #include <QVector3D>
@@ -100,164 +100,12 @@
 
 #include <algorithm>
 #include <chrono>
-#include <deque>
 #include <sstream>
 
 using namespace skybolt;
 using namespace skybolt::sim;
 
-class ViewportPropertiesModel : public PropertiesModel
-{
-public:
-	ViewportPropertiesModel(vis::Scene* Scene, CameraComponent* camera) :
-		mScene(Scene)
-	{
-		{
-			mFov = createVariantProperty("Vertical FOV", 0.0);
-			mFov->setValue(camera->getState().fovY * skybolt::math::radToDegF());
-			mProperties.push_back(mFov);
-
-			connect(mFov.get(), &VariantProperty::valueChanged, [=]()
-			{
-				camera->getState().fovY = mFov->value.toFloat() * skybolt::math::degToRadF();
-			});
-		}
-		{
-			mAmbientLight = createVariantProperty("Ambient Light", 0.0);
-			mAmbientLight->setValue(mScene->getAmbientLightColor().x());
-			mProperties.push_back(mAmbientLight);
-
-			connect(mAmbientLight.get(), &VariantProperty::valueChanged, [=]()
-			{
-				float v = mAmbientLight->value.toFloat();
-				mScene->setAmbientLightColor(osg::Vec3f(v, v, v));
-			});
-		}
-	}
-
-private:
-	vis::Scene* mScene;
-	VariantPropertyPtr mFov;
-	VariantPropertyPtr mAmbientLight;
-};
-
-class PropertiesDialog : public QDialog
-{
-public:
-	PropertiesDialog(vis::Scene* Scene, const sim::EntityPtr& camera, QWidget* parent) : QDialog(parent, Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint)
-	{
-		setLayout(new QVBoxLayout);
-		PropertyEditor* editor = new PropertyEditor({});
-		layout()->addWidget(editor);
-		editor->setModel(std::make_shared<ViewportPropertiesModel>(Scene, camera->getFirstComponent<CameraComponent>().get()));
-
-		QPushButton* button = new QPushButton("Close");
-		button->setAutoDefault(false);
-		layout()->addWidget(button);
-		connect(button, &QPushButton::pressed, this, &QDialog::accept);
-	}
-};
-
 static const QString defaultWindowLayoutState = "AAAAAwAAADgAdABvAG8AbABXAGkAbgBkAG8AdwBNAGEAbgBhAGcAZQByAFMAdABhAHQAZQBGAG8AcgBtAGEAdAAAAAIAAAAAAQAAABYAbQBhAGkAbgBXAHIAYQBwAHAAZQByAAAACAAAAAACAAAAEABzAHAAbABpAHQAdABlAHIAAAAIAAAAAAMAAAAIAHQAeQBwAGUAAAAKAAAAABAAcwBwAGwAaQB0AHQAZQByAAAACgBzAHQAYQB0AGUAAAAKAAAAAFgAQQBBAEEAQQAvAHcAQQBBAEEAQQBFAEEAQQBBAEEAQwBBAEEAQQBBAC8AdwBBAEEAQgBuAGMAQQAvAC8ALwAvAC8AdwBFAEEAQQBBAEEAQgBBAEEAPQA9AAAACgBpAHQAZQBtAHMAAAAJAAAAAAIAAAAIAAAAAAMAAAAIAHQAeQBwAGUAAAAKAAAAAAgAYQByAGUAYQAAAA4AbwBiAGoAZQBjAHQAcwAAAAkAAAAAAgAAAAgAAAAAAgAAAAgAbgBhAG0AZQAAAAoAAAAAEABFAHgAcABsAG8AcgBlAHIAAAAIAGQAYQB0AGEAAAAAAQAAAAgAAAAAAgAAAAgAbgBhAG0AZQAAAAoAAAAAIgBFAG4AdABpAHQAeQAgAEMAbwBuAHQAcgBvAGwAbABlAHIAAAAIAGQAYQB0AGEAAAAAAQAAABgAYwB1AHIAcgBlAG4AdABJAG4AZABlAHgAAAACAAAAAAAAAAAIAAAAAAMAAAAIAHQAeQBwAGUAAAAKAAAAABAAcwBwAGwAaQB0AHQAZQByAAAACgBzAHQAYQB0AGUAAAAKAAAAAFgAQQBBAEEAQQAvAHcAQQBBAEEAQQBFAEEAQQBBAEEAQwBBAEEAQQBGAEwAUQBBAEEAQQBVAEEAQQAvAC8ALwAvAC8AdwBFAEEAQQBBAEEAQgBBAEEAPQA9AAAACgBpAHQAZQBtAHMAAAAJAAAAAAIAAAAIAAAAAAMAAAAIAHQAeQBwAGUAAAAKAAAAAAgAYQByAGUAYQAAAA4AbwBiAGoAZQBjAHQAcwAAAAkAAAAAAQAAAAgAAAAAAgAAAAgAbgBhAG0AZQAAAAoAAAAAEABWAGkAZQB3AHAAbwByAHQAAAAIAGQAYQB0AGEAAAAAAQAAABgAYwB1AHIAcgBlAG4AdABJAG4AZABlAHgAAAACAAAAAAAAAAAIAAAAAAMAAAAIAHQAeQBwAGUAAAAKAAAAAAgAYQByAGUAYQAAAA4AbwBiAGoAZQBjAHQAcwAAAAkAAAAAAQAAAAgAAAAAAgAAAAgAbgBhAG0AZQAAAAoAAAAAFABQAHIAbwBwAGUAcgB0AGkAZQBzAAAACABkAGEAdABhAAAAAAEAAAAYAGMAdQByAHIAZQBuAHQASQBuAGQAZQB4AAAAAgAAAAAAAAAAEABnAGUAbwBtAGUAdAByAHkAAAAKAAAAALAAQQBkAG4AUQB5AHcAQQBEAEEAQQBBAEEAQQBBAEEAQQBBAEEAQQBBAEEAQQBBAEEAQgAzADgAQQBBAEEAUABNAEEAQQBBAEEAQQBBAEEAQQBBAEEAQQBBAEEAQQBkAC8AQQBBAEEARAB6AEEAQQBBAEEAQQBBAEEAQQBBAEEAQQBCADQAQQBBAEEAQQBBAEEAQQBBAEEAQQBBAEEAQQBBAEIAMwA4AEEAQQBBAFAATQAAAB4AZgBsAG8AYQB0AGkAbgBnAFcAaQBuAGQAbwB3AHMAAAAJAAAAAAA=";
-
-class ViewportInput : public EventListener
-{
-public:
-	ViewportInput(const InputPlatformPtr& inputPlatform) :
-		mInputPlatform(inputPlatform)
-	{
-		mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
-
-		std::vector<InputDevicePtr> keyboards = inputPlatform->getInputDevicesOfType(InputDeviceTypeKeyboard);
-		if (keyboards.empty())
-		{
-			throw std::runtime_error("Keyboard input device not found");
-		}
-
-		InputDevicePtr keyboard = keyboards.front();
-		float rate = 1000;
-		mForwardAxis = std::make_shared<KeyAxis>(keyboard, KC_S, KC_W, rate, rate, -1.0f, 1.0f);
-		mLogicalAxes.push_back(mForwardAxis);
-
-		mRightAxis = std::make_shared<KeyAxis>(keyboard, KC_A, KC_D, rate, rate, -1.0f, 1.0f);
-		mLogicalAxes.push_back(mRightAxis);
-
-		setEnabled(false);
-	}
-
-	~ViewportInput()
-	{
-		mInputPlatform->getEventEmitter()->removeEventListener(this);
-	}
-
-	void setEnabled(bool enabled)
-	{
-		for (InputDevicePtr device : mInputPlatform->getInputDevicesOfType(InputDeviceTypeMouse))
-		{
-			device->setEnabled(enabled);
-		}
-
-		for (InputDevicePtr device : mInputPlatform->getInputDevicesOfType(InputDeviceTypeKeyboard))
-		{
-			device->setEnabled(enabled);
-		}
-		mEnabled = enabled;
-	}
-
-	void updateBeforeInput()
-	{
-		mInput = CameraController::Input::zero();
-	}
-
-	void updateAfterInput(float dt)
-	{
-		for (const LogicalAxisPtr& device : mLogicalAxes)
-		{
-			device->update(dt);
-		}
-		mInput.forwardSpeed = mForwardAxis->getState();
-		mInput.rightSpeed = mRightAxis->getState();
-		mInput.panSpeed /= dt;
-		mInput.tiltSpeed /= dt;
-		mInput.zoomSpeed /= dt;
-		mInput.modifier1Pressed = mInputPlatform->getInputDevicesOfType(InputDeviceTypeKeyboard)[0]->isButtonPressed(KC_LSHIFT);
-		mInput.modifier2Pressed = mInputPlatform->getInputDevicesOfType(InputDeviceTypeKeyboard)[0]->isButtonPressed(KC_LCONTROL);
-	}
-
-	CameraController::Input getInput() const
-	{
-		return mInput;
-	}
-
-	void onEvent(const Event &evt)
-	{
-		if (!mEnabled)
-		{
-			return;
-		}
-
-		if (const auto& event = dynamic_cast<const MouseEvent*>(&evt))
-		{
-			mInput.panSpeed += event->relState.x;
-			mInput.tiltSpeed -= event->relState.y;
-			mInput.zoomSpeed = event->relState.z;
-		}
-	}
-
-private:
-	InputPlatformPtr mInputPlatform;
-	std::vector<LogicalAxisPtr> mLogicalAxes;
-	LogicalAxisPtr mForwardAxis;
-	LogicalAxisPtr mRightAxis;
-	CameraController::Input mInput = CameraController::Input::zero();
-	bool mEnabled = false;
-};
-
-template <typename Source, typename Result, typename Functor>
-void mapContainer(const Source& c, Result& result, Functor &&f)
-{
-	std::transform(std::begin(c), std::end(c), std::inserter(result, std::end(result)), f);
-}
 
 static osg::ref_ptr<osg::Texture> createEntitySelectionIcon(int width = 32)
 {
@@ -293,7 +141,6 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	};
 
 	ui->setupUi(this);
-	ui->actionNewEntityTemplate->setEnabled(false); // Entity Template editing is not implemented
 	mViewMenuToolWindowSeparator = ui->menuView->addSeparator();
 	mRecentFilesMenuPopulator.reset(new RecentFilesMenuPopulator(ui->menuRecentFiles, &mSettings, fileOpener));
 
@@ -329,7 +176,7 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	
 	// Connect menus
 	QObject::connect(ui->actionNewScenario, SIGNAL(triggered()), this, SLOT(newScenario()));
-	QObject::connect(ui->actionNewEntityTemplate, SIGNAL(triggered()), this, SLOT(newEntityTemplate()));
+
 	QObject::connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(open()));
 	QObject::connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(save()));
 	QObject::connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(saveAs()));
@@ -433,9 +280,8 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 		config.engineRoot = mEngineRoot.get();
 		config.fileLocator = mSprocketModel->fileLocator;
 		config.inputPlatform = mInputPlatform;
-		config.dataSeriesRegistry = std::make_shared<DataSeriesRegistry>();
 
-		mapContainer(windowConfig.editorPluginFactories, mPlugins, [config](const EditorPluginFactory& factory) {
+		transform(windowConfig.editorPluginFactories, mPlugins, [config](const EditorPluginFactory& factory) {
 			return factory(config);
 		});
 	}
@@ -644,147 +490,6 @@ void MainWindow::updateIfIntervalElapsed()
 	update();
 }
 
-static bool isPlanet(const Entity& entity)
-{
-	return getPosition(entity).has_value() && entity.getFirstComponent<PlanetComponent>() != nullptr;
-}
-
-static bool entityPredicateAlwaysFalse(const Entity& entity)
-{
-	return false;
-}
-
-static sim::CameraControllerSelectorPtr getCameraControllerSelector(const sim::Entity& entity)
-{	
-	if (auto controller = entity.getFirstComponent<sim::CameraControllerComponent>())
-	{
-		return std::dynamic_pointer_cast<sim::CameraControllerSelector>(controller->cameraController);
-	}
-	return nullptr;
-}
-
-class CameraControllerWidget : public QWidget
-{
-public:
-	CameraControllerWidget(sim::World* world, QWidget* parent = nullptr) :
-		mWorld(world),
-		QWidget(parent)
-	{
-		setLayout(new QHBoxLayout());
-		mCameraModeCombo = new QComboBox();
-		mCameraModeCombo->setToolTip("Camera Mode");
-		mCameraModeCombo->setEnabled(false);
-		layout()->addWidget(mCameraModeCombo);
-
-		mTargetListModel = new EntityListModel(world, &entityPredicateAlwaysFalse);
-		auto proxyModel = new QSortFilterProxyModel(this);
-		proxyModel->setSourceModel(mTargetListModel);
-		
-
-		mCameraTargetCombo = new QComboBox();
-		mCameraTargetCombo->setToolTip("Camera Target");
-		mCameraTargetCombo->setModel(proxyModel);
-		mCameraTargetCombo->setEnabled(false);
-		layout()->addWidget(mCameraTargetCombo);
-	}
-
-	void setCamera(const sim::EntityPtr& camera)
-	{
-		mCamera = camera;
-		sim::CameraControllerSelectorPtr cameraControllerSelector = camera ? getCameraControllerSelector(*camera) : nullptr;
-
-		// Clear
-		mCameraModeCombo->disconnect();
-		mCameraTargetCombo->disconnect();
-		mCameraModeCombo->clear();
-		mControllerConnections.clear();
-
-		if (!cameraControllerSelector)
-		{
-			mCameraModeCombo->setEnabled(false);
-			mCameraTargetCombo->setEnabled(false);
-			mTargetListModel->setEntityFilter(&entityPredicateAlwaysFalse);
-			return;
-		}
-
-		mCameraModeCombo->setEnabled(true);
-		mCameraTargetCombo->setEnabled(true);
-
-		// Mode combo
-		for (const auto& item : cameraControllerSelector->getControllers())
-		{
-			mCameraModeCombo->addItem(QString::fromStdString(item.first));
-		}
-
-		const std::string& currentControllerName = cameraControllerSelector->getSelectedControllerName();
-		mCameraModeCombo->setCurrentText(QString::fromStdString(currentControllerName));
-		updateTargetFilterForControllerName(currentControllerName);
-
-		connect(mCameraModeCombo, &QComboBox::currentTextChanged, [=](const QString& text)
-		{
-			cameraControllerSelector->selectController(text.toStdString());
-		});
-
-		mControllerConnections.push_back(cameraControllerSelector->controllerSelected.connect([this](const std::string& name) {
-			mCameraModeCombo->blockSignals(true);
-			mCameraModeCombo->setCurrentText(QString::fromStdString(name));
-			mCameraModeCombo->blockSignals(false);
-
-			updateTargetFilterForControllerName(name);
-		}));
-
-		// Target combo
-		if (auto target = cameraControllerSelector->getTarget())
-		{
-			mCameraTargetCombo->setCurrentText(QString::fromStdString(getName(*target)));
-		}
-		
-		connect(mCameraTargetCombo, &QComboBox::currentTextChanged, [=](const QString& text)
-		{
-			EntityPtr object = sim::findObjectByName(*mWorld, text.toStdString());
-			if (object)
-			{
-				cameraControllerSelector->setTarget(object.get());
-			}
-		});
-
-		mControllerConnections.push_back(cameraControllerSelector->targetChanged.connect([this](Entity* target) {
-			mCameraTargetCombo->blockSignals(true);
-			mCameraTargetCombo->setCurrentText(target ? QString::fromStdString(getName(*target)) : "");
-			mCameraTargetCombo->blockSignals(false);
-		}));
-	}
-
-private:
-	void updateTargetFilterForControllerName(const std::string& name)
-	{
-		if (name == "Globe")
-		{
-			mTargetListModel->setEntityFilter(isPlanet);
-		}
-		else if (mCamera)
-		{
-			mTargetListModel->setEntityFilter([cameraName = getName(*mCamera)] (const sim::Entity& entity) {
-				return getPosition(entity).has_value()
-					&& entity.getFirstComponent<TemplateNameComponent>() != nullptr
-					&& getName(entity) != cameraName;
-			});
-		}
-		else
-		{
-			mTargetListModel->setEntityFilter(&entityPredicateAlwaysFalse);
-		}
-	}
-
-private:
-	sim::World* mWorld;
-	sim::EntityPtr mCamera;
-	QComboBox* mCameraModeCombo;
-	QComboBox* mCameraTargetCombo;
-	EntityListModel* mTargetListModel;
-	std::vector<boost::signals2::scoped_connection> mControllerConnections;
-};
-
 QToolBar* MainWindow::createViewportToolBar()
 {
 	QToolBar* toolbar = new QToolBar();
@@ -811,12 +516,13 @@ QToolBar* MainWindow::createViewportToolBar()
 	}
 
 	QIcon icon = getSprocketIcon(SprocketIcon::Settings);
-	vis::ScenePtr Scene = mEngineRoot->scene;
 	toolbar->addAction(icon, "Settings", [=] {
 		if (mCurrentSimCamera)
 		{
-			PropertiesDialog dialog(Scene.get(), mCurrentSimCamera, this);
-			dialog.exec();
+			PropertyEditor* editor = new PropertyEditor({});
+			editor->setModel(std::make_shared<ViewportPropertiesModel>(mEngineRoot->scene.get(), mCurrentSimCamera->getFirstComponent<sim::CameraComponent>().get()));
+			QDialog* dialog = createDialogNonModal(editor, "Settings", this);
+			dialog->exec();
 		}
 	});
 
@@ -871,11 +577,6 @@ void MainWindow::newScenario()
 	auto planet = factory.createEntity("PlanetEarth");
 	simWorld.addEntity(planet);
 	setCameraTarget(planet.get());
-}
-
-void MainWindow::newEntityTemplate()
-{
-	clearProject();
 }
 
 QString projectFileExtension = ".proj";
@@ -1142,7 +843,7 @@ void MainWindow::setCameraTarget(Entity* target)
 
 void MainWindow::about()
 {
-	QMessageBox::about(this, QApplication::applicationName(), "Copyright 2019 Matthew Paul Reid"); // TODO
+	QMessageBox::about(this, QApplication::applicationName(), "Copyright 2023 Matthew Paul Reid");
 }
 
 void MainWindow::exit()
@@ -1193,7 +894,7 @@ void MainWindow::editEngineSettings()
 	QString settingsFilename = mSettings.value(getSettingsFilenameKey()).toString();
 
 	SettingsEditor editor(settingsFilename, mEngineRoot->engineSettings, this);
-	auto dialog = createDialog(&editor, "Settings");
+	auto dialog = createDialogModal(&editor, "Settings");
 	dialog->setMinimumWidth(500);
 	dialog->setMinimumHeight(500);
 
