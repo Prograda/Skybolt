@@ -77,8 +77,6 @@ private slots:
 	void exit();
 	void captureImage();
 	void editEngineSettings();
-	void setViewportTextureDisplayEnabled(bool enabled);
-	void setLiveShaderEditingEnabled(bool enabled);
 
 	void toolWindowActionToggled(bool state);
 	void toolWindowVisibilityChanged(QWidget* toolWindow, bool visible);
@@ -126,13 +124,9 @@ private:
 	QAction* mViewMenuToolWindowSeparator;
 	ToolWindowManager* mToolWindowManager;
 	std::vector<QAction*> mToolActions;
-	std::unique_ptr<skybolt::vis::ShaderSourceFileChangeMonitor> mShaderSourceFileChangeMonitor;
-	std::shared_ptr<skybolt::StatsDisplaySystem> mStatsDisplaySystem;
 	cxxtimer::Timer mUpdateTimer; //!< Time since last update
 
 	class EntitiesTableModel* mEntitiesTableModel;
-	class PictureTableModel* mPictureTableModel;
-	class PlanTableModel* mPlanTableModel;
 	std::shared_ptr<class PropertiesModel> mPropertiesModel;
 
 	std::vector<DefaultContextActionPtr> mContextActions;
@@ -165,7 +159,6 @@ private:
 
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> mViewport;
 	ViewportClickHandler mViewportClickHandler = getDefaultViewportClickHandler();
-	osg::ref_ptr<skybolt::vis::RenderOperation> mRenderOperationVisualization;
 
 	skybolt::sim::EntityId mSelectedEntityId = skybolt::sim::nullEntityId();
 };

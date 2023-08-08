@@ -14,13 +14,16 @@
 #include <QString>
 #include <QWidget>
 
+class OsgWidget;
+class QMenuBar;
+
 struct UiController
 {
 	std::function<void(QWidget*)> toolWindowRaiser;
 	std::function<void(const PropertiesModelPtr&)> propertiesModelSetter;
 };
 
-typedef std::shared_ptr<UiController> UiControllerPtr;
+using UiControllerPtr = std::shared_ptr<UiController>;
 
 struct EditorPluginConfig
 {
@@ -28,6 +31,9 @@ struct EditorPluginConfig
 	skybolt::EngineRoot* engineRoot;
 	skybolt::file::FileLocator fileLocator;
 	skybolt::InputPlatformPtr inputPlatform;
+	OsgWidget* osgWidget;
+	osg::ref_ptr<skybolt::vis::RenderCameraViewport> renderCameraViewport;
+	QMenuBar* menuBar;
 };
 
 class BOOST_SYMBOL_VISIBLE EditorPlugin

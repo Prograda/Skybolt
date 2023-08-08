@@ -63,14 +63,6 @@
      <string>View</string>
     </property>
    </widget>
-    <widget class="QMenu" name="menuDeveloper">
-      <property name="title">
-        <string>Developer</string>
-      </property>
-      <addaction name="actionShowViewportStats"/>
-      <addaction name="actionShowViewportTextures"/>
-      <addaction name="actionLiveShaderEditing"/>
-    </widget>
    <widget class="QMenu" name="menuTools">
      <property name="title">
        <string>Tools</string>
@@ -86,7 +78,6 @@
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
-   <addaction name="menuDeveloper"/>
    <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -117,22 +108,6 @@
     <string>Exit</string>
    </property>
   </action>
-   <action name="actionShowViewportStats">
-     <property name="text">
-       <string>Viewport Stats</string>
-     </property>
-     <property name="checkable">
-       <bool>true</bool>
-     </property>
-   </action>
-   <action name="actionShowViewportTextures">
-     <property name="text">
-       <string>Viewport Textures</string>
-     </property>
-     <property name="checkable">
-       <bool>true</bool>
-     </property>
-   </action>
    <action name="actionCaptureImage">
      <property name="text">
        <string>Capture Image...</string>
@@ -141,14 +116,6 @@
    <action name="actionSettings">
      <property name="text">
        <string>Settings...</string>
-     </property>
-   </action>
-   <action name="actionLiveShaderEditing">
-     <property name="text">
-       <string>Live Shader Editing</string>
-     </property>
-     <property name="checkable">
-       <bool>true</bool>
      </property>
    </action>
   <action name="actionAbout">

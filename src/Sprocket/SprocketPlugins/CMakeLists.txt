@@ -1,3 +1,4 @@
+add_subdirectory(EngineDevTools)
 add_subdirectory(EntityController)
 
 OPTION(BUILD_SEQUENCE_EDITOR_PLUGIN "Build SequenceEditor Plugin")

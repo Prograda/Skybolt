@@ -189,6 +189,8 @@ public:
 		timer->start(50);
 	}
 
+	~EntityControllerWidget() override = default;
+
 	//! @param object may be null
 	void setEntity(sim::Entity* entity)
 	{

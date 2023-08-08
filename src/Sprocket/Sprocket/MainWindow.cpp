@@ -33,7 +33,6 @@
 #include <SkyboltEngine/EngineStats.h>
 #include <SkyboltEngine/TemplateNameComponent.h>
 #include <SkyboltEngine/VisObjectsComponent.h>
-#include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltEngine/Input/LogicalAxis.h>
 #include <SkyboltEngine/Scenario/Scenario.h>
 #include <SkyboltEngine/Scenario/ScenarioSerialization.h>
@@ -49,7 +48,6 @@
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
-#include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Physics/Astronomy.h>
 #include <SkyboltSim/System/SimStepper.h>
@@ -64,9 +62,7 @@
 #include <SkyboltVis/Renderable/Planet/Planet.h>
 #include <SkyboltVis/Renderable/Arrows.h>
 #include <SkyboltVis/RenderOperation/DefaultRenderCameraViewport.h>
-#include <SkyboltVis/RenderOperation/RenderOperationUtil.h>
 #include <SkyboltVis/RenderOperation/RenderTarget.h>
-#include <SkyboltVis/Shader/ShaderSourceFileChangeMonitor.h>
 #include <SkyboltVis/Window/CaptureScreenshot.h>
 #include <SkyboltVis/Window/Window.h>
 #include <SkyboltCommon/ContainerUtility.h>
@@ -161,10 +157,6 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	mOsgWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(mOsgWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
 
-	mStatsDisplaySystem = std::make_shared<StatsDisplaySystem>(&mOsgWidget->getVisRoot()->getViewer(), mOsgWidget->getWindow()->getView(), mViewport->getFinalRenderTarget()->getOsgCamera());
-	mStatsDisplaySystem->setVisible(false);
-	mEngineRoot->systemRegistry->push_back(mStatsDisplaySystem);
-
 	mInputPlatform.reset(new InputPlatformOis(std::to_string(size_t(winId())), 800, 600)); // TODO: use actual resolution
 	mViewportInput.reset(new ViewportInput(mInputPlatform));
 
@@ -182,11 +174,8 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	QObject::connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(saveAs()));
 	QObject::connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
 	QObject::connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(exit()));
-	QObject::connect(ui->actionShowViewportStats, &QAction::triggered, this, [this](bool visible) {mStatsDisplaySystem->setVisible(visible); });
-	QObject::connect(ui->actionShowViewportTextures, SIGNAL(triggered(bool)), this, SLOT(setViewportTextureDisplayEnabled(bool)));
 	QObject::connect(ui->actionCaptureImage, SIGNAL(triggered()), this, SLOT(captureImage()));
 	QObject::connect(ui->actionSettings, SIGNAL(triggered()), this, SLOT(editEngineSettings()));
-	QObject::connect(ui->actionLiveShaderEditing, SIGNAL(triggered(bool)), this, SLOT(setLiveShaderEditingEnabled(bool)));
 	
 	World* world = mEngineRoot->simWorld.get();
 
@@ -280,6 +269,9 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 		config.engineRoot = mEngineRoot.get();
 		config.fileLocator = mSprocketModel->fileLocator;
 		config.inputPlatform = mInputPlatform;
+		config.osgWidget = mOsgWidget;
+		config.renderCameraViewport = mViewport;
+		config.menuBar = ui->menuBar;
 
 		transform(windowConfig.editorPluginFactories, mPlugins, [config](const EditorPluginFactory& factory) {
 			return factory(config);
@@ -417,11 +409,6 @@ void MainWindow::update()
 	EngineRoot* engineRoot = mSprocketModel->engineRoot;
 
 	engineRoot->scenario.timeSource.update(dt);
-
-	if (mShaderSourceFileChangeMonitor)
-	{
-		mShaderSourceFileChangeMonitor->update();
-	}
 
 	auto simVisSystem = findSystem<SimVisSystem>(*engineRoot->systemRegistry);
 	assert(simVisSystem);
@@ -903,28 +890,6 @@ void MainWindow::editEngineSettings()
 		settingsFilename = editor.getSettingsFilename();
 		mSettings.setValue(getSettingsFilenameKey(), settingsFilename);
 		writeJsonFile(editor.getJson(), settingsFilename.toStdString());
-	}
-}
-
-void MainWindow::setViewportTextureDisplayEnabled(bool enabled)
-{
-	if (enabled && !mRenderOperationVisualization)
-	{
-		mRenderOperationVisualization = vis::createRenderOperationVisualization(mViewport, mEngineRoot->programs);
-		mOsgWidget->getWindow()->getRenderOperationSequence().addOperation(mRenderOperationVisualization);
-	}
-	else if (!enabled && mRenderOperationVisualization)
-	{
-		mOsgWidget->getWindow()->getRenderOperationSequence().removeOperation(mRenderOperationVisualization);
-	}
-}
-
-void MainWindow::setLiveShaderEditingEnabled(bool enabled)
-{
-	mShaderSourceFileChangeMonitor.reset();
-	if (enabled)
-	{
-		mShaderSourceFileChangeMonitor = std::make_unique<vis::ShaderSourceFileChangeMonitor>(mEngineRoot->programs);
 	}
 }
 

@@ -140,9 +140,7 @@ public:
 		mToolWindow.widget = mSequencePlotWidget;
 	}
 
-	~SequenceEditorPlugin()
-	{
-	}
+	~SequenceEditorPlugin() override = default;
 
 	void clearProject()
 	{
