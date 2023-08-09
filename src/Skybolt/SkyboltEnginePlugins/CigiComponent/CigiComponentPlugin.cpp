@@ -140,7 +140,7 @@ public:
 			entity->addComponent(std::make_shared<ProceduralLifetimeComponent>());
 			entity->setDynamicsEnabled(false);
 
-			mEngineRoot->simWorld->addEntity(entity);
+			mEngineRoot->scenario->world.addEntity(entity);
 			return std::make_shared<MyCigiEntity>(entity);
 		}
 		return nullptr;
@@ -149,7 +149,7 @@ public:
 	void destroyEntity(const CigiEntityPtr& cigiEntity) override
 	{
 		sim::EntityPtr simEntity = static_cast<MyCigiEntity*>(cigiEntity.get())->mEntity;
-		mEngineRoot->simWorld->removeEntity(simEntity.get());
+		mEngineRoot->scenario->world.removeEntity(simEntity.get());
 	}
 
 	CigiCameraPtr createCamera() override
@@ -157,14 +157,14 @@ public:
 		sim::EntityPtr entity = mEngineRoot->entityFactory->createEntity("Camera");
 		entity->addComponent(std::make_shared<ParentReferenceComponent>(mCigiGatewayEntity));
 		entity->addComponent(std::make_shared<ProceduralLifetimeComponent>());
-		mEngineRoot->simWorld->addEntity(entity);
+		mEngineRoot->scenario->world.addEntity(entity);
 		return std::make_shared<MyCigiCamera>(entity);
 	}
 
 	void destroyCamera(const CigiCameraPtr& cigiCamera) override
 	{
 		sim::EntityPtr simEntity = static_cast<MyCigiCamera*>(cigiCamera.get())->mEntity;
-		mEngineRoot->simWorld->removeEntity(simEntity.get());
+		mEngineRoot->scenario->world.removeEntity(simEntity.get());
 	}
 
 private:

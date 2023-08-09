@@ -21,7 +21,7 @@ constexpr double forceScaleMetersPerNewton = 0.0001;
 ForcesVisBinding::ForcesVisBinding(sim::World* world, const vis::ArrowsPtr& arrows) :
 	mWorld(world),
 	mArrows(arrows),
-	mVisibilityPredicate(visibilityOn)
+	mEntityVisibilityPredicate(visibilityOn)
 {
 	assert(mWorld);
 	assert(mArrows);
@@ -34,7 +34,7 @@ void ForcesVisBinding::syncVis(const GeocentricToNedConverter& converter)
 	const auto& entities = mWorld->getEntities();
 	for (const sim::EntityPtr& entity : entities)
 	{
-		if (mVisibilityPredicate(*entity))
+		if (mEntityVisibilityPredicate(*entity))
 		{
 			if (entity->isDynamicsEnabled())
 			{

@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "PropertyEditor.h"
-#include "QtLayoutUtil.h"
+#include "Sprocket/QtUtil/QtLayoutUtil.h"
 #include "Widgets/TableEditorWidget.h"
 
 #include <QtCore/QDate>

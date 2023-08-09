@@ -67,7 +67,6 @@
      <property name="title">
        <string>Tools</string>
      </property>
-     <addaction name="actionCaptureImage"/>
      <addaction name="actionSettings"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -108,11 +107,6 @@
     <string>Exit</string>
    </property>
   </action>
-   <action name="actionCaptureImage">
-     <property name="text">
-       <string>Capture Image...</string>
-     </property>
-   </action>
    <action name="actionSettings">
      <property name="text">
        <string>Settings...</string>

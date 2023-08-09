@@ -1,3 +1,9 @@
+/* Copyright 2012-2020 Matthew Reid
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
 #include "CameraControllerWidget.h"
 #include "Sprocket/Entity/EntityListModel.h"
 
@@ -37,6 +43,8 @@ CameraControllerWidget::CameraControllerWidget(sim::World* world, QWidget* paren
 	mWorld(world),
 	QWidget(parent)
 {
+	assert(mWorld);
+
 	setLayout(new QHBoxLayout());
 	mCameraModeCombo = new QComboBox();
 	mCameraModeCombo->setToolTip("Camera Mode");
@@ -55,7 +63,7 @@ CameraControllerWidget::CameraControllerWidget(sim::World* world, QWidget* paren
 	layout()->addWidget(mCameraTargetCombo);
 }
 
-void CameraControllerWidget::setCamera(const sim::EntityPtr& camera)
+void CameraControllerWidget::setCamera(sim::Entity* camera)
 {
 	mCamera = camera;
 	sim::CameraControllerSelectorPtr cameraControllerSelector = camera ? getCameraControllerSelector(*camera) : nullptr;
@@ -108,10 +116,10 @@ void CameraControllerWidget::setCamera(const sim::EntityPtr& camera)
 		
 	connect(mCameraTargetCombo, &QComboBox::currentTextChanged, [=](const QString& text)
 	{
-		sim::EntityPtr object = sim::findObjectByName(*mWorld, text.toStdString());
+		sim::Entity* object = mWorld->findObjectByName(text.toStdString());
 		if (object)
 		{
-			cameraControllerSelector->setTarget(object.get());
+			cameraControllerSelector->setTarget(object);
 		}
 	});
 
@@ -120,6 +128,14 @@ void CameraControllerWidget::setCamera(const sim::EntityPtr& camera)
 		mCameraTargetCombo->setCurrentText(target ? QString::fromStdString(sim::getName(*target)) : "");
 		mCameraTargetCombo->blockSignals(false);
 	}));
+}
+
+void CameraControllerWidget::entityRemoved(const sim::EntityPtr& entity)
+{
+	if (mCamera == entity.get())
+	{
+		setCamera(nullptr);
+	}
 }
 
 void CameraControllerWidget::updateTargetFilterForControllerName(const std::string& name)

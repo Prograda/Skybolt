@@ -14,13 +14,15 @@
 
 namespace skybolt {
 
- //! Visibility of sim objects is controlled by a predicate.
+using EntityVisibilityPredicate = std::function<bool(const sim::Entity&)>;
+using EntityVisibilityPredicateSetter = std::function<void(EntityVisibilityPredicate)>;
+
+ //! Visibility of entities is controlled by a predicate.
 class EntityVisibilityFilterable
 {
 public:
-	typedef std::function<bool(const sim::Entity&)> VisibilityPredicate;
 
-	virtual void setVisibilityPredicate(VisibilityPredicate predicate) = 0;
+	virtual void setEntityVisibilityPredicate(EntityVisibilityPredicate predicate) = 0;
 
 	static bool visibilityOff(const sim::Entity&) { return false; }
 	static bool visibilityOn(const sim::Entity&) {return true; }

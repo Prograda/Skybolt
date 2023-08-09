@@ -30,7 +30,7 @@ std::vector<DefaultContextActionPtr> createContextActions(const EngineRoot& engi
 
 	return {
 		adaptToDefaultAction(std::make_shared<AboutContextAction>()),
-		adaptToDefaultAction(std::make_shared<AttachToParentContextAction>(engineRoot.simWorld.get())),
+		adaptToDefaultAction(std::make_shared<AttachToParentContextAction>(&engineRoot.scenario->world)),
 		adaptToDefaultAction(std::make_shared<DetatchFromParentContextAction>()),
 		adaptToDefaultAction(std::make_shared<MoveToAirportContextAction>(airports)),
 		adaptToDefaultAction(std::make_shared<SetPositionContextAction>()),

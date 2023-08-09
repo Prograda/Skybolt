@@ -14,6 +14,7 @@
 
 #include <assert.h>
 #include <boost/foreach.hpp>
+#include <optional>
 
 namespace skybolt {
 
@@ -73,7 +74,9 @@ public:
 	void capture()
 	{
 		if (mKeyboard)
+		{
 			mKeyboard->capture();
+		}
 	}
 
 private:
@@ -266,19 +269,17 @@ public:
 
 	virtual size_t getButtonCount() const
 	{
-		return mJoystick->getNumberOfComponents(OIS::OIS_Button);
+		return mJoystick ? mJoystick->getNumberOfComponents(OIS::OIS_Button) : 0;
 	}
 
 	virtual bool isButtonPressed(size_t i) const
 	{
-		if (mJoystick)
-			return mJoystick->getJoyStickState().mButtons[i];
-		return false;
+		return mJoystick ? mJoystick->getJoyStickState().mButtons[i] : false;
 	}
 
 	virtual size_t getAxisCount() const
 	{
-		return mJoystick->getNumberOfComponents(OIS::OIS_Axis);
+		return mJoystick ? mJoystick->getNumberOfComponents(OIS::OIS_Axis) : 0;
 	}
 
 	virtual float getAxisState(size_t i) const

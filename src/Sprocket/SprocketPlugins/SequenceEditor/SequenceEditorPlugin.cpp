@@ -9,56 +9,54 @@
 #include "SequencePlotWidget.h"
 #include "SequenceSerializer.h"
 #include <Sprocket/EditorPlugin.h>
+#include <Sprocket/SceneSelectionModel.h>
 #include <Sprocket/Icon/SprocketIcons.h>
-#include <Sprocket/JsonHelpers.h>
 #include <Sprocket/Entity/EntityChooserDialogFactory.h>
+#include <Sprocket/Scenario/ScenarioObject.h>
+#include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Sequence/SequenceController.h>
 #include <SkyboltEngine/Sequence/EntityStateSequenceController.h>
 #include <SkyboltEngine/Sequence/JulianDateSequenceController.h>
 
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
+#include <QMainWindow>
 
 #include <boost/config.hpp>
 #include <boost/dll/alias.hpp>
 
 using namespace skybolt;
 
-using SequenceTreeItem = TreeItemT<StateSequenceControllerPtr>;
+using SequenceObject = ScenarioObjectT<StateSequenceControllerPtr>;
 
-static void addItem(Registry<TreeItem>& registry, const StateSequenceControllerPtr& controller, const QString& name)
+static void addItem(Registry<ScenarioObject>& registry, const StateSequenceControllerPtr& controller, const std::string& name)
 {
 	QIcon icon = getSprocketIcon(SprocketIcon::Sequence);
-	registry.add(std::make_shared<SequenceTreeItem>(icon, name, controller));
+	registry.add(std::make_shared<SequenceObject>(name, icon, controller));
 }
 
-static StateSequenceControllerPtr toSequenceController(const TreeItem& item)
+static StateSequenceControllerPtr toSequenceController(const SequenceObject& item)
 {
-	auto sequenceItem = static_cast<const SequenceTreeItem*>(&item);
+	auto sequenceItem = static_cast<const SequenceObject*>(&item);
 	return sequenceItem->data;
 }
 
-static void readSequences(Registry<TreeItem>& registry, const QJsonValue& value, const sim::World& world, Scenario* scenario)
+static void readSequences(Registry<ScenarioObject>& registry, const nlohmann::json& json, Scenario* scenario)
 {
-	assert(!value.isUndefined());
 	assert(scenario);
 
-	QJsonObject json = value.toObject();
-	for (const auto& name : json.keys())
+	for (const auto& i : json.items())
 	{
-		StateSequenceControllerPtr controller = readSequenceController(json[name].toObject(), world, scenario);
-		addItem(registry, controller, name);
+		StateSequenceControllerPtr controller = readSequenceController(i.value(), scenario);
+		addItem(registry, controller, i.key());
 	}
 }
 
-static QJsonObject writeSequences(const Registry<TreeItem>& registry)
+static nlohmann::json writeSequences(const Registry<ScenarioObject>& registry)
 {
-	QJsonObject json;
+	nlohmann::json json;
 	for (const auto& item : registry.getItems())
 	{
-		json[QString::fromStdString(item->getName())] = writeSequenceController(*toSequenceController(*item));
+		json[item->getName()] = writeSequenceController(*toSequenceController(*dynamic_cast<SequenceObject*>(item.get())));
 	}
 	return json;
 }
@@ -99,21 +97,21 @@ class SequenceEditorPlugin : public EditorPlugin
 public:
 	SequenceEditorPlugin(const EditorPluginConfig& config) :
 		mUiController(config.uiController),
-		mSequenceTreeItemRegistry(new Registry<TreeItem>()),
 		mEngineRoot(config.engineRoot)
 	{
 		assert(mEngineRoot);
-		mConnections.push_back(mEngineRoot->scenario.timeSource.timeChanged.connect([this](double time) {
+		mConnections.push_back(mEngineRoot->scenario->timeSource.timeChanged.connect([this](double time) {
 			setTime(time);
 		}));
 
 		QIcon icon = getSprocketIcon(SprocketIcon::Sequence);
 
 		{
-			TreeItemType type(typeid(SequenceTreeItem));
-			type.name = "Sequence";
-			type.subTypes = {"Entity", "DateTime"};
-			type.itemCreator = [this, icon](const std::string& name, const std::string& subType) {
+			auto type = std::make_shared<ScenarioObjectType>();
+			type->name = "Sequence";
+			type->category = "Sequence";
+			type->templateNames = {"Entity", "DateTime"};
+			type->objectCreator = [this, icon](const std::string& name, const std::string& subType) {
 				StateSequenceControllerPtr sequence;
 				if (subType == "Entity")
 				{
@@ -121,79 +119,33 @@ public:
 				}
 				else if (subType == "DateTime")
 				{
-					sequence = std::make_shared<JulianDateSequenceController>(std::make_shared<DoubleStateSequence>(), &mEngineRoot->scenario);
+					sequence = std::make_shared<JulianDateSequenceController>(std::make_shared<DoubleStateSequence>(), mEngineRoot->scenario.get());
 				}
 				assert(sequence);
-				mSequenceTreeItemRegistry->add(std::make_shared<SequenceTreeItem>(icon, QString::fromStdString(name), sequence));
+				auto item = std::make_shared<SequenceObject>(name, icon, sequence);
+				mSequenceObjectRegistry->add(item);
+				return item;
 			};
-			type.itemDeleter = [this](TreeItem* item) {
-				mSequenceTreeItemRegistry->remove(item);
+			type->isObjectRemovable = [] (const ScenarioObject& item) { return true; };
+			type->objectRemover = [this](const ScenarioObject& item) {
+				mSequenceObjectRegistry->remove(&item);
 			};
-			type.itemRegistry = mSequenceTreeItemRegistry;
+			type->objectRegistry = mSequenceObjectRegistry;
 
-			mTreeItemTypes.push_back(type);
+			mScenarioObjectTypes[std::type_index(typeid(SequenceObject))] = type;
 		}
 
 
-		mSequencePlotWidget = new SequencePlotWidget(&mEngineRoot->scenario.timeSource);
+		mSequencePlotWidget = new SequencePlotWidget(&mEngineRoot->scenario->timeSource, config.mainWindow);
 		mToolWindow.name = "Curve Editor";
 		mToolWindow.widget = mSequencePlotWidget;
-	}
 
-	~SequenceEditorPlugin() override = default;
-
-	void clearProject()
-	{
-		mSequenceTreeItemRegistry->clear();
-		mRecordingControllers.clear();
-	}
-
-	void loadProject(const QJsonObject& json)
-	{
-		QJsonValue value = json["sequences"];
-		if (!value.isUndefined())
-		{
-			readSequences(*mSequenceTreeItemRegistry, value, *mEngineRoot->simWorld, &mEngineRoot->scenario);
-		}
-	}
-
-	void saveProject(QJsonObject& json)
-	{
-		json["sequences"] = writeSequences(*mSequenceTreeItemRegistry);
-	}
-
-	void setTime(double time)
-	{
-		for (const auto& item : mSequenceTreeItemRegistry->getItems())
-		{
-			const auto& sequence = toSequenceController(*item);
-
-			auto i = mRecordingControllers.find(sequence);
-			if (i == mRecordingControllers.end()) // playing
-			{
-				sequence->setTime(time);
-			}
-			else // recording
-			{
-				i->second->setTime(time);
-			}
-		}
-	}
-	
-	std::vector<TreeItemType> getTreeItemTypes() override
-	{
-		return mTreeItemTypes;
-	}
-
-	PropertyEditorWidgetFactoryMap getPropertyEditorWidgetFactories() override
-	{
-		PropertyEditorWidgetFactoryMap factoryMap;
-		factoryMap[typeid(SequenceProperty)] = [this](QtProperty& property) {
+		mFactoryMap[typeid(SequenceProperty)] = [this](QtProperty& property) {
 			auto sequence = static_cast<SequenceProperty*>(&property)->sequence;
 			SequenceEditorConfig config;
 			config.controller = sequence;
-			config.entityChooserDialogFactory = std::make_shared<EntityChooserDialogFactory>(mEngineRoot->simWorld.get());
-			config.timeSource = &mEngineRoot->scenario.timeSource;
+			config.entityChooserDialogFactory = std::make_shared<EntityChooserDialogFactory>(&mEngineRoot->scenario->world);
+			config.timeSource = &mEngineRoot->scenario->timeSource;
 			config.sequenceRecorder = [this, sequence, timeSource = config.timeSource](bool enabled) {
 				if (enabled)
 				{
@@ -213,14 +165,72 @@ public:
 			config.parent = nullptr;
 			return new SequenceEditor(config);
 		};
-		return factoryMap;
+
+		QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this] (const ScenarioObjectPtr& selected, const ScenarioObjectPtr& deselected) {
+			selectionChanged(selected);
+		});
 	}
 
-	void explorerSelectionChanged(const TreeItem& item) override
+	~SequenceEditorPlugin() override = default;
+
+	void resetProject() override
 	{
-		if (auto sequenceItem = dynamic_cast<const SequenceTreeItem*>(&item))
+		mSequenceObjectRegistry->clear();
+		mRecordingControllers.clear();
+	}
+
+	void readProject(const nlohmann::json& json) override
+	{
+		ifChildExists(json, "sequences", [&] (const nlohmann::json& child) {
+			readSequences(*mSequenceObjectRegistry, child, mEngineRoot->scenario.get());
+		});
+	}
+
+	void writeProject(nlohmann::json& json)
+	{
+		json["sequences"] = writeSequences(*mSequenceObjectRegistry);
+	}
+
+	void setTime(double time)
+	{
+		for (const auto& item : mSequenceObjectRegistry->getItems())
 		{
-			mUiController->propertiesModelSetter(std::make_shared<SequencePropertiesModel>(sequenceItem->data));
+			const auto& sequence = toSequenceController(*dynamic_cast<SequenceObject*>(item.get()));
+
+			auto i = mRecordingControllers.find(sequence);
+			if (i == mRecordingControllers.end()) // playing
+			{
+				sequence->setTime(time);
+			}
+			else // recording
+			{
+				i->second->setTime(time);
+			}
+		}
+	}
+	
+	PropertyModelFactoryMap getPropertyModelFactories() const override
+	{
+		return { { typeid(SequenceObject), [] (const ScenarioObject& item) {
+			auto sequenceItem = dynamic_cast<const SequenceObject*>(&item);
+			return std::make_shared<SequencePropertiesModel>(sequenceItem->data);
+		}}};
+	}
+
+	PropertyEditorWidgetFactoryMap getPropertyEditorWidgetFactories() const override
+	{
+		return mFactoryMap;
+	}
+
+	ScenarioObjectTypeMap getSceneObjectTypes() const override
+	{
+		return mScenarioObjectTypes;
+	}
+
+	void selectionChanged(const ScenarioObjectPtr& item)
+	{
+		if (auto sequenceItem = dynamic_cast<const SequenceObject*>(item.get()))
+		{
 			mSequencePlotWidget->setSequenceController(sequenceItem->data);
 		}
 	}
@@ -232,12 +242,13 @@ public:
 
 private:
 	UiControllerPtr mUiController;
-	std::shared_ptr<Registry<TreeItem>> mSequenceTreeItemRegistry;
-	std::vector<TreeItemType> mTreeItemTypes;
+	ScenarioObjectRegistryPtr mSequenceObjectRegistry = std::make_shared<ScenarioObjectRegistry>();
+	ScenarioObjectTypeMap mScenarioObjectTypes;
 	ToolWindow mToolWindow;
 	EngineRoot* mEngineRoot;
 	std::vector<boost::signals2::scoped_connection> mConnections;
 	SequencePlotWidget* mSequencePlotWidget;
+	PropertyEditorWidgetFactoryMap mFactoryMap;
 	std::map<StateSequenceControllerPtr, std::shared_ptr<SequenceRecorder>> mRecordingControllers;
 };
 

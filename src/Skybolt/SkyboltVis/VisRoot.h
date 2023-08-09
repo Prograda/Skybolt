@@ -33,6 +33,8 @@ public:
 	void addWindow(const WindowPtr& window);
 	void removeWindow(const WindowPtr& window);
 
+	const std::vector<WindowPtr>& getWindows() const { return mWindows; }
+
 	//! Default is LoadTimingPolicy::LoadAcrossMultipleFrames
 	void setLoadTimingPolicy(LoadTimingPolicy loadTimingPolicy) { mLoadTimingPolicy = loadTimingPolicy; }
 

@@ -7,72 +7,25 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 
-#include "CaptureImageDailog.h"
 #include "EditorPlugin.h"
 #include "EngineSettingsSerialization.h"
-#include "InputPlatformOis.h"
-#include "QtDialogUtil.h"
 #include "RecentFilesMenuPopulator.h"
-#include "SprocketModel.h"
-#include "ContextAction/CreateContextActions.h"
-#include "Icon/SprocketIcons.h"
-#include "Entity/EntityCreatorWidget.h"
-#include "Entity/EntityListModel.h"
-#include "Entity/EntityPropertiesModel.h"
-#include "Scenario/ScenarioPropertiesModel.h"
-#include "Viewport/VisEntityIcons.h"
-#include "Viewport/ViewportInput.h"
-#include "Viewport/ViewportPropertiesModel.h"
-#include "Viewport/OsgWidget.h"
-#include "Widgets/CameraControllerWidget.h"
+#include "QtUtil/QtDialogUtil.h"
+#include "Property/PropertyEditor.h"
 #include "Widgets/SettingsEditor.h"
-#include "Widgets/TimeControlWidget.h"
-#include "Widgets/TimelineWidget.h"
 
+#include <SkyboltCommon/Json/JsonHelpers.h>
+#include <SkyboltCommon/Json/WriteJsonFile.h>
 #include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/EngineStats.h>
-#include <SkyboltEngine/TemplateNameComponent.h>
-#include <SkyboltEngine/VisObjectsComponent.h>
-#include <SkyboltEngine/Input/LogicalAxis.h>
 #include <SkyboltEngine/Scenario/Scenario.h>
 #include <SkyboltEngine/Scenario/ScenarioSerialization.h>
-#include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
-#include <SkyboltEngine/SimVisBinding/ForcesVisBinding.h>
-#include <SkyboltEngine/SimVisBinding/EntityVisibilityFilterable.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
-#include <SkyboltEngine/SimVisBinding/VisNameLabels.h>
-#include <SkyboltEngine/SimVisBinding/VisOrbits.h>
-#include <SkyboltSim/CameraController/CameraControllerSelector.h>
-#include <SkyboltSim/Components/CameraComponent.h>
-#include <SkyboltSim/Components/CameraControllerComponent.h>
-#include <SkyboltSim/Components/Node.h>
-#include <SkyboltSim/Components/NameComponent.h>
-#include <SkyboltSim/Components/PlanetComponent.h>
-#include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Physics/Astronomy.h>
 #include <SkyboltSim/System/SimStepper.h>
 #include <SkyboltSim/System/System.h>
 #include <SkyboltSim/System/SystemRegistry.h>
-#include <SkyboltSim/World.h>
 #include <SkyboltVis/Camera.h>
-#include <SkyboltVis/DisplaySettings.h>
-#include <SkyboltVis/Shader/OsgShaderHelpers.h>
-#include <SkyboltVis/Scene.h>
-#include <SkyboltVis/VisRoot.h>
-#include <SkyboltVis/Renderable/Planet/Planet.h>
-#include <SkyboltVis/Renderable/Arrows.h>
-#include <SkyboltVis/RenderOperation/DefaultRenderCameraViewport.h>
-#include <SkyboltVis/RenderOperation/RenderTarget.h>
-#include <SkyboltVis/Window/CaptureScreenshot.h>
-#include <SkyboltVis/Window/Window.h>
-#include <SkyboltCommon/ContainerUtility.h>
-#include <SkyboltCommon/Json/WriteJsonFile.h>
-#include <SkyboltCommon/Math/IntersectionUtility.h>
-#include <SkyboltCommon/Math/MathUtility.h>
-#include <SkyboltCommon/StringVector.h>
-#include <SkyboltCommon/Range.h>
-
-#include <px_sched/px_sched.h>
 
 #include <filesystem>
 #include <boost/log/trivial.hpp>
@@ -82,15 +35,10 @@
 #include <QApplication>
 #include <QBoxLayout>
 #include <QCloseEvent>
-#include <QComboBox>
 #include <QFileDialog>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QMessageBox>
 #include <QTimer>
 #include <QToolBar>
-#include <QVector3D>
 
 #include <osgDB/Registry>
 
@@ -100,29 +48,6 @@
 
 using namespace skybolt;
 using namespace skybolt::sim;
-
-static const QString defaultWindowLayoutState = "AAAAAwAAADgAdABvAG8AbABXAGkAbgBkAG8AdwBNAGEAbgBhAGcAZQByAFMAdABhAHQAZQBGAG8AcgBtAGEAdAAAAAIAAAAAAQAAABYAbQBhAGkAbgBXAHIAYQBwAHAAZQByAAAACAAAAAACAAAAEABzAHAAbABpAHQAdABlAHIAAAAIAAAAAAMAAAAIAHQAeQBwAGUAAAAKAAAAABAAcwBwAGwAaQB0AHQAZQByAAAACgBzAHQAYQB0AGUAAAAKAAAAAFgAQQBBAEEAQQAvAHcAQQBBAEEAQQBFAEEAQQBBAEEAQwBBAEEAQQBBAC8AdwBBAEEAQgBuAGMAQQAvAC8ALwAvAC8AdwBFAEEAQQBBAEEAQgBBAEEAPQA9AAAACgBpAHQAZQBtAHMAAAAJAAAAAAIAAAAIAAAAAAMAAAAIAHQAeQBwAGUAAAAKAAAAAAgAYQByAGUAYQAAAA4AbwBiAGoAZQBjAHQAcwAAAAkAAAAAAgAAAAgAAAAAAgAAAAgAbgBhAG0AZQAAAAoAAAAAEABFAHgAcABsAG8AcgBlAHIAAAAIAGQAYQB0AGEAAAAAAQAAAAgAAAAAAgAAAAgAbgBhAG0AZQAAAAoAAAAAIgBFAG4AdABpAHQAeQAgAEMAbwBuAHQAcgBvAGwAbABlAHIAAAAIAGQAYQB0AGEAAAAAAQAAABgAYwB1AHIAcgBlAG4AdABJAG4AZABlAHgAAAACAAAAAAAAAAAIAAAAAAMAAAAIAHQAeQBwAGUAAAAKAAAAABAAcwBwAGwAaQB0AHQAZQByAAAACgBzAHQAYQB0AGUAAAAKAAAAAFgAQQBBAEEAQQAvAHcAQQBBAEEAQQBFAEEAQQBBAEEAQwBBAEEAQQBGAEwAUQBBAEEAQQBVAEEAQQAvAC8ALwAvAC8AdwBFAEEAQQBBAEEAQgBBAEEAPQA9AAAACgBpAHQAZQBtAHMAAAAJAAAAAAIAAAAIAAAAAAMAAAAIAHQAeQBwAGUAAAAKAAAAAAgAYQByAGUAYQAAAA4AbwBiAGoAZQBjAHQAcwAAAAkAAAAAAQAAAAgAAAAAAgAAAAgAbgBhAG0AZQAAAAoAAAAAEABWAGkAZQB3AHAAbwByAHQAAAAIAGQAYQB0AGEAAAAAAQAAABgAYwB1AHIAcgBlAG4AdABJAG4AZABlAHgAAAACAAAAAAAAAAAIAAAAAAMAAAAIAHQAeQBwAGUAAAAKAAAAAAgAYQByAGUAYQAAAA4AbwBiAGoAZQBjAHQAcwAAAAkAAAAAAQAAAAgAAAAAAgAAAAgAbgBhAG0AZQAAAAoAAAAAFABQAHIAbwBwAGUAcgB0AGkAZQBzAAAACABkAGEAdABhAAAAAAEAAAAYAGMAdQByAHIAZQBuAHQASQBuAGQAZQB4AAAAAgAAAAAAAAAAEABnAGUAbwBtAGUAdAByAHkAAAAKAAAAALAAQQBkAG4AUQB5AHcAQQBEAEEAQQBBAEEAQQBBAEEAQQBBAEEAQQBBAEEAQQBBAEEAQgAzADgAQQBBAEEAUABNAEEAQQBBAEEAQQBBAEEAQQBBAEEAQQBBAEEAQQBkAC8AQQBBAEEARAB6AEEAQQBBAEEAQQBBAEEAQQBBAEEAQQBCADQAQQBBAEEAQQBBAEEAQQBBAEEAQQBBAEEAQQBBAEIAMwA4AEEAQQBBAFAATQAAAB4AZgBsAG8AYQB0AGkAbgBnAFcAaQBuAGQAbwB3AHMAAAAJAAAAAAA=";
-
-static osg::ref_ptr<osg::Texture> createEntitySelectionIcon(int width = 32)
-{
-	int height = width;
-	osg::ref_ptr<osg::Image> image = new osg::Image();
-	image->allocateImage(width, height, 1, GL_RGBA, GL_UNSIGNED_BYTE);
-	std::uint8_t* p = image->data();
-	for (int y = 0; y < height; ++y)
-	{
-		for (int x = 0; x < width; ++x)
-		{
-			bool edge = (x == 0 || y == 0 || x == (width - 1) || y == (height - 1));
-			*p++ = 255;
-			*p++ = 255;
-			*p++ = 255;
-			*p++ = edge ? 255 : 0;
-		}
-	}
-
-	return new osg::Texture2D(image);
-}
 
 MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	QMainWindow(windowConfig.parent, windowConfig.flags),
@@ -142,28 +67,6 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 
 	mSimStepper = std::make_unique<SimStepper>(mEngineRoot->systemRegistry);
 
-	mOsgWidget = new OsgWidget(getDisplaySettingsFromEngineSettings(mEngineRoot->engineSettings), this);
-
-	mViewport = new vis::DefaultRenderCameraViewport([&]{
-		vis::DefaultRenderCameraViewportConfig c;
-		c.scene = mEngineRoot->scene;
-		c.programs = &mEngineRoot->programs;
-		c.shadowParams = getShadowParams(mEngineRoot->engineSettings);
-		c.cloudRenderingParams = getCloudRenderingParams(mEngineRoot->engineSettings);
-		return c;
-	}());
-	mOsgWidget->getWindow()->getRenderOperationSequence().addOperation(mViewport);
-
-	mOsgWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-	connect(mOsgWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
-
-	mInputPlatform.reset(new InputPlatformOis(std::to_string(size_t(winId())), 800, 600)); // TODO: use actual resolution
-	mViewportInput.reset(new ViewportInput(mInputPlatform));
-
-	mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
-
-	mSprocketModel.reset(new SprocketModel(mEngineRoot.get(), mInputPlatform.get()));
-
 	setProjectFilename("");
 	
 	// Connect menus
@@ -174,38 +77,7 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	QObject::connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(saveAs()));
 	QObject::connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
 	QObject::connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(exit()));
-	QObject::connect(ui->actionCaptureImage, SIGNAL(triggered()), this, SLOT(captureImage()));
 	QObject::connect(ui->actionSettings, SIGNAL(triggered()), this, SLOT(editEngineSettings()));
-	
-	World* world = mEngineRoot->simWorld.get();
-
-	mSceneObjectPicker = createSceneObjectPicker(world);
-
-	Scenario& scenario = mEngineRoot->scenario;
-
-	auto hudGroup = mEngineRoot->scene->getBucketGroup(vis::Scene::Bucket::Hud);
-
-	mVisSelectedEntityIcon = new VisEntityIcons(mEngineRoot->programs, createEntitySelectionIcon());
-	hudGroup->addChild(mVisSelectedEntityIcon);
-
-	mVisNameLabels = std::make_unique<VisNameLabels>(world, hudGroup, mEngineRoot->programs);
-
-	osg::ref_ptr<osg::Program> unlitColoredProgram = mEngineRoot->programs.getRequiredProgram("unlitColored");
-
-	{
-		vis::Polyline::Params params;
-		params.program = unlitColoredProgram;
-		mVisOrbits.reset(new VisOrbits(world, hudGroup, params, mEngineRoot->julianDateProvider));
-	}
-	
-	{
-		vis::Arrows::Params params;
-		params.program = unlitColoredProgram;
-
-		auto arrows = std::make_shared<vis::Arrows>(params);
-		mEngineRoot->scene->addObject(arrows);
-		mForcesVisBinding.reset(new ForcesVisBinding(world, arrows));
-	}
 
 	mToolWindowManager = new ToolWindowManager(this);
 	// setup tool window manager
@@ -215,120 +87,8 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 
 	setStatusBar(new QStatusBar(this));
 
-	// Create center layout
-	QWidget* viewWidget;
-	{
-		QBoxLayout* layout = new QVBoxLayout();
-		layout->setMargin(0);
-		viewWidget = new QWidget();
-		viewWidget->setLayout(layout);
-
-		QToolBar* toolbar = createViewportToolBar();
-		layout->addWidget(toolbar);
-
-		layout->addWidget(mOsgWidget);
-
-		{
-			TimelineWidget* timeline = new TimelineWidget;
-			layout->addWidget(timeline);
-			TimeControlWidget* timeControl = new TimeControlWidget;
-			layout->addWidget(timeControl);
-
-			timeline->setTimeSource(&scenario.timeSource);
-
-			scenario.timeSource.timeChanged.connect([=](double time)
-			{
-				timeline->setBufferedRange(TimeRange(0, time));
-			});
-
-			timeControl->setTimeSource(&scenario.timeSource);
-		}
-	}
-
-	addToolWindow("Viewport", viewWidget);
-
 	float timeOfDayInHours = 20;
-	scenario.startJulianDate = calcJulianDate(2017, 8, 17, timeOfDayInHours);
-
-	// Load editor plugins
-	{
-		EditorPluginConfig config;
-		config.uiController = std::make_shared<UiController>();
-		config.uiController->propertiesModelSetter = [this](const PropertiesModelPtr& model) {
-			if (mPropertiesEditor)
-				mPropertiesEditor->setModel(nullptr);
-			mPropertiesModel.reset();
-
-			if (mPropertiesEditor)
-				mPropertiesEditor->setModel(model);
-			mPropertiesModel = model;
-		};
-		config.uiController->toolWindowRaiser = [this](QWidget* widget) {
-			raiseToolWindow(widget);
-		};
-		config.engineRoot = mEngineRoot.get();
-		config.fileLocator = mSprocketModel->fileLocator;
-		config.inputPlatform = mInputPlatform;
-		config.osgWidget = mOsgWidget;
-		config.renderCameraViewport = mViewport;
-		config.menuBar = ui->menuBar;
-
-		transform(windowConfig.editorPluginFactories, mPlugins, [config](const EditorPluginFactory& factory) {
-			return factory(config);
-		});
-	}
-
-	{
-		PropertyEditorWidgetFactoryMap factories;
-		for (const EditorPluginPtr& plugin : mPlugins)
-		{
-			auto items = plugin->getPropertyEditorWidgetFactories();
-			factories.insert(items.begin(), items.end());
-		}
-
-		mPropertiesEditor = new PropertyEditor(factories, this);
-		mPropertiesEditor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-		addToolWindow("Properties", mPropertiesEditor);
-	}
-
-	mContextActions = createContextActions(*mEngineRoot);
-
-	{
-		std::vector<TreeItemType> itemTypes;
-
-		for (const EditorPluginPtr& plugin : mPlugins)
-		{
-			auto items = plugin->getTreeItemTypes();
-			itemTypes.insert(itemTypes.end(), items.begin(), items.end());
-		}
-
-		WorldTreeWidgetConfig config;
-		config.world = world;
-		config.factory = mEngineRoot->entityFactory.get();
-		config.itemTypes = itemTypes;
-		config.scenario = &scenario;
-		config.contextActions = mContextActions;
-
-		mWorldTreeWidget = new WorldTreeWidget(config);
-		QObject::connect(mWorldTreeWidget, &WorldTreeWidget::selectionChanged, this, &MainWindow::explorerSelectionChanged);
-
-		addToolWindow("Explorer", mWorldTreeWidget);
-	}
-	for (const EditorPluginPtr& plugin : mPlugins)
-	{
-		auto windows = plugin->getToolWindows();
-		for (const auto& window : windows)
-		{
-			addToolWindow(window.name, window.widget);
-		}
-	}
-
-	addViewportMenuActions();
-
-	connect(mOsgWidget, &OsgWidget::mouseDown, this, [this](Qt::MouseButton button, const QPointF& position) {
-		onViewportMouseDown(button, position);
-	});
+	mEngineRoot->scenario->startJulianDate = calcJulianDate(2017, 8, 17, timeOfDayInHours);
 
 	clearProject();
 
@@ -341,41 +101,31 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 
 MainWindow::~MainWindow()
 {
-	mForcesVisBinding.reset();
-	mVisNameLabels.reset();
-	mVisOrbits.reset();
-
-	mPlugins.clear();
-
 	delete mToolWindowManager;
 
-	mSprocketModel.reset();
-	mCurrentSimCamera.reset();
 	mSimStepper.reset();
 	mEngineRoot.reset();
 }
 
 double minFrameDuration = 0.01;
 
-double latestSimTime = 0;
-
-static void simulate(SimStepper& simStepper, TimeSource& timeSource, float dt)
+void MainWindow::simulate(TimeSource& timeSource, float dt)
 {
 	if (timeSource.getTime() == 0)
 	{
-		latestSimTime = timeSource.getTime();
+		mLatestSimTime = timeSource.getTime();
 	}
 
 	timeSource.update(dt);
-	double dtSim = std::max(0.0, timeSource.getTime() - latestSimTime);
+	double dtSim = std::max(0.0, timeSource.getTime() - mLatestSimTime);
 	if (dtSim > 0.0)
 	{
-		latestSimTime = timeSource.getTime();
+		mLatestSimTime = timeSource.getTime();
 	}
 	System::StepArgs args;
 	args.dtSim = dtSim;
 	args.dtWallClock = dt;
-	simStepper.step(args);
+	mSimStepper->step(args);
 }
 
 static QString addSeparator(const QString& str)
@@ -394,68 +144,25 @@ void MainWindow::update()
 	mUpdateTimer.reset();
 	mUpdateTimer.start();
 
-	if (mInputPlatform) // TODO
-	{
-		if (mDisableInputSystemOnNextUpdate)
-		{
-			mViewportInput->setEnabled(false);
-			mDisableInputSystemOnNextUpdate = false;
-		}
-		mViewportInput->updateBeforeInput();
-		mInputPlatform->update();
-		mViewportInput->updateAfterInput(dt);
-	}
+	mEngineRoot->scenario->timeSource.update(dt);
 
-	EngineRoot* engineRoot = mSprocketModel->engineRoot;
+	simulate(mEngineRoot->scenario->timeSource, dt);
 
-	engineRoot->scenario.timeSource.update(dt);
-
-	auto simVisSystem = findSystem<SimVisSystem>(*engineRoot->systemRegistry);
-	assert(simVisSystem);
-	const GeocentricToNedConverter& coordinateConverter = simVisSystem->getCoordinateConverter();
-
-	if (mCurrentSimCamera)
-	{
-		simVisSystem->setSceneOriginProvider(SimVisSystem::sceneOriginFromEntity(mCurrentSimCamera));
-
-		if (auto controller = mCurrentSimCamera->getFirstComponent<CameraControllerComponent>())
-		{
-			controller->cameraController->setInput(mViewportInput->getInput());
-		}
-	}
-
-	simulate(*mSimStepper, engineRoot->scenario.timeSource, dt);
-
-	if (mCurrentSimCamera)
-	{
-		mVisSelectedEntityIcon->syncVis(coordinateConverter);
-		mVisNameLabels->syncVis(coordinateConverter);
-		mVisOrbits->syncVis(coordinateConverter);
-		mForcesVisBinding->syncVis(coordinateConverter);
-	}
-
-	if (Updatable* updatablePropertiesModel = dynamic_cast<Updatable*>(mPropertiesModel.get()))
-	{
-		updatablePropertiesModel->update();
-	}
-
-	mOsgWidget->update(); // TODO only redraw if something changed
-
-	mWorldTreeWidget->update();
+	emit updated();
 
 	QString status;
-	if (engineRoot->stats.terrainTileLoadQueueSize)
+	if (mEngineRoot->stats.terrainTileLoadQueueSize)
 	{
-		status += "Loading terrain tiles: " + QString::number(engineRoot->stats.terrainTileLoadQueueSize);
+		status += "Loading terrain tiles: " + QString::number(mEngineRoot->stats.terrainTileLoadQueueSize);
 	}
 
-	if (engineRoot->stats.featureTileLoadQueueSize)
+	if (mEngineRoot->stats.featureTileLoadQueueSize)
 	{
 		status = addSeparator(status);
-		status += "Loading feature tiles: " + QString::number(engineRoot->stats.featureTileLoadQueueSize);
+		status += "Loading feature tiles: " + QString::number(mEngineRoot->stats.featureTileLoadQueueSize);
 	}
 
-	uint32_t activeTasks = engineRoot->scheduler->active_threads();
+	uint32_t activeTasks = mEngineRoot->scheduler->active_threads();
 	if (activeTasks)
 	{
 		status = addSeparator(status);
@@ -477,45 +184,6 @@ void MainWindow::updateIfIntervalElapsed()
 	update();
 }
 
-QToolBar* MainWindow::createViewportToolBar()
-{
-	QToolBar* toolbar = new QToolBar();
-
-	World* world = mEngineRoot->simWorld.get();
-
-	{
-		mCameraCombo = new QComboBox();
-		mCameraCombo->setToolTip("Camera");
-		mCameraCombo->setModel(new EntityListModel(world, [] (const Entity& entity) {
-			return entity.getFirstComponent<CameraComponent>() != nullptr;
-		}));
-
-		connect(mCameraCombo, &QComboBox::currentTextChanged, [=](const QString& text)
-		{
-			EntityPtr object = findObjectByName(*world, text.toStdString());
-			setCamera(object);
-		});
-
-		toolbar->addWidget(mCameraCombo);
-
-		mCameraControllerWidget = new CameraControllerWidget(world);
-		toolbar->addWidget(mCameraControllerWidget);
-	}
-
-	QIcon icon = getSprocketIcon(SprocketIcon::Settings);
-	toolbar->addAction(icon, "Settings", [=] {
-		if (mCurrentSimCamera)
-		{
-			PropertyEditor* editor = new PropertyEditor({});
-			editor->setModel(std::make_shared<ViewportPropertiesModel>(mEngineRoot->scene.get(), mCurrentSimCamera->getFirstComponent<sim::CameraComponent>().get()));
-			QDialog* dialog = createDialogNonModal(editor, "Settings", this);
-			dialog->exec();
-		}
-	});
-
-	return toolbar;
-}
-
 static QVariantMap toVariantMap(const QByteArray& array)
 {
 	QVariantMap variantMap;
@@ -530,13 +198,16 @@ for (const auto& __item__ : container) \
 
 void MainWindow::clearProject()
 {
-	FOREACH_CALL(mPlugins, clearProject);
-
 	setProjectFilename("");
 
-	mSprocketModel->engineRoot->simWorld->removeAllEntities();
+	mEngineRoot->scenario->world.removeAllEntities();
 
-	mToolWindowManager->restoreState(toVariantMap(QByteArray::fromBase64(defaultWindowLayoutState.toUtf8())));
+	emit projectCleared();
+}
+
+void MainWindow::restoreToolWindowsState(const QString& stateBase64)
+{
+	mToolWindowManager->restoreState(toVariantMap(QByteArray::fromBase64(stateBase64.toUtf8())));
 }
 
 void createDefaultObjects(World& world, const EntityFactory& factory)
@@ -548,22 +219,20 @@ void createDefaultObjects(World& world, const EntityFactory& factory)
 
 void MainWindow::newScenario()
 {
-	const EntityFactory& factory = *mSprocketModel->engineRoot->entityFactory;
-	World& simWorld = *mSprocketModel->engineRoot->simWorld;
+	const EntityFactory& factory = *mEngineRoot->entityFactory;
+	World& simWorld = mEngineRoot->scenario->world;
 
 	clearProject();
 
 	// Create camera
 	sim::EntityPtr camera = factory.createEntity("Camera");
 	simWorld.addEntity(camera);
-	setCamera(camera);
 
 	createDefaultObjects(simWorld, factory);
 
 	// Create earth
 	auto planet = factory.createEntity("PlanetEarth");
 	simWorld.addEntity(planet);
-	setCameraTarget(planet.get());
 }
 
 QString projectFileExtension = ".proj";
@@ -613,18 +282,16 @@ void MainWindow::open(const QString& filename)
 	if (!file.open(QIODevice::ReadOnly))
 		return;
 
-	EngineRoot* engineRoot = mSprocketModel->engineRoot;
-
 	// TODO: prompt to save changes
 	clearProject();
-	createDefaultObjects(*engineRoot->simWorld, *engineRoot->entityFactory);
+	createDefaultObjects(mEngineRoot->scenario->world, *mEngineRoot->entityFactory);
 
 	setProjectFilename(filename);
 
 	try
 	{
-		QByteArray wholeFile = file.readAll();
-		QJsonObject const json = QJsonDocument::fromJson(wholeFile).object();
+		std::string content = file.readAll().toStdString();
+		nlohmann::json json = nlohmann::json::parse(content);
 
 		loadProject(json);
 		mRecentFilesMenuPopulator->addFilename(filename);
@@ -636,71 +303,46 @@ void MainWindow::open(const QString& filename)
 	}
 }
 
-static nlohmann::json toNlohmannJson(const QJsonObject& json)
+void MainWindow::loadProject(const nlohmann::json& json)
 {
-	QJsonDocument doc(json);
-	QString str(doc.toJson(QJsonDocument::Compact));
-	return nlohmann::json::parse(str.toStdString());
-}
+	ifChildExists(json, "scenario", [this] (const nlohmann::json& child) {
+		loadScenario(*mEngineRoot->scenario, child);
+	});
 
-static QJsonObject toQJson(const nlohmann::json& json)
-{
-	auto doc = QJsonDocument::fromJson(QString::fromStdString(json.dump()).toUtf8());
-	return doc.object();
-}
+	ifChildExists(json, "windowGeometry", [this] (const nlohmann::json& child) {
+		QString str = QString::fromStdString(child.get<std::string>());
+		restoreGeometry(QByteArray::fromBase64(str.toUtf8()));
+	});
 
-void MainWindow::loadProject(const QJsonObject& json)
-{
-	QJsonValue value = json["scenario"];
-	if (!value.isUndefined())
-	{
-		loadScenario(mEngineRoot->scenario, toNlohmannJson(value.toObject()));
-	}
+	ifChildExists(json, "windows", [this] (const nlohmann::json& child) {
+		QString str = QString::fromStdString(child.get<std::string>());
+		mToolWindowManager->restoreState(toVariantMap(QByteArray::fromBase64(str.toUtf8())));
+	});
 
-	value = json["geometry"];
-	if (!value.isUndefined())
-	{
-		mToolWindowManager->restoreGeometry(QByteArray::fromBase64(value.toString().toUtf8()));
-	}
+	ifChildExists(json, "entities", [this] (const nlohmann::json& child) {
+		loadEntities(mEngineRoot->scenario->world, *mEngineRoot->entityFactory, child);
+	});
 
-	value = json["windows"];
-	if (!value.isUndefined())
-	{
-		mToolWindowManager->restoreState(toVariantMap(QByteArray::fromBase64(value.toString().toUtf8())));
-	}
-
-	value = json["entities"];
-	if (!value.isUndefined())
-	{
-		loadEntities(*mEngineRoot->simWorld, *mEngineRoot->entityFactory, toNlohmannJson(value.toObject()));
-	}
-
-	value = json["viewport"];
-	if (!value.isUndefined())
-	{
-		loadViewport(value.toObject());
-	}
-
-	FOREACH_CALL(mPlugins, loadProject, json);
+	emit projectLoaded(json);
 }
 
 void MainWindow::save(QFile& file)
 {
-	QJsonObject json;
+	nlohmann::json json;
 	saveProject(json);
 
-	file.write(QJsonDocument(json).toJson());
+	int indent = 4;
+	file.write(json.dump(indent).c_str());
 }
 
-void MainWindow::saveProject(QJsonObject& json) const
+void MainWindow::saveProject(nlohmann::json& json) const
 {
-	json["scenario"] = toQJson(saveScenario(mSprocketModel->engineRoot->scenario));
-	json["windows"] = QString(toByteArray(mToolWindowManager->saveState()).toBase64());
-	json["geometry"] = QString(saveGeometry().toBase64());
-	json["entities"] = toQJson(saveEntities(*mSprocketModel->engineRoot->simWorld));
-	json["viewport"] = saveViewport();
+	json["scenario"] = saveScenario(*mEngineRoot->scenario);
+	json["windows"] = toByteArray(mToolWindowManager->saveState()).toBase64().toStdString();
+	json["windowGeometry"] = saveGeometry().toBase64().toStdString();
+	json["entities"] = saveEntities(mEngineRoot->scenario->world);
 
-	FOREACH_CALL(mPlugins, saveProject, json);
+	emit projectSaved(json);
 }
 
 void MainWindow::save()
@@ -741,93 +383,6 @@ void MainWindow::saveAs()
 	}
 }
 
-static osg::Vec3 readJsonOsgVec3(const QJsonArray& v)
-{
-	if (v.size() != 3)
-	{
-		throw std::runtime_error("Incorrect number of elements in vector. Expected 3.");
-	}
-	return osg::Vec3(v[0].toDouble(), v[1].toDouble(), v[2].toDouble());
-}
-
-void MainWindow::loadViewport(const QJsonObject& json)
-{
-	{
-		auto it = json.find("camera");
-		if (it != json.end())
-		{
-			std::string name = it.value().toString().toStdString();
-			EntityPtr camera = findObjectByName(*mEngineRoot->simWorld, name);
-			setCamera(camera);
-		}
-	}
-	{
-		auto it = json.find("ambientLight");
-		if (it != json.end())
-		{
-			mEngineRoot->scene->setAmbientLightColor(readJsonOsgVec3(it.value().toArray()));
-		}
-	}
-}
-
-static QJsonArray writeJson(const osg::Vec3& v)
-{
-	return { v.x(), v.y(), v.z() };
-}
-
-QJsonObject MainWindow::saveViewport() const
-{
-	QJsonObject json;
-	if (mCurrentSimCamera)
-	{
-		json["camera"] = QString::fromStdString(getName(*mCurrentSimCamera));
-		json["ambientLight"] = writeJson(mEngineRoot->scene->getAmbientLightColor());
-	}
-	return json;
-}
-
-static vis::CameraPtr getFirstVisCamera(const sim::Entity& simCamera)
-{
-	auto bindings = simCamera.getFirstComponent<SimVisBindingsComponent>();
-	if (bindings)
-	{
-		for (const auto& binding : bindings->bindings)
-		{
-			if (auto cameraBinding = dynamic_cast<CameraSimVisBinding*>(binding.get()))
-			{
-				return cameraBinding->getCamera();
-			}
-		}
-	}
-	return nullptr;
-}
-
-void MainWindow::setCamera(const sim::EntityPtr& simCamera)
-{
-	if (mCurrentSimCamera != simCamera)
-	{
-		mCurrentSimCamera = simCamera;
-		mCameraControllerWidget->setCamera(mCurrentSimCamera);
-
-		vis::CameraPtr visCamera = mCurrentSimCamera ? getFirstVisCamera(*mCurrentSimCamera) : nullptr;
-		mViewport->setCamera(visCamera);
-
-		mCameraCombo->setCurrentText(simCamera ? QString::fromStdString(getName(*simCamera)) : "");
-	}
-}
-
-void MainWindow::setCameraTarget(Entity* target)
-{
-	if (mCurrentSimCamera)
-	{
-		vis::CameraPtr visCamera = getFirstVisCamera(*mCurrentSimCamera);
-		if (auto controller = mCurrentSimCamera->getFirstComponent<CameraControllerComponent>())
-		{
-			controller->cameraController->setTarget(target);
-		}
-	}
-}
-
 void MainWindow::about()
 {
 	QMessageBox::about(this, QApplication::applicationName(), "Copyright 2023 Matthew Paul Reid");
@@ -844,38 +399,6 @@ void MainWindow::closeEvent(QCloseEvent* event)
 	QMainWindow::closeEvent(event);
 }
 
-void MainWindow::captureImage()
-{
-	mOsgWidget->setFixedWidth(1920);
-	mOsgWidget->setFixedHeight(1080);
-
-	QString defaultSequenceName = "untitled";
-	if (!mProjectFilename.isEmpty())
-	{
-		defaultSequenceName = QString::fromStdString(std::filesystem::path(mProjectFilename.toStdString()).stem().string());
-	}
-
-	showCaptureImageSequenceDialog([=](double time, const QString& filename) {
-			mEngineRoot->scenario.timeSource.setTime(time);
-			update();
-			bool fullyLoadEachFrameBeforeProgressing = false;
-			if (fullyLoadEachFrameBeforeProgressing)
-			{
-				while (mEngineRoot->stats.terrainTileLoadQueueSize > 0)
-				{
-					using namespace std::chrono_literals;
-					std::this_thread::sleep_for(1ms);
-					updateIfIntervalElapsed();
-				}
-			}
-			QImage image = mOsgWidget->grabFramebuffer();
-			image.save(filename);
-		}, defaultSequenceName, this);
-
-	mOsgWidget->setMinimumSize(1, 1);
-	mOsgWidget->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
-}
-
 void MainWindow::editEngineSettings()
 {
 	QString settingsFilename = mSettings.value(getSettingsFilenameKey()).toString();
@@ -890,121 +413,6 @@ void MainWindow::editEngineSettings()
 		settingsFilename = editor.getSettingsFilename();
 		mSettings.setValue(getSettingsFilenameKey(), settingsFilename);
 		writeJsonFile(editor.getJson(), settingsFilename.toStdString());
-	}
-}
-
-void MainWindow::setPropertiesModel(PropertiesModelPtr properties)
-{
-	mPropertiesEditor->setModel(nullptr);
-	mPropertiesModel = std::move(properties);
-	mPropertiesEditor->setModel(mPropertiesModel);
-}
-
-void MainWindow::setSelectedEntity(skybolt::sim::EntityId entityId)
-{
-	mSelectedEntityId = entityId;
-	std::set<sim::Entity*> selection;
-	auto entity = mEngineRoot->simWorld->getEntityById(entityId);
-	if (entity)
-	{
-		selection.insert(entity);
-	}
-	mVisSelectedEntityIcon->setEntities(selection);
-	
-	mWorldTreeWidget->blockSignals(true); // prevent tree widget signaling explorerSelectionChanged
-	mWorldTreeWidget->setSelectedEntity(entity);
-	mWorldTreeWidget->blockSignals(false);
-}
-
-void MainWindow::explorerSelectionChanged(const TreeItem& item)
-{
-	setSelectedEntity(nullEntityId());
-
-	if (auto entityItem = dynamic_cast<const EntityTreeItem*>(&item))
-	{
-		setSelectedEntity(entityItem->data);
-		setPropertiesModel(std::make_shared<EntityPropertiesModel>( mEngineRoot->simWorld->getEntityById(mSelectedEntityId)));
-	}
-	else if (auto scenarioItem = dynamic_cast<const ScenarioTreeItem*>(&item))
-	{
-		setPropertiesModel(std::make_shared<ScenarioPropertiesModel>(&mSprocketModel->engineRoot->scenario));
-	}
-
-	FOREACH_CALL(mPlugins, explorerSelectionChanged, item);
-}
-
-std::optional<PickedSceneObject> MainWindow::pickSceneObjectAtPointInWindow(const QPointF& position, const EntitySelectionPredicate& predicate) const
-{
-	glm::vec2 pointNdc = glm::vec2(float(position.x()) / mOsgWidget->width(), float(position.y()) / mOsgWidget->height());
-	glm::dmat4 transform = calcCurrentViewProjTransform();
-	return mSceneObjectPicker(transform, pointNdc, 0.04, predicate);
-}
-
-std::optional<sim::Vector3> MainWindow::pickPointOnPlanetAtPointInWindow(const QPointF& position) const
-{
-   glm::vec2 pointNdc = glm::vec2(float(position.x()) / mOsgWidget->width(), float(position.y()) / mOsgWidget->height());
-   sim::Vector3 camPosition = *getPosition(*mCurrentSimCamera);
-   std::optional<PickedSceneObject> object = pickPointOnPlanet(*mEngineRoot->simWorld, camPosition, glm::inverse(calcCurrentViewProjTransform()), pointNdc);
-   return object ? object->position : std::optional<sim::Vector3>();
-}
-
-MainWindow::ViewportClickHandler MainWindow::getDefaultViewportClickHandler()
-{
-	static ViewportClickHandler f = [this] (Qt::MouseButton button, const QPointF& position) {
-		if (button == Qt::MouseButton::LeftButton)
-		{
-			if (mViewportInput)
-			{
-				mViewportInput->setEnabled(true);
-			}
-		}
-		else if (button == Qt::MouseButton::MiddleButton)
-		{
-			skybolt::sim::EntityId selectedEntityId = nullEntityId();
-			auto hasNamePredicate = [] (const skybolt::sim::Entity& e) { return !getName(e).empty(); };
-			
-			if (std::optional<PickedSceneObject> object = pickSceneObjectAtPointInWindow(position, hasNamePredicate); object)
-			{
-				selectedEntityId = object->entity->getId();
-			}
-			if (selectedEntityId != mSelectedEntityId)
-			{
-				setSelectedEntity(selectedEntityId);
-				sim::Entity* selectedEntity = mEngineRoot->simWorld->getEntityById(selectedEntityId);
-				setPropertiesModel(selectedEntity ? std::make_shared<EntityPropertiesModel>(selectedEntity) : nullptr);
-			}
-		}
-	};
-	return f;
-}
-
-void MainWindow::onViewportMouseDown(Qt::MouseButton button, const QPointF& position)
-{
-	mViewportClickHandler(button, position);
-}
-
-void MainWindow::showContextMenu(const QPoint& point)
-{
-	QMenu contextMenu(tr("Context menu"), this);
-	if (auto intersection = pickPointOnPlanetAtPointInWindow(point); intersection)
-	{
-		ActionContext context;
-		context.entity = mEngineRoot->simWorld->getEntityById(mSelectedEntityId);
-		context.point = *intersection;
-
-		for (const auto& contextAction : mContextActions)
-		{
-			if (contextAction->handles(context))
-			{
-				auto action = new QAction(QString::fromStdString(contextAction->getName()), this);
-				connect(action, &QAction::triggered, this, [&] { contextAction->execute(context); });
-				contextMenu.addAction(action);
-			}
-		}
-		if (!contextMenu.actions().empty())
-		{
-			contextMenu.exec(mOsgWidget->mapToGlobal(point));
-		}
 	}
 }
 
@@ -1034,6 +442,11 @@ void MainWindow::raiseToolWindow(QWidget* widget)
 	}
 }
 
+QMenuBar* MainWindow::getMenuBar() const
+{
+	return ui->menuBar;
+}
+
 void MainWindow::toolWindowActionToggled(bool state)
 {
 	int index = static_cast<QAction*>(sender())->data().toInt();
@@ -1054,8 +467,12 @@ void MainWindow::setProjectFilename(const QString& filename)
 {
 	if (!mProjectFilename.isEmpty())
 	{
-		;
-		mSprocketModel->removeFileSearchPath(std::filesystem::path(mProjectFilename.toStdString()).parent_path().string());
+		std::string folder = std::filesystem::path(mProjectFilename.toStdString()).parent_path().string();
+		auto& pathList = osgDB::Registry::instance()->getDataFilePathList();
+		if (auto i = std::find(pathList.begin(), pathList.end(), folder); i != pathList.end())
+		{
+			pathList.erase(i);
+		}
 	}
 
 	mProjectFilename = filename;
@@ -1066,85 +483,6 @@ void MainWindow::setProjectFilename(const QString& filename)
 	}
 	setWindowTitle(title);
 
-	mSprocketModel->addFileSearchPath(std::filesystem::path(mProjectFilename.toStdString()).parent_path().string());
-}
-
-void MainWindow::onEvent(const Event& event)
-{
-	if (const auto& mouseEvent = dynamic_cast<const MouseEvent*>(&event))
-	{
-		if (mouseEvent->type == MouseEvent::Type::Released)
-		{
-			mDisableInputSystemOnNextUpdate = true; // Can't disable it now because we are in the middle of the input capture process
-		}
-	}
-}
-
-static QAction* addCheckedAction(QMenu& menu, const QString& text, std::function<void(bool checked)> fn)
-{
-	QAction* action = menu.addAction(text, fn);
-	action->setCheckable(true);
-	return action;
-}
-
-QMenu* MainWindow::addVisibilityFilterableSubMenu(const QString& text, EntityVisibilityFilterable* filterable) const
-{
-	QMenu* menu = ui->menuView->addMenu(text);
-
-	QActionGroup* alignmentGroup = new QActionGroup(menu);
-
-	QAction* offAction = addCheckedAction(*menu, "Hide All", [=](bool checked) {
-		filterable->setVisibilityPredicate(EntityVisibilityFilterable::visibilityOff);
-	});
-
-	auto hasLineOfSight = [this](const Entity& entity) {
-		if (const auto& entityPosition = getPosition(entity); entityPosition)
-		{
-			// FIXME: We shouldn't assume position is in geocetric coordinates, or earth radius
-			const auto cameraPosition = *getPosition(*mCurrentSimCamera);
-			Vector3 camToEntityDir = *entityPosition - cameraPosition;
-			double length = glm::length(camToEntityDir);
-			camToEntityDir /= length;
-
-			double effectivePlanetRadius = sim::earthRadius() - 10000; // use a slightly smaller radius for robustness
-			return !intersectRaySegmentSphere(cameraPosition, camToEntityDir, length, Vector3(0,0,0), effectivePlanetRadius);
-		}
-		return false;
-	};
-
-	QAction* onAction = addCheckedAction(*menu, "Show All", [=](bool checked) {
-		filterable->setVisibilityPredicate(hasLineOfSight);
-	});
-
-	QAction* selectedAction = addCheckedAction(*menu, "Show Selected", [=](bool checked) {
-		filterable->setVisibilityPredicate([=](const Entity& entity) {
-			return (mSelectedEntityId == entity.getId()) &&
-				hasLineOfSight(entity);
-		});
-	});
-
-	alignmentGroup->addAction(offAction);
-	alignmentGroup->addAction(onAction);
-	alignmentGroup->addAction(selectedAction);
-
-	filterable->setVisibilityPredicate(hasLineOfSight);
-	onAction->setChecked(true);
-
-	return menu;
-}
-
-void MainWindow::addViewportMenuActions()
-{
-	addVisibilityFilterableSubMenu("Labels", mVisNameLabels.get());
-	addVisibilityFilterableSubMenu("Forces", mForcesVisBinding.get());
-	addVisibilityFilterableSubMenu("Orbits", mVisOrbits.get());
-}
-
-glm::dmat4 MainWindow::calcCurrentViewProjTransform() const
-{
-	skybolt::sim::Vector3 origin = *getPosition(*mCurrentSimCamera);
-	skybolt::sim::Quaternion orientation = *getOrientation(*mCurrentSimCamera);
-	skybolt::sim::CameraState camera = mCurrentSimCamera->getFirstComponentRequired<sim::CameraComponent>()->getState();
-	double aspectRatio = double(mOsgWidget->width()) / double(mOsgWidget->height());
-	return makeViewProjTransform(origin, orientation, camera, aspectRatio);
+	std::string folder = std::filesystem::path(mProjectFilename.toStdString()).parent_path().string();
+	osgDB::Registry::instance()->getDataFilePathList().push_back(folder);
 }

@@ -32,7 +32,7 @@ public:
 		CALL_LISTENERS(itemAdded(item));
 	}
 
-	void remove(T* item)
+	void remove(const T* item)
 	{
 		auto it = std::find_if(mItems.begin(), mItems.end(),
 			[item](const ItemPtr& i) { return i.get() == item; });

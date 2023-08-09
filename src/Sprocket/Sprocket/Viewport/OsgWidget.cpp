@@ -27,14 +27,11 @@ public:
 	OsgWidget* widget;
 };
 
-OsgWidget::OsgWidget(const DisplaySettings& displaySettings, QWidget* parent):
-	QOpenGLWidget(parent),
-	mVisRoot(std::make_unique<VisRoot>(displaySettings))
+OsgWidget::OsgWidget(const VisRootPtr& visRoot, QWidget* parent) :
+	mVisRoot(visRoot),
+	QOpenGLWidget(parent)
 {
 	setFocusPolicy(Qt::StrongFocus);
-
-	// Since Qt manages the OpenGL context, ensure OSG renders on the Qt thread
-	mVisRoot->getViewer().setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
 
 	EmbeddedWindowConfig config;
 	config.rect = RectI(0, 0, width(), height());

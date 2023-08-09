@@ -1,3 +1,9 @@
+/* Copyright 2012-2020 Matthew Reid
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
 #include "SprocketIcons.h"
 #include "IconFactory.h"
 
@@ -9,6 +15,7 @@ static std::map<SprocketIcon, QIcon> createSprocketIcons()
 		{SprocketIcon::Code, "Icons/google/code.svg"},
 		{SprocketIcon::FastForward, "Icons/google/round-fast_forward.svg"},
 		{SprocketIcon::FastRewind, "Icons/google/round-fast_rewind.svg"},
+		{SprocketIcon::Filter, "Icons/google/filter_alt.svg"},
 		{SprocketIcon::Folder, "Icons/google/folder.svg"},
 		{SprocketIcon::Node, "Icons/google/brightness_1.svg"},
 		{SprocketIcon::NodeGraph, "Icons/google/view_agenda.svg"},
@@ -16,6 +23,7 @@ static std::map<SprocketIcon, QIcon> createSprocketIcons()
 		{SprocketIcon::Play, "Icons/google/round-play_arrow.svg"},
 		{SprocketIcon::Remove, "Icons/google/remove_circle.svg"},
 		{SprocketIcon::Save, "Icons/google/save.svg"},
+		{SprocketIcon::Screenshot, "Icons/google/screenshot_keyboard.svg"},
 		{SprocketIcon::Sequence, "Icons/google/playlist_play.svg"},
 		{SprocketIcon::Settings, "Icons/google/settings.svg"}
 	};

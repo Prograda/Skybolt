@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Viewport/VisEntityAttachables.h>
+#include "Sprocket/Viewport/VisEntityAttachables.h"
 #include <SkyboltSim/Entity.h>
 #include <osg/Group>
 #include <osg/MatrixTransform>

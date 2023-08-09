@@ -42,14 +42,17 @@ public:
 	//! @return null if entity not found
 	Entity* getEntityById(EntityId id) const;
 
+	//! @return null if entity not found
+	Entity* findObjectByName(const std::string& name) const;
+
 private:
 	Entities mEntities;
 	std::map<EntityId, EntityPtr> mIdToEntityMap;
+	std::map<std::string, EntityPtr> mNameToEntityMap;
 
 	bool mDestructing = false;
 };
 
-EntityPtr findObjectByName(const World& world, const std::string& name);
 
 } // namespace sim
 } // namespace skybolt

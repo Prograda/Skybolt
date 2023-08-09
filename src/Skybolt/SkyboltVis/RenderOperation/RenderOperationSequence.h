@@ -25,6 +25,20 @@ public:
 	void addOperation(const osg::ref_ptr<RenderOperation>& operation, int priority = 0);
 	void removeOperation(const osg::ref_ptr<RenderOperation>& operation);
 
+	template <typename T>
+	std::vector<osg::ref_ptr<T>> findOperationsOfType() const
+	{
+		std::vector<osg::ref_ptr<T>> r;
+		for (const auto& [name, op] : mOperations)
+		{
+			if (auto opDerived = osg::dynamic_pointer_cast<T>(op); opDerived)
+			{
+				r.push_back(opDerived);
+			}
+		}
+		return r;
+	}
+
 	using Priority = int;
 	using RenderOperationsOrder = std::multimap<Priority, osg::ref_ptr<RenderOperation>>;
 

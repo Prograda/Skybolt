@@ -124,6 +124,7 @@ typedef shared_ptr<TileProgressCallback> ProgressCallbackPtr;
 typedef shared_ptr<TileSource> TileSourcePtr;
 typedef shared_ptr<VisMarker> VisMarkerPtr;
 typedef shared_ptr<VisObject> VisObjectPtr;
+typedef shared_ptr<VisRoot> VisRootPtr;
 typedef shared_ptr<VolumeClouds> VolumeCloudsPtr;
 typedef shared_ptr<Window> WindowPtr;
 

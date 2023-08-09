@@ -7,10 +7,10 @@
 #pragma once
 
 #include <SkyboltEngine/SkyboltEngineFwd.h>
-#include <SkyboltSim/World.h>
-#include <QJsonObject>
+
+#include <nlohmann/json.hpp>
 #include <memory>
 
-skybolt::StateSequenceControllerPtr readSequenceController(const QJsonObject& object, const skybolt::sim::World& world, skybolt::Scenario* scenario);
+skybolt::StateSequenceControllerPtr readSequenceController(const nlohmann::json& json, skybolt::Scenario* scenario);
 
-QJsonObject writeSequenceController(const skybolt::StateSequenceController& controller);
+nlohmann::json writeSequenceController(const skybolt::StateSequenceController& controller);

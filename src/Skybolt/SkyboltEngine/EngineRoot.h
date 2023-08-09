@@ -10,9 +10,6 @@
 #include "EntityFactory.h"
 #include "Scenario/Scenario.h"
 #include "Plugin/Plugin.h"
-#include <SkyboltSim/Components/NameComponent.h>
-#include <SkyboltSim/System/SystemRegistry.h>
-#include <SkyboltVis/Scene.h>
 #include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 #include <SkyboltCommon/File/FileUtility.h>
@@ -48,13 +45,10 @@ public:
 	vis::ShaderPrograms programs;
 	vis::ScenePtr scene;
 	file::FileLocator fileLocator;
-	JulianDateProvider julianDateProvider;
-	std::unique_ptr<sim::World> simWorld;
 	std::unique_ptr<EntityFactory> entityFactory;
-	sim::NamedObjectRegistryPtr namedObjectRegistry;
 	vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
 	EngineStats stats;
-	Scenario scenario;
+	std::unique_ptr<Scenario> scenario;
 	sim::SystemRegistryPtr systemRegistry;
 	nlohmann::json engineSettings;
 };

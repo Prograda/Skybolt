@@ -10,6 +10,7 @@
 #include <SkyboltSim/System/EntitySystem.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltVis/OsgStateSetHelpers.h>
+#include <SkyboltVis/Scene.h>
 #include <SkyboltVis/TextureCache.h>
 #include <SkyboltVis/Renderable/Model/ModelFactory.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
@@ -106,8 +107,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	mPluginFactories(config.pluginFactories),
 	scheduler(new px_sched::Scheduler),
 	fileLocator(locateFile),
-	simWorld(std::make_unique<sim::World>()),
-	namedObjectRegistry(std::make_shared<sim::NamedObjectRegistry>()),
+	scenario(std::make_unique<Scenario>()),
 	engineSettings(config.engineSettings)
 {
 	int threadCount = determineThreadCountFromHardwareAndUserLimits();
@@ -157,8 +157,8 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	programs = vis::createShaderPrograms();
 	scene.reset(new vis::Scene(new osg::StateSet()));
 
-	Scenario* scenarioPtr = &scenario;
-	julianDateProvider = [=]() {
+	Scenario* scenarioPtr = scenario.get();
+	auto julianDateProvider = [=]() {
 		return scenarioPtr->startJulianDate + scenarioPtr->timeSource.getTime() / (60.0 * 60.0 * 24.0);
 	};
 
@@ -174,12 +174,11 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	// Create object factory
 	EntityFactory::Context context;
 	context.scheduler = scheduler.get();
-	context.simWorld = simWorld.get();
+	context.simWorld = &scenario->world;
 	context.componentFactoryRegistry = componentFactoryRegistry;
 	context.scene = scene.get();
 	context.programs = &programs;
 	context.julianDateProvider = julianDateProvider;
-	context.namedObjectRegistry = namedObjectRegistry;
 	context.stats = &stats;
 	context.visFactoryRegistry = visFactoryRegistry;
 	context.tileSourceFactoryRegistry = tileSourceFactoryRegistry;
@@ -194,8 +193,8 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 
 	// Create default systems
 	systemRegistry = std::make_shared<sim::SystemRegistry>(sim::SystemRegistry({
-		std::make_shared<sim::EntitySystem>(simWorld.get()),
-		std::make_shared<SimVisSystem>(simWorld.get(), scene)
+		std::make_shared<sim::EntitySystem>(&scenario->world),
+		std::make_shared<SimVisSystem>(&scenario->world, scene)
 	}));
 
 	// Create plugins

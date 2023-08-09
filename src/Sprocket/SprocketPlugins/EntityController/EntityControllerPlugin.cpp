@@ -5,17 +5,21 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <Sprocket/EditorPlugin.h>
-#include <Sprocket/QtLayoutUtil.h>
+#include <Sprocket/SceneSelectionModel.h>
+#include <Sprocket/Scenario/EntityObjectType.h>
+#include <Sprocket/QtUtil/QtLayoutUtil.h>
 
 #include <SkyboltSim/Components/ControlInputsComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/System/System.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Input/InputPlatform.h>
+#include <SkyboltEngine/Scenario/Scenario.h>
 #include <SkyboltCommon/VectorUtility.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <QGridLayout>
 #include <QLabel>
+#include <QMainWindow>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QTimer>
@@ -335,16 +339,19 @@ public:
 	{
 		config.engineRoot->systemRegistry->push_back(mJoystickInputSystem);
 
-		mEntityControllerWidget = new EntityControllerWidget();
+		mEntityControllerWidget = new EntityControllerWidget(config.mainWindow);
 
 		mToolWindow.name = "Entity Controller";
 		mToolWindow.widget = mEntityControllerWidget;
+
+		QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this] (const ScenarioObjectPtr& selected, const ScenarioObjectPtr& deselected) {
+			selectionChanged(selected);
+		});
 	}
 
 	~EntityControllerPlugin()
 	{
 		eraseFirst<sim::SystemPtr>(*mEngineRoot->systemRegistry, mJoystickInputSystem);
-		delete mToolWindow.widget;
 	}
 
 	std::vector<ToolWindow> getToolWindows() override
@@ -352,11 +359,11 @@ public:
 		return { mToolWindow };
 	}
 
-	void explorerSelectionChanged(const TreeItem& item) override
+	void selectionChanged(const ScenarioObjectPtr& selected)
 	{
-		if (auto entityItem = dynamic_cast<const EntityTreeItem*>(&item))
+		if (auto entityObject = dynamic_cast<const EntityObject*>(selected.get()); entityObject)
 		{
-			sim::Entity* entity = mEngineRoot->simWorld->getEntityById(entityItem->data);
+			sim::Entity* entity = mEngineRoot->scenario->world.getEntityById(entityObject->data);
 			mEntityControllerWidget->setEntity(entity);
 			mJoystickInputSystem->setEntity(entity);
 		}

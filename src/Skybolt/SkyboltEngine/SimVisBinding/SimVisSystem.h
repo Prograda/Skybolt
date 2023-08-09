@@ -32,7 +32,7 @@ public:
 	void setSceneOriginProvider(SceneOriginProvider sceneOriginProvider) { mSceneOriginProvider = std::move(sceneOriginProvider); }
 
 	static SceneOriginProvider sceneOriginFromPosition(const sim::Vector3& position);
-	static SceneOriginProvider sceneOriginFromEntity(const sim::EntityPtr& entity);
+	static SceneOriginProvider sceneOriginFromEntity(const sim::World* world, const sim::EntityId& entity);
 	static SceneOriginProvider sceneOriginFromFirstCamera(const sim::World* world);
 
 private:

@@ -319,7 +319,8 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("getEntities", &World::getEntities, py::return_value_policy::reference)
 		.def("addEntity", &World::addEntity)
 		.def("removeEntity", &World::removeEntity)
-		.def("removeAllEntities", &World::removeAllEntities);
+		.def("removeAllEntities", &World::removeAllEntities)
+		.def("findObjectByName", &World::findObjectByName);
 
 	py::class_<EntityFactory>(m, "EntityFactory")
 		.def("createEntity", &EntityFactory::createEntity, py::return_value_policy::reference,
@@ -329,9 +330,9 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_readwrite("startJulianDate", &Scenario::startJulianDate);
 
 	py::class_<EngineRoot>(m, "EngineRoot")
-		.def_property_readonly("world", [](const EngineRoot& r) {return r.simWorld.get(); }, py::return_value_policy::reference_internal)
+		.def_property_readonly("world", [](const EngineRoot& r) {return &r.scenario->world; }, py::return_value_policy::reference_internal)
 		.def_property_readonly("entityFactory", [](const EngineRoot& r) {return r.entityFactory.get(); }, py::return_value_policy::reference_internal)
-		.def_property_readonly("scenario", [](const EngineRoot& r) {return &r.scenario; }, py::return_value_policy::reference_internal);
+		.def_property_readonly("scenario", [](const EngineRoot& r) {return r.scenario.get(); }, py::return_value_policy::reference_internal);
 
 	py::class_<vis::VisRoot>(m, "VisRoot")
 		.def(py::init())
@@ -371,6 +372,5 @@ PYBIND11_MODULE(skybolt, m) {
 	m.def("captureScreenshot", [](vis::VisRoot& visRoot, const std::string& filename) { return vis::captureScreenshot(visRoot, filename); });
 	m.def("moveDistanceAndBearing", &moveDistanceAndBearing);
 	m.def("transformToScreenSpace", &transformToScreenSpace);
-	m.def("findObjectByName", &findObjectByName);
 	m.def("setWaveHeight", &setWaveHeight);
 }

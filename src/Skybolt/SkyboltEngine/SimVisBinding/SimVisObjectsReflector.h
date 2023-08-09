@@ -24,7 +24,7 @@ public:
 	SimVisObjectsReflector(sim::World* world, osg::Group* parent) :
 		mWorld(world),
 		mGroup(new osg::Switch),
-		mVisibilityPredicate(visibilityOn)
+		mEntityVisibilityPredicate(visibilityOn)
 	{
 		mWorld->addListener(this);
 
@@ -33,13 +33,16 @@ public:
 
 	~SimVisObjectsReflector()
 	{
-		mGroup->getParent(0)->removeChild(mGroup);
+		if (mGroup->getNumParents() > 0)
+		{
+			mGroup->getParent(0)->removeChild(mGroup);
+		}
 		mWorld->removeListener(this);
 	}
 
-	void setVisibilityPredicate(VisibilityPredicate predicate) override
+	void setEntityVisibilityPredicate(EntityVisibilityPredicate predicate) override
 	{
-		mVisibilityPredicate = predicate;
+		mEntityVisibilityPredicate = predicate;
 	}
 
 protected:
@@ -49,7 +52,7 @@ protected:
 
 	bool applyVisibility(const sim::Entity& entity, const T& visObject)
 	{
-		bool visibility = mVisibilityPredicate(entity);
+		bool visibility = mEntityVisibilityPredicate(entity);
 		mGroup->setChildValue(getNode(visObject), visibility);
 		return visibility;
 	}
@@ -85,7 +88,7 @@ protected:
 private:
 	sim::World* mWorld;
 	std::map<sim::Entity*, T> mEntities;
-	VisibilityPredicate mVisibilityPredicate;
+	EntityVisibilityPredicate mEntityVisibilityPredicate;
 };
 
 } // namespace skybolt

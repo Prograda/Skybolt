@@ -15,11 +15,14 @@ TreeItemModel::TreeItemModel(const TreeItemPtr& root, QObject *parent)
 {
 }
 
-TreeItem* TreeItemModel::getTreeItem(const QModelIndex &index) const
+TreeItemPtr TreeItemModel::getTreeItem(const QModelIndex &index) const
 {
 	TreeItem* item = static_cast<TreeItem*>(index.internalPointer());
-	if (mItems.find(item) != mItems.end())
-		return item;
+	auto i = std::find_if(mItems.begin(), mItems.end(), [&] (const TreeItemPtr& itemPtr) {
+		return itemPtr.get() == item;
+	});
+	if (i != mItems.end())
+		return *i;
 	return nullptr;
 }
 
@@ -35,7 +38,7 @@ void TreeItemModel::insertChildren(TreeItem& item, int position, const std::vect
 
 	for (const TreeItemPtr& child : children)
 	{
-		mItems.insert(child.get());
+		mItems.insert(child);
 	}
 
 	beginInsertRows(index(&item), position, position + (int)children.size() - 1);
@@ -58,7 +61,7 @@ void TreeItemModel::removeChildren(TreeItem& item, int position, int count)
 
 	for (int i = position; i < position + count; ++i)
 	{
-		TreeItem* child = item.mChildren[i].get();
+		TreeItemPtr child = item.mChildren[i];
 		child->mParent = nullptr;
 		mItems.erase(child);
 	}
@@ -80,6 +83,11 @@ void TreeItemModel::clearChildren(TreeItem& item)
 	removeChildren(item, 0, (int)item.mChildren.size());
 }
 
+const std::vector<TreeItemPtr>& TreeItemModel::getChildren(TreeItem& item) const
+{
+	return item.mChildren;
+}
+
 int TreeItemModel::getChildPosition(const TreeItem& item, const TreeItem& child)
 {
 	int i = 0;
@@ -99,10 +107,10 @@ QModelIndex TreeItemModel::index(int row, int column, const QModelIndex &parent)
 	if (!hasIndex(row, column, parent))
 		return QModelIndex();
 
-	TreeItem* parentItem;
+	TreeItemPtr parentItem;
 
 	if (!parent.isValid())
-		parentItem = mRootItem.get();
+		parentItem = mRootItem;
 	else
 		parentItem = getTreeItem(parent);
 
@@ -139,7 +147,7 @@ QModelIndex TreeItemModel::parent(const QModelIndex &index) const
 	if (!index.isValid())
 		return QModelIndex();
 
-	TreeItem *childItem = getTreeItem(index);
+	TreeItemPtr childItem = getTreeItem(index);
 
 	if (childItem == nullptr || childItem->mParent == nullptr || childItem->mParent->mParent == nullptr)
 		return QModelIndex();
@@ -159,12 +167,12 @@ QModelIndex TreeItemModel::parent(const QModelIndex &index) const
 
 int TreeItemModel::rowCount(const QModelIndex &itemIndex) const
 {
-	TreeItem* item;
+	TreeItemPtr item;
 	if (itemIndex.column() > 0)
 		return 0;
 
 	if (!itemIndex.isValid())
-		item = mRootItem.get();
+		item = mRootItem;
 	else
 		item = getTreeItem(itemIndex);
 
@@ -184,7 +192,7 @@ QVariant TreeItemModel::data(const QModelIndex &index, int role) const
 	if (!index.isValid())
 		return QVariant();
 
-	TreeItem *item = getTreeItem(index);
+	TreeItemPtr item = getTreeItem(index);
 
 	if (!item)
 		return QVariant();

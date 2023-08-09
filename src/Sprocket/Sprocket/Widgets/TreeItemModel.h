@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include "Sprocket/SprocketFwd.h"
+
 #include <SkyboltSim/World.h>
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <QAbstractItemModel>
 #include <QIcon>
-
-typedef std::shared_ptr<class TreeItem> TreeItemPtr;
 
 class TreeItem
 {
@@ -20,7 +20,7 @@ public:
 	TreeItem(const QIcon& icon) : mIcon(icon) {}
 	virtual ~TreeItem() {}
 
-	virtual const QString& getLabel() = 0;
+	virtual const QString& getLabel() const = 0;
 	virtual const QIcon& getIcon() const { return mIcon; }
 
 	//! Registry item interface
@@ -39,7 +39,7 @@ class TreeItemModel : public QAbstractItemModel
 public:
 	TreeItemModel(const TreeItemPtr& root, QObject *parent = 0);
 
-	TreeItem* getTreeItem(const QModelIndex &index) const;
+	TreeItemPtr getTreeItem(const QModelIndex &index) const;
 	QModelIndex index(TreeItem* item) const;
 
 	void addChildren(TreeItem& item, const std::vector<TreeItemPtr>& children);
@@ -47,6 +47,7 @@ public:
 	void removeChildren(TreeItem& item, int position, int count);
 	void removeChild(TreeItem& item, const TreeItem& child);
 	void clearChildren(TreeItem& item);
+	const std::vector<TreeItemPtr>& getChildren(TreeItem& item) const;
 
 	//! @returns -1 if child is not a child of item
 	int getChildPosition(const TreeItem& item, const TreeItem& child);
@@ -65,5 +66,5 @@ public:
 
 private:
 	TreeItemPtr mRootItem;
-	std::set<TreeItem*> mItems;
+	std::set<TreeItemPtr> mItems;
 };

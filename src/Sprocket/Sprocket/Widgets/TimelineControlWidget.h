@@ -6,21 +6,12 @@
 
 #pragma once
 
-#include <QWidget>
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 
-class QListWidget;
+#include <QWidget>
 
-class EntityCreatorWidget : public QWidget
+class TimelineControlWidget : public QWidget
 {
-	Q_OBJECT
 public:
-	EntityCreatorWidget(QWidget* parent, skybolt::EntityFactory* factory);
-
-private slots:
-	void createEntity();
-
-private:
-	skybolt::EntityFactory* mFactory;
-	QListWidget* mList;
+	TimelineControlWidget(skybolt::TimeSource* timeSource, QWidget* parent = nullptr);
 };

@@ -4,12 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-/* Copyright 2012-2019 Matthew Paul Reid
-*
-* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-
 #include "ScenarioSerialization.h"
 #include "Scenario.h"
 #include <SkyboltEngine/EntityFactory.h>
@@ -69,10 +63,10 @@ static void loadCameraController(CameraControllerSelector& cameraControllerSelec
 
 	if (j.contains("target"))
 	{
-		EntityPtr target = findObjectByName(world, j.at("target"));
+		Entity* target = world.findObjectByName(j.at("target"));
 		if (target)
 		{
-			cameraControllerSelector.setTarget(target.get());
+			cameraControllerSelector.setTarget(target);
 		}
 	}
 

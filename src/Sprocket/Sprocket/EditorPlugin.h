@@ -6,21 +6,28 @@
 
 #pragma once
 
-#include "Sprocket/Property/PropertyEditor.h"
+#include "Sprocket/JsonProjectSerializable.h"
 #include "Sprocket/SprocketFwd.h"
-#include "Sprocket/Widgets/WorldTreeWidget.h"
-#include <SkyboltEngine/SkyboltEngineFwd.h>
+#include "Sprocket/Scenario/ScenarioObject.h"
+#include "Sprocket/Property/PropertyEditor.h"
+#include "Sprocket/Property/PropertyModelFactoryMap.h"
+#include "Sprocket/Widgets/ScenarioTreeWidget.h"
 #include <SkyboltCommon/File/FileLocator.h>
+#include <SkyboltEngine/SkyboltEngineFwd.h>
+#include <SkyboltEngine/SimVisBinding/EntityVisibilityFilterable.h>
+#include <SkyboltVis/SkyboltVisFwd.h>
+
 #include <QString>
 #include <QWidget>
 
+#include <boost/dll/import.hpp>
+
 class OsgWidget;
-class QMenuBar;
+class QMainWindow;
 
 struct UiController
 {
 	std::function<void(QWidget*)> toolWindowRaiser;
-	std::function<void(const PropertiesModelPtr&)> propertiesModelSetter;
 };
 
 using UiControllerPtr = std::shared_ptr<UiController>;
@@ -29,29 +36,28 @@ struct EditorPluginConfig
 {
 	UiControllerPtr uiController;
 	skybolt::EngineRoot* engineRoot;
-	skybolt::file::FileLocator fileLocator;
 	skybolt::InputPlatformPtr inputPlatform;
-	OsgWidget* osgWidget;
-	osg::ref_ptr<skybolt::vis::RenderCameraViewport> renderCameraViewport;
-	QMenuBar* menuBar;
+	SceneSelectionModel* selectionModel;
+	skybolt::vis::VisRoot* visRoot;
+	QMainWindow* mainWindow;
 };
 
-class BOOST_SYMBOL_VISIBLE EditorPlugin
+using EntityVisibilityLayerMap = std::map<std::string, skybolt::EntityVisibilityPredicateSetter>;
+
+class BOOST_SYMBOL_VISIBLE EditorPlugin : public JsonProjectSerializable
 {
 public:
 	static std::string factorySymbolName() { return "createEditorPlugin"; }
 
 	virtual ~EditorPlugin() {}
 
-	virtual void clearProject() {}
-	
-	virtual void loadProject(const QJsonObject& json) {}
-	
-	virtual void saveProject(QJsonObject& json) {}
-	
-	virtual std::vector<TreeItemType> getTreeItemTypes() { return {}; }
+	virtual PropertyModelFactoryMap getPropertyModelFactories() const { return {}; }
 
-	virtual PropertyEditorWidgetFactoryMap getPropertyEditorWidgetFactories() { return {}; }
+	virtual PropertyEditorWidgetFactoryMap getPropertyEditorWidgetFactories() const { return {}; }
+
+	virtual ScenarioObjectTypeMap getSceneObjectTypes() const { return {}; }
+
+	virtual EntityVisibilityLayerMap getEntityVisibilityLayers() const { return {}; }
 
 	struct ToolWindow
 	{
@@ -60,6 +66,9 @@ public:
 	};
 	
 	virtual std::vector<ToolWindow> getToolWindows() { return {}; }
-	
-	virtual void explorerSelectionChanged(const TreeItem& item) {}
 };
+
+PropertyModelFactoryMap getPropertyModelFactories(const std::vector<EditorPluginPtr>& plugins, skybolt::EngineRoot* engineRoot);
+PropertyEditorWidgetFactoryMap getPropertyEditorWidgetFactories(const std::vector<EditorPluginPtr>& plugins);
+ScenarioObjectTypeMap getSceneObjectTypes(const std::vector<EditorPluginPtr>& plugins, skybolt::EngineRoot* engineRoot);
+EntityVisibilityLayerMap getEntityVisibilityLayers(const std::vector<EditorPluginPtr>& plugins);

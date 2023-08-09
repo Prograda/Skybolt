@@ -7,8 +7,7 @@
 #pragma once
 
 #include "TreeItemModel.h"
-#include "Sprocket/Registry.h"
-#include <SkyboltEngine/SkyboltEngineFwd.h>
+#include "Sprocket/SprocketFwd.h"
 
 #include <QString>
 
@@ -23,24 +22,20 @@ struct TreeItemT : public TreeItem
 	{
 	}
 
-	const QString& getLabel() override
+	const QString& getLabel() const override
 	{
 		return label;
 	}
 };
 
-typedef TreeItemT<void*> SimpleTreeItem;
-typedef TreeItemT<skybolt::sim::EntityId> EntityTreeItem;
-typedef TreeItemT<skybolt::Scenario*> ScenarioTreeItem;
-
-struct TreeItemType
+class SimpleTreeItem : public TreeItem
 {
-	TreeItemType(const std::type_index& itemTypeId) : itemTypeId(itemTypeId) {}
+public:
+	SimpleTreeItem(const QString& label, const QIcon& icon) : TreeItem(icon), mLabel(label) {}
+	~SimpleTreeItem() override = default;
 
-	std::string name;
-	std::vector<std::string> subTypes; //!< Names of each sub type of this item. Leave empty if there's only one type.
-	std::function<void(const std::string& name, const std::string& subType)> itemCreator;
-	std::function<void(TreeItem*)> itemDeleter; //!< Throws exception if item is not disposable
-	std::shared_ptr<Registry<TreeItem>> itemRegistry;
-	std::type_index itemTypeId;
+	const QString& getLabel() const override { return mLabel; }
+
+private:
+	QString mLabel;
 };

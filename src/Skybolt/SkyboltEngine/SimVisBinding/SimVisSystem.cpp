@@ -14,6 +14,7 @@
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/WorldUtil.h>
+#include <SkyboltVis/Scene.h>
 #include <assert.h>
 
 namespace skybolt {
@@ -74,12 +75,16 @@ SimVisSystem::SceneOriginProvider SimVisSystem::sceneOriginFromPosition(const si
 	return [=] { return position; };
 }
 
-SimVisSystem::SceneOriginProvider SimVisSystem::sceneOriginFromEntity(const sim::EntityPtr& entity)
+SimVisSystem::SceneOriginProvider SimVisSystem::sceneOriginFromEntity(const sim::World* world, const sim::EntityId& entityId)
 {
+	assert(world);
 	return [=]{
-		auto position = getPosition(*entity);
+		if (sim::Entity* entity = world->getEntityById(entityId); entity)
 		{
-			return *position;
+			auto position = getPosition(*entity);
+			{
+				return *position;
+			}
 		}
 		return sim::Vector3(0, 0, 0);
 	};

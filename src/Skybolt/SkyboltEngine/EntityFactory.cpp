@@ -591,7 +591,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 		entity->addComponent(std::make_shared<OceanComponent>());
 	}
 
-	SimVisBindingPtr simVis(new PlanetVisBinding(context.julianDateProvider, entity, visObject));
+	SimVisBindingPtr simVis(std::make_shared<PlanetVisBinding>(context.julianDateProvider, entity, visObject));
 	simVisBindingComponent->bindings.push_back(simVis);
 
 	if (visObject->getWaterMaterial())
@@ -600,7 +600,7 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 		simVisBindingComponent->bindings.push_back(binding);
 	}
 
-	entity->addComponent(ComponentPtr(new NameComponent("Earth", context.namedObjectRegistry, entity)));
+	entity->addComponent(std::make_shared<NameComponent>("Earth"));
 
 	std::shared_ptr<PlanetStatsUpdater> statsUpdater = std::make_shared<PlanetStatsUpdater>(context.stats, static_cast<vis::Planet*>(visObject.get()));
 	entity->addComponent(statsUpdater);
@@ -612,7 +612,7 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 {
 	EntityPtr entity = std::make_shared<sim::Entity>(generateNextEntityId());
 
-	entity->addComponent(ComponentPtr(new NameComponent(instanceName, mContext.namedObjectRegistry, entity.get())));
+	entity->addComponent(std::make_shared<NameComponent>(instanceName));
 
 	SimVisBindingsComponentPtr simVisBindingComponent(new SimVisBindingsComponent);
 	entity->addComponent(simVisBindingComponent);
@@ -683,7 +683,7 @@ EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::v
 	mContext(context)
 {
 	assert(context.julianDateProvider);
-	assert(context.namedObjectRegistry);
+	assert(context.entityNameRegistry);
 	assert(context.programs);
 	assert(context.simWorld);
 	assert(context.stats);
@@ -872,7 +872,7 @@ std::string EntityFactory::createUniqueObjectName(const std::string& baseName) c
 	for (int i = 1; i < INT_MAX; ++i)
 	{
 		std::string name = baseName + std::to_string(i);
-		if (mContext.namedObjectRegistry->getObjectByName(name) == nullptr)
+		if (mContext.simWorld->findObjectByName(name) == nullptr)
 		{
 			return name;
 		}

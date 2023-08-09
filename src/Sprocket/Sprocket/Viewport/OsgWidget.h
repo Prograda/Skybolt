@@ -18,7 +18,7 @@ class OsgWidget : public QOpenGLWidget
 {
 	Q_OBJECT
 public:
-	OsgWidget(const skybolt::vis::DisplaySettings& displaySettings, QWidget* parent = 0);
+	OsgWidget(const skybolt::vis::VisRootPtr& visRoot, QWidget* parent = 0);
 	~OsgWidget() override;
 
 	skybolt::vis::VisRoot* getVisRoot() const;
@@ -37,7 +37,7 @@ protected:
 	void keyPressEvent(QKeyEvent* event) override;
 
 private:
-	std::unique_ptr<skybolt::vis::VisRoot> mVisRoot;
+	skybolt::vis::VisRootPtr mVisRoot;
 	std::shared_ptr<skybolt::vis::EmbeddedWindow> mWindow;
 	osg::ref_ptr<osg::Camera::DrawCallback> mDrawCallback;
 };

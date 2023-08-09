@@ -7,6 +7,7 @@
 
 #include "SkyboltSim/World.h"
 #include "SkyboltSim/Components/NameComponent.h"
+#include <SkyboltCommon/MapUtility.h>
 
 namespace skybolt {
 namespace sim {
@@ -36,6 +37,12 @@ void World::addEntity(const EntityPtr& entity)
 
 	mEntities.push_back(entity);
 	mIdToEntityMap[entity->getId()] = entity;
+
+	if (const std::string& name = getName(*entity); !name.empty())
+	{
+		mNameToEntityMap[name] = entity;
+	}
+
 	CALL_LISTENERS(entityAdded(entity));
 }
 
@@ -58,6 +65,12 @@ void World::removeEntity(Entity* entity)
 		CALL_LISTENERS(entityAboutToBeRemoved(objectPtr));
 		mEntities.erase(it);
 		mIdToEntityMap.erase(entity->getId());
+
+		if (const std::string& name = getName(*entity); !name.empty())
+		{
+			mNameToEntityMap.erase(name);
+		}
+
 		CALL_LISTENERS(entityRemoved(objectPtr));
 	}
 }
@@ -92,21 +105,9 @@ Vector3 World::calcGravity(const Vector3& position, double mass) const
 	return Vector3(0, 0, 0);
 }
 
-EntityPtr findObjectByName(const World& world, const std::string& name)
+Entity* World::findObjectByName(const std::string& name) const
 {
-	if (!name.empty())
-	{
-		const World::Entities &entities = world.getEntities();
-		for (const EntityPtr& entity : entities)
-		{
-			if (getName(*entity) == name)
-			{
-				return entity;
-			}
-		}
-	}
-
-	return nullptr;
+	return findOptional(mNameToEntityMap, name).value_or(nullptr).get();
 }
 
 } // namespace sim

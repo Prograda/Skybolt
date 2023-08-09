@@ -34,7 +34,6 @@ public:
 		vis::VisFactoryRegistryPtr visFactoryRegistry;
 		const vis::ShaderPrograms* programs;
 		JulianDateProvider julianDateProvider;
-		sim::NamedObjectRegistryPtr namedObjectRegistry;
 		ComponentFactoryRegistryPtr componentFactoryRegistry;
 		vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
 		vis::ModelFactoryPtr modelFactory;

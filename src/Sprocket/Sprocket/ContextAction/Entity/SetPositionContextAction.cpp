@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "SetPositionContextAction.h"
-#include "Sprocket/QtDialogUtil.h"
+#include "Sprocket/QtUtil/QtDialogUtil.h"
 #include "Widgets/PositionEditor.h"
 #include <SkyboltEngine/TemplateNameComponent.h>
 #include <SkyboltSim/Spatial/LatLon.h>

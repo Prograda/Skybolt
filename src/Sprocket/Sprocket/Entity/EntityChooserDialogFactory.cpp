@@ -5,8 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "EntityChooserDialogFactory.h"
+#include "Sprocket/QtUtil/QtDialogUtil.h"
 #include <SkyboltSim/World.h>
-#include "QtDialogUtil.h"
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/World.h>
 

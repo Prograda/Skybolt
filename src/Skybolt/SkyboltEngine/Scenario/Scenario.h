@@ -7,6 +7,7 @@
 #pragma once
 
 #include <SkyboltEngine/TimeSource.h>
+#include <SkyboltSim/World.h>
 
 namespace skybolt {
 
@@ -14,6 +15,7 @@ struct Scenario
 {
 	double startJulianDate = 2457982.9;
 	TimeSource timeSource = TimeRange(0, 120);
+	sim::World world;
 };
 
 } // namespace skybolt

@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <Sprocket/EditorPlugin.h>
-#include <Sprocket/QtMenuUtil.h>
+#include <Sprocket/QtUtil/QtMenuUtil.h>
 #include <Sprocket/Viewport/OsgWidget.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
@@ -17,6 +17,7 @@
 #include <SkyboltVis/RenderOperation/RenderOperationUtil.h>
 #include <SkyboltVis/Shader/ShaderSourceFileChangeMonitor.h>
 
+#include <QMainWindow>
 #include <QMenuBar>
 
 #include <boost/config.hpp>
@@ -43,28 +44,18 @@ class EngineDevToolsPlugin : public EditorPlugin
 public:
 	EngineDevToolsPlugin(const EditorPluginConfig& config) :
 		mEngineRoot(config.engineRoot),
-		mOsgWidget(config.osgWidget),
-		mViewport(config.renderCameraViewport)
+		mVisRoot(config.visRoot)
 	{
-		assert(mEngineRoot);
+		assert(mVisRoot);
 
-		mStatsDisplaySystem = std::make_shared<StatsDisplaySystem>(&mOsgWidget->getVisRoot()->getViewer(), mOsgWidget->getWindow()->getView(), mViewport->getFinalRenderTarget()->getOsgCamera());
-		mStatsDisplaySystem->setVisible(false);
-		config.engineRoot->systemRegistry->push_back(mStatsDisplaySystem);
-		config.engineRoot->systemRegistry->push_back(std::make_shared<EngineDevToolsSystem>([this] {
-			if (mShaderSourceFileChangeMonitor)
-			{
-				mShaderSourceFileChangeMonitor->update();
-			}
-		}));
-
-		QMenu* devMenu = new QMenu("Developer", config.menuBar);
-		insertMenuBefore(*config.menuBar, "Tools", *devMenu);
+		QMenuBar* menuBar = config.mainWindow->menuBar();
+		QMenu* devMenu = new QMenu("Developer", menuBar);
+		insertMenuBefore(*menuBar, "Tools", *devMenu);
 
 		{
 			QAction* action = devMenu->addAction("Viewport Stats");
 			action->setCheckable(true);
-			QObject::connect(action, &QAction::triggered, [this](bool visible) { mStatsDisplaySystem->setVisible(visible); });
+			QObject::connect(action, &QAction::triggered, [this](bool visible) { setStatsDisplaySystemEnabled(visible); });
 		}
 		{
 			QAction* action = devMenu->addAction("Viewport Textures");
@@ -76,20 +67,58 @@ public:
 			action->setCheckable(true);
 			QObject::connect(action, &QAction::triggered, [this](bool visible) { setLiveShaderEditingEnabled(visible); });
 		}
+
+		mEngineRoot->systemRegistry->push_back(std::make_shared<EngineDevToolsSystem>([this] {
+			if (mShaderSourceFileChangeMonitor)
+			{
+				mShaderSourceFileChangeMonitor->update();
+			}
+		}));
 	}
 
 	~EngineDevToolsPlugin() override = default;
 
+	void acquireViewport()
+	{
+		mWindow = mVisRoot->getWindows().empty() ? nullptr : mVisRoot->getWindows().front();
+		if (mWindow)
+		{
+			auto ops = mWindow->getRenderOperationSequence().findOperationsOfType<vis::RenderCameraViewport>();
+			mViewport = ops.empty() ? nullptr : ops.back();
+		}
+
+	}
+
+	void setStatsDisplaySystemEnabled(bool enabled)
+	{
+		acquireViewport();
+		if (mWindow && mViewport)
+		{
+			if (!mStatsDisplaySystem)
+			{
+				mStatsDisplaySystem = std::make_shared<StatsDisplaySystem>(&mVisRoot->getViewer(), mWindow->getView(), mViewport->getFinalRenderTarget()->getOsgCamera());
+				mStatsDisplaySystem->setVisible(false);
+				mEngineRoot->systemRegistry->push_back(mStatsDisplaySystem);
+			}
+
+			mStatsDisplaySystem->setVisible(enabled);
+		}
+	}
+
 	void setViewportTextureDisplayEnabled(bool enabled)
 	{
-		if (enabled && !mRenderOperationVisualization)
+		acquireViewport();
+		if (mWindow && mViewport)
 		{
-			mRenderOperationVisualization = vis::createRenderOperationVisualization(mViewport, mEngineRoot->programs);
-			mOsgWidget->getWindow()->getRenderOperationSequence().addOperation(mRenderOperationVisualization);
-		}
-		else if (!enabled && mRenderOperationVisualization)
-		{
-			mOsgWidget->getWindow()->getRenderOperationSequence().removeOperation(mRenderOperationVisualization);
+			if (enabled && !mRenderOperationVisualization)
+			{
+				mRenderOperationVisualization = vis::createRenderOperationVisualization(mViewport, mEngineRoot->programs);
+				mWindow->getRenderOperationSequence().addOperation(mRenderOperationVisualization);
+			}
+			else if (!enabled && mRenderOperationVisualization)
+			{
+				mWindow->getRenderOperationSequence().removeOperation(mRenderOperationVisualization);
+			}
 		}
 	}
 
@@ -104,7 +133,8 @@ public:
 
 private:
 	EngineRoot* mEngineRoot;
-	OsgWidget* mOsgWidget;
+	vis::VisRoot* mVisRoot;
+	vis::WindowPtr mWindow;
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> mViewport;
 	std::shared_ptr<skybolt::StatsDisplaySystem> mStatsDisplaySystem;
 	std::unique_ptr<skybolt::vis::ShaderSourceFileChangeMonitor> mShaderSourceFileChangeMonitor;

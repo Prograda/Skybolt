@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
 
 		// Create camera
 		EntityPtr simCamera = engineRoot->entityFactory->createEntity("Camera");
-		engineRoot->simWorld->addEntity(simCamera);
+		engineRoot->scenario->world.addEntity(simCamera);
 
 		// Configure external view camera controller
 		auto cameraControllerComponent = simCamera->getFirstComponentRequired<CameraControllerComponent>();
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 		if (params.count("multiwindow"))
 		{
 			sim::EntityPtr simCamera2 = engineRoot->entityFactory->createEntity("Camera");
-			engineRoot->simWorld->addEntity(simCamera2);
+			engineRoot->scenario->world.addEntity(simCamera2);
 			
 			auto cameraControllerComponent2 = simCamera2->getFirstComponentRequired<CameraControllerComponent>();
 			cameraController2 = std::static_pointer_cast<CameraControllerSelector>(cameraControllerComponent2->cameraController);
@@ -229,10 +229,10 @@ int main(int argc, char *argv[])
 #endif
 
 		// Create entities
-		createEnvironmentEntities(*engineRoot->entityFactory, *engineRoot->simWorld);
+		createEnvironmentEntities(*engineRoot->entityFactory, engineRoot->scenario->world);
 		
 		EntityPtr aircraft = engineRoot->entityFactory->createEntity("UH60");
-		engineRoot->simWorld->addEntity(aircraft);
+		engineRoot->scenario->world.addEntity(aircraft);
 
 		sim::LatLonAlt boeingFieldPosition(47.537 * math::degToRadD(), -122.307 * math::degToRadD(), 500);
 		setPosition(*aircraft, toGeocentric(sim::LatLonAltPosition(boeingFieldPosition)).position);
@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
 		}
 
 		// Set time of day
-		engineRoot->scenario.startJulianDate = sim::calcJulianDate(/* year */ 2030, /* month */ 4, /* day */ 6, /* hour */ 20);
+		engineRoot->scenario->startJulianDate = sim::calcJulianDate(/* year */ 2030, /* month */ 4, /* day */ 6, /* hour */ 20);
 
 		// Run loop
 		runMainLoop(*visRoot, *engineRoot, UpdateLoop::neverExit);

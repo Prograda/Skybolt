@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
 		// Create camera
 		EntityPtr simCamera = engineRoot->entityFactory->createEntity("Camera");
-		engineRoot->simWorld->addEntity(simCamera);
+		engineRoot->scenario->world.addEntity(simCamera);
 		
 		auto visRoot = createExampleVisRoot();
 
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 #endif
 
 		// Create entities
-		createEntities(*engineRoot->entityFactory, *engineRoot->simWorld, *simCamera->getFirstComponentRequired<CameraControllerComponent>()->cameraController);
+		createEntities(*engineRoot->entityFactory, engineRoot->scenario->world, *simCamera->getFirstComponentRequired<CameraControllerComponent>()->cameraController);
 
 		// Run loop
 		runMainLoop(*visRoot, *engineRoot, UpdateLoop::neverExit);

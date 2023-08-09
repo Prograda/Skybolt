@@ -6,115 +6,109 @@
 
 #include "SequenceSerializer.h"
 
-#include <Sprocket/JsonHelpers.h>
+#include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltEngine/Sequence/EntityStateSequenceController.h>
 #include <SkyboltEngine/Sequence/JulianDateSequenceController.h>
+#include <SkyboltEngine/Scenario/Scenario.h>
+#include <SkyboltSim/JsonHelpers.h>
 #include <SkyboltSim/Components/NameComponent.h>
-
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QStringList>
 
 using namespace skybolt;
 
-static EntitySequenceState readEntityState(const QJsonObject& object)
+static EntitySequenceState readEntityState(const nlohmann::json& json)
 {
 	EntitySequenceState s;
-	s.position = readJsonVector3(object["position"].toArray());
-	s.orientation = readJsonQuaternion(object["orientation"].toObject());
+	s.position = sim::readVector3(json.at("position"));
+	s.orientation = sim::readQuaternion(json.at("orientation"));
 	return s;
 }
 
-static std::shared_ptr<EntityStateSequence> readEntityStateSequence(const QJsonObject& object)
+static std::shared_ptr<EntityStateSequence> readEntityStateSequence(const nlohmann::json& json)
 {
 	auto sequence = std::make_shared<EntityStateSequence>();
-	for (const auto& time : object.keys())
+	for (const auto& i : json.items())
 	{
-		QJsonObject itemValue = object[time].toObject();
-		EntitySequenceState value = readEntityState(itemValue);
-		sequence->addItemAtTime(value, time.toDouble());
+		EntitySequenceState value = readEntityState(i.value());
+		sequence->addItemAtTime(value, stod(i.key()));
 	}
 	return sequence;
 }
 
-std::shared_ptr<EntityStateSequenceController> readEntityStateSequenceController(const QJsonObject& object, const sim::World& world)
+std::shared_ptr<EntityStateSequenceController> readEntityStateSequenceController(const nlohmann::json& json, const sim::World& world)
 {
-	auto controller = std::make_shared<EntityStateSequenceController>(readEntityStateSequence(object["sequence"].toObject()));
+	auto controller = std::make_shared<EntityStateSequenceController>(readEntityStateSequence(json.at("sequence")));
 
-	auto it = object.find("entityName");
-	if (it != object.end())
-	{
-		QString entityName = it.value().toString();
-		sim::EntityPtr entity = findObjectByName(world, entityName.toStdString());
+	ifChildExists(json, "entityName", [&] (const nlohmann::json& child) {
+		std::string entityName = child.get<std::string>();
+		sim::Entity* entity = world.findObjectByName(entityName);
 		if (entity)
 		{
-			controller->setEntity(entity.get());
+			controller->setEntity(entity);
 		}
-	}
+	});
 
 	return controller;
 }
 
-static std::shared_ptr<DoubleStateSequence> readDoubleSequence(const QJsonObject& object)
+static std::shared_ptr<DoubleStateSequence> readDoubleSequence(const nlohmann::json& json)
 {
 	auto sequence = std::make_shared<DoubleStateSequence>();
-	for (const auto& time : object.keys())
+	for (const auto& i : json.items())
 	{
-		DoubleSequenceState value = object[time].toDouble();
-		sequence->addItemAtTime(value, time.toDouble());
+		DoubleSequenceState value = i.value();
+		sequence->addItemAtTime(value, stod(i.key()));
 	}
 	return sequence;
 }
 
-static std::shared_ptr<JulianDateSequenceController> readJulianDateSequenceController(const QJsonObject& object, Scenario* scenario)
+static std::shared_ptr<JulianDateSequenceController> readJulianDateSequenceController(const nlohmann::json& json, Scenario* scenario)
 {
-	return std::make_shared<JulianDateSequenceController>(readDoubleSequence(object["sequence"].toObject()), scenario);
+	return std::make_shared<JulianDateSequenceController>(readDoubleSequence(json.at("sequence")), scenario);
 }
 
-StateSequenceControllerPtr readSequenceController(const QJsonObject& object, const sim::World& world, Scenario* scenario)
+StateSequenceControllerPtr readSequenceController(const nlohmann::json& json, Scenario* scenario)
 {
 	StateSequenceControllerPtr controller;
 
-	QString type = object["type"].toString();
+	std::string type = json.at("type");
 	if (type == "EntityState")
 	{
-		controller = readEntityStateSequenceController(object, world);
+		controller = readEntityStateSequenceController(json, scenario->world);
 	}
 	else if (type == "JulianDate")
 	{
-		controller = readJulianDateSequenceController(object, scenario);
+		controller = readJulianDateSequenceController(json, scenario);
 	}
 	else
 	{
-		throw Exception("Unsupported Sequence type: " + type.toStdString());
+		throw Exception("Unsupported Sequence type: " + type);
 	}
 	return controller;
 }
 
-static QJsonObject writeEntityState(const EntitySequenceState& state)
+static nlohmann::json writeEntityState(const EntitySequenceState& state)
 {
-	QJsonObject object;
-	object["position"] = writeJson(state.position);
-	object["orientation"] = writeJson(state.orientation);
+	nlohmann::json object;
+	object["position"] = sim::writeJson(state.position);
+	object["orientation"] = sim::writeJson(state.orientation);
 	return object;
 }
 
-static QJsonObject writeEntityStateSequence(const EntityStateSequence& sequence)
+static nlohmann::json writeEntityStateSequence(const EntityStateSequence& sequence)
 {
-	QJsonObject object;
+	nlohmann::json object;
 
 	assert(sequence.times.size() == sequence.values.size());
 	for (size_t i = 0; i < sequence.times.size(); ++i)
 	{
-		object[QString::number(sequence.times[i])] = writeEntityState(sequence.values[i]);
+		object[std::to_string(sequence.times[i])] = writeEntityState(sequence.values[i]);
 	}
 	return object;
 }
 
-static QJsonObject writeEntityStateSequenceController(const EntityStateSequenceController& controller)
+static nlohmann::json writeEntityStateSequenceController(const EntityStateSequenceController& controller)
 {
-	QJsonObject object;
+	nlohmann::json object;
 	object["type"] = "EntityState";
 	object["sequence"] = writeEntityStateSequence(static_cast<const EntityStateSequence&>(*controller.getSequence()));
 
@@ -124,33 +118,33 @@ static QJsonObject writeEntityStateSequenceController(const EntityStateSequenceC
 		std::string name = sim::getName(*entity);
 		if (!name.empty())
 		{
-			object["entityName"] = QString::fromStdString(name);
+			object["entityName"] = name;
 		}
 	}
 	return object;
 }
 
-static QJsonObject writeDoubleStateSequence(const DoubleStateSequence& sequence)
+static nlohmann::json writeDoubleStateSequence(const DoubleStateSequence& sequence)
 {
-	QJsonObject object;
+	nlohmann::json object;
 
 	assert(sequence.times.size() == sequence.values.size());
 	for (size_t i = 0; i < sequence.times.size(); ++i)
 	{
-		object[QString::number(sequence.times[i])] = sequence.values[i].value;
+		object[std::to_string(sequence.times[i])] = sequence.values[i].value;
 	}
 	return object;
 }
 
-static QJsonObject writeJulianDateSequenceController(const JulianDateSequenceController& controller)
+static nlohmann::json writeJulianDateSequenceController(const JulianDateSequenceController& controller)
 {
-	QJsonObject object;
+	nlohmann::json object;
 	object["type"] = "JulianDate";
 	object["sequence"] = writeDoubleStateSequence(static_cast<const DoubleStateSequence&>(*controller.getSequence()));
 	return object;
 }
 
-QJsonObject writeSequenceController(const StateSequenceController& controller)
+nlohmann::json writeSequenceController(const StateSequenceController& controller)
 {
 	if (const EntityStateSequenceController* entityStateSequenceController = dynamic_cast<const EntityStateSequenceController*>(&controller))
 	{
@@ -161,5 +155,5 @@ QJsonObject writeSequenceController(const StateSequenceController& controller)
 		return writeJulianDateSequenceController(*julianDateSequenceController);
 	}
 	assert(!"Unsupported sequence type");
-	return QJsonObject();
+	return nlohmann::json();
 }
