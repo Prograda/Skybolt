@@ -26,7 +26,13 @@ public:
 
 signals:
 	//! @param position is in NDC coordinates with (0,0) at top-left and (1,1) at bottom-right.
-	void mouseDown(Qt::MouseButton button, const QPointF& position);
+	void mousePressed(Qt::MouseButton button, const QPointF& position);
+
+	//! @param position is in NDC coordinates with (0,0) at top-left and (1,1) at bottom-right.
+	void mouseReleased(Qt::MouseButton button, const QPointF& position);
+
+	//! @param position is in NDC coordinates with (0,0) at top-left and (1,1) at bottom-right.
+	void mouseMoved(Qt::MouseButtons buttons, const QPointF& position);
 
 protected:
 	void initializeGL() override;
@@ -34,6 +40,8 @@ protected:
 	void paintGL() override;
 
 	void mousePressEvent(QMouseEvent* event) override;
+	void mouseReleaseEvent(QMouseEvent* event) override;
+	void mouseMoveEvent(QMouseEvent* event) override;
 	void keyPressEvent(QKeyEvent* event) override;
 
 private:

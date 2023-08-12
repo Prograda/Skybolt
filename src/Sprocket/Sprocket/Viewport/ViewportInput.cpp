@@ -23,7 +23,8 @@ ViewportInput::ViewportInput(const InputPlatformPtr& inputPlatform) :
 	mRightAxis = std::make_shared<KeyAxis>(keyboard, KC_A, KC_D, rate, rate, -1.0f, 1.0f);
 	mLogicalAxes.push_back(mRightAxis);
 
-	setEnabled(false);
+	setMouseEnabled(false);
+	setKeyboardEnabled(false);
 }
 
 ViewportInput::~ViewportInput()
@@ -31,18 +32,21 @@ ViewportInput::~ViewportInput()
 	mInputPlatform->getEventEmitter()->removeEventListener(this);
 }
 
-void ViewportInput::setEnabled(bool enabled)
+void ViewportInput::setMouseEnabled(bool enabled)
 {
 	for (InputDevicePtr device : mInputPlatform->getInputDevicesOfType(InputDeviceTypeMouse))
 	{
 		device->setEnabled(enabled);
 	}
+	mMouseEnabled = enabled;
+}
 
+void ViewportInput::setKeyboardEnabled(bool enabled)
+{
 	for (InputDevicePtr device : mInputPlatform->getInputDevicesOfType(InputDeviceTypeKeyboard))
 	{
 		device->setEnabled(enabled);
 	}
-	mEnabled = enabled;
 }
 
 void ViewportInput::updateBeforeInput()
@@ -72,7 +76,7 @@ sim::CameraController::Input ViewportInput::getInput() const
 
 void ViewportInput::onEvent(const Event &evt)
 {
-	if (!mEnabled)
+	if (!mMouseEnabled)
 	{
 		return;
 	}

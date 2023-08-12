@@ -11,7 +11,8 @@ public:
 
 	~ViewportInput();
 
-	void setEnabled(bool enabled);
+	void setMouseEnabled(bool enabled);
+	void setKeyboardEnabled(bool enabled);
 
 	void updateBeforeInput();
 
@@ -27,5 +28,5 @@ private:
 	skybolt::LogicalAxisPtr mForwardAxis;
 	skybolt::LogicalAxisPtr mRightAxis;
 	skybolt::sim::CameraController::Input mInput = skybolt::sim::CameraController::Input::zero();
-	bool mEnabled = false;
+	bool mMouseEnabled = false;
 };

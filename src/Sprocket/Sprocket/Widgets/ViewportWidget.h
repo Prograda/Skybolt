@@ -48,9 +48,19 @@ public:
 	std::optional<PickedSceneObject> pickSceneObjectAtPointInWindow(const QPointF& position, const EntitySelectionPredicate& predicate = &EntitySelectionPredicateAlways) const;
 	std::optional<skybolt::sim::Vector3> pickPointOnPlanetAtPointInWindow(const QPointF& position) const;
 
-	using ViewportClickHandler = std::function<void(Qt::MouseButton button, const QPointF& position)>;
-	ViewportClickHandler getDefaultViewportClickHandler();
-	void setViewportClickHandler(ViewportClickHandler handler) { mViewportClickHandler = std::move(handler); }
+	enum class ButtonState
+	{
+		Down,
+		Up
+	};
+
+	using MouseClickHandler = std::function<void(Qt::MouseButton button, const QPointF& position, ButtonState state)>;
+	MouseClickHandler getDefaultMouseClickHandler();
+	void setMouseClickHandler(MouseClickHandler handler) { mMouseClickHandler = std::move(handler); }
+
+	using MouseMoveHandler = std::function<void(Qt::MouseButtons buttons, const QPointF& position)>;
+	MouseMoveHandler getDefaultMouseMoveHandler();
+	void setMouseMoveHandler(MouseMoveHandler handler) { mMouseMoveHandler = std::move(handler); }
 
 	QMenu* addVisibilityFilterableSubMenu(const QString& text, const skybolt::EntityVisibilityPredicateSetter& setter) const;
 
@@ -70,8 +80,6 @@ private:
 	void setCamera(skybolt::sim::Entity* simCamera);
 	void setCameraTarget(skybolt::sim::Entity* target);
 
-	void onViewportMouseDown(Qt::MouseButton button, const QPointF& position);
-
 	void showContextMenu(const QPoint& point);
 
 	glm::dmat4 calcCurrentViewProjTransform() const;
@@ -86,7 +94,8 @@ private:
 	QMenu* mFilterMenu;
 	OsgWidget* mOsgWidget;
 	
-	ViewportClickHandler mViewportClickHandler = getDefaultViewportClickHandler();
+	MouseClickHandler mMouseClickHandler = getDefaultMouseClickHandler();
+	MouseMoveHandler mMouseMoveHandler = getDefaultMouseMoveHandler();
 
 	QComboBox* mCameraCombo;
 	class CameraControllerWidget* mCameraControllerWidget;

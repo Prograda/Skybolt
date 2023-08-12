@@ -71,8 +71,16 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	mOsgWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(mOsgWidget, &OsgWidget::customContextMenuRequested, this, [this] (const QPoint& point) { showContextMenu(point); });
 
-	connect(mOsgWidget, &OsgWidget::mouseDown, this, [this](Qt::MouseButton button, const QPointF& position) {
-		onViewportMouseDown(button, position);
+	connect(mOsgWidget, &OsgWidget::mousePressed, this, [this](Qt::MouseButton button, const QPointF& position) {
+		mMouseClickHandler(button, position, ButtonState::Down);
+	});
+
+	connect(mOsgWidget, &OsgWidget::mouseReleased, this, [this](Qt::MouseButton button, const QPointF& position) {
+		mMouseClickHandler(button, position, ButtonState::Up);
+	});
+
+	connect(mOsgWidget, &OsgWidget::mouseMoved, this, [this](Qt::MouseButtons buttons, const QPointF& position) {
+		mMouseMoveHandler(buttons, position);
 	});
 
 	// Create center layout
@@ -158,32 +166,42 @@ std::optional<sim::Vector3> ViewportWidget::pickPointOnPlanetAtPointInWindow(con
    return object ? object->position : std::optional<sim::Vector3>();
 }
 
-ViewportWidget::ViewportClickHandler ViewportWidget::getDefaultViewportClickHandler()
+ViewportWidget::MouseClickHandler ViewportWidget::getDefaultMouseClickHandler()
 {
-	static ViewportClickHandler f = [this] (Qt::MouseButton button, const QPointF& position) {
+	static MouseClickHandler f = [this] (Qt::MouseButton button, const QPointF& position, ButtonState state) {
 		if (button == Qt::MouseButton::LeftButton)
 		{
 			if (mViewportInput)
 			{
-				mViewportInput->setEnabled(true);
+				mViewportInput->setKeyboardEnabled(state == ButtonState::Down);
 			}
-		}
-		else if (button == Qt::MouseButton::MiddleButton)
-		{
-			sim::EntityId selectedEntityId = sim::nullEntityId();
-			auto hasNamePredicate = [] (const skybolt::sim::Entity& e) { return !getName(e).empty(); };
+
+			if (state == ButtonState::Up)
+			{
+				sim::EntityId selectedEntityId = sim::nullEntityId();
+				auto hasNamePredicate = [] (const skybolt::sim::Entity& e) { return !getName(e).empty(); };
 			
-			std::optional<PickedSceneObject> object = pickSceneObjectAtPointInWindow(position, hasNamePredicate);
-			ScenarioObjectPtr scenarioObject = object->entity ? mEntityObjectRegistry->findByName(getName(*object->entity)) : nullptr;
-			mSelectionModel->selectItem(scenarioObject);
+				std::optional<PickedSceneObject> object = pickSceneObjectAtPointInWindow(position, hasNamePredicate);
+				ScenarioObjectPtr scenarioObject = object->entity ? mEntityObjectRegistry->findByName(getName(*object->entity)) : nullptr;
+				mSelectionModel->selectItem(scenarioObject);
+			}
 		}
 	};
 	return f;
 }
 
-void ViewportWidget::onViewportMouseDown(Qt::MouseButton button, const QPointF& position)
+ViewportWidget::MouseMoveHandler ViewportWidget::getDefaultMouseMoveHandler()
 {
-	mViewportClickHandler(button, position);
+	static MouseMoveHandler f = [this] (Qt::MouseButtons buttons, const QPointF& position) {
+		if (buttons & Qt::LeftButton)
+		{
+			if (mViewportInput)
+			{
+				mViewportInput->setMouseEnabled(true);
+			}
+		}
+	};
+	return f;
 }
 
 void ViewportWidget::showContextMenu(const QPoint& point)
