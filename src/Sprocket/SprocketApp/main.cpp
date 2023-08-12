@@ -208,8 +208,8 @@ int main(int argc, char *argv[])
 		}
 
 		std::string pluginsDir = (getExecutablePath() / "plugins").string();
-		std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(pluginsDir);
-		std::vector<EditorPluginFactory> editorPluginFactories = loadPluginFactories<EditorPlugin, EditorPluginConfig>(pluginsDir);
+		std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(getAllPluginFilepathsInDirectory(pluginsDir));
+		std::vector<EditorPluginFactory> editorPluginFactories = loadPluginFactories<EditorPlugin, EditorPluginConfig>(getAllPluginFilepathsInDirectory(pluginsDir));
 		Application application(enginePluginFactories, editorPluginFactories, argc, argv);
 
 		if (!applicationSupportsOpenGl())

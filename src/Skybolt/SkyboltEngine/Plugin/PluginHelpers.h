@@ -15,21 +15,27 @@
 namespace skybolt {
 
 std::vector<std::filesystem::path> getAllPluginFilepathsInDirectory(const std::string& directory);
+std::vector<std::filesystem::path> getAllPluginFilepathsInDirectories(const std::vector<std::string>& directories);
 
 template <class PluginT, class PluginConfigT>
-std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadPluginFactories(const std::string& directoryPath)
+std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadPluginFactories(const std::vector<std::filesystem::path>& pluginFilepaths)
 {
 	namespace dll = boost::dll;
 
 	std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> result;
-
-	std::vector<std::filesystem::path> pluginFilepaths = getAllPluginFilepathsInDirectory(directoryPath);
+	std::set<std::string> loadedPluginNames;
 
 	for (const std::filesystem::path& path : pluginFilepaths)
 	{
 		typedef std::shared_ptr<PluginT>(CreatePluginFunction)(const PluginConfigT&);
 
 		boost::filesystem::path boostPath(path.string());
+		std::string pluginName = boostPath.leaf().string();
+		if (loadedPluginNames.find(pluginName) != loadedPluginNames.end())
+		{
+			BOOST_LOG_TRIVIAL(warning) << "Found plugin with same name as already loaded plugin '" << pluginName << "' in directory '" << boostPath.string() << "'. Ignoring the duplicate plugin.";
+			continue;
+		}
 
 		try
 		{
@@ -42,8 +48,8 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 					dll::load_mode::default_mode
 				);
 
-
-				BOOST_LOG_TRIVIAL(info) << "Loaded plugin: " << boostPath.leaf().string();
+				loadedPluginNames.insert(pluginName);
+				BOOST_LOG_TRIVIAL(info) << "Loaded plugin: " << pluginName;
 
 				result.push_back([=](const PluginConfigT& config) { return creator(config); });
 			}
@@ -54,18 +60,6 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 		}
 	}
 
-	return result;
-}
-
-template <class PluginT, class PluginConfigT>
-std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadPluginFactories(const std::vector<std::string>& directoryPaths)
-{
-	std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> result;
-	for (const auto& path : directoryPaths)
-	{
-		auto plugins = loadPluginFactories<PluginT, PluginConfigT>(path);
-		result.insert(result.begin(), plugins.begin(), plugins.end());
-	}
 	return result;
 }
 

@@ -31,7 +31,7 @@ T getOptionalNodeOrDefaultWithWarning(const json& j, const std::string& name, co
 
 std::unique_ptr<EngineRoot> EngineRootFactory::create(const boost::program_options::variables_map& params)
 {
-	std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(getDefaultPluginDirs());
+	std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(getAllPluginFilepathsInDirectories(getDefaultPluginDirs()));
 
 	nlohmann::json settings = readEngineSettings(params);
 	return create(enginePluginFactories, settings);

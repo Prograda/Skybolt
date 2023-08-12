@@ -39,4 +39,15 @@ std::vector<fs::path> getAllPluginFilepathsInDirectory(const std::string& direct
 	return getAllFilesWithExtensions(directory, { ".dll", ".dylib", ".dso" });
 }
 
+std::vector<std::filesystem::path> getAllPluginFilepathsInDirectories(const std::vector<std::string>& directories)
+{
+	std::vector<std::filesystem::path> result;
+	for (const auto& path : directories)
+	{
+		auto plugins = getAllPluginFilepathsInDirectory(path);
+		result.insert(result.begin(), plugins.begin(), plugins.end());
+	}
+	return result;
+}
+
 } // namespace skybolt
