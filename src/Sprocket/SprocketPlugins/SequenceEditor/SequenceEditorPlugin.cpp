@@ -166,7 +166,7 @@ public:
 			return new SequenceEditor(config);
 		};
 
-		QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this] (const ScenarioObjectPtr& selected, const ScenarioObjectPtr& deselected) {
+		QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
 			selectionChanged(selected);
 		});
 	}
@@ -227,9 +227,9 @@ public:
 		return mScenarioObjectTypes;
 	}
 
-	void selectionChanged(const ScenarioObjectPtr& item)
+	void selectionChanged(const SelectedScenarioObjects& selection)
 	{
-		if (auto sequenceItem = dynamic_cast<const SequenceObject*>(item.get()))
+		if (auto sequenceItem = getFirstSelectedScenarioObjectOfType<SequenceObject>(selection))
 		{
 			mSequencePlotWidget->setSequenceController(sequenceItem->data);
 		}

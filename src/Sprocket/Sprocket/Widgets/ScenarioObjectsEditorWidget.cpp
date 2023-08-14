@@ -146,14 +146,14 @@ ScenarioObjectsEditorWidget::ScenarioObjectsEditorWidget(const ScenarioObjectsEd
 	layout->addWidget(toolbar);
 
 	QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, this, [deleteButton, scenarioObjectTypes = config.scenarioObjectTypes]
-		(const ScenarioObjectPtr& selected, const ScenarioObjectPtr& deselected)
+		(const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected)
 	{
 		bool enabled = false;
-		if (selected)
+		if (auto item = getFirstSelectedScenarioObject(selected); item)
 		{
-			if (const ScenarioObjectTypePtr& type = findScenarioObjectType(scenarioObjectTypes, *selected); type)
+			if (const ScenarioObjectTypePtr& type = findScenarioObjectType(scenarioObjectTypes, *item); type)
 			{
-				enabled = type->isObjectRemovable(*selected);
+				enabled = type->isObjectRemovable(*item);
 			}
 		}
 		deleteButton->setEnabled(enabled);
@@ -161,7 +161,7 @@ ScenarioObjectsEditorWidget::ScenarioObjectsEditorWidget(const ScenarioObjectsEd
 
 	QObject::connect(deleteButton, &QToolButton::pressed, [selectionModel = config.selectionModel, scenarioObjectTypes = config.scenarioObjectTypes]()
 	{
-		if (const auto& object = selectionModel->getSelectedItem(); object)
+		if (const auto& object = getFirstSelectedScenarioObject(selectionModel->getSelectedItems()); object)
 		{
 			if (const ScenarioObjectTypePtr& type = findScenarioObjectType(scenarioObjectTypes, *object); type)
 			{

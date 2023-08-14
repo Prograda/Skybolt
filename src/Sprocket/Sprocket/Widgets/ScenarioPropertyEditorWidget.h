@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "Sprocket/SprocketFwd.h"
+#include "Sprocket/SceneSelectionModel.h"
 #include "Sprocket/Property/PropertyEditor.h"
 #include "Sprocket/Property/PropertyModelFactoryMap.h"
 
@@ -27,7 +28,7 @@ public:
 private:
 	void setPropertiesModel(PropertiesModelPtr properties);
 
-	void selectionChanged(const ScenarioObjectPtr& selected, const ScenarioObjectPtr& deselected);
+	void selectionChanged(const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected);
 
 private:
 	skybolt::EngineRoot* mEngineRoot;

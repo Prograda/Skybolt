@@ -11,12 +11,12 @@ SceneSelectionModel::SceneSelectionModel(QObject* parent) :
 {
 }
 
-void SceneSelectionModel::selectItem(const ScenarioObjectPtr& item)
+void SceneSelectionModel::setSelectedItems(const SelectedScenarioObjects& items)
 {
-	if (mSelectedItem != item)
+	if (mSelectedItems != items)
 	{
-		auto previousSelection = mSelectedItem;
-		mSelectedItem = item;
-		emit selectionChanged(item, previousSelection);
+		auto previousSelection = mSelectedItems;
+		mSelectedItems = items;
+		emit selectionChanged(items, previousSelection);
 	}
 }

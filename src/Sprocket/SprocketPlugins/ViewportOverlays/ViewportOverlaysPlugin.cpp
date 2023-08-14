@@ -70,7 +70,7 @@ public:
 		mEngineRoot(config.engineRoot)
 	{
 		// Handle selection events
-		QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this] (const ScenarioObjectPtr& selected, const ScenarioObjectPtr& deselected) {
+		QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
 			selectionChanged(selected);
 		});
 
@@ -133,16 +133,19 @@ public:
 		};
 	}
 
-	void selectionChanged(const ScenarioObjectPtr& selected)
+	void selectionChanged(const SelectedScenarioObjects& selected)
 	{
 		std::set<sim::Entity*> selection;
-		if (auto entityObject = dynamic_cast<const EntityObject*>(selected.get()); entityObject)
+		for (const ScenarioObjectPtr& object : selected)
 		{
-			mSelectedEntityId = entityObject->data;
-			auto entity = mEngineRoot->scenario->world.getEntityById(mSelectedEntityId);
-			if (entity)
+			if (auto entityObject = dynamic_cast<const EntityObject*>(object.get()); entityObject)
 			{
-				selection.insert(entity);
+				mSelectedEntityId = entityObject->data;
+				auto entity = mEngineRoot->scenario->world.getEntityById(mSelectedEntityId);
+				if (entity)
+				{
+					selection.insert(entity);
+				}
 			}
 		}
 		mVisSelectedEntityIcon->setEntities(selection);

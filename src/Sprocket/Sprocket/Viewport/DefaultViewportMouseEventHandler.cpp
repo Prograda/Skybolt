@@ -50,7 +50,7 @@ void DefaultViewportMouseEventHandler::mouseReleased(const QPointF& position, Qt
 			
 		std::optional<PickedSceneObject> object = mViewportWidget->pickSceneObjectAtPointInWindow(position, hasNamePredicate);
 		ScenarioObjectPtr scenarioObject = object->entity ? mEntityObjectRegistry->findByName(getName(*object->entity)) : nullptr;
-		mSelectionModel->selectItem(scenarioObject);
+		selectItems({scenarioObject});
 	}
 }
 
@@ -63,4 +63,9 @@ void DefaultViewportMouseEventHandler::mouseMoved(const QPointF& position, Qt::M
 			mViewportInput->setMouseEnabled(true);
 		}
 	}
+}
+
+void DefaultViewportMouseEventHandler::selectItems(const std::vector<ScenarioObjectPtr>& objects)
+{
+	mSelectionModel->setSelectedItems(objects);
 }

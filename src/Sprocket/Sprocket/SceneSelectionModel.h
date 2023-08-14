@@ -11,18 +11,35 @@
 #include <QObject>
 #include <memory>
 
+using SelectedScenarioObjects = std::vector<ScenarioObjectPtr>;
+
+inline ScenarioObjectPtr getFirstSelectedScenarioObject(const SelectedScenarioObjects& objects)
+{
+	return objects.empty() ? nullptr : objects.front();
+}
+
+template <typename T>
+std::shared_ptr<T> getFirstSelectedScenarioObjectOfType(const SelectedScenarioObjects& objects)
+{
+	if (auto object = getFirstSelectedScenarioObject(objects); object)
+	{
+		return std::dynamic_pointer_cast<T>(object);
+	}
+	return nullptr;
+}
+
 class SceneSelectionModel : public QObject
 {
 	Q_OBJECT
 public:
 	SceneSelectionModel(QObject* parent = nullptr);
 
-	void selectItem(const ScenarioObjectPtr& item);
-	ScenarioObjectPtr getSelectedItem() const { return mSelectedItem; }
+	void setSelectedItems(const SelectedScenarioObjects& item);
+	SelectedScenarioObjects getSelectedItems() const { return mSelectedItems; }
 
 public:
-	Q_SIGNAL void selectionChanged(const ScenarioObjectPtr& selected, const ScenarioObjectPtr& deselected);
+	Q_SIGNAL void selectionChanged(const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected);
 
 private:
-	ScenarioObjectPtr mSelectedItem;
+	SelectedScenarioObjects mSelectedItems;
 };

@@ -48,7 +48,7 @@ private:
 	void updateTreeItemParents();
 
 	std::vector<TreeItem*> getCurrentSelection() const;
-	void setCurrentSelection(std::vector<TreeItem*> items);
+	void setCurrentSelection(const std::vector<TreeItem*>& items);
 
 private:
 	skybolt::sim::World* mWorld;

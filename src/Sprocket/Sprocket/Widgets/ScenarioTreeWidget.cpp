@@ -66,9 +66,11 @@ ScenarioTreeWidget::ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config) :
 
 	auto rootItem = std::make_shared<SimpleTreeItem>("", getSprocketIcon(SprocketIcon::Folder));
 	mModel = new TreeItemModel(rootItem, this);
-	mView = new QTreeView;
+	mView = new QTreeView(this);
 	mView->setModel(mModel);
 	mView->setContextMenuPolicy(Qt::CustomContextMenu);
+	mView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
 	connect(mView, &QTreeView::customContextMenuRequested, this, [=](const QPoint& point) {
 		QModelIndex index = mView->indexAt(point);
 		TreeItemPtr item = mModel->getTreeItem(index);
@@ -81,31 +83,32 @@ ScenarioTreeWidget::ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config) :
 	layout()->addWidget(mView);
 
 	QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this]
-		(const ScenarioObjectPtr& selected, const ScenarioObjectPtr& deselected)
+		(const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected)
 	{
 		std::vector<TreeItem*> selection;
-		if (selected)
+		for (auto object : selected)
 		{
-			if (auto item = findOptional(mItemsMap, selected); item)
+			if (auto item = findOptional(mItemsMap, object); item)
 			{
-				selection = {item->get()};
+				selection.push_back(item->get());
 			}
 		};
 		setCurrentSelection(selection);
 	});
 
 	QObject::connect(mView->selectionModel(), &QItemSelectionModel::selectionChanged, [this, selectionModel = config.selectionModel](const QItemSelection& selected, const QItemSelection& deselected) {
-		ScenarioObjectPtr object;
-		QModelIndexList selectedIndexes = selected.empty() ? QModelIndexList() : selected.front().indexes();
-		QModelIndex selectedIndex = selectedIndexes.empty() ? QModelIndex() : selectedIndexes.front();
-		if (const TreeItemPtr& item = mModel->getTreeItem(selectedIndex); item)
+		SelectedScenarioObjects objects;
+		for (const QModelIndex& index : mView->selectionModel()->selection().indexes())
 		{
-			if (auto scenarioTreeItem = dynamic_cast<const ScenarioObjectTreeItem*>(item.get()); scenarioTreeItem)
+			if (const TreeItemPtr& item = mModel->getTreeItem(index); item)
 			{
-				object = scenarioTreeItem->object;
+				if (auto scenarioTreeItem = dynamic_cast<const ScenarioObjectTreeItem*>(item.get()); scenarioTreeItem)
+				{
+					objects.push_back(scenarioTreeItem->object);
+				}
 			}
 		}
-		selectionModel->selectItem(object);
+		selectionModel->setSelectedItems(objects);
 	});
 
 	QIcon folderIcon = getSprocketIcon(SprocketIcon::Folder);
@@ -139,14 +142,6 @@ ScenarioTreeWidget::ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config) :
 }
 
 ScenarioTreeWidget::~ScenarioTreeWidget() = default;
-
-template <typename T>
-static std::vector<T> toVector(const std::set<T>& s)
-{
-	std::vector<T> r;
-	r.insert(r.end(), s.begin(), s.end());
-	return r;
-}
 
 void ScenarioTreeWidget::addObjects(const std::type_index& sceneObjectType, const std::set<ScenarioObjectPtr>& objects)
 {
@@ -194,7 +189,7 @@ std::vector<TreeItem*> ScenarioTreeWidget::getCurrentSelection() const
 	return r;
 }
 
-void ScenarioTreeWidget::setCurrentSelection(std::vector<TreeItem*> items)
+void ScenarioTreeWidget::setCurrentSelection(const std::vector<TreeItem*>& items)
 {
 	if (getCurrentSelection() != items)
 	{

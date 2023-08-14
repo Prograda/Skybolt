@@ -344,7 +344,7 @@ public:
 		mToolWindow.name = "Entity Controller";
 		mToolWindow.widget = mEntityControllerWidget;
 
-		QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this] (const ScenarioObjectPtr& selected, const ScenarioObjectPtr& deselected) {
+		QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
 			selectionChanged(selected);
 		});
 	}
@@ -359,9 +359,9 @@ public:
 		return { mToolWindow };
 	}
 
-	void selectionChanged(const ScenarioObjectPtr& selected)
+	void selectionChanged(const SelectedScenarioObjects& selected)
 	{
-		if (auto entityObject = dynamic_cast<const EntityObject*>(selected.get()); entityObject)
+		if (auto entityObject = getFirstSelectedScenarioObjectOfType<EntityObject>(selected); entityObject)
 		{
 			sim::Entity* entity = mEngineRoot->scenario->world.getEntityById(entityObject->data);
 			mEntityControllerWidget->setEntity(entity);

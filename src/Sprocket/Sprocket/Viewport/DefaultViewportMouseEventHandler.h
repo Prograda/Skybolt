@@ -30,6 +30,9 @@ public:
 	void mouseMoved(const QPointF& position, Qt::MouseButtons buttons) override;
 
 protected:
+	virtual void selectItems(const std::vector<ScenarioObjectPtr>& objects);
+
+protected:
 	ViewportWidget* mViewportWidget;
 	ViewportInput* mViewportInput;
 	ScenarioObjectRegistryPtr mEntityObjectRegistry;

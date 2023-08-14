@@ -54,6 +54,7 @@ public:
 
 	int getViewportWidth() const;
 	int getViewportHeight() const;
+	glm::dmat4 calcCurrentViewProjTransform() const;
 
 public: // JsonProjectSerializable
 	void resetProject() override;
@@ -72,8 +73,6 @@ private:
 	void setCameraTarget(skybolt::sim::Entity* target);
 
 	void showContextMenu(const QPoint& point);
-
-	glm::dmat4 calcCurrentViewProjTransform() const;
 
 private:
 	skybolt::EngineRoot* mEngineRoot;

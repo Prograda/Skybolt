@@ -180,7 +180,7 @@ void ViewportWidget::showContextMenu(const QPoint& point)
 	if (auto intersection = pickPointOnPlanetAtPointInWindow(point); intersection)
 	{
 		sim::Entity* selectedEntity = nullptr;
-		if (auto item = dynamic_cast<EntityObject*>(mSelectionModel->getSelectedItem().get()); item)
+		if (auto item = getFirstSelectedScenarioObjectOfType<EntityObject>(mSelectionModel->getSelectedItems()); item)
 		{
 			selectedEntity = mEngineRoot->scenario->world.getEntityById(item->data);
 		}
@@ -411,9 +411,12 @@ QMenu* ViewportWidget::addVisibilityFilterableSubMenu(const QString& text, const
 
 	QAction* selectedAction = addCheckedAction(*menu, "Show Selected", [=](bool checked) {
 		setter([=](const sim::Entity& entity) {
-			if (auto entityObject = dynamic_cast<EntityObject*>(mSelectionModel->getSelectedItem().get()); entityObject)
+			for (const auto& object : mSelectionModel->getSelectedItems())
 			{
-				return (entityObject->data == entity.getId()) && hasLineOfSight(entity);
+				if (auto entityObject = dynamic_cast<EntityObject*>(object.get()); entityObject)
+				{
+					return (entityObject->data == entity.getId()) && hasLineOfSight(entity);
+				}
 			}
 			return false;
 		});

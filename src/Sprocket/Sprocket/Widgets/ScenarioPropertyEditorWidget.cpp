@@ -5,7 +5,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "ScenarioPropertyEditorWidget.h"
-#include "Sprocket/SceneSelectionModel.h"
 #include "Sprocket/QtUtil/QtTimerUtil.h"
 #include "Sprocket/Widgets/TreeItems.h"
 
@@ -31,7 +30,7 @@ ScenarioPropertyEditorWidget::ScenarioPropertyEditorWidget(const ScenarioPropert
 	setLayout(layout);
 	layout->addWidget(mPropertiesEditor);
 
-	connect(config.selectionModel, &SceneSelectionModel::selectionChanged, this, [this] (const ScenarioObjectPtr& selected, const ScenarioObjectPtr& deselected) {
+	connect(config.selectionModel, &SceneSelectionModel::selectionChanged, this, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
 		selectionChanged(selected, deselected);
 	});
 
@@ -43,14 +42,14 @@ ScenarioPropertyEditorWidget::ScenarioPropertyEditorWidget(const ScenarioPropert
 	});
 }
 
-void ScenarioPropertyEditorWidget::selectionChanged(const ScenarioObjectPtr& selected, const ScenarioObjectPtr& deselected)
+void ScenarioPropertyEditorWidget::selectionChanged(const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected)
 {
 	PropertiesModelPtr properties;
-	if (selected)
+	if (auto object = getFirstSelectedScenarioObject(selected); object)
 	{
-		if (auto i = mPropertyModelFactoryMap.find(typeid(*selected)); i != mPropertyModelFactoryMap.end())
+		if (auto i = mPropertyModelFactoryMap.find(typeid(*object)); i != mPropertyModelFactoryMap.end())
 		{
-			properties = i->second(*selected);
+			properties = i->second(*object);
 		}
 	}
 	setPropertiesModel(properties);
