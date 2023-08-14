@@ -190,6 +190,16 @@ void intersectRayGrid(const Grid& grid, const glm::vec2& origin, const glm::vec2
 	}
 }
 
+std::optional<float> intersectRayPlane(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, const glm::vec3& planeOrigin, const glm::vec3& planeNormal)
+{
+	float denom = glm::dot(planeNormal, rayDirection);
+	if (abs(denom) <= std::numeric_limits<float>::epsilon()) // your favorite epsilon
+	{
+		return std::nullopt;
+	}
+	return glm::dot(planeOrigin - rayOrigin, planeNormal) / denom;
+}
+
 std::optional<std::pair<float, float>> intersectRaySphere(const glm::vec3& r0, const glm::vec3& rd, const glm::vec3& s0, float sr)
 {
     glm::vec3 s0_r0 = r0 - s0;
@@ -197,7 +207,7 @@ std::optional<std::pair<float, float>> intersectRaySphere(const glm::vec3& r0, c
     float c = dot(s0_r0, s0_r0) - (sr * sr);
 
 	float det = b*b - 4.0f*c;
-    if (det < 0.0)
+    if (det <= std::numeric_limits<float>::epsilon())
 	{
 		return std::nullopt;
     }
@@ -213,6 +223,29 @@ std::optional<std::pair<float, float>> intersectRaySegmentSphere(const glm::vec3
 		return result;
 	}
 	return std::nullopt;
+}
+
+std::optional<std::pair<float, float>> nearestDistancesOnRays(const glm::vec3& origin0, const glm::vec3& dir0, const glm::vec3& origin1, const glm::vec3& dir1)
+{
+	// Based on https://math.stackexchange.com/questions/846054/closest-points-on-two-line-segments
+    glm::vec3 V21 = origin1 - origin0;
+
+	float v11 = glm::dot(dir0, dir0);
+	float v22 = glm::dot(dir1, dir1);
+	float v21 = glm::dot(dir0, dir1);
+	float v21_1 = glm::dot(V21, dir0);
+	float v21_2 = glm::dot(V21, dir1);
+	float denom = v21 * v21 - v22 * v11;
+
+	if (std::abs(denom) <= std::numeric_limits<float>::epsilon())
+	{
+		return std::nullopt;
+	}
+
+	float s = (v21_2 * v21 - v22 * v21_1) / denom;
+	float t = (-v21_1 * v21 + v11 * v21_2) / denom;
+
+	return std::make_pair(s, t);
 }
 
 } // namespace skybolt

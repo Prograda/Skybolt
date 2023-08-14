@@ -12,6 +12,8 @@
 
 using namespace skybolt;
 
+constexpr float epsilon = 1e-8f;
+
 TEST_CASE("Intersect grid along X axis")
 {
 	Grid grid;
@@ -89,10 +91,52 @@ TEST_CASE("Intersect ray vs sphere")
 	float sr = 2;
 	auto result = intersectRaySphere(r0, rd, s0, sr);
 	REQUIRE(result);
-	CHECK(result->first == Approx(1.0).margin(1e-8f));
-	CHECK(result->second == Approx(5.0).margin(1e-8f));
+	CHECK(result->first == Approx(1.0).margin(epsilon));
+	CHECK(result->second == Approx(5.0).margin(epsilon));
 
 	// Test miss
 	result = intersectRaySphere(r0, glm::vec3(0,1,0), s0, sr);
 	CHECK(!result);
+}
+
+TEST_CASE("Nearest distance on line to point")
+{
+	// Point near middle of line
+	float r = nearestNormalizedDistanceOnLineToPoint(glm::vec3(1,0,0), glm::vec3(3,0,0), glm::vec3(2,1,0));
+	CHECK(r == 0.5f);
+
+	// Point beyond start of line
+	r = nearestNormalizedDistanceOnLineToPoint(glm::vec3(1,0,0), glm::vec3(3,0,0), glm::vec3(0,1,0));
+	CHECK(r == 0.f);
+
+	// Point beyond end of line
+	r = nearestNormalizedDistanceOnLineToPoint(glm::vec3(1,0,0), glm::vec3(3,0,0), glm::vec3(4,1,0));
+	CHECK(r == 1.f);
+}
+
+TEST_CASE("Nearest distances on rays")
+{
+	// Test rays with same origin intersect at origin
+	// Test perpendicular rays that intersect
+	auto r = nearestDistancesOnRays(glm::vec3(1,2,3), glm::vec3(0,1,0), glm::vec3(1,2,3), glm::vec3(1,0,0));
+	REQUIRE(r.has_value());
+	CHECK(*r == std::make_pair(0.f, 0.f));
+
+	// Test perpendicular rays that intersect
+	r = nearestDistancesOnRays(glm::vec3(2,0,0), glm::vec3(0,1,0), glm::vec3(0,1,0), glm::vec3(1,0,0));
+	REQUIRE(r.has_value());
+	CHECK(*r == std::make_pair(1.f, 2.f));
+
+	// Test perpendicular rays that miss
+	r = nearestDistancesOnRays(glm::vec3(2,0,0), glm::vec3(0,1,0), glm::vec3(0,1,3), glm::vec3(1,0,0));
+	REQUIRE(r.has_value());
+	CHECK(*r == std::make_pair(1.f, 2.f));
+
+	// Test parallel rays have no intersection
+	r = nearestDistancesOnRays(glm::vec3(1,0,0), glm::vec3(1,0,0), glm::vec3(-1,0,0), glm::vec3(1,0,0));
+	REQUIRE(!r.has_value());
+
+	// Test anti-parallel rays have no intersection
+	r = nearestDistancesOnRays(glm::vec3(1,0,0), glm::vec3(1,0,0), glm::vec3(-1,0,0), glm::vec3(-1,0,0));
+	REQUIRE(!r.has_value());
 }
