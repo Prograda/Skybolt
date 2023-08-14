@@ -74,19 +74,19 @@ void OsgWidget::resizeGL(int width, int height)
 
 void OsgWidget::mousePressEvent(QMouseEvent* event)
 {
-	emit mousePressed(event->button(), event->localPos());
+	emit mousePressed(event->localPos(), event->button(), event->modifiers());
 	event->accept();
 }
 
 void OsgWidget::mouseReleaseEvent(QMouseEvent* event)
 {
-	emit mouseReleased(event->button(), event->localPos());
+	emit mouseReleased(event->localPos(), event->button());
 	event->accept();
 }
 
 void OsgWidget::mouseMoveEvent(QMouseEvent* event)
 {
-	mouseMoved(event->buttons(), event->localPos());
+	mouseMoved(event->localPos(), event->buttons());
 	event->accept();
 }
 

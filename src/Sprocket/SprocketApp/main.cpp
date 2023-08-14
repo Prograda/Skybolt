@@ -14,6 +14,7 @@
 #include <Sprocket/Input/EditorInputSystem.h>
 #include <Sprocket/Input/InputPlatformOis.h>
 #include <Sprocket/Scenario/EntityObjectType.h>
+#include <Sprocket/Viewport/DefaultViewportMouseEventHandler.h>
 #include <Sprocket/ThirdParty/DarkStyle.h>
 #include <Sprocket/Widgets/ScenarioPropertyEditorWidget.h>
 #include <Sprocket/Widgets/ScenarioObjectsEditorWidget.h>
@@ -133,10 +134,17 @@ public:
 				c.selectionModel = selectionModel;
 				c.contextActions = createContextActions(*engineRoot);
 				c.projectFilenameGetter = [this] { return mMainWindow->getProjectFilename().toStdString(); };
-				c.entityObjectRegistry = (*entityObjectRegistry)->objectRegistry;
 				c.parent = mMainWindow.get();
 				return c;
 			}());
+			window->setMouseEventHandler(std::make_shared<DefaultViewportMouseEventHandler>([&] {
+				DefaultViewportMouseEventHandlerConfig c;
+				c.viewportWidget = window;
+				c.viewportInput = inputSystem->getViewportInput();
+				c.entityObjectRegistry = (*entityObjectRegistry)->objectRegistry;
+				c.sceneSelectionModel = selectionModel;
+				return c;
+			}()));
 
 			for (const auto& layer : getEntityVisibilityLayers(mEditorPlugins))
 			{

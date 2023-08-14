@@ -11,6 +11,7 @@
 #include "Sprocket/ContextAction/ActionContext.h"
 #include "Sprocket/Scenario/ScenarioObject.h"
 #include "Sprocket/Viewport/SceneObjectPicker.h"
+#include "Sprocket/Viewport/ViewportMouseEventHandler.h"
 
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltEngine/SimVisBinding/EntityVisibilityFilterable.h>
@@ -32,7 +33,6 @@ struct ViewportWidgetConfig
 	SceneSelectionModel* selectionModel;
 	std::vector<DefaultContextActionPtr> contextActions;
 	std::function<std::string()> projectFilenameGetter;
-	ScenarioObjectRegistryPtr entityObjectRegistry;
 	QWidget* parent = nullptr;
 };
 
@@ -48,21 +48,12 @@ public:
 	std::optional<PickedSceneObject> pickSceneObjectAtPointInWindow(const QPointF& position, const EntitySelectionPredicate& predicate = &EntitySelectionPredicateAlways) const;
 	std::optional<skybolt::sim::Vector3> pickPointOnPlanetAtPointInWindow(const QPointF& position) const;
 
-	enum class ButtonState
-	{
-		Down,
-		Up
-	};
-
-	using MouseClickHandler = std::function<void(Qt::MouseButton button, const QPointF& position, ButtonState state)>;
-	MouseClickHandler getDefaultMouseClickHandler();
-	void setMouseClickHandler(MouseClickHandler handler) { mMouseClickHandler = std::move(handler); }
-
-	using MouseMoveHandler = std::function<void(Qt::MouseButtons buttons, const QPointF& position)>;
-	MouseMoveHandler getDefaultMouseMoveHandler();
-	void setMouseMoveHandler(MouseMoveHandler handler) { mMouseMoveHandler = std::move(handler); }
+	void setMouseEventHandler(ViewportMouseEventHandlerPtr handler) { mMouseEventHandler = std::move(handler); }
 
 	QMenu* addVisibilityFilterableSubMenu(const QString& text, const skybolt::EntityVisibilityPredicateSetter& setter) const;
+
+	int getViewportWidth() const;
+	int getViewportHeight() const;
 
 public: // JsonProjectSerializable
 	void resetProject() override;
@@ -89,13 +80,11 @@ private:
 	ViewportInput* mViewportInput;
 	SceneSelectionModel* mSelectionModel;
 	std::vector<DefaultContextActionPtr> mContextActions;
-	ScenarioObjectRegistryPtr mEntityObjectRegistry;
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> mViewport;
 	QMenu* mFilterMenu;
 	OsgWidget* mOsgWidget;
 	
-	MouseClickHandler mMouseClickHandler = getDefaultMouseClickHandler();
-	MouseMoveHandler mMouseMoveHandler = getDefaultMouseMoveHandler();
+	ViewportMouseEventHandlerPtr mMouseEventHandler;
 
 	QComboBox* mCameraCombo;
 	class CameraControllerWidget* mCameraControllerWidget;

@@ -25,14 +25,9 @@ public:
 	skybolt::vis::Window* getWindow() const;
 
 signals:
-	//! @param position is in NDC coordinates with (0,0) at top-left and (1,1) at bottom-right.
-	void mousePressed(Qt::MouseButton button, const QPointF& position);
-
-	//! @param position is in NDC coordinates with (0,0) at top-left and (1,1) at bottom-right.
-	void mouseReleased(Qt::MouseButton button, const QPointF& position);
-
-	//! @param position is in NDC coordinates with (0,0) at top-left and (1,1) at bottom-right.
-	void mouseMoved(Qt::MouseButtons buttons, const QPointF& position);
+	void mousePressed(const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers);
+	void mouseReleased(const QPointF& position, Qt::MouseButton button);
+	void mouseMoved(const QPointF& position, Qt::MouseButtons buttons);
 
 protected:
 	void initializeGL() override;

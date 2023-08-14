@@ -50,7 +50,6 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	mViewportInput(config.viewportInput),
 	mSelectionModel(config.selectionModel),
 	mContextActions(config.contextActions),
-	mEntityObjectRegistry(config.entityObjectRegistry),
 	mFilterMenu(new QMenu(this)),
 	QWidget(config.parent)
 {
@@ -71,16 +70,25 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	mOsgWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(mOsgWidget, &OsgWidget::customContextMenuRequested, this, [this] (const QPoint& point) { showContextMenu(point); });
 
-	connect(mOsgWidget, &OsgWidget::mousePressed, this, [this](Qt::MouseButton button, const QPointF& position) {
-		mMouseClickHandler(button, position, ButtonState::Down);
+	connect(mOsgWidget, &OsgWidget::mousePressed, this, [this](const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {
+		if (mMouseEventHandler)
+		{
+			mMouseEventHandler->mousePressed(position, button, modifiers);
+		}
 	});
 
-	connect(mOsgWidget, &OsgWidget::mouseReleased, this, [this](Qt::MouseButton button, const QPointF& position) {
-		mMouseClickHandler(button, position, ButtonState::Up);
+	connect(mOsgWidget, &OsgWidget::mouseReleased, this, [this](const QPointF& position, Qt::MouseButton button) {
+		if (mMouseEventHandler)
+		{
+			mMouseEventHandler->mouseReleased(position, button);
+		}
 	});
 
-	connect(mOsgWidget, &OsgWidget::mouseMoved, this, [this](Qt::MouseButtons buttons, const QPointF& position) {
-		mMouseMoveHandler(buttons, position);
+	connect(mOsgWidget, &OsgWidget::mouseMoved, this, [this](const QPointF& position, Qt::MouseButtons buttons) {
+		if (mMouseEventHandler)
+		{
+			mMouseEventHandler->mouseMoved(position, buttons);
+		}
 	});
 
 	// Create center layout
@@ -164,44 +172,6 @@ std::optional<sim::Vector3> ViewportWidget::pickPointOnPlanetAtPointInWindow(con
    sim::Vector3 camPosition = *getPosition(*mCurrentSimCamera);
    std::optional<PickedSceneObject> object = pickPointOnPlanet(mEngineRoot->scenario->world, camPosition, glm::inverse(calcCurrentViewProjTransform()), pointNdc);
    return object ? object->position : std::optional<sim::Vector3>();
-}
-
-ViewportWidget::MouseClickHandler ViewportWidget::getDefaultMouseClickHandler()
-{
-	static MouseClickHandler f = [this] (Qt::MouseButton button, const QPointF& position, ButtonState state) {
-		if (button == Qt::MouseButton::LeftButton)
-		{
-			if (mViewportInput)
-			{
-				mViewportInput->setKeyboardEnabled(state == ButtonState::Down);
-			}
-
-			if (state == ButtonState::Up)
-			{
-				sim::EntityId selectedEntityId = sim::nullEntityId();
-				auto hasNamePredicate = [] (const skybolt::sim::Entity& e) { return !getName(e).empty(); };
-			
-				std::optional<PickedSceneObject> object = pickSceneObjectAtPointInWindow(position, hasNamePredicate);
-				ScenarioObjectPtr scenarioObject = object->entity ? mEntityObjectRegistry->findByName(getName(*object->entity)) : nullptr;
-				mSelectionModel->selectItem(scenarioObject);
-			}
-		}
-	};
-	return f;
-}
-
-ViewportWidget::MouseMoveHandler ViewportWidget::getDefaultMouseMoveHandler()
-{
-	static MouseMoveHandler f = [this] (Qt::MouseButtons buttons, const QPointF& position) {
-		if (buttons & Qt::LeftButton)
-		{
-			if (mViewportInput)
-			{
-				mViewportInput->setMouseEnabled(true);
-			}
-		}
-	};
-	return f;
 }
 
 void ViewportWidget::showContextMenu(const QPoint& point)
@@ -457,4 +427,14 @@ QMenu* ViewportWidget::addVisibilityFilterableSubMenu(const QString& text, const
 	onAction->setChecked(true);
 
 	return menu;
+}
+
+int ViewportWidget::getViewportWidth() const
+{
+	return mOsgWidget->width();
+}
+
+int ViewportWidget::getViewportHeight() const
+{
+	return mOsgWidget->height();
 }
