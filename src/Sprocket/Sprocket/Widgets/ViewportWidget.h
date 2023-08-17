@@ -48,13 +48,22 @@ public:
 	std::optional<PickedSceneObject> pickSceneObjectAtPointInWindow(const QPointF& position, const EntitySelectionPredicate& predicate = &EntitySelectionPredicateAlways) const;
 	std::optional<skybolt::sim::Vector3> pickPointOnPlanetAtPointInWindow(const QPointF& position) const;
 
-	void setMouseEventHandler(ViewportMouseEventHandlerPtr handler) { mMouseEventHandler = std::move(handler); }
+	//! handlers with lower priority numbers will be executed first
+	static constexpr int mouseEventHandlerDefaultPriority = 100;
+	void addMouseEventHandler(const ViewportMouseEventHandlerPtr& handler, int priority = mouseEventHandlerDefaultPriority);
+	void removeMouseEventHandler(const ViewportMouseEventHandler& handler);
 
 	QMenu* addVisibilityFilterableSubMenu(const QString& text, const skybolt::EntityVisibilityPredicateSetter& setter) const;
 
+	OsgWidget* getViewportCanvas() const { return mOsgWidget; }
 	int getViewportWidth() const;
 	int getViewportHeight() const;
 	glm::dmat4 calcCurrentViewProjTransform() const;
+
+	skybolt::sim::Entity* getCamera() const { return mCurrentSimCamera; }
+
+	QToolBar* getToolBar() const { return mToolBar; }
+
 
 public: // JsonProjectSerializable
 	void resetProject() override;
@@ -82,8 +91,9 @@ private:
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> mViewport;
 	QMenu* mFilterMenu;
 	OsgWidget* mOsgWidget;
+	QToolBar* mToolBar;
 	
-	ViewportMouseEventHandlerPtr mMouseEventHandler;
+	std::multimap<int, ViewportMouseEventHandlerPtr> mMouseEventHandlers; //!< Key is priority, lower values executed first
 
 	QComboBox* mCameraCombo;
 	class CameraControllerWidget* mCameraControllerWidget;

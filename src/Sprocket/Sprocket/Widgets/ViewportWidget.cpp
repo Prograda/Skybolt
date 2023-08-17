@@ -56,6 +56,9 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	assert(mEngineRoot);
 
 	mOsgWidget = new OsgWidget(config.visRoot, this);
+	mOsgWidget->setMouseTracking(true);
+
+	mToolBar = createViewportToolBar(config.projectFilenameGetter);
 
 	mViewport = new vis::DefaultRenderCameraViewport([&]{
 		vis::DefaultRenderCameraViewportConfig c;
@@ -71,23 +74,32 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	connect(mOsgWidget, &OsgWidget::customContextMenuRequested, this, [this] (const QPoint& point) { showContextMenu(point); });
 
 	connect(mOsgWidget, &OsgWidget::mousePressed, this, [this](const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {
-		if (mMouseEventHandler)
+		for (const auto& [priority, handler] : mMouseEventHandlers)
 		{
-			mMouseEventHandler->mousePressed(position, button, modifiers);
+			if (handler->mousePressed(position, button, modifiers))
+			{
+				break;
+			}
 		}
 	});
 
 	connect(mOsgWidget, &OsgWidget::mouseReleased, this, [this](const QPointF& position, Qt::MouseButton button) {
-		if (mMouseEventHandler)
+		for (const auto& [priority, handler] : mMouseEventHandlers)
 		{
-			mMouseEventHandler->mouseReleased(position, button);
+			if (handler->mouseReleased(position, button))
+			{
+				break;
+			}
 		}
 	});
 
 	connect(mOsgWidget, &OsgWidget::mouseMoved, this, [this](const QPointF& position, Qt::MouseButtons buttons) {
-		if (mMouseEventHandler)
+		for (const auto& [priority, handler] : mMouseEventHandlers)
 		{
-			mMouseEventHandler->mouseMoved(position, buttons);
+			if (handler->mouseMoved(position, buttons))
+			{
+				break;
+			}
 		}
 	});
 
@@ -97,9 +109,7 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 		layout->setMargin(0);
 		setLayout(layout);
 
-		QToolBar* toolbar = createViewportToolBar(config.projectFilenameGetter);
-		layout->addWidget(toolbar);
-
+		layout->addWidget(mToolBar);
 		layout->addWidget(mOsgWidget);
 	}
 
@@ -168,10 +178,31 @@ std::optional<PickedSceneObject> ViewportWidget::pickSceneObjectAtPointInWindow(
 
 std::optional<sim::Vector3> ViewportWidget::pickPointOnPlanetAtPointInWindow(const QPointF& position) const
 {
-   glm::vec2 pointNdc = glm::vec2(float(position.x()) / mOsgWidget->width(), float(position.y()) / mOsgWidget->height());
-   sim::Vector3 camPosition = *getPosition(*mCurrentSimCamera);
-   std::optional<PickedSceneObject> object = pickPointOnPlanet(mEngineRoot->scenario->world, camPosition, glm::inverse(calcCurrentViewProjTransform()), pointNdc);
-   return object ? object->position : std::optional<sim::Vector3>();
+	if (mCurrentSimCamera)
+	{
+		glm::vec2 pointNdc = glm::vec2(position.x() / mOsgWidget->width(), position.y() / mOsgWidget->height());
+		sim::Vector3 camPosition = *getPosition(*mCurrentSimCamera);
+		std::optional<PickedSceneObject> object = pickPointOnPlanet(mEngineRoot->scenario->world, camPosition, glm::inverse(calcCurrentViewProjTransform()), pointNdc);
+		return object ? object->position : std::optional<sim::Vector3>();
+	}
+	return std::nullopt;
+}
+
+void ViewportWidget::addMouseEventHandler(const ViewportMouseEventHandlerPtr& handler, int priority)
+{
+	mMouseEventHandlers.insert(std::make_pair(priority, std::move(handler)));
+}
+
+void ViewportWidget::removeMouseEventHandler(const ViewportMouseEventHandler& handler)
+{
+	for (auto i = mMouseEventHandlers.begin(); i != mMouseEventHandlers.end(); ++i)
+	{
+		if (i->second.get() == &handler)
+		{
+			mMouseEventHandlers.erase(i);
+			return;
+		}
+	}
 }
 
 void ViewportWidget::showContextMenu(const QPoint& point)
@@ -207,11 +238,15 @@ void ViewportWidget::showContextMenu(const QPoint& point)
 
 glm::dmat4 ViewportWidget::calcCurrentViewProjTransform() const
 {
-	sim::Vector3 origin = *getPosition(*mCurrentSimCamera);
-	sim::Quaternion orientation = *getOrientation(*mCurrentSimCamera);
-	sim::CameraState camera = mCurrentSimCamera->getFirstComponentRequired<sim::CameraComponent>()->getState();
-	double aspectRatio = double(mOsgWidget->width()) / double(mOsgWidget->height());
-	return makeViewProjTransform(origin, orientation, camera, aspectRatio);
+	if (mCurrentSimCamera)
+	{
+		sim::Vector3 origin = *getPosition(*mCurrentSimCamera);
+		sim::Quaternion orientation = *getOrientation(*mCurrentSimCamera);
+		sim::CameraState camera = mCurrentSimCamera->getFirstComponentRequired<sim::CameraComponent>()->getState();
+		double aspectRatio = double(mOsgWidget->width()) / double(mOsgWidget->height());
+		return makeViewProjTransform(origin, orientation, camera, aspectRatio);
+	}
+	return math::dmat4Identity();
 }
 
 static vis::CameraPtr getFirstVisCamera(const sim::Entity& simCamera)

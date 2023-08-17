@@ -25,9 +25,9 @@ public:
 	DefaultViewportMouseEventHandler(DefaultViewportMouseEventHandlerConfig config);
 	~DefaultViewportMouseEventHandler() override = default;
 	
-	void mousePressed(const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) override;
-	void mouseReleased(const QPointF& position, Qt::MouseButton button) override;
-	void mouseMoved(const QPointF& position, Qt::MouseButtons buttons) override;
+	bool mousePressed(const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) override;
+	bool mouseReleased(const QPointF& position, Qt::MouseButton button) override;
+	bool mouseMoved(const QPointF& position, Qt::MouseButtons buttons) override;
 
 protected:
 	virtual void selectItems(const std::vector<ScenarioObjectPtr>& objects);

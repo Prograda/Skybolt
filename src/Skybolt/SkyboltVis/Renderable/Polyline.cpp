@@ -44,11 +44,10 @@ void Polyline::setPoints(const osg::ref_ptr<osg::Vec3Array>& points)
 		// Add points to geometry
 		osg::ref_ptr<osg::Vec4Array> color = new osg::Vec4Array;
 		color->push_back(osg::Vec4(0.0, 1.0, 0.0, 1.0));
-		mGeometry->setColorArray(color.get());
+		mGeometry->setColorArray(color);
 		mGeometry->setColorBinding(osg::Geometry::BIND_OVERALL);
 
 		mGeometry->setVertexArray(points);
-		mGeometry->getPrimitiveSetList().clear();
 		mGeometry->addPrimitiveSet(new osg::DrawArrays(GL_LINE_STRIP, 0, points->size()));
 	}
 }

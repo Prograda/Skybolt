@@ -13,7 +13,8 @@ class ViewportMouseEventHandler
 public:
 	virtual ~ViewportMouseEventHandler() = default;
 	
-	virtual void mousePressed(const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {}
-	virtual void mouseReleased(const QPointF& position, Qt::MouseButton button) {}
-	virtual void mouseMoved(const QPointF& position, Qt::MouseButtons buttons) {}
+	//! @return true if event was handled
+	virtual bool mousePressed(const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) { return false; }
+	virtual bool mouseReleased(const QPointF& position, Qt::MouseButton button) { return false; }
+	virtual bool mouseMoved(const QPointF& position, Qt::MouseButtons buttons) { return false; }
 };

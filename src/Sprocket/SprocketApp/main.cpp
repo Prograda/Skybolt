@@ -137,7 +137,7 @@ public:
 				c.parent = mMainWindow.get();
 				return c;
 			}());
-			window->setMouseEventHandler(std::make_shared<DefaultViewportMouseEventHandler>([&] {
+			window->addMouseEventHandler(std::make_shared<DefaultViewportMouseEventHandler>([&] {
 				DefaultViewportMouseEventHandlerConfig c;
 				c.viewportWidget = window;
 				c.viewportInput = inputSystem->getViewportInput();
