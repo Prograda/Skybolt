@@ -28,7 +28,7 @@
 
 using namespace skybolt;
 
-static osg::ref_ptr<osg::Texture> createEntitySelectionIcon(int width = 32)
+static osg::ref_ptr<osg::Texture> createEntitySelectionIcon(int width = 64)
 {
 	int height = width;
 	osg::ref_ptr<osg::Image> image = new osg::Image();
@@ -38,11 +38,24 @@ static osg::ref_ptr<osg::Texture> createEntitySelectionIcon(int width = 32)
 	{
 		for (int x = 0; x < width; ++x)
 		{
+#ifdef ENTITY_SELECTION_ICON_BOX
 			bool edge = (x == 0 || y == 0 || x == (width - 1) || y == (height - 1));
+			int alpha = edge ? 255 : 0;
+#else // circle
+			int rx = std::abs(x - width/2);
+			int ry = std::abs(y - width/2);
+			float r = glm::length(glm::vec2(float(rx), float(ry)));
+			
+			float rampUpStart = width/2 - 3;
+			float rampUpEnd = rampUpStart+1;
+			float rampDownStart = rampUpStart+2;
+			float rampDownEnd = rampUpStart+3;
+			int alpha = int(255.f * std::max(0.f, (glm::smoothstep(rampUpStart, rampUpEnd, r)) - std::max(0.f, glm::smoothstep(rampDownStart, rampDownEnd, r))));
+#endif
 			*p++ = 255;
 			*p++ = 255;
 			*p++ = 255;
-			*p++ = edge ? 255 : 0;
+			*p++ = alpha;
 		}
 	}
 
