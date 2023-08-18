@@ -14,7 +14,13 @@ SKYBOLT_REFLECT(Node)
 {
 	rttr::registration::class_<Node>("Node")
 		.property("position", &Node::_getPositionConstRef, &Node::setPosition)
-		.property("orientation", &Node::_getOrientationConstRef, &Node::setOrientation);
+		(    
+			rttr::metadata(PropertyMetadataType::AttributeType, AttributeType::PositionInWorld)
+		)
+		.property("orientation", &Node::_getOrientationConstRef, &Node::setOrientation)
+		(    
+			rttr::metadata(PropertyMetadataType::AttributeType, AttributeType::Orientation)
+		);
 }
 
 Node::Node(const Vector3 &localPosition, const Quaternion &localOrientation) :

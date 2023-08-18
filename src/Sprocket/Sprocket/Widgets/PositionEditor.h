@@ -13,15 +13,19 @@ class QStackedWidget;
 
 class PositionEditor : public QWidget
 {
+	Q_OBJECT
 public:
 	PositionEditor(QWidget* parent = nullptr);
 
-	void setPosition(const skybolt::sim::PositionPtr& position);
+	void setPosition(const skybolt::sim::Position& position);
 
 	skybolt::sim::PositionPtr getPosition();
 
+	Q_SIGNAL void valueChanged(const skybolt::sim::Position& position);
+
 private:
-	class Positionable* getCurrentEditor() const;
+	void addEditor(class PositionEditorImpl*);
+	class PositionEditorImpl* getCurrentEditor() const;
 
 private:
 	QStackedWidget* mStackedWidget;

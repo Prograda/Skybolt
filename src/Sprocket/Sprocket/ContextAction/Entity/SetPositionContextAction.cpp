@@ -33,7 +33,7 @@ void SetPositionContextAction::execute(Entity& entity) const
 	assert(position);
 
 	PositionEditor* editor = new PositionEditor();
-	editor->setPosition(std::make_shared<GeocentricPosition>(*position));
+	editor->setPosition(GeocentricPosition(*position));
 	auto dialog = createDialogModal(editor, "Set Position");
 
 	if (dialog->exec() == QDialog::Accepted)

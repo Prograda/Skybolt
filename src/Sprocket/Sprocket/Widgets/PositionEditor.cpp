@@ -18,48 +18,63 @@ using namespace skybolt::math;
 
 constexpr int decimalCount = 9;
 
-static QLineEdit* addDoubleEditor(QGridLayout& layout, const QString& name)
+class PositionEditorImpl : public QWidget
 {
-	int row = layout.rowCount();
-	layout.addWidget(new QLabel(name), row, 0);
-	
-	QLineEdit* editor = new QLineEdit;
-	layout.addWidget(editor, row, 1);
-
-	QDoubleValidator* validator = new QDoubleValidator();
-	validator->setNotation(QDoubleValidator::StandardNotation);
-	validator->setDecimals(decimalCount);
-	editor->setValidator(validator);
-
-	return editor;
-}
-
-class Positionable
-{
+	Q_OBJECT
 public:
-	virtual void setPosition(const sim::PositionPtr& position) = 0;
+	PositionEditorImpl(QWidget* parent = nullptr) : QWidget(parent) {}
+
+	virtual void setPosition(const sim::Position& position) = 0;
 	virtual sim::PositionPtr getPosition() const = 0;
+
+	Q_SIGNAL void valueChanged(const sim::Position& position);
+
+protected:
+	QLineEdit* addDoubleEditor(QGridLayout& layout, const QString& name)
+	{
+		int row = layout.rowCount();
+		layout.addWidget(new QLabel(name, this), row, 0);
+	
+		QLineEdit* editor = new QLineEdit(this);
+		layout.addWidget(editor, row, 1);
+
+		QDoubleValidator* validator = new QDoubleValidator();
+		validator->setNotation(QDoubleValidator::StandardNotation);
+		validator->setDecimals(decimalCount);
+		editor->setValidator(validator);
+
+		connect(editor, &QLineEdit::editingFinished, this, [this] {
+			sim::PositionPtr position = getPosition();
+			emit valueChanged(*position);
+		});
+
+		return editor;
+	}
 };
 
-class GeocentricPositionEditor : public QWidget, public Positionable
+class GeocentricPositionEditor : public PositionEditorImpl
 {
 public:
-	GeocentricPositionEditor()
+	GeocentricPositionEditor(QWidget* parent = nullptr) :
+		PositionEditorImpl(parent)
 	{
-		QGridLayout* layout = new QGridLayout;
+		QGridLayout* layout = new QGridLayout(this);
+		layout->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
+		layout->setMargin(0);
 		setLayout(layout);
-		mValues[0] = addDoubleEditor(*layout, "X");
-		mValues[1] = addDoubleEditor(*layout, "Y");
-		mValues[2] = addDoubleEditor(*layout, "Z");
+		mValues[0] = addDoubleEditor(*layout, "x");
+		mValues[1] = addDoubleEditor(*layout, "y");
+		mValues[2] = addDoubleEditor(*layout, "z");
 	}
 
-	void setPosition(const sim::PositionPtr& position) override
+	void setPosition(const sim::Position& position) override
 	{
-		sim::GeocentricPosition pos = sim::toGeocentric(*position);
+		sim::GeocentricPosition pos = sim::toGeocentric(position);
 		for (int i = 0; i < 3; ++i)
 		{
 			mValues[i]->setText(QString::number(pos.position[i], 'g', decimalCount));
 		}
+		emit valueChanged(position);
 	}
 
 	sim::PositionPtr getPosition() const override
@@ -76,24 +91,29 @@ private:
 	QLineEdit* mValues[3];
 };
 
-class LatLonAltPositionEditor : public QWidget, public Positionable
+class LatLonAltPositionEditor : public PositionEditorImpl
 {
 public:
-	LatLonAltPositionEditor()
+	LatLonAltPositionEditor(QWidget* parent = nullptr) :
+		PositionEditorImpl(parent)
 	{
-		QGridLayout* layout = new QGridLayout;
+		QGridLayout* layout = new QGridLayout(this);
+		layout->setMargin(0);
+		layout->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
 		setLayout(layout);
 		mValues[0] = addDoubleEditor(*layout, "Latitude");
 		mValues[1] = addDoubleEditor(*layout, "Longitude");
 		mValues[2] = addDoubleEditor(*layout, "Altitude");
 	}
 
-	void setPosition(const sim::PositionPtr& position) override
+	void setPosition(const sim::Position& position) override
 	{
-		sim::LatLonAltPosition pos = sim::toLatLonAlt(*position);
+		sim::LatLonAltPosition pos = sim::toLatLonAlt(position);
 		mValues[0]->setText(QString::number(pos.position.lat * math::radToDegD()));
 		mValues[1]->setText(QString::number(pos.position.lon * math::radToDegD()));
 		mValues[2]->setText(QString::number(pos.position.alt));
+
+		emit valueChanged(position);
 	}
 
 	sim::PositionPtr getPosition() const override
@@ -112,25 +132,39 @@ private:
 PositionEditor::PositionEditor(QWidget* parent) :
 	QWidget(parent)
 {
-	setLayout(new QVBoxLayout);
+	auto layout = new QVBoxLayout(this);
+	layout->setMargin(0);
+	setLayout(layout);
 
-	QComboBox* positionTypeSelector = new QComboBox;
-	positionTypeSelector->addItems({ "LatLonAlt", "Geocentric" });
-	layout()->addWidget(positionTypeSelector);
+	QComboBox* positionTypeSelector = new QComboBox(this);
+	positionTypeSelector->addItems({ "Geographic", "Geocentric" });
+	layout->addWidget(positionTypeSelector);
 
-	mStackedWidget = new QStackedWidget;
-	mStackedWidget->addWidget(new LatLonAltPositionEditor);
-	mStackedWidget->addWidget(new GeocentricPositionEditor);
-	layout()->addWidget(mStackedWidget);
+	mStackedWidget = new QStackedWidget(this);
+	mStackedWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
+	addEditor(new LatLonAltPositionEditor());
+	addEditor(new GeocentricPositionEditor(this));
+	layout->addWidget(mStackedWidget);
 
 	connect(positionTypeSelector, QOverload<int>::of(&QComboBox::currentIndexChanged), mStackedWidget, [=](int index) {
 		auto position = getCurrentEditor()->getPosition();
 		mStackedWidget->setCurrentIndex(index);
-		getCurrentEditor()->setPosition(position);
+		getCurrentEditor()->setPosition(*position);
 	});
 }
 
-void PositionEditor::setPosition(const sim::PositionPtr& position)
+void PositionEditor::addEditor(PositionEditorImpl* editor)
+{
+	mStackedWidget->addWidget(editor);
+	editor->setMaximumHeight(50);
+	editor->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
+	connect(editor, &PositionEditorImpl::valueChanged, this, [this] (const sim::Position& position) {
+		emit valueChanged(position);
+	});
+}
+
+void PositionEditor::setPosition(const sim::Position& position)
 {
 	getCurrentEditor()->setPosition(position);
 }
@@ -140,7 +174,9 @@ sim::PositionPtr PositionEditor::getPosition()
 	return getCurrentEditor()->getPosition();
 }
 
-class Positionable* PositionEditor::getCurrentEditor() const
+class PositionEditorImpl* PositionEditor::getCurrentEditor() const
 {
-	return dynamic_cast<Positionable*>(mStackedWidget->currentWidget());
+	return static_cast<PositionEditorImpl*>(mStackedWidget->currentWidget());
 }
+
+#include "PositionEditor.moc"

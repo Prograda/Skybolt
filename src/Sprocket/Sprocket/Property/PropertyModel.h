@@ -10,11 +10,8 @@
 #include "Sprocket/TableRecord.h"
 #include <SkyboltCommon/Updatable.h>
 
-#include <QWidget>
+#include <QObject>
 #include <memory>
-#include <typeindex>
-
-class QGridLayout;
 
 struct QtProperty : public QObject
 {

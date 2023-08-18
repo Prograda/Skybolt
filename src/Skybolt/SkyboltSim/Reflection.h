@@ -70,9 +70,16 @@ rttr::array_range<rttr::property> getProperties(const ObjectT& object)
 		.get_properties();
 }
 
+enum class AttributeType
+{
+	PositionInWorld,
+	Orientation
+};
+
 enum class PropertyMetadataType
 {
-	Units
+	Units, //!< Value is Units enum giving the measurement units of the property
+	AttributeType //!< Value is AttributeType enum giving information about the physical meaning of the property values
 };
 
 } // namespace skybolt::sim

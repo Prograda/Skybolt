@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "QtPropertyReflection.h"
+#include "PropertyMetadata.h"
 #include "Sprocket/QtTypeConversions.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltEngine/VisObjectsComponent.h>
@@ -123,6 +124,15 @@ sim::Quaternion qtValueToSim(const rttr::property& property, const QVariant& val
 	return skybolt::math::quatFromEuler(euler * skybolt::math::radToDegD());
 }
 
+static void addMetadata(QtProperty& qtProperty, const rttr::property& rttrProperty)
+{
+	// TODO: copy metadata from rttr to QT property automatically, without needing to explicitly all types here?
+	if (auto variant = rttrProperty.get_metadata(sim::PropertyMetadataType::AttributeType); variant.is_valid())
+	{
+		qtProperty.setProperty(PropertyMetadataNames::attributeType, variant.get_value<int>());
+	}
+}
+
 using PropertyFactory = std::function<QtPropertyUpdaterApplier(const RttrInstanceGetter& instanceGetter, const rttr::property& property)>;
 
 template <typename SimValueT, typename QtValueT>
@@ -133,6 +143,7 @@ PropertyFactory createPropertyFactory(const QtValueT& defaultValue)
 		
 		QString name = QString::fromStdString(property.get_name().to_string());
 		r.property = PropertiesModel::createVariantProperty(name, defaultValue);
+		addMetadata(*r.property, property);
 		
 		r.updater = [instanceGetter, property] (QtProperty& qtProperty) {
 			rttr::instance instance = instanceGetter();

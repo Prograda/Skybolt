@@ -5,8 +5,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "PropertyEditor.h"
+#include "PropertyMetadata.h"
 #include "Sprocket/QtUtil/QtLayoutUtil.h"
-#include "Widgets/TableEditorWidget.h"
+#include "Sprocket/Widgets/PositionEditor.h"
+#include "Sprocket/Widgets/TableEditorWidget.h"
+#include "SkyboltSim/Reflection.h"
+#include "SkyboltSim/Spatial/Position.h"
 
 #include <QtCore/QDate>
 #include <QtCore/QLocale>
@@ -24,6 +28,8 @@
 #include <QVector3D>
 
 #include <assert.h>
+
+using namespace skybolt;
 
 static void showTableEditor(TableProperty& property)
 {
@@ -187,14 +193,43 @@ private:
 	VariantProperty* mProperty;
 };
 
+static sim::Vector3 toSimVector3(const QVector3D& v)
+{
+	return sim::Vector3(v.x(), v.y(), v.z());
+}
+
+static QVector3D toQVector3D(const sim::Vector3& v)
+{
+	return QVector3D(v.x, v.y, v.z);
+}
+
+static PositionEditor* createWorldPositionEditor(VariantProperty* variantProperty, QWidget* parent)
+{
+	auto widget = new PositionEditor(parent);
+	widget->setPosition(sim::GeocentricPosition(toSimVector3(variantProperty->value.value<QVector3D>())));
+
+	QObject::connect(variantProperty, &QtProperty::valueChanged, widget, [widget, variantProperty]() {
+		widget->blockSignals(true);
+		widget->setPosition(sim::GeocentricPosition(toSimVector3(variantProperty->value.value<QVector3D>())));
+		widget->blockSignals(false);
+	});
+
+	QObject::connect(widget, &PositionEditor::valueChanged, variantProperty, [=] (const sim::Position& position) {
+		variantProperty->setValue(toQVector3D(sim::toGeocentric(position).position));
+	});
+	return widget;
+}
+
 QWidget* PropertyEditor::createEditorInEnabledState(QtProperty& property)
 {
+	// See if a custom editor widget is registered for this property type
 	auto i = mFactoryMap.find(typeid(property));
 	if (i != mFactoryMap.end())
 	{
 		return i->second(property);
 	}
 
+	// Fall back to default variant editor widget
 	if (auto variantProperty = dynamic_cast<VariantProperty*>(&property))
 	{
 		const QVariant& value = variantProperty->value;
@@ -292,6 +327,10 @@ QWidget* PropertyEditor::createEditorInEnabledState(QtProperty& property)
 			}
 			case QVariant::Vector3D:
 			{
+				if (auto value = property.property(PropertyMetadataNames::attributeType); value.isValid() && value.toInt() == int(sim::AttributeType::PositionInWorld))
+				{
+					return createWorldPositionEditor(variantProperty, this);
+				}
 				return new QVector3PropertyEditor(variantProperty, { "x", "y", "z" }, this);
 			}
 		}
