@@ -23,3 +23,5 @@ struct QtPropertyUpdaterApplier
 using RttrInstanceGetter = std::function<rttr::instance()>;
 
 std::optional<QtPropertyUpdaterApplier> rttrPropertyToQt(const RttrInstanceGetter& instanceGetter, const rttr::property& property);
+
+void addRttrPropertiesToModel(PropertiesModel& model, const rttr::array_range<rttr::property>& properties, const RttrInstanceGetter& instanceGetter);

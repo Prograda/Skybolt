@@ -45,14 +45,7 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 		for (const sim::ComponentPtr& component : mEntity->getComponents())
 		{
 			RttrInstanceGetter getter = [component] { return component; };
-			for (const rttr::property& property : sim::getProperties(*component))
-			{
-				std::optional<QtPropertyUpdaterApplier> qtProperty = rttrPropertyToQt(getter, property);
-				if (qtProperty)
-				{
-					addProperty(qtProperty->property, qtProperty->updater, qtProperty->applier);
-				}
-			}
+			addRttrPropertiesToModel(*this, sim::getProperties(*component), getter);
 		}
 
 		addProperty(createVariantProperty("dynamicsEnabled", false),

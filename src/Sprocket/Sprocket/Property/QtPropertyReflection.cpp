@@ -62,6 +62,18 @@ SimValueT qtValueToSim(const rttr::property& property, const QVariant& value)
 }
 
 template <>
+QVariant simValueToQt(const rttr::property& property, const std::string& value)
+{
+	return QString::fromStdString(value);
+}
+
+template <>
+std::string qtValueToSim(const rttr::property& property, const QVariant& value)
+{
+	return value.toString().toStdString();
+}
+
+template <>
 QVariant simValueToQt(const rttr::property& property, const float& value)
 {
 	return simUnitToDisplay(property, value);
@@ -130,6 +142,7 @@ PropertyFactory createPropertyFactory(const QtValueT& defaultValue)
 				static_cast<VariantProperty&>(qtProperty).setValue(simValueToQt(property, value));
 			}
 		};
+		r.updater(*r.property);
 
 		if (!property.is_readonly())
 		{
@@ -152,6 +165,7 @@ std::optional<QtPropertyUpdaterApplier> rttrPropertyToQt(const RttrInstanceGette
 	const auto& type = property.get_type();
 
 	static std::map<rttr::type::type_id, PropertyFactory> typePropertyFactories = {
+		{ rttr::type::get<std::string>().get_id(), createPropertyFactory<std::string>("") },
 		{ rttr::type::get<bool>().get_id(), createPropertyFactory<bool>(false) },
 		{ rttr::type::get<int>().get_id(), createPropertyFactory<int>(0) },
 		{ rttr::type::get<float>().get_id(), createPropertyFactory<float>(0.f) },
@@ -165,4 +179,16 @@ std::optional<QtPropertyUpdaterApplier> rttrPropertyToQt(const RttrInstanceGette
 		return i->second(instanceGetter, property); 
 	}
 	return std::nullopt;
+}
+
+void addRttrPropertiesToModel(PropertiesModel& model, const rttr::array_range<rttr::property>& properties, const RttrInstanceGetter& instanceGetter)
+{
+	for (const rttr::property& property : properties)
+	{
+		std::optional<QtPropertyUpdaterApplier> qtProperty = rttrPropertyToQt(instanceGetter, property);
+		if (qtProperty)
+		{
+			model.addProperty(qtProperty->property, qtProperty->updater, qtProperty->applier);
+		}
+	}
 }
