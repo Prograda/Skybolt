@@ -22,4 +22,15 @@ std::optional<ValueT> findOptional(const std::map<KeyT, ValueT>& m, const KeyT& 
 	return std::nullopt;
 }
 
+template <typename KeyT, typename ValueT>
+std::vector<ValueT> toValuesVector(const std::map<KeyT, ValueT>& m)
+{
+	std::vector<ValueT> r;
+	for (const auto& i : m)
+	{
+		r.push_back(i.second);
+	}
+	return r;
+}
+
 } // namespace skybolt

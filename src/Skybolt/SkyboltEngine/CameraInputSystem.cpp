@@ -1,29 +1,17 @@
-/* Copyright 2012-2020 Matthew Reid
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
-
 #include "CameraInputSystem.h"
-#include "Input/InputPlatform.h"
-#include "Input/LogicalAxis.h"
-#include "SimVisBinding/CameraSimVisBinding.h"
-#include <SkyboltSim/CameraController/CameraControllerSelector.h>
+#include <SkyboltCommon/MapUtility.h>
+#include <SkyboltEngine/Input/InputPlatform.h>
+#include <SkyboltEngine/Input/LogicalAxis.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
-#include <SkyboltVis/Camera.h>
-#include <SkyboltVis/Window/Window.h>
+
+#include <boost/log/trivial.hpp>
 
 namespace skybolt {
 
-using namespace sim;
-
-CameraInputSystem::CameraInputSystem(const EntityPtr& camera, const InputPlatformPtr& inputPlatform, const std::vector<LogicalAxisPtr>& axes) :
-	mCamera(camera),
+CameraInputSystem::CameraInputSystem(const skybolt::InputPlatformPtr& inputPlatform, CameraInputAxes axes) :
 	mInputPlatform(inputPlatform),
-	mInputAxes(axes),
-	mInput(CameraController::Input::zero())
+	mAxes(std::move(axes))
 {
-	assert(mEnabled);
 	mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
 }
 
@@ -32,78 +20,107 @@ CameraInputSystem::~CameraInputSystem()
 	mInputPlatform->getEventEmitter()->removeEventListener(this);
 }
 
-void CameraInputSystem::updatePostDynamics(const System::StepArgs& args)
+void CameraInputSystem::setMouseEnabled(bool enabled)
 {
-	if (!mEnabled)
+	for (InputDevicePtr device : mInputPlatform->getInputDevicesOfType(InputDeviceTypeMouse))
 	{
-		return;
-	}
-
-	if (mInputAxes.size() == 2)
-	{
-		mInput.forwardSpeed = mInputAxes[0]->getState();
-		mInput.rightSpeed = mInputAxes[1]->getState();
-	}
-
-	mInput.panSpeed /= args.dtWallClock;
-	mInput.tiltSpeed /= args.dtWallClock;
-	mInput.zoomSpeed /= args.dtWallClock;
-	mInput.modifier1Pressed = mInputPlatform->getInputDevicesOfType(InputDeviceTypeKeyboard)[0]->isButtonPressed(KC_LSHIFT);
-	mInput.modifier2Pressed = mInputPlatform->getInputDevicesOfType(InputDeviceTypeKeyboard)[0]->isButtonPressed(KC_LCONTROL);
-
-	auto cameraControllerComponent = mCamera->getFirstComponent<sim::CameraControllerComponent>();
-	if (cameraControllerComponent)
-	{
-		if (auto controller = cameraControllerComponent->getSelectedController(); controller)
-		{
-			controller->setInput(mInput);
-		}
-	}
-
-	mInput = CameraController::Input::zero();
-}
-
-void CameraInputSystem::setInputEnabled(bool enabled)
-{
-	if (enabled && !mEnabled)
-	{
-		mInput = CameraController::Input::zero();
-		mInputPlatform->getEventEmitter()->addEventListener<MouseEvent>(this);
-	}
-	else if (!enabled && mEnabled)
-	{
-		mInputPlatform->getEventEmitter()->removeEventListener(this);
-	}
-	mEnabled = enabled;
-}
-
-void CameraInputSystem::onEvent(const Event &event)
-{
-	if (const auto& mouseEvent = dynamic_cast<const MouseEvent*>(&event))
-	{
-		if (mouseEvent->type == MouseEvent::Type::Moved)
-		{
-			mInput.panSpeed += mouseEvent->relState.x;
-			mInput.tiltSpeed -= mouseEvent->relState.y;
-			mInput.zoomSpeed = mouseEvent->relState.z;
-		}
+		device->setEnabled(enabled);
 	}
 }
 
-std::vector<LogicalAxisPtr> CameraInputSystem::createDefaultAxes(const InputPlatform& inputPlatform)
+void CameraInputSystem::setKeyboardEnabled(bool enabled)
 {
+	for (InputDevicePtr device : mInputPlatform->getInputDevicesOfType(InputDeviceTypeKeyboard))
+	{
+		device->setEnabled(enabled);
+	}
+}
+
+static float getAxisValueOrDefault(const CameraInputAxes& axes, CameraInputAxisType type, float defaultValue)
+{
+	if (auto a = findOptional(axes, type); a)
+	{
+		return (*a)->getState();
+	}
+	return defaultValue;
+}
+
+//! @returns first keyboard, or null if not found
+static InputDevicePtr getFirstKeyboard(const skybolt::InputPlatform& platform)
+{
+	auto keyboards = platform.getInputDevicesOfType(InputDeviceTypeKeyboard);
+	return keyboards.empty() ? nullptr : keyboards.front();
+}
+
+void CameraInputSystem::updatePreDynamics(const skybolt::sim::System::StepArgs& args)
+{
+	InputDevicePtr keyboard = getFirstKeyboard(*mInputPlatform);
+
+	float dt = args.dtWallClock;
+	mInput.forwardSpeed = getAxisValueOrDefault(mAxes, CameraInputAxisType::Forward, 0.f);
+	mInput.rightSpeed = getAxisValueOrDefault(mAxes, CameraInputAxisType::Right, 0.f);
+	mInput.yawRate /= dt;
+	mInput.tiltRate /= dt;
+	mInput.zoomRate /= dt;
+	mInput.modifier1Pressed = keyboard ? keyboard->isButtonPressed(KC_LSHIFT) : false;
+	mInput.modifier2Pressed = keyboard ? keyboard->isButtonPressed(KC_LCONTROL) : false;
+
+	cameraInputGenerated(mInput);
+
+	mInput = sim::CameraController::Input::zero();
+}
+
+void CameraInputSystem::onEvent(const Event &evt)
+{
+	if (const auto& event = dynamic_cast<const MouseEvent*>(&evt))
+	{
+		mInput.yawRate += event->relState.x * mCameraRotationAnglePerMousePixel;
+		mInput.tiltRate -= event->relState.y * mCameraRotationAnglePerMousePixel;
+		mInput.zoomRate += event->relState.z * 0.001;
+	}
+}
+
+CameraInputAxes createDefaultCameraInputAxes(const skybolt::InputPlatform& inputPlatform)
+{
+	if (inputPlatform.getInputDevicesOfType(InputDeviceTypeKeyboard).empty())
+	{
+		BOOST_LOG_TRIVIAL(warning) << "Keyboard not found. Keyboard input will be ignored.'";
+		return {};
+	}
+
 	InputDevicePtr keyboard = inputPlatform.getInputDevicesOfType(InputDeviceTypeKeyboard)[0];
 	float rate = 1000;
 
-	std::vector<LogicalAxisPtr> logicalAxes;
-
-	LogicalAxisPtr forwardAxis(new KeyAxis(keyboard, KC_S, KC_W, rate, rate, -1.0f, 1.0f));
-	logicalAxes.push_back(forwardAxis);
-
-	LogicalAxisPtr rightAxis(new KeyAxis(keyboard, KC_A, KC_D, rate, rate, -1.0f, 1.0f));
-	logicalAxes.push_back(rightAxis);
-
-	return logicalAxes;
+	return {
+		{ CameraInputAxisType::Forward, std::make_shared<KeyAxis>(keyboard, KC_S, KC_W, rate, rate, -1.0f, 1.0f) },
+		{ CameraInputAxisType::Right, std::make_shared<KeyAxis>(keyboard, KC_A, KC_D, rate, rate, -1.0f, 1.0f) }
+	};
 }
 
-} // skybolt
+void connectToCamera(CameraInputSystem& system, const sim::EntityPtr& camera)
+{
+	system.cameraInputGenerated.connect([camera] (const sim::CameraController::Input& input) {
+		if (auto controller = camera->getFirstComponent<sim::CameraControllerComponent>(); controller)
+		{
+			if (controller->getSelectedController())
+			{
+				controller->getSelectedController()->setInput(input);
+			}
+		}
+	});
+}
+
+void configure(CameraInputSystem& system, int screenWidthPixels, const nlohmann::json& engineSettings)
+{
+	float mouseSensitivity = engineSettings.at("mouse").at("sensitivity");
+	if (mouseSensitivity <= 0)
+	{
+		BOOST_LOG_TRIVIAL(warning) << "Invalid mouse sensitivity value '" << mouseSensitivity << "'. Defaulting to 1.";
+		mouseSensitivity = 1.f;
+	}
+
+	float rate = mouseSensitivity / screenWidthPixels;
+	system.setCameraRotationAnglePerMousePixel(rate);
+}
+
+} // namespace skybolt

@@ -8,36 +8,58 @@
 
 #include "SkyboltEngine/SkyboltEngineFwd.h"
 #include <SkyboltCommon/Event.h>
-#include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltSim/CameraController/CameraController.h>
 #include <SkyboltSim/System/System.h>
-#include <SkyboltVis/SkyboltVisFwd.h>
+
+#include <nlohmann/json.hpp>
+#include <boost/signals2.hpp>
 
 namespace skybolt {
 
-//! Applies user input to the camera each update
-class CameraInputSystem : public sim::System, public EventListener
+enum class CameraInputAxisType
+{
+	Forward,
+	Right
+};
+
+using CameraInputAxes = std::map<CameraInputAxisType, LogicalAxisPtr>;
+
+//! This system listens to input events from the InputPlatform and emits a CameraController::Input signal.
+//! This system should be updated after InputPlatform is updated.
+class CameraInputSystem : public sim::System, public skybolt::EventListener
 {
 public:
-	CameraInputSystem(const sim::EntityPtr& camera, const InputPlatformPtr& inputPlatform, const std::vector<LogicalAxisPtr>& axes);
+	CameraInputSystem(const skybolt::InputPlatformPtr& inputPlatform, CameraInputAxes axes = {});
+	~CameraInputSystem() override;
 
-	~CameraInputSystem();
+	void setMouseEnabled(bool enabled);
+	void setKeyboardEnabled(bool enabled);
 
-	void updatePostDynamics(const sim::System::StepArgs& args) override;
+	//! @param rotationRadiansPerPixel gives camera rotation angle in radians for every pixel of mouse movement
+	void setCameraRotationAnglePerMousePixel(float cameraRotationAnglePerMousePixel) { mCameraRotationAnglePerMousePixel = cameraRotationAnglePerMousePixel; }
 
-	void setInputEnabled(bool enabled);
+	boost::signals2::signal<void(const skybolt::sim::CameraController::Input&)> cameraInputGenerated;
 
-	static std::vector<LogicalAxisPtr> createDefaultAxes(const InputPlatform& inputPlatform);
+public:
+	void updatePreDynamics(const skybolt::sim::System::StepArgs& args) override;
 
-private: // EventListener interface
-	void onEvent(const Event &event) override;
+protected: // EventListener interface
+	void onEvent(const skybolt::Event &evt) override;
+
+protected:
+	skybolt::InputPlatformPtr mInputPlatform;
 
 private:
-	sim::EntityPtr mCamera;
-	InputPlatformPtr mInputPlatform;
-	std::vector<LogicalAxisPtr> mInputAxes;
-	sim::CameraController::Input mInput;
-	bool mEnabled = true;
+	CameraInputAxes mAxes;
+
+	skybolt::sim::CameraController::Input mInput = skybolt::sim::CameraController::Input::zero();
+	float mCameraRotationAnglePerMousePixel = 1.f / 1000.f;
 };
+
+CameraInputAxes createDefaultCameraInputAxes(const skybolt::InputPlatform& inputPlatform);
+
+void connectToCamera(CameraInputSystem& system, const sim::EntityPtr& camera);
+
+void configure(CameraInputSystem& system, int screenWidthPixels, const nlohmann::json& engineSettings);
 
 } // skybolt

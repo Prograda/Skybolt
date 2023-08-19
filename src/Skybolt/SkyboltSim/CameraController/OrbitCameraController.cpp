@@ -17,9 +17,9 @@
 using namespace skybolt::sim;
 using namespace skybolt;
 
-const float OrbitCameraController::msYawRate = 0.01f;
-const float OrbitCameraController::msPitchRate = 0.01f;
-const float OrbitCameraController::msZoomRate = 0.001f;
+const float OrbitCameraController::msYawRate = 1.0f;
+const float OrbitCameraController::msPitchRate = 1.0f;
+const float OrbitCameraController::msZoomRate = 1.0f;
 const float OrbitCameraController::msPlanetAlignTransitionRate = 2.0f;
 
 
@@ -75,10 +75,10 @@ void OrbitCameraController::update(float dt)
 
 	mCameraComponent->getState().fovY = mParams.fovY;
 
-	mYaw += msYawRate * mInput.panSpeed * dt;
-	mPitch += msPitchRate * mInput.tiltSpeed * dt;
-	float wheel = mInput.zoomSpeed * dt;
-	mZoom = math::clamp(mZoom + wheel * msZoomRate, 0.0f, 1.0f);
+	mYaw += msYawRate * mInput.yawRate * dt;
+	mPitch += msPitchRate * mInput.tiltRate * dt;
+	mZoom += msZoomRate * mInput.zoomRate * dt;
+	mZoom = math::clamp(mZoom, 0.0f, 1.0f);
     
     double maxPitch = math::halfPiD();
     mPitch = math::clamp(mPitch, -maxPitch, maxPitch);

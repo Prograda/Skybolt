@@ -11,7 +11,7 @@
 #include <Sprocket/MainWindowUtil.h>
 #include <Sprocket/SceneSelectionModel.h>
 #include <Sprocket/ContextAction/CreateContextActions.h>
-#include <Sprocket/Input/EditorInputSystem.h>
+#include <Sprocket/Input/ViewportInputSystem.h>
 #include <Sprocket/Input/InputPlatformOis.h>
 #include <Sprocket/Scenario/EntityObjectType.h>
 #include <Sprocket/Viewport/DefaultViewportMouseEventHandler.h>
@@ -28,6 +28,7 @@
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/GetExecutablePath.h>
+#include <SkyboltEngine/Input/InputSystem.h>
 #include <SkyboltVis/VisRoot.h>
 #include <SkyboltSim/World.h>
 
@@ -75,8 +76,11 @@ public:
 		auto selectionModel = new SceneSelectionModel(mMainWindow.get());
 
 		auto inputPlatform = std::make_shared<InputPlatformOis>(std::to_string(size_t(mMainWindow->winId())), 800, 600); // TODO: get actual dimensions, which are currently only needed on Linux
-		auto inputSystem = std::make_shared<EditorInputSystem>(inputPlatform);
-		engineRoot->systemRegistry->insert(engineRoot->systemRegistry->begin(), inputSystem);
+		CameraInputAxes axes = createDefaultCameraInputAxes(*inputPlatform);
+		engineRoot->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, toValuesVector(axes)));
+
+		auto viewportInputSystem = std::make_shared<ViewportInputSystem>(inputPlatform, axes);
+		engineRoot->systemRegistry->push_back(viewportInputSystem);
 
 		vis::VisRootPtr visRoot = createVisRoot(*engineRoot);
 
@@ -99,7 +103,7 @@ public:
 		const ScenarioObjectTypeMap& scenarioObjectTypes = getSceneObjectTypes(mEditorPlugins, engineRoot.get());
 
 		{
-			auto window = new ScenarioPropertyEditorWidget([&] {
+			auto widget = new ScenarioPropertyEditorWidget([&] {
 				ScenarioPropertyEditorWidgetConfig c;
 				c.engineRoot = engineRoot.get();
 				c.selectionModel = selectionModel;
@@ -108,10 +112,10 @@ public:
 				c.parent = mMainWindow.get();
 				return c;
 			}());
-			mMainWindow->addToolWindow("Properties", window);
+			mMainWindow->addToolWindow("Properties", widget);
 		}
 		{
-			auto window = new ScenarioObjectsEditorWidget([&] {
+			auto widget = new ScenarioObjectsEditorWidget([&] {
 				ScenarioObjectsEditorWidgetConfig c;
 				c.engineRoot = engineRoot.get();
 				c.selectionModel = selectionModel;
@@ -120,27 +124,27 @@ public:
 				c.parent = mMainWindow.get();
 				return c;
 			}());
-			mMainWindow->addToolWindow("Explorer", window);
+			mMainWindow->addToolWindow("Explorer", widget);
 		}
 		{
 			auto entityObjectRegistry = findOptional(scenarioObjectTypes, std::type_index(typeid(EntityObject)));
 			assert(entityObjectRegistry);
 
-			auto window = new ViewportWidget([&] {
+			auto widget = new ViewportWidget([&] {
 				ViewportWidgetConfig c;
 				c.engineRoot = engineRoot.get();
 				c.visRoot = visRoot;
-				c.viewportInput = inputSystem->getViewportInput();
+				c.viewportInput = viewportInputSystem;
 				c.selectionModel = selectionModel;
 				c.contextActions = createContextActions(*engineRoot);
 				c.projectFilenameGetter = [this] { return mMainWindow->getProjectFilename().toStdString(); };
 				c.parent = mMainWindow.get();
 				return c;
 			}());
-			window->addMouseEventHandler(std::make_shared<DefaultViewportMouseEventHandler>([&] {
+			widget->addMouseEventHandler(std::make_shared<DefaultViewportMouseEventHandler>([&] {
 				DefaultViewportMouseEventHandlerConfig c;
-				c.viewportWidget = window;
-				c.viewportInput = inputSystem->getViewportInput();
+				c.viewportWidget = widget;
+				c.viewportInput = viewportInputSystem;
 				c.entityObjectRegistry = (*entityObjectRegistry)->objectRegistry;
 				c.sceneSelectionModel = selectionModel;
 				return c;
@@ -148,13 +152,13 @@ public:
 
 			for (const auto& layer : getEntityVisibilityLayers(mEditorPlugins))
 			{
-				window->addVisibilityFilterableSubMenu(QString::fromStdString(layer.first), layer.second);
+				widget->addVisibilityFilterableSubMenu(QString::fromStdString(layer.first), layer.second);
 			}
 
-			mMainWindow->addToolWindow("Viewport", window);
+			mMainWindow->addToolWindow("Viewport", widget);
 
-			QObject::connect(mMainWindow.get(), &MainWindow::updated, window, &ViewportWidget::update);
-			connectJsonProjectSerializable(*mMainWindow, *window);
+			QObject::connect(mMainWindow.get(), &MainWindow::updated, widget, &ViewportWidget::update);
+			connectJsonProjectSerializable(*mMainWindow, *widget);
 		}
 		{
 			auto window = new TimelineControlWidget(&engineRoot->scenario->timeSource, mMainWindow.get());

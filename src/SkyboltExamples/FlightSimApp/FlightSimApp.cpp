@@ -195,9 +195,12 @@ int main(int argc, char *argv[])
 		std::vector<LogicalAxisPtr> axes = createHelicopterInputAxesKeyboard(*inputPlatform);
 
 		// Create systems
-		engineRoot->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, window.get(), axes));
-		engineRoot->systemRegistry->push_back(std::make_shared<CameraInputSystem>(simCamera, inputPlatform, std::vector<LogicalAxisPtr>()));
-		
+		engineRoot->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, axes));
+
+		auto cameraInputSystem = std::make_shared<CameraInputSystem>(inputPlatform);
+		configure(*cameraInputSystem, window->getWidth(), engineRoot->engineSettings);
+		connectToCamera(*cameraInputSystem, simCamera);
+		engineRoot->systemRegistry->push_back(cameraInputSystem);
 
 		osg::ref_ptr<osg::Camera> overlayCamera = viewport->getFinalRenderTarget()->getOsgCamera();
 

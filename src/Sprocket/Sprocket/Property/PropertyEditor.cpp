@@ -255,6 +255,7 @@ QWidget* PropertyEditor::createEditorInEnabledState(QtProperty& property)
 			case QVariant::Int:
 			{
 				QSpinBox* widget = new QSpinBox(this);
+				widget->setMaximum(999999);
 				widget->setValue(value.toInt());
 
 				connect(&property, &QtProperty::valueChanged, widget, [widget, variantProperty]() {

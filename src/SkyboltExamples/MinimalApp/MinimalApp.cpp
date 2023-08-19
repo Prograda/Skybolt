@@ -38,6 +38,7 @@
 #include <SkyboltVis/Window/StandaloneWindow.h>
 
 #include <SkyboltCommon/Exception.h>
+#include <SkyboltCommon/MapUtility.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
 
 using namespace skybolt;
@@ -95,11 +96,15 @@ int main(int argc, char *argv[])
 
 		// Create input
 		auto inputPlatform = std::make_shared<InputPlatformOsg>(window->getView());
-		std::vector<LogicalAxisPtr> axes = CameraInputSystem::createDefaultAxes(*inputPlatform);
+		CameraInputAxes axes = createDefaultCameraInputAxes(*inputPlatform);
 
 		// Create systems
-		engineRoot->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, window.get(), axes));
-		engineRoot->systemRegistry->push_back(std::make_shared<CameraInputSystem>(simCamera, inputPlatform, axes));
+		engineRoot->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, toValuesVector(axes)));
+
+		auto cameraInputSystem = std::make_shared<CameraInputSystem>(inputPlatform, axes);
+		configure(*cameraInputSystem, window->getWidth(), engineRoot->engineSettings);
+		connectToCamera(*cameraInputSystem, simCamera);
+		engineRoot->systemRegistry->push_back(cameraInputSystem);
 
 		osg::ref_ptr<HelpDisplayRenderOperation> helpDisplay = createHelpDisplay();
 		window->getRenderOperationSequence().addOperation(helpDisplay, (int)RenderOperationOrder::Hud);

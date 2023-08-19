@@ -7,14 +7,13 @@
 #pragma once
 
 #include "ViewportMouseEventHandler.h"
-#include "ViewportInput.h"
 #include "Sprocket/Scenario/ScenarioObject.h"
 #include "Sprocket/SprocketFwd.h"
 
 struct DefaultViewportMouseEventHandlerConfig
 {
 	ViewportWidget* viewportWidget;
-	ViewportInput* viewportInput;
+	ViewportInputSystemPtr viewportInput;
 	ScenarioObjectRegistryPtr entityObjectRegistry;
 	SceneSelectionModel* sceneSelectionModel;
 };
@@ -34,7 +33,7 @@ protected:
 
 protected:
 	ViewportWidget* mViewportWidget;
-	ViewportInput* mViewportInput;
+	ViewportInputSystemPtr mViewportInput;
 	ScenarioObjectRegistryPtr mEntityObjectRegistry;
 	SceneSelectionModel* mSelectionModel;
 };

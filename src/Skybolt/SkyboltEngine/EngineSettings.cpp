@@ -22,6 +22,9 @@ nlohmann::json createDefaultEngineSettings()
 		"multiSampleCount": 4,
 		"texturePoolSizeMB": 512
 	},
+	"mouse": {
+		"sensitivity": 1.0
+	},
 	"shadows": {
 		"enabled": true,
 		"textureSize": 2048,

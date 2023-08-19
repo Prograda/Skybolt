@@ -19,9 +19,10 @@
 using namespace skybolt::sim;
 using namespace skybolt;
 
-const float PlanetCameraController::msYawRate = 0.01f;
-const float PlanetCameraController::msPitchRate = 0.01f;
-const float PlanetCameraController::msZoomRate = 0.0002f;
+const float PlanetCameraController::msYawRate = 1.f;
+const float PlanetCameraController::msPitchRate = 1.f;
+const float PlanetCameraController::msZoomRate = 0.2f;
+constexpr float pitchControlSensitivity = 2.f;
 
 PlanetCameraController::PlanetCameraController(sim::Entity* camera, const Params& params) :
 	CameraController(camera),
@@ -46,11 +47,10 @@ void PlanetCameraController::update(float dt)
 		return;
 	}
 
-	float yawDelta = msYawRate * mInput.panSpeed * dt;
-	float pitchDelta = msPitchRate * mInput.tiltSpeed * dt;
-	float zoomDelta = (mInput.zoomSpeed + mInput.forwardSpeed * 1000.f) * dt * msZoomRate;
+	float yawDelta = msYawRate * mInput.yawRate * dt;
+	float pitchDelta = msPitchRate * mInput.tiltRate * dt;
+	float zoomDelta = (mInput.zoomRate + mInput.forwardSpeed) * dt * msZoomRate;
 	mZoom = skybolt::math::clamp(mZoom + zoomDelta, 0.0f, 1.0f);
-
 	float maxDistance = mParams.maxDistOnRadius * (float)planet->radius;
 
 	// Zoom control
@@ -60,14 +60,16 @@ void PlanetCameraController::update(float dt)
 	// Orientation control
 	if (mInput.modifier1Pressed)
 	{
-		mPitch -= (double)pitchDelta;
+		mPitch -= (double)pitchDelta * pitchControlSensitivity;
 		mPitch = skybolt::math::clamp<float>((float)mPitch, 0, skybolt::math::halfPiF());
 	}
 	else
 	{
-		float rotationSpeed = std::min(1.0f, distFromSurface / maxDistance);
-		mLatLon.lon -= yawDelta * rotationSpeed;
-		mLatLon.lat -= pitchDelta * rotationSpeed;
+		float fovHeightAtPlanetSurfaceInMeters = 2.0f * std::tan(mParams.fovY * 0.5f) * distFromSurface;
+		float planetSurfaceVisibleVerticalArcInRadians = fovHeightAtPlanetSurfaceInMeters / planet->radius;
+
+		mLatLon.lon -= planetSurfaceVisibleVerticalArcInRadians * yawDelta / mParams.fovY;
+		mLatLon.lat -= planetSurfaceVisibleVerticalArcInRadians * pitchDelta / mParams.fovY;
 		mLatLon.lat = skybolt::math::clamp<double>(mLatLon.lat, -skybolt::math::halfPiD(), skybolt::math::halfPiD());
 	}
 

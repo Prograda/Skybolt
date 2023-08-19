@@ -18,9 +18,9 @@
 using namespace skybolt;
 using namespace skybolt::sim;
 
-const float AttachedCameraController::msYawRate = 0.01f;
-const float AttachedCameraController::msPitchRate = 0.01f;
-const float AttachedCameraController::msZoomRate = 0.001f;
+const float AttachedCameraController::msYawRate = 1.0f;
+const float AttachedCameraController::msPitchRate = 1.0f;
+const float AttachedCameraController::msZoomRate = 1.0f;
 
 AttachedCameraController::AttachedCameraController(sim::Entity* camera, const Params& params) :
 	CameraController(camera),
@@ -31,10 +31,10 @@ AttachedCameraController::AttachedCameraController(sim::Entity* camera, const Pa
 
 void AttachedCameraController::update(float dt)
 {
-	mYaw += msYawRate * mInput.panSpeed * dt;
-	mPitch += msPitchRate * mInput.tiltSpeed * dt;
-	float wheel = mInput.zoomSpeed * dt;
-	mZoom = math::clamp(mZoom + wheel * msZoomRate, 0.0f, 1.0f);
+	mYaw += msYawRate * mInput.yawRate * dt;
+	mPitch += msPitchRate * mInput.tiltRate * dt;
+	mZoom += msZoomRate * mInput.zoomRate * dt;
+	mZoom = math::clamp(mZoom, 0.0f, 1.0f);
     
     double maxPitch = math::halfPiD();
     mPitch = math::clamp(mPitch, -maxPitch, maxPitch);

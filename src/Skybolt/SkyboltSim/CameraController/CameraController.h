@@ -24,11 +24,11 @@ public:
 			return {0,0,0,0,0,false,false};
 		}
 
-		float forwardSpeed; //!< Range [-1, 1]
-		float rightSpeed; //!< Range [-1, 1]
-		float panSpeed; //!< Range [-1, 1]
-		float tiltSpeed; //!< Range [-1, 1]
-		float zoomSpeed; //!< Range [-1, 1]
+		float forwardSpeed; //!< Typical range is [-1, 1], but can exceed range if needed
+		float rightSpeed; //!< Typical range is [-1, 1], but can exceed range if needed
+		float yawRate; //!< Radians per second
+		float tiltRate; //!< Radians per second
+		float zoomRate; //!< Typical range is Range [-1, 1], but can exceed range if needed
 		bool modifier1Pressed;
 		bool modifier2Pressed;
 	};

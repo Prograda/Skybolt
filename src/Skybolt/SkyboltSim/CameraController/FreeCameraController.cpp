@@ -22,11 +22,9 @@ FreeCameraController::FreeCameraController(Entity* camera, const Params& params)
 
 void FreeCameraController::update(float dt)
 {
-	float turnRate = 0.01f;
-	float zoomRate = 0.01f;
-	mYaw += mInput.panSpeed * turnRate * dt;
-	mPitch += mInput.tiltSpeed * turnRate * dt;
-	mZoom += mInput.zoomSpeed * zoomRate * dt;
+	mYaw += mInput.yawRate * dt;
+	mPitch += mInput.tiltRate * dt;
+	mZoom += mInput.zoomRate * dt;
 	mZoom = skybolt::math::clamp(mZoom, 0.0f, 1.0f);
 
 	mCameraComponent->getState().fovY = skybolt::math::lerp(mBaseFov, mBaseFov * 0.1f, mZoom);

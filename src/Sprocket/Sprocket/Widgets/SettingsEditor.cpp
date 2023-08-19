@@ -8,6 +8,7 @@
 #include "Property/PropertyEditor.h"
 
 #include <QBoxLayout>
+#include <QLabel>
 #include <QScrollArea>
 #include <boost/algorithm/string.hpp>  
 #include <memory>
@@ -97,6 +98,8 @@ SettingsEditor::SettingsEditor(const QString& settingsFilename, const nlohmann::
 
 	QVBoxLayout* layout = new QVBoxLayout;
 	setLayout(layout);
+
+	layout->addWidget(new QLabel("Note: some settings will not take effect until application restart.", this));
 
 	{
 		mSettingsFilenameProperty = PropertiesModel::createVariantProperty("Settings filename", settingsFilename);

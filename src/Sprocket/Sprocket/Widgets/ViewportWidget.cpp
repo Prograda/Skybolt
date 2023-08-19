@@ -9,10 +9,10 @@
 #include "Sprocket/SceneSelectionModel.h"
 #include "Sprocket/Entity/EntityListModel.h"
 #include "Sprocket/Icon/SprocketIcons.h"
+#include "Sprocket/Input/ViewportInputSystem.h"
 #include "Sprocket/Property/PropertyEditor.h"
 #include "Sprocket/Scenario/EntityObjectType.h"
 #include "Sprocket/QtUtil/QtDialogUtil.h"
-#include "Sprocket/Viewport/ViewportInput.h"
 #include "Sprocket/Viewport/ViewportPropertiesModel.h"
 #include "Sprocket/Viewport/OsgWidget.h"
 #include "Sprocket/Widgets/CameraControllerWidget.h"
@@ -114,6 +114,19 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	}
 
 	mSceneObjectPicker = createSceneObjectPicker(&mEngineRoot->scenario->world);
+
+	mViewportCameraConnection = mViewportInput->cameraInputGenerated.connect([this] (const skybolt::sim::CameraController::Input& input) {
+		if (mCurrentSimCamera)
+		{
+			if (auto controller = mCurrentSimCamera->getFirstComponent<sim::CameraControllerComponent>(); controller)
+			{
+				if (controller->getSelectedController())
+				{
+					controller->getSelectedController()->setInput(input);
+				}
+			}
+		}
+	});
 }
 
 ViewportWidget::~ViewportWidget() = default;
@@ -121,6 +134,7 @@ ViewportWidget::~ViewportWidget() = default;
 void ViewportWidget::update()
 {
 	mOsgWidget->update(); // TODO only redraw if something changed
+	configure(*mViewportInput, getViewportWidth(), mEngineRoot->engineSettings);
 
 	auto simVisSystem = sim::findSystem<SimVisSystem>(*mEngineRoot->systemRegistry);
 	assert(simVisSystem);
@@ -129,14 +143,6 @@ void ViewportWidget::update()
 	if (mCurrentSimCamera)
 	{
 		simVisSystem->setSceneOriginProvider(SimVisSystem::sceneOriginFromEntity(&mEngineRoot->scenario->world, mCurrentSimCamera->getId()));
-
-		if (auto controller = mCurrentSimCamera->getFirstComponent<sim::CameraControllerComponent>(); controller)
-		{
-			if (controller->getSelectedController())
-			{
-				controller->getSelectedController()->setInput(mViewportInput->getInput());
-			}
-		}
 	}
 }
 

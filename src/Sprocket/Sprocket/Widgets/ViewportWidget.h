@@ -18,6 +18,7 @@
 #include <SkyboltSim/World.h>
 #include <SkyboltVis/RenderOperation/RenderCameraViewport.h>
 
+#include <boost/signals2/connection.hpp>
 #include <filesystem>
 #include <QWidget>
 
@@ -29,7 +30,7 @@ struct ViewportWidgetConfig
 {
 	skybolt::EngineRoot* engineRoot;
 	skybolt::vis::VisRootPtr visRoot;
-	ViewportInput* viewportInput;
+	ViewportInputSystemPtr viewportInput;
 	SceneSelectionModel* selectionModel;
 	std::vector<DefaultContextActionPtr> contextActions;
 	std::function<std::string()> projectFilenameGetter;
@@ -85,7 +86,7 @@ private:
 
 private:
 	skybolt::EngineRoot* mEngineRoot;
-	ViewportInput* mViewportInput;
+	ViewportInputSystemPtr mViewportInput;
 	SceneSelectionModel* mSelectionModel;
 	std::vector<DefaultContextActionPtr> mContextActions;
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> mViewport;
@@ -98,6 +99,7 @@ private:
 	QComboBox* mCameraCombo;
 	class CameraControllerWidget* mCameraControllerWidget;
 	skybolt::sim::Entity* mCurrentSimCamera = nullptr;
+	boost::signals2::scoped_connection mViewportCameraConnection;
 
 	SceneObjectPicker mSceneObjectPicker;
 };

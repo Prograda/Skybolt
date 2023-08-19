@@ -7,24 +7,20 @@
 #include "InputSystem.h"
 #include "InputPlatform.h"
 #include "LogicalAxis.h"
-#include <SkyboltVis/Window/Window.h>
+#include <SkyboltCommon/VectorUtility.h>
 
 namespace skybolt {
 
-InputSystem::InputSystem(const InputPlatformPtr& inputPlatform, vis::Window* window, const std::vector<LogicalAxisPtr>& axes) :
+InputSystem::InputSystem(const InputPlatformPtr& inputPlatform, const std::vector<LogicalAxisPtr>& axes) :
 	mInputPlatform(inputPlatform),
-	mWindow(window),
 	mAxes(axes)
 {
 	assert(mInputPlatform);
-	assert(mWindow);
 }
 
-void InputSystem::updatePostDynamics(const System::StepArgs& args)
+void InputSystem::updatePreDynamics(const System::StepArgs& args)
 {
 	mInputPlatform->update();
-	mInputPlatform->setWindowWidth(mWindow->getWidth());
-	mInputPlatform->setWindowHeight(mWindow->getHeight());
 
 	for (const LogicalAxisPtr& axis : mAxes)
 	{

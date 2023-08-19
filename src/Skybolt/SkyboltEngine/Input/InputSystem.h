@@ -18,13 +18,12 @@ namespace skybolt {
 class InputSystem : public sim::System
 {
 public:
-	InputSystem(const InputPlatformPtr& inputPlatform, vis::Window* window, const std::vector<LogicalAxisPtr>& axes);
+	InputSystem(const InputPlatformPtr& inputPlatform, const std::vector<LogicalAxisPtr>& axes = {});
 
-	void updatePostDynamics(const System::StepArgs& args);
+	void updatePreDynamics(const System::StepArgs& args);
 
 private:
 	InputPlatformPtr mInputPlatform;
-	vis::Window* mWindow;
 	std::vector<LogicalAxisPtr> mAxes;
 };
 

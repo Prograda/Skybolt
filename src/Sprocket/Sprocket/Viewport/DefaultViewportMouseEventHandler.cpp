@@ -5,8 +5,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "DefaultViewportMouseEventHandler.h"
-#include "Sprocket/Widgets/ViewportWidget.h"
 #include "Sprocket/SceneSelectionModel.h"
+#include "Sprocket/Input/ViewportInputSystem.h"
+#include "Sprocket/Widgets/ViewportWidget.h"
 
 #include <SkyboltSim/Components/NameComponent.h>
 
