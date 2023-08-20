@@ -9,6 +9,7 @@
 #include "TemplateNameComponent.h"
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltVis/OsgGeometryHelpers.h>
+#include <SkyboltVis/OsgTextHelpers.h>
 #include <SkyboltVis/VisibilityCategory.h>
 #include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <osg/Depth>
@@ -23,21 +24,7 @@ VisNameLabels::VisNameLabels(World* world, osg::Group* parent, const vis::Shader
 	SimVisObjectsReflector<osg::MatrixTransform*>(world, parent)
 {
 	mGroup->setNodeMask(~vis::VisibilityCategory::shadowCaster);
-
-	osg::ref_ptr<osg::StateSet> ss = mGroup->getOrCreateStateSet();
-	{
-		ss->setAttributeAndModes(programs.getRequiredProgram("hudText"), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-
-		ss->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
-		ss->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-		ss->setMode(GL_BLEND, osg::StateAttribute::ON);
-		ss->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-
-		osg::Depth* depth = new osg::Depth;
-		depth->setWriteMask(false);
-		depth->setFunction(osg::Depth::ALWAYS);
-		ss->setAttributeAndModes(depth, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE | osg::StateAttribute::PROTECTED);
-	}
+	mGroup->setStateSet(vis::createTransparentTextStateSet(programs.getRequiredProgram("hudText")));
 }
 
 VisNameLabels::~VisNameLabels()
@@ -69,8 +56,7 @@ std::optional<osg::MatrixTransform*> VisNameLabels::createObject(const sim::Enti
 		if (!name.empty())
 		{
 			osgText::Text* text = new osgText::Text();
-			static osg::ref_ptr<osgText::Font> font = osgText::readRefFontFile("fonts/verdana.ttf"); // static so we only load the font once
-			text->setFont(font);
+			text->setFont(vis::getDefaultFont());
 			text->setText(name);
 			text->setCharacterSize(0.12); // scaled in shader to be approximately font point size / 100
 			vis::configureDrawable(*text);

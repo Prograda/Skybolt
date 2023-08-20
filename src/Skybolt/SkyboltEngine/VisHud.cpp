@@ -6,6 +6,7 @@
 
 #include "VisHud.h"
 #include <SkyboltVis/OsgGeometryHelpers.h>
+#include <SkyboltVis/OsgTextHelpers.h>
 
 #include <osg/Geode>
 #include <osgText/Text>
@@ -37,9 +38,8 @@ public:
 		}
 		else
 		{
-			static osg::ref_ptr<osgText::Font> font = osgText::readRefFontFile("fonts/verdana.ttf"); // static so we only load the font once
 			text = new osgText::Text();
-			text->setFont(font);
+			text->setFont(vis::getDefaultFont());
 			text->setText(message);
 			text->setAlignment(alignment);
 			text->setUseDisplayList(false);
