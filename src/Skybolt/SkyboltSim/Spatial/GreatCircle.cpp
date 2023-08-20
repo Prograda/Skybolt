@@ -27,7 +27,7 @@ double calcDistance(const LatLon& p1, const LatLon& p2)
 double calcBearing(const LatLon& p1, const LatLon& p2)
 {
 	double y = sin(p2.lon-p1.lon) * cos(p2.lat);
-	double x = cos(p1.lat)*sin(p2.lat) - sin(p1.lat)*cos(p2.lat)*cos(p2.lat-p1.lat);
+	double x = cos(p1.lat)*sin(p2.lat) - sin(p1.lat)*cos(p2.lat)*cos(p2.lon-p1.lon);
 	return atan2(y, x);
 }
 
