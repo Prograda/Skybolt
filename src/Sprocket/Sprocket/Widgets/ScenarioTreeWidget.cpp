@@ -271,6 +271,7 @@ void ScenarioTreeWidget::showContextMenu(TreeItem& item, const QPoint& point)
 				// Confirm that the action is still supported before executing,
 				// as the context might have changed since the action was created.
 				ActionContext context = toActionContext(*mWorld, item);
+				context.widget = this;
 				if (action->handles(context))
 				{
 					action->execute(context);

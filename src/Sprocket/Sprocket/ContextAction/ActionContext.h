@@ -12,10 +12,13 @@
 #include <SkyboltSim/Spatial/LatLon.h>
 #include <optional>
 
+class QWidget;
+
 struct ActionContext
 {
 	skybolt::sim::Entity* entity = nullptr; //!< Can be null
 	std::optional<skybolt::sim::Vector3> point;
+	QWidget* widget = nullptr; //!< Widget in which the action was performed
 };
 
 using DefaultContextAction = ContextAction<ActionContext>;

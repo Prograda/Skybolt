@@ -40,12 +40,10 @@ bool DefaultViewportMouseEventHandler::mousePressed(const QPointF& position, Qt:
 
 bool DefaultViewportMouseEventHandler::mouseReleased(const QPointF& position, Qt::MouseButton button)
 {
-	bool handled = false;
 	if (mViewportInput)
 	{
 		mViewportInput->setKeyboardEnabled(false);
 		mViewportInput->setMouseEnabled(false);
-		handled = true;
 	}
 
 	if (button == Qt::MouseButton::LeftButton)
@@ -56,9 +54,9 @@ bool DefaultViewportMouseEventHandler::mouseReleased(const QPointF& position, Qt
 		std::optional<PickedSceneObject> object = mViewportWidget->pickSceneObjectAtPointInWindow(position, hasNamePredicate);
 		ScenarioObjectPtr scenarioObject = object->entity ? mEntityObjectRegistry->findByName(getName(*object->entity)) : nullptr;
 		selectItems({scenarioObject});
-		handled = true;
+		return true;
 	}
-	return handled;
+	return false;
 }
 
 bool DefaultViewportMouseEventHandler::mouseMoved(const QPointF& position, Qt::MouseButtons buttons)

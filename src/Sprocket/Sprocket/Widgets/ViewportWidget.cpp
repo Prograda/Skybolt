@@ -71,14 +71,13 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	mOsgWidget->getWindow()->getRenderOperationSequence().addOperation(mViewport);
 
 	mOsgWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-	connect(mOsgWidget, &OsgWidget::customContextMenuRequested, this, [this] (const QPoint& point) { showContextMenu(point); });
 
 	connect(mOsgWidget, &OsgWidget::mousePressed, this, [this](const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {
 		for (const auto& [priority, handler] : mMouseEventHandlers)
 		{
 			if (handler->mousePressed(position, button, modifiers))
 			{
-				break;
+				return;
 			}
 		}
 	});
@@ -88,8 +87,12 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 		{
 			if (handler->mouseReleased(position, button))
 			{
-				break;
+				return;
 			}
+		}
+		if (button == Qt::RightButton)
+		{
+			showContextMenu(QPoint(position.x(), position.y()));
 		}
 	});
 
@@ -98,7 +101,7 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 		{
 			if (handler->mouseMoved(position, buttons))
 			{
-				break;
+				return;
 			}
 		}
 	});
@@ -228,6 +231,7 @@ void ViewportWidget::showContextMenu(const QPoint& point)
 		ActionContext context;
 		context.entity = selectedEntity;
 		context.point = *intersection;
+		context.widget = this;
 
 		for (const auto& contextAction : mContextActions)
 		{
