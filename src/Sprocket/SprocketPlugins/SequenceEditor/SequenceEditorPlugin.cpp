@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "SequencePropertiesModel.h"
 #include "SequenceEditor.h"
+#include "SequenceMetaTypes.h"
 #include "SequencePlotWidget.h"
 #include "SequenceSerializer.h"
 #include <Sprocket/EditorPlugin.h>
@@ -140,8 +140,8 @@ public:
 		mToolWindow.name = "Curve Editor";
 		mToolWindow.widget = mSequencePlotWidget;
 
-		mFactoryMap[typeid(SequenceProperty)] = [this](QtProperty& property) {
-			auto sequence = static_cast<SequenceProperty*>(&property)->sequence;
+		mFactoryMap[qMetaTypeId<StateSequenceControllerPtr>()] = [this](QtProperty* property, QWidget* parent) {
+			auto sequence = property->value.value<StateSequenceControllerPtr>();
 			SequenceEditorConfig config;
 			config.controller = sequence;
 			config.entityChooserDialogFactory = std::make_shared<EntityChooserDialogFactory>(&mEngineRoot->scenario->world);
@@ -213,7 +213,8 @@ public:
 	{
 		return { { typeid(SequenceObject), [] (const ScenarioObject& item) {
 			auto sequenceItem = dynamic_cast<const SequenceObject*>(&item);
-			return std::make_shared<SequencePropertiesModel>(sequenceItem->data);
+			QtPropertyPtr property = createQtProperty("Sequence", QVariant::fromValue(sequenceItem->data));
+			return std::make_shared<PropertiesModel>(std::vector<QtPropertyPtr>({ property }));
 		}}};
 	}
 

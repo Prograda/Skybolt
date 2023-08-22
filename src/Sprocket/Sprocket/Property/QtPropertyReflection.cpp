@@ -6,11 +6,13 @@
 
 #include "QtPropertyReflection.h"
 #include "PropertyMetadata.h"
+#include "SprocketMetaTypes.h"
 #include "Sprocket/QtTypeConversions.h"
+#include <SkyboltCommon/Units.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltEngine/VisObjectsComponent.h>
 #include <SkyboltSim/Reflection.h>
-#include <SkyboltCommon/Units.h>
+#include <SkyboltSim/Spatial/LatLon.h>
 
 #include <QVector3D>
 
@@ -124,6 +126,21 @@ sim::Quaternion qtValueToSim(const rttr::property& property, const QVariant& val
 	return skybolt::math::quatFromEuler(euler * skybolt::math::radToDegD());
 }
 
+template <>
+QVariant simValueToQt(const rttr::property& property, const sim::LatLon& value)
+{
+	return QVariant::fromValue(sim::LatLon(value.lat * skybolt::math::radToDegD(), value.lon * skybolt::math::radToDegD()));
+}
+
+template <>
+sim::LatLon qtValueToSim(const rttr::property& property, const QVariant& value)
+{
+	sim::LatLon simValue = value.value<sim::LatLon>();
+	simValue.lat *= skybolt::math::degToRadD();
+	simValue.lon *= skybolt::math::degToRadD();
+	return simValue;
+}
+
 static void addMetadata(QtProperty& qtProperty, const rttr::property& rttrProperty)
 {
 	// TODO: copy metadata from rttr to QT property automatically, without needing to explicitly all types here?
@@ -142,7 +159,7 @@ PropertyFactory createPropertyFactory(const QtValueT& defaultValue)
 		QtPropertyUpdaterApplier r;
 		
 		QString name = QString::fromStdString(property.get_name().to_string());
-		r.property = PropertiesModel::createVariantProperty(name, defaultValue);
+		r.property = createQtProperty(name, defaultValue);
 		addMetadata(*r.property, property);
 		
 		r.updater = [instanceGetter, property] (QtProperty& qtProperty) {
@@ -150,7 +167,7 @@ PropertyFactory createPropertyFactory(const QtValueT& defaultValue)
 			if (instance.is_valid())
 			{
 				auto value = property.get_value(instance).get_value<SimValueT>();
-				static_cast<VariantProperty&>(qtProperty).setValue(simValueToQt(property, value));
+				qtProperty.setValue(simValueToQt(property, value));
 			}
 		};
 		r.updater(*r.property);
@@ -161,7 +178,58 @@ PropertyFactory createPropertyFactory(const QtValueT& defaultValue)
 				rttr::instance instance = instanceGetter();
 				if (instance.is_valid())
 				{
-					auto value = qtValueToSim<SimValueT>(property, static_cast<const VariantProperty&>(qtProperty).value);
+					auto value = qtValueToSim<SimValueT>(property, static_cast<const QtProperty&>(qtProperty).value);
+					property.set_value(instance, value);
+				}
+			};
+		}
+
+		return r;
+	};
+}
+
+template <typename SimValueT, typename QtValueT>
+PropertyFactory createOptionalPropertyFactory(const QtValueT& defaultValue)
+{
+	return [defaultValue, basePropertyFactory = createPropertyFactory<SimValueT, QtValueT>(defaultValue)] (const RttrInstanceGetter& instanceGetter, const rttr::property& property) {
+		QString name = QString::fromStdString(property.get_name().to_string());
+		QtPropertyPtr baseProperty = createQtProperty(name, defaultValue);
+		addMetadata(*baseProperty, property);
+
+		OptionalProperty optionalProperty;
+		optionalProperty.property = baseProperty;
+
+		QtPropertyUpdaterApplier r;
+		r.property = createQtProperty(name, QVariant::fromValue(optionalProperty));
+		QObject::connect(baseProperty.get(), &QtProperty::valueChanged, r.property.get(), &QtProperty::valueChanged);
+
+		r.updater = [instanceGetter, property, defaultValue] (QtProperty& qtProperty) {
+			rttr::instance instance = instanceGetter();
+			if (instance.is_valid())
+			{
+				std::optional<SimValueT> value = property.get_value(instance).get_value<std::optional<SimValueT>>();
+
+				OptionalProperty optionalProperty = qtProperty.value.value<OptionalProperty>();
+				optionalProperty.property->setValue(simValueToQt(property, value.value_or(defaultValue)));
+				optionalProperty.present = value.has_value();
+				qtProperty.value.setValue(optionalProperty);
+			}
+		};
+		r.updater(*r.property);
+
+		if (!property.is_readonly())
+		{
+			r.applier = [instanceGetter, property] (const QtProperty& qtProperty) {
+				rttr::instance instance = instanceGetter();
+				if (instance.is_valid())
+				{
+					std::optional<SimValueT> value;
+
+					OptionalProperty optionalProperty = qtProperty.value.value<OptionalProperty>();
+					if (optionalProperty.present)
+					{
+						value = qtValueToSim<SimValueT>(property, optionalProperty.property->value);
+					}
 					property.set_value(instance, value);
 				}
 			};
@@ -181,8 +249,14 @@ std::optional<QtPropertyUpdaterApplier> rttrPropertyToQt(const RttrInstanceGette
 		{ rttr::type::get<int>().get_id(), createPropertyFactory<int>(0) },
 		{ rttr::type::get<float>().get_id(), createPropertyFactory<float>(0.f) },
 		{ rttr::type::get<double>().get_id(), createPropertyFactory<double>(0.f) },
+		{ rttr::type::get<std::optional<std::string>>().get_id(), createPropertyFactory<std::string>("") },
+		{ rttr::type::get<std::optional<bool>>().get_id(), createOptionalPropertyFactory<bool>(false) },
+		{ rttr::type::get<std::optional<int>>().get_id(), createOptionalPropertyFactory<int>(0) },
+		{ rttr::type::get<std::optional<float>>().get_id(), createOptionalPropertyFactory<float>(0.f) },
+		{ rttr::type::get<std::optional<double>>().get_id(), createOptionalPropertyFactory<double>(0.f) },
 		{ rttr::type::get<sim::Vector3>().get_id(), createPropertyFactory<sim::Vector3>(QVector3D(0,0,0)) },
-		{ rttr::type::get<sim::Quaternion>().get_id(), createPropertyFactory<sim::Quaternion>(QVector3D(0,0,0)) }
+		{ rttr::type::get<sim::Quaternion>().get_id(), createPropertyFactory<sim::Quaternion>(QVector3D(0,0,0)) },
+		{ rttr::type::get<sim::LatLon>().get_id(), createPropertyFactory<sim::LatLon>(QVariant::fromValue(sim::LatLon(0,0))) }
 	};
 
 	if (const auto& i = typePropertyFactories.find(type.get_id()); i != typePropertyFactories.end())

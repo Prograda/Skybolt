@@ -6,6 +6,7 @@
 
 #include "EditorPlugin.h"
 #include "Sprocket/Entity/EntityPropertiesModel.h"
+#include "Sprocket/Property/DefaultEditorWidgets.h"
 #include "Sprocket/Scenario/EntityObjectType.h"
 #include "Sprocket/Scenario/ScenarioDescObjectType.h"
 #include "Sprocket/Scenario/ScenarioPropertiesModel.h"
@@ -36,7 +37,7 @@ PropertyModelFactoryMap getPropertyModelFactories(const std::vector<EditorPlugin
 
 PropertyEditorWidgetFactoryMap getPropertyEditorWidgetFactories(const std::vector<EditorPluginPtr>& plugins)
 {
-	PropertyEditorWidgetFactoryMap factories;
+	PropertyEditorWidgetFactoryMap factories = getDefaultEditorWidgetFactoryMap();
 	for (const EditorPluginPtr& plugin : plugins)
 	{
 		auto items = plugin->getPropertyEditorWidgetFactories();

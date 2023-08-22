@@ -19,6 +19,6 @@ public:
 	nlohmann::json getJson() const;
 
 private:
-	std::shared_ptr<struct VariantProperty> mSettingsFilenameProperty;
+	std::shared_ptr<struct QtProperty> mSettingsFilenameProperty;
 	PropertiesModelPtr mSettingsModel;
 };

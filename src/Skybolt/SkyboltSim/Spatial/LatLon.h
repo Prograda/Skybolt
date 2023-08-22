@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <assert.h>
+
 namespace skybolt {
 namespace sim {
 
@@ -17,6 +19,18 @@ struct LatLon
 	bool operator == (const LatLon& other) const
 	{
 		return (lat == other.lat && lon == other.lon);
+	}
+
+	double operator[] (int i) const
+	{
+		assert(i == 0 || i == 1);
+		return i ? lon : lat;
+	}
+
+	double& operator[] (int i)
+	{
+		assert(i == 0 || i == 1);
+		return i ? lon : lat;
 	}
 
 	double lat; //!< radians

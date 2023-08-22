@@ -9,6 +9,7 @@
 #include <catch2/catch.hpp>
 
 #include <assert.h>
+#include <optional>
 
 using namespace skybolt;
 using namespace skybolt::sim;
@@ -30,6 +31,8 @@ struct TestObject
 	std::shared_ptr<TestNestedObject> nestedObjectSharedPtrProperty = std::make_shared<TestNestedObject>();
 	std::map<std::string, std::shared_ptr<TestNestedObject>> sharedPtrMapProperty = { {"A", std::make_shared<TestNestedObject>()} };
 	std::vector<std::shared_ptr<TestNestedObject>> sharedPtrVectorProperty = { std::make_shared<TestNestedObject>(-1), std::make_shared<TestNestedObject>(-1)};
+	std::optional<int> optionalIntProperty1;
+	std::optional<int> optionalIntProperty2;
 };
 
 SKYBOLT_REFLECT_INLINE(TestNestedObject)
@@ -46,7 +49,9 @@ SKYBOLT_REFLECT_INLINE(TestObject)
 		.property("nestedObjectProperty", &TestObject::nestedObjectProperty)
 		.property("nestedObjectSharedPtrProperty", &TestObject::nestedObjectSharedPtrProperty)
 		.property("sharedPtrMapProperty", &TestObject::sharedPtrMapProperty)
-		.property("sharedPtrVectorProperty", &TestObject::sharedPtrVectorProperty);
+		.property("sharedPtrVectorProperty", &TestObject::sharedPtrVectorProperty)
+		.property("optionalIntProperty1", &TestObject::optionalIntProperty1)
+		.property("optionalIntProperty2", &TestObject::optionalIntProperty2);
 }
 
 TEST_CASE("Read and write to JSON")
@@ -59,6 +64,8 @@ TEST_CASE("Read and write to JSON")
 	originalObject.nestedObjectSharedPtrProperty->intProperty = 4;
 	originalObject.sharedPtrMapProperty["A"]->intProperty = 6;
 	originalObject.sharedPtrVectorProperty = { std::make_shared<TestNestedObject>(1), std::make_shared<TestNestedObject>(2) };
+	// Leave originalObject.optionalIntProperty1 unset
+	originalObject.optionalIntProperty2 = 123;
 	nlohmann::json json = writeReflectedObject(originalObject);
 
 	// Read
@@ -76,7 +83,9 @@ TEST_CASE("Read and write to JSON")
 	CHECK(readObject.sharedPtrMapProperty.begin()->second->intProperty == originalObject.sharedPtrMapProperty.begin()->second->intProperty);
 	REQUIRE(readObject.sharedPtrVectorProperty.size() == 2);
 	CHECK(readObject.sharedPtrVectorProperty[0]->intProperty == 1);
-	CHECK(readObject.sharedPtrVectorProperty[1]->intProperty == 2);
+	CHECK(!readObject.optionalIntProperty1);
+	REQUIRE(readObject.optionalIntProperty2);
+	CHECK(readObject.optionalIntProperty2 == 123);
 }
 
 struct TestBaseObject

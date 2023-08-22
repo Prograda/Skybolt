@@ -14,6 +14,7 @@
 
 #include "SimMath.h"
 #include "SkyboltSim/Spatial/LatLon.h"
+#include "SkyboltSim/Spatial/LatLonAlt.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <nlohmann/json.hpp>
 
@@ -72,6 +73,16 @@ inline LatLon readLatLon(const nlohmann::json& j)
 inline nlohmann::json writeJson(const LatLon& v)
 {
 	return {v.lat * skybolt::math::radToDegD(), v.lon * skybolt::math::radToDegD()};
+}
+
+inline LatLonAlt readLatLonAlt(const nlohmann::json& j)
+{
+	return LatLonAlt(j[0].get<double>() * skybolt::math::degToRadD(), j[1].get<double>() * skybolt::math::degToRadD(), j[2].get<double>());
+}
+
+inline nlohmann::json writeJson(const LatLonAlt& v)
+{
+	return {v.lat * skybolt::math::radToDegD(), v.lon * skybolt::math::radToDegD(), v.alt};
 }
 
 inline void writeIfNotEmpty(nlohmann::json& object, const std::string& key, const nlohmann::json& v)

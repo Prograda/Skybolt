@@ -8,9 +8,15 @@
 
 #include <QUuid>
 #include <QVariantList>
+#include <vector>
 
 struct TableRecord
 {
 	QUuid uuid;
 	QVariantList values;
 };
+
+using RecordAdded = std::function<void(int index, const TableRecord& record)>;
+using RecordMoved = std::function<void(int oldIndex, int newIndex)>;
+using RecordRemoved = std::function<void(int index)>;
+void calcDiff(std::vector<TableRecord> oldRecords, const std::vector<TableRecord>& newRecords, RecordAdded addedFn, RecordMoved movedFn, RecordRemoved removedFn);

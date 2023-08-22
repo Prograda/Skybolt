@@ -6,10 +6,6 @@
 
 #pragma once
 
-#include "SequencePropertiesModel.h"
+#include "PropertyEditorWidgetFactory.h"
 
-SequencePropertiesModel::SequencePropertiesModel(const skybolt::StateSequenceControllerPtr& sequence) :
-	mSequence(sequence)
-{
-	mProperties.push_back(std::make_shared<SequenceProperty>(sequence));
-}
+PropertyEditorWidgetFactoryMap getDefaultEditorWidgetFactoryMap();

@@ -85,7 +85,7 @@ static void createPropertiesRecursive(std::vector<QtPropertyPtr>& properties, co
 				throw std::runtime_error("Settings property name must not contain period (.)");
 			}
 
-			auto property = PropertiesModel::createVariantProperty(QString::fromStdString(propertyNamePrefix + item.key()), variant);
+			auto property = createQtProperty(QString::fromStdString(propertyNamePrefix + item.key()), variant);
 			properties.push_back(property);
 		}
 	}
@@ -102,14 +102,14 @@ SettingsEditor::SettingsEditor(const QString& settingsFilename, const nlohmann::
 	layout->addWidget(new QLabel("Note: some settings will not take effect until application restart.", this));
 
 	{
-		mSettingsFilenameProperty = PropertiesModel::createVariantProperty("Settings filename", settingsFilename);
-		PropertyEditor* editor = new PropertyEditor({});
+		mSettingsFilenameProperty = createQtProperty("Settings filename", settingsFilename);
+		PropertyEditor* editor = new PropertyEditor();
 		editor->setModel(std::make_shared<PropertiesModel>(std::vector<QtPropertyPtr>{ mSettingsFilenameProperty }));
 		layout->addWidget(editor, 0);
 	}
 	{
 		mSettingsModel = std::make_shared<PropertiesModel>(properties);
-		PropertyEditor* editor = new PropertyEditor({});
+		PropertyEditor* editor = new PropertyEditor();
 		editor->setModel(mSettingsModel);
 
 		QScrollArea* scrollArea = new QScrollArea;
@@ -129,10 +129,7 @@ nlohmann::json SettingsEditor::getJson() const
 	nlohmann::json j;
 	for (const auto& item : mSettingsModel->getProperties())
 	{
-		if (auto variantProperty = dynamic_cast<VariantProperty*>(item.get()))
-		{
-			setJsonQVariant(j, item->name.toStdString(), variantProperty->value);
-		}
+		setJsonQVariant(j, item->name.toStdString(), item->value);
 	}
 
 	return j;

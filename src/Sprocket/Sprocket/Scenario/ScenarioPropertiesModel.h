@@ -20,6 +20,6 @@ public:
 
 private:
 	skybolt::Scenario* mScenario;
-	VariantPropertyPtr mDateTime;
-	VariantPropertyPtr mDuration;
+	QtPropertyPtr mDateTime;
+	QtPropertyPtr mDuration;
 };

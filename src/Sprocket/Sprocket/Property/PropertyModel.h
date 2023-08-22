@@ -20,7 +20,8 @@ public:
 	QString name;
 	bool enabled = true;
 
-	void setEnabled(bool e) {
+	void setEnabled(bool e)
+	{
 		if (enabled != e)
 		{
 			enabled = e;
@@ -28,13 +29,6 @@ public:
 		}
 	}
 
-signals:
-	void valueChanged();
-	void enabledChanged(bool enabled);
-};
-
-struct VariantProperty : public QtProperty
-{
 	void setValue(const QVariant& v)
 	{
 		if (value != v)
@@ -45,40 +39,13 @@ struct VariantProperty : public QtProperty
 	}
 
 	QVariant value;
-};
-
-struct EnumProperty : public QtProperty
-{
-	void setValue(int v)
-	{
-		if (value != v)
-		{
-			value = v;
-			emit valueChanged();
-		}
-	}
-
-	int value;
-	QStringList values;
-};
-
-struct TableProperty : public QtProperty
-{
-	Q_OBJECT
-public:
-	QStringList fieldNames;
-	std::vector<TableRecord> records;
 
 signals:
-	void recordAdded(int index, const TableRecord& record);
-	void recordMoved(int oldIndex, int newIndex);
-	void recordRemoved(int index);
+	void valueChanged();
+	void enabledChanged(bool enabled);
 };
 
-typedef std::shared_ptr<QtProperty> QtPropertyPtr;
-typedef std::shared_ptr<VariantProperty> VariantPropertyPtr;
-typedef std::shared_ptr<EnumProperty> EnumPropertyPtr;
-typedef std::shared_ptr<TableProperty> TablePropertyPtr;
+QtPropertyPtr createQtProperty(const QString& name, const QVariant& value);
 
 class PropertiesModel : public QObject, public skybolt::Updatable
 {
@@ -98,10 +65,6 @@ public:
 	//! @param updater is regularly called update the value of QtProperty from an external model
 	//! @param applier is called when a QtProperty value should be applied to an external model (e.g. if the user pressent 'Enter' key in a text box
 	void addProperty(const QtPropertyPtr& property, QtPropertyUpdater updater = nullptr, QtPropertyApplier applier = nullptr);
-
-	static VariantPropertyPtr createVariantProperty(const QString& name, const QVariant& value);
-	static EnumPropertyPtr createEnumProperty(const QString& name, const QStringList& values, int value = 0);
-	static TablePropertyPtr createTableProperty(const QString& name, const QStringList& fieldNames, const std::vector<TableRecord>& records);
 
 signals:
 	void modelReset(PropertiesModel*);

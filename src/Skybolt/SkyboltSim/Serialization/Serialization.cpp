@@ -22,6 +22,14 @@ ToRttrVariantTranslator createToRttrVariantTranslator()
 		};
 }
 
+template <typename T>
+ToRttrVariantTranslator createOptionalToRttrVariantTranslator()
+{
+	return [] (const nlohmann::json& json) {
+		return std::optional<T>(json.get<T>());
+		};
+}
+
 static bool isSerializable(const rttr::property& property)
 {
 	return true;
@@ -39,9 +47,17 @@ rttr::variant jsonToRttrVariant(const rttr::type& type, const nlohmann::json& js
 		{ rttr::type::get<float>().get_id(), createToRttrVariantTranslator<float>() },
 		{ rttr::type::get<double>().get_id(), createToRttrVariantTranslator<double>() },
 		{ rttr::type::get<std::string>().get_id(), createToRttrVariantTranslator<std::string>() },
+
+		{ rttr::type::get<std::optional<bool>>().get_id(), createOptionalToRttrVariantTranslator<bool>() },
+		{ rttr::type::get<std::optional<int>>().get_id(), createOptionalToRttrVariantTranslator<int>() },
+		{ rttr::type::get<std::optional<float>>().get_id(), createOptionalToRttrVariantTranslator<float>() },
+		{ rttr::type::get<std::optional<double>>().get_id(), createOptionalToRttrVariantTranslator<double>() },
+		{ rttr::type::get<std::optional<std::string>>().get_id(), createToRttrVariantTranslator<std::string>() },
+
 		{ rttr::type::get<sim::Vector3>().get_id(), [] (const nlohmann::json& json) { return readVector3(json); }},
 		{ rttr::type::get<sim::Quaternion>().get_id(), [] (const nlohmann::json& json) { return readQuaternion(json); }},
-		{ rttr::type::get<sim::LatLon>().get_id(), [] (const nlohmann::json& json) { return readLatLon(json); }}
+		{ rttr::type::get<sim::LatLon>().get_id(), [] (const nlohmann::json& json) { return readLatLon(json); }},
+		{ rttr::type::get<sim::LatLonAlt>().get_id(), [] (const nlohmann::json& json) { return readLatLonAlt(json); }}
 	};
 
 	if (const auto& i = translators.find(type.get_id()); i != translators.end())
@@ -184,12 +200,21 @@ void readReflectedObject(rttr::instance& object, const nlohmann::json& json)
 	}
 }
 
-using PropertyToJsonTranslator = std::function<nlohmann::json(const rttr::variant& var)>;
+using ToJsonTranslator = std::function<nlohmann::json(const rttr::variant& var)>;
 
 template <typename T>
-PropertyToJsonTranslator createPropertyToJsonTranslator()
+ToJsonTranslator createToJsonTranslator()
 {
 	return [] (const rttr::variant& var) { return nlohmann::json(var.get_value<T>()); };
+}
+
+template <typename T>
+ToJsonTranslator createOptionalToJsonTranslator()
+{
+	return [] (const rttr::variant& var) {
+		auto value = var.get_value<std::optional<T>>();
+		return value ? nlohmann::json(*value) : nlohmann::json();
+	};
 }
 
 static nlohmann::json sequentialContainerToJson(const rttr::variant& var);
@@ -198,15 +223,23 @@ static nlohmann::json associativeContainerToJson(const rttr::variant& var);
 
 static nlohmann::json toJson(const rttr::variant& var)
 {
-	static std::map<rttr::type::type_id, PropertyToJsonTranslator> translators = {
-		{ rttr::type::get<bool>().get_id(), createPropertyToJsonTranslator<bool>() },
-		{ rttr::type::get<int>().get_id(), createPropertyToJsonTranslator<int>() },
-		{ rttr::type::get<float>().get_id(), createPropertyToJsonTranslator<float>() },
-		{ rttr::type::get<double>().get_id(), createPropertyToJsonTranslator<double>() },
-		{ rttr::type::get<std::string>().get_id(), createPropertyToJsonTranslator<std::string>() },
+	static std::map<rttr::type::type_id, ToJsonTranslator> translators = {
+		{ rttr::type::get<bool>().get_id(), createToJsonTranslator<bool>() },
+		{ rttr::type::get<int>().get_id(), createToJsonTranslator<int>() },
+		{ rttr::type::get<float>().get_id(), createToJsonTranslator<float>() },
+		{ rttr::type::get<double>().get_id(), createToJsonTranslator<double>() },
+		{ rttr::type::get<std::string>().get_id(), createToJsonTranslator<std::string>() },
+
+		{ rttr::type::get<std::optional<bool>>().get_id(), createOptionalToJsonTranslator<bool>() },
+		{ rttr::type::get<std::optional<int>>().get_id(), createOptionalToJsonTranslator<int>() },
+		{ rttr::type::get<std::optional<float>>().get_id(), createOptionalToJsonTranslator<float>() },
+		{ rttr::type::get<std::optional<double>>().get_id(), createOptionalToJsonTranslator<double>() },
+		{ rttr::type::get<std::optional<std::string>>().get_id(), createOptionalToJsonTranslator<std::string>() },
+
 		{ rttr::type::get<sim::Vector3>().get_id(), [] (const rttr::variant& var) {	return writeJson(var.get_value<sim::Vector3>()); }},
 		{ rttr::type::get<sim::Quaternion>().get_id(), [] (const rttr::variant& var) { return writeJson(var.get_value<sim::Quaternion>()); }},
-		{ rttr::type::get<sim::LatLon>().get_id(), [] (const rttr::variant& var) { return writeJson(var.get_value<sim::LatLon>()); }}
+		{ rttr::type::get<sim::LatLon>().get_id(), [] (const rttr::variant& var) { return writeJson(var.get_value<sim::LatLon>()); }},
+		{ rttr::type::get<sim::LatLonAlt>().get_id(), [] (const rttr::variant& var) { return writeJson(var.get_value<sim::LatLonAlt>()); }}
 	};
 
 	rttr::variant unwrappedVar = unwrap(var);

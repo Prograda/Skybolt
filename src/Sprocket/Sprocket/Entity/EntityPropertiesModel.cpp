@@ -38,8 +38,8 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 	{
 		mEntity->addListener(this);
 
-		addProperty(createVariantProperty(QLatin1String("name"), QString()), [this](QtProperty& property) {
-			static_cast<VariantProperty&>(property).setValue(QString::fromStdString(getName(*mEntity)));
+		addProperty(createQtProperty(QLatin1String("name"), QString()), [this](QtProperty& property) {
+			property.setValue(QString::fromStdString(getName(*mEntity)));
 		});
 
 		for (const sim::ComponentPtr& component : mEntity->getComponents())
@@ -48,14 +48,14 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 			addRttrPropertiesToModel(*this, sim::getProperties(*component), getter);
 		}
 
-		addProperty(createVariantProperty("dynamicsEnabled", false),
+		addProperty(createQtProperty("dynamicsEnabled", false),
 			// Updater
 			[this](QtProperty& property) {
-				static_cast<VariantProperty&>(property).setValue(mEntity->isDynamicsEnabled());
+				property.setValue(mEntity->isDynamicsEnabled());
 			},
 			// Applier
 			[this](const QtProperty& property) {
-				mEntity->setDynamicsEnabled(static_cast<const VariantProperty&>(property).value.toBool());
+				mEntity->setDynamicsEnabled(property.value.toBool());
 			}
 		);
 	}

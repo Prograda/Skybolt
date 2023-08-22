@@ -7,6 +7,7 @@
 #pragma once
 
 #include "LatLon.h"
+#include <assert.h>
 #include <tuple>
 
 namespace skybolt {
@@ -20,6 +21,30 @@ struct LatLonAlt
 	bool operator == (const LatLonAlt& other) const
 	{
 		return std::tie(lat, lon, alt) == std::tie(other.lat, other.lon, other.alt);
+	}
+
+	double operator[] (int i) const
+	{
+		switch (i)
+		{
+			case 0: return lat;
+			case 1: return lon;
+			case 2: return alt;
+		}
+		assert(!"Invalid index");
+		return alt;
+	}
+
+	double& operator[] (int i)
+	{
+		switch (i)
+		{
+			case 0: return lat;
+			case 1: return lon;
+			case 2: return alt;
+		}
+		assert(!"Invalid index");
+		return alt;
 	}
 
 	double lat; //!< radians

@@ -347,7 +347,7 @@ QToolBar* ViewportWidget::createViewportToolBar(const std::function<std::string(
 	toolbar->addAction(getSprocketIcon(SprocketIcon::Settings), "Settings", [=] {
 		if (mCurrentSimCamera)
 		{
-			PropertyEditor* editor = new PropertyEditor({});
+			PropertyEditor* editor = new PropertyEditor();
 			editor->setModel(std::make_shared<ViewportPropertiesModel>(mEngineRoot->scene.get(), mCurrentSimCamera->getFirstComponent<sim::CameraComponent>().get()));
 			QDialog* dialog = createDialogNonModal(editor, "Settings", this);
 			dialog->exec();

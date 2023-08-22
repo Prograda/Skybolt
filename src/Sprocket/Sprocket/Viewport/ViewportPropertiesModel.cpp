@@ -9,21 +9,21 @@ ViewportPropertiesModel::ViewportPropertiesModel(vis::Scene* Scene, sim::CameraC
 	mScene(Scene)
 {
 	{
-		mFov = createVariantProperty("Vertical FOV", 0.0);
+		mFov = createQtProperty("Vertical FOV", 0.0);
 		mFov->setValue(camera->getState().fovY * skybolt::math::radToDegF());
 		mProperties.push_back(mFov);
 
-		connect(mFov.get(), &VariantProperty::valueChanged, [=]()
+		connect(mFov.get(), &QtProperty::valueChanged, [=]()
 		{
 			camera->getState().fovY = mFov->value.toFloat() * skybolt::math::degToRadF();
 		});
 	}
 	{
-		mAmbientLight = createVariantProperty("Ambient Light", 0.0);
+		mAmbientLight = createQtProperty("Ambient Light", 0.0);
 		mAmbientLight->setValue(mScene->getAmbientLightColor().x());
 		mProperties.push_back(mAmbientLight);
 
-		connect(mAmbientLight.get(), &VariantProperty::valueChanged, [=]()
+		connect(mAmbientLight.get(), &QtProperty::valueChanged, [=]()
 		{
 			float v = mAmbientLight->value.toFloat();
 			mScene->setAmbientLightColor(osg::Vec3f(v, v, v));

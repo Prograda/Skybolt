@@ -18,10 +18,10 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 {
 	assert(mScenario);
 
-	mDateTime = createVariantProperty("startTime", QDateTime());
+	mDateTime = createQtProperty("startTime", QDateTime());
 	mProperties.push_back(mDateTime);
 
-	connect(mDateTime.get(), &VariantProperty::valueChanged, [this]() {
+	connect(mDateTime.get(), &QtProperty::valueChanged, [this]() {
 		QDateTime dateTime = mDateTime->value.toDateTime();
 		const QDate& date = dateTime.date();
 		const QTime& time = dateTime.time();
@@ -30,10 +30,10 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 	});
 
 
-	mDuration = createVariantProperty("duration", 0.0);
+	mDuration = createQtProperty("duration", 0.0);
 	mProperties.push_back(mDuration);
 
-	connect(mDuration.get(), &VariantProperty::valueChanged, [this]() {
+	connect(mDuration.get(), &QtProperty::valueChanged, [this]() {
 		TimeRange range = mScenario->timeSource.getRange();
 		range.end = mDuration->value.toDouble();
 		mScenario->timeSource.setRange(range);

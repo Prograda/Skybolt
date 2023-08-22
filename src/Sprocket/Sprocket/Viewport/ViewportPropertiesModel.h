@@ -11,6 +11,6 @@ public:
 
 private:
 	skybolt::vis::Scene* mScene;
-	VariantPropertyPtr mFov;
-	VariantPropertyPtr mAmbientLight;
+	QtPropertyPtr mFov;
+	QtPropertyPtr mAmbientLight;
 };

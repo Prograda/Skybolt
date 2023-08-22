@@ -4,18 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "QtLayoutUtil.h"
-#include <QWidget>
+#pragma once
 
-void clearLayout(QLayout& layout)
+#include "PropertyModel.h"
+#include <SkyboltSim/Spatial/LatLon.h>
+
+struct OptionalProperty
 {
-	while (QLayoutItem* item = layout.takeAt(0))
-	{
-		delete item->widget();
-		if (item->layout())
-		{
-			clearLayout(*item->layout());
-		}
-		delete item;
-	}
-}
+	QtPropertyPtr property;
+	bool present = false;
+};
+
+Q_DECLARE_METATYPE(OptionalProperty)
+Q_DECLARE_METATYPE(skybolt::sim::LatLon)

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "DefaultEditorWidgets.h"
 #include "Sprocket/Property/PropertyModel.h"
 #include "Sprocket/SprocketFwd.h"
 
@@ -15,14 +16,11 @@
 
 class QGridLayout;
 
-using PropertyEditorWidgetFactory = std::function<QWidget*(QtProperty& property)>;
-using PropertyEditorWidgetFactoryMap = std::map<std::type_index, PropertyEditorWidgetFactory>;
-
 class PropertyEditor : public QWidget
 {
 	Q_OBJECT
 public:
-	PropertyEditor(const PropertyEditorWidgetFactoryMap& factoryMap, QWidget* parent = nullptr);
+	PropertyEditor(const PropertyEditorWidgetFactoryMap& factoryMap = getDefaultEditorWidgetFactoryMap(), QWidget* parent = nullptr);
 
 	void setModel(const PropertiesModelPtr& model);
 
@@ -30,8 +28,7 @@ private slots:
 	void modelReset(PropertiesModel* model);
 
 private:
-	QWidget* createEditorInEnabledState(QtProperty& property);
-	QWidget* createEditor(QtProperty& property);
+	QWidget* createEditor(QtProperty* property);
 
 private:
 	PropertiesModelPtr mModel;

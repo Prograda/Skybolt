@@ -28,13 +28,13 @@ static QString specializeImageSequenceFilenameTemplate(QString str, int frameNum
 
 void showCaptureImageSequenceDialog(const FrameImageWriter& frameImageWriter, const QString& defaultSequenceName, QWidget* parent)
 {
-	auto filenameTemplate = PropertiesModel::createVariantProperty("Filename", "Video/" + defaultSequenceName + "/" + defaultSequenceName + ".####.jpg");
-	auto startTime = PropertiesModel::createVariantProperty("Start Time", 0.0);
-	auto endTime = PropertiesModel::createVariantProperty("End Time", 1.0);
-	auto frameRate = PropertiesModel::createVariantProperty("Frame Rate", 30.0);
+	auto filenameTemplate = createQtProperty("Filename", "Video/" + defaultSequenceName + "/" + defaultSequenceName + ".####.jpg");
+	auto startTime = createQtProperty("Start Time", 0.0);
+	auto endTime = createQtProperty("End Time", 1.0);
+	auto frameRate = createQtProperty("Frame Rate", 30.0);
 	auto properties = std::make_shared<PropertiesModel>(std::vector<QtPropertyPtr>({filenameTemplate, startTime, endTime, frameRate}));
 
-	PropertyEditor* editor = new PropertyEditor({});
+	PropertyEditor* editor = new PropertyEditor();
 	editor->setModel(properties);
 
 	std::shared_ptr<QDialog> dialog = createDialogModal(editor, "Capture Image Sequence");
