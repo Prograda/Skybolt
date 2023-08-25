@@ -52,7 +52,7 @@ void PropertyEditor::modelReset(PropertiesModel* model)
 	for (const QtPropertyPtr& property : model->getProperties())
 	{
 		auto label = new QLabel(property->name, this);
-		auto labelLayout = new QVBoxLayout(this);
+		auto labelLayout = new QVBoxLayout();
 		labelLayout->setContentsMargins(3, 3, 6, 3);
 		labelLayout->addWidget(label);
 		mGridLayout->addLayout(labelLayout, r, 0, Qt::AlignTop | Qt::AlignRight);
