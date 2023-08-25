@@ -312,7 +312,7 @@ static QWidget* createOptionalVariantEditor(const PropertyEditorWidgetFactoryMap
 		QObject::connect(activateCheckbox, &QCheckBox::stateChanged, property, [=](bool value) {
 			auto optionalProperty = property->value.value<OptionalProperty>();
 			optionalProperty.present = value;
-			property->value.setValue(optionalProperty);
+			property->setValue(QVariant::fromValue(optionalProperty));
 			valueEditorWidget->setEnabled(value && property->enabled);
 		});
 
