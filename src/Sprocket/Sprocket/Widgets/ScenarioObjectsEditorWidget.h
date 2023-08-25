@@ -9,6 +9,7 @@
 #include "Sprocket/SprocketFwd.h"
 #include "Sprocket/ContextAction/ActionContext.h"
 #include "Sprocket/Scenario/ScenarioObject.h"
+#include "Sprocket/Scenario/ScenarioObjectTypeMap.h"
 
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 
@@ -17,7 +18,7 @@
 struct ScenarioObjectsEditorWidgetConfig
 {
 	skybolt::EngineRoot* engineRoot;
-	SceneSelectionModel* selectionModel;
+	ScenarioSelectionModel* selectionModel;
 	ScenarioObjectTypeMap scenarioObjectTypes;
 	std::vector<DefaultContextActionPtr> contextActions;
 	QWidget* parent;
@@ -27,8 +28,6 @@ class ScenarioObjectsEditorWidget : public QWidget
 {
 public:
 	ScenarioObjectsEditorWidget(const ScenarioObjectsEditorWidgetConfig& config);
-
-	void selectionChanged(const ScenarioObjectPtr& selected, const ScenarioObjectPtr& deselected);
 
 private:
 	skybolt::EngineRoot* mEngineRoot;

@@ -11,6 +11,7 @@
 #include "Sprocket/SprocketFwd.h"
 #include "Sprocket/ContextAction/ActionContext.h"
 #include "Sprocket/Scenario/ScenarioObject.h"
+#include "Sprocket/Scenario/ScenarioObjectTypeMap.h"
 
 #include <QWidget>
 
@@ -18,7 +19,7 @@ class QTreeView;
 
 struct ScenarioTreeWidgetConfig
 {
-	SceneSelectionModel* selectionModel;
+	ScenarioSelectionModel* selectionModel;
 	skybolt::sim::World* world;
 	ScenarioObjectTypeMap scenarioObjectTypes;
 	std::vector<DefaultContextActionPtr> contextActions;

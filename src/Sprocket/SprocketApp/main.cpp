@@ -9,11 +9,12 @@
 #include <Sprocket/EngineSettingsSerialization.h>
 #include <Sprocket/MainWindow.h>
 #include <Sprocket/MainWindowUtil.h>
-#include <Sprocket/SceneSelectionModel.h>
 #include <Sprocket/ContextAction/CreateContextActions.h>
 #include <Sprocket/Input/ViewportInputSystem.h>
 #include <Sprocket/Input/InputPlatformOis.h>
 #include <Sprocket/Scenario/EntityObjectType.h>
+#include <Sprocket/Viewport/ScenarioObjectPicker.h>
+#include <Sprocket/Scenario/ScenarioSelectionModel.h>
 #include <Sprocket/Viewport/DefaultViewportMouseEventHandler.h>
 #include <Sprocket/ThirdParty/DarkStyle.h>
 #include <Sprocket/Widgets/ScenarioPropertyEditorWidget.h>
@@ -73,7 +74,7 @@ public:
 			return c;
 		}()));
 
-		auto selectionModel = new SceneSelectionModel(mMainWindow.get());
+		auto selectionModel = new ScenarioSelectionModel(mMainWindow.get());
 
 		auto inputPlatform = std::make_shared<InputPlatformOis>(std::to_string(size_t(mMainWindow->winId())), 800, 600); // TODO: get actual dimensions, which are currently only needed on Linux
 		CameraInputAxes axes = createDefaultCameraInputAxes(*inputPlatform);
@@ -136,6 +137,7 @@ public:
 				c.visRoot = visRoot;
 				c.viewportInput = viewportInputSystem;
 				c.selectionModel = selectionModel;
+				c.scenarioObjectPicker = createScenarioObjectPicker(scenarioObjectTypes);
 				c.contextActions = createContextActions(*engineRoot);
 				c.projectFilenameGetter = [this] { return mMainWindow->getProjectFilename().toStdString(); };
 				c.parent = mMainWindow.get();
@@ -146,7 +148,8 @@ public:
 				c.viewportWidget = widget;
 				c.viewportInput = viewportInputSystem;
 				c.entityObjectRegistry = (*entityObjectRegistry)->objectRegistry;
-				c.sceneSelectionModel = selectionModel;
+				c.scenarioSelectionModel = selectionModel;
+				c.selectionPredicate = ScenarioObjectPredicateAlways;
 				return c;
 			}()));
 

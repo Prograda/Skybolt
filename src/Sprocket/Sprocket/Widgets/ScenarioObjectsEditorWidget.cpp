@@ -6,7 +6,7 @@
 
 #include "ScenarioObjectsEditorWidget.h"
 #include "Sprocket/Icon/SprocketIcons.h"
-#include "Sprocket/SceneSelectionModel.h"
+#include "Sprocket/Scenario/ScenarioSelectionModel.h"
 #include "Sprocket/Widgets/ScenarioTreeWidget.h"
 
 #include <SkyboltCommon/MapUtility.h>
@@ -145,7 +145,7 @@ ScenarioObjectsEditorWidget::ScenarioObjectsEditorWidget(const ScenarioObjectsEd
 
 	layout->addWidget(toolbar);
 
-	QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, this, [deleteButton, scenarioObjectTypes = config.scenarioObjectTypes]
+	QObject::connect(config.selectionModel, &ScenarioSelectionModel::selectionChanged, this, [deleteButton, scenarioObjectTypes = config.scenarioObjectTypes]
 		(const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected)
 	{
 		bool enabled = false;

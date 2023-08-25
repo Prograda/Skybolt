@@ -6,15 +6,17 @@
 
 #include "ViewportWidget.h"
 #include "CaptureImageDailog.h"
-#include "Sprocket/SceneSelectionModel.h"
 #include "Sprocket/Entity/EntityListModel.h"
 #include "Sprocket/Icon/SprocketIcons.h"
 #include "Sprocket/Input/ViewportInputSystem.h"
 #include "Sprocket/Property/PropertyEditor.h"
 #include "Sprocket/Scenario/EntityObjectType.h"
+#include "Sprocket/Scenario/ScenarioSelectionModel.h"
 #include "Sprocket/QtUtil/QtDialogUtil.h"
 #include "Sprocket/Viewport/ViewportPropertiesModel.h"
 #include "Sprocket/Viewport/OsgWidget.h"
+#include "Sprocket/Viewport/PlanetPointPicker.h"
+#include "Sprocket/Viewport/ScreenTransformUtil.h"
 #include "Sprocket/Widgets/CameraControllerWidget.h"
 
 #include <SkyboltCommon/Math/IntersectionUtility.h>
@@ -49,11 +51,15 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	mEngineRoot(config.engineRoot),
 	mViewportInput(config.viewportInput),
 	mSelectionModel(config.selectionModel),
+	mScenarioObjectPicker(config.scenarioObjectPicker),
 	mContextActions(config.contextActions),
 	mFilterMenu(new QMenu(this)),
 	QWidget(config.parent)
 {
 	assert(mEngineRoot);
+	assert(mViewportInput);
+	assert(mSelectionModel);
+	assert(mScenarioObjectPicker);
 
 	mOsgWidget = new OsgWidget(config.visRoot, this);
 	mOsgWidget->setMouseTracking(true);
@@ -115,8 +121,6 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 		layout->addWidget(mToolBar);
 		layout->addWidget(mOsgWidget);
 	}
-
-	mSceneObjectPicker = createSceneObjectPicker(&mEngineRoot->scenario->world);
 
 	mViewportCameraConnection = mViewportInput->cameraInputGenerated.connect([this] (const skybolt::sim::CameraController::Input& input) {
 		if (mCurrentSimCamera)
@@ -181,20 +185,25 @@ void ViewportWidget::captureImage(const std::filesystem::path& baseFilename)
 	mOsgWidget->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
 }
 
-std::optional<PickedSceneObject> ViewportWidget::pickSceneObjectAtPointInWindow(const QPointF& position, const EntitySelectionPredicate& predicate) const
+std::optional<PickedScenarioObject> ViewportWidget::pickSceneObjectAtPointInWindow(const QPointF& position, const ScenarioObjectPredicate& predicate) const
 {
-	glm::vec2 pointNdc = glm::vec2(float(position.x()) / mOsgWidget->width(), float(position.y()) / mOsgWidget->height());
-	glm::dmat4 transform = calcCurrentViewProjTransform();
-	return mSceneObjectPicker(transform, pointNdc, 0.04, predicate);
+	if (mCurrentSimCamera)
+	{
+		sim::Vector3 camPosition = *getPosition(*mCurrentSimCamera);
+		glm::vec2 pointNdc = glm::vec2(float(position.x()) / mOsgWidget->width(), float(position.y()) / mOsgWidget->height());
+		glm::dmat4 transform = calcCurrentViewProjTransform();
+		return mScenarioObjectPicker(camPosition, transform, pointNdc, predicate);
+	}
+	return std::nullopt;
 }
 
 std::optional<sim::Vector3> ViewportWidget::pickPointOnPlanetAtPointInWindow(const QPointF& position) const
 {
 	if (mCurrentSimCamera)
 	{
-		glm::vec2 pointNdc = glm::vec2(position.x() / mOsgWidget->width(), position.y() / mOsgWidget->height());
 		sim::Vector3 camPosition = *getPosition(*mCurrentSimCamera);
-		std::optional<PickedSceneObject> object = pickPointOnPlanet(mEngineRoot->scenario->world, camPosition, glm::inverse(calcCurrentViewProjTransform()), pointNdc);
+		glm::vec2 pointNdc = glm::vec2(position.x() / mOsgWidget->width(), position.y() / mOsgWidget->height());
+		std::optional<PickedEntity> object = pickPointOnPlanet(mEngineRoot->scenario->world, camPosition, glm::inverse(calcCurrentViewProjTransform()), pointNdc);
 		return object ? object->position : std::optional<sim::Vector3>();
 	}
 	return std::nullopt;

@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <catch2/catch.hpp>
-#include <Sprocket/Viewport/SceneObjectPicker.h>
+#include <Sprocket/Viewport/ScreenTransformUtil.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 

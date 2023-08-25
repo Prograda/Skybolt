@@ -6,12 +6,12 @@
 
 #include "ScenarioTreeWidget.h"
 #include "Registry.h"
-#include "SceneSelectionModel.h"
 #include "TreeItems.h"
 #include "Icon/SprocketIcons.h"
 #include "QtUtil/QtTimerUtil.h"
-#include "Scenario/ScenarioObject.h"
 #include "Scenario/EntityObjectType.h"
+#include "Scenario/ScenarioObject.h"
+#include "Scenario/ScenarioSelectionModel.h"
 
 #include <SkyboltCommon/MapUtility.h>
 #include <SkyboltEngine/Scenario/Scenario.h>
@@ -82,7 +82,7 @@ ScenarioTreeWidget::ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config) :
 
 	layout()->addWidget(mView);
 
-	QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this]
+	QObject::connect(config.selectionModel, &ScenarioSelectionModel::selectionChanged, [this]
 		(const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected)
 	{
 		std::vector<TreeItem*> selection;

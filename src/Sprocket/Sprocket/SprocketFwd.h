@@ -18,7 +18,7 @@ class PropertyEditor;
 class PropertiesModel;
 struct QtProperty;
 class ScenarioObject;
-class SceneSelectionModel;
+class ScenarioSelectionModel;
 struct ScenarioObjectType;
 class ScenarioTreeWidget;
 class TreeItem;

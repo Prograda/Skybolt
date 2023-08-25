@@ -19,6 +19,9 @@ public:
 	EntityObject(EntityObjectRegistry* registry, skybolt::sim::World* world, const skybolt::sim::Entity& entity);
 	ScenarioObjectPtr getParent() const override;
 
+	std::optional<skybolt::sim::Vector3> getWorldPosition() const override;
+	std::optional<skybolt::sim::Vector3> intersectRay(const skybolt::sim::Vector3& origin, const skybolt::sim::Vector3& dir, const glm::dmat4& viewProjTransform) const override;
+
 private:
 	EntityObjectRegistry* mRegistry;
 	skybolt::sim::World* mWorld;

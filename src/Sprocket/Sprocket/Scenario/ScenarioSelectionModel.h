@@ -28,11 +28,11 @@ std::shared_ptr<T> getFirstSelectedScenarioObjectOfType(const SelectedScenarioOb
 	return nullptr;
 }
 
-class SceneSelectionModel : public QObject
+class ScenarioSelectionModel : public QObject
 {
 	Q_OBJECT
 public:
-	SceneSelectionModel(QObject* parent = nullptr);
+	ScenarioSelectionModel(QObject* parent = nullptr);
 
 	void setSelectedItems(const SelectedScenarioObjects& item);
 	SelectedScenarioObjects getSelectedItems() const { return mSelectedItems; }

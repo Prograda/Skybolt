@@ -5,16 +5,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "Sprocket/SprocketFwd.h"
-#include "Sprocket/SceneSelectionModel.h"
 #include "Sprocket/Property/PropertyEditor.h"
 #include "Sprocket/Property/PropertyModelFactoryMap.h"
+#include "Sprocket/Scenario/ScenarioSelectionModel.h"
 
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 
 struct ScenarioPropertyEditorWidgetConfig
 {
 	skybolt::EngineRoot* engineRoot;
-	SceneSelectionModel* selectionModel;
+	ScenarioSelectionModel* selectionModel;
 	PropertyModelFactoryMap propertyModelFactoryMap;
 	PropertyEditorWidgetFactoryMap widgetFactoryMap;
 	QWidget* parent = nullptr;

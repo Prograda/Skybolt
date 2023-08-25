@@ -10,7 +10,7 @@
 #include "Sprocket/JsonProjectSerializable.h"
 #include "Sprocket/ContextAction/ActionContext.h"
 #include "Sprocket/Scenario/ScenarioObject.h"
-#include "Sprocket/Viewport/SceneObjectPicker.h"
+#include "Sprocket/Viewport/ScenarioObjectPicker.h"
 #include "Sprocket/Viewport/ViewportMouseEventHandler.h"
 
 #include <SkyboltEngine/SkyboltEngineFwd.h>
@@ -31,7 +31,8 @@ struct ViewportWidgetConfig
 	skybolt::EngineRoot* engineRoot;
 	skybolt::vis::VisRootPtr visRoot;
 	ViewportInputSystemPtr viewportInput;
-	SceneSelectionModel* selectionModel;
+	ScenarioSelectionModel* selectionModel;
+	ScenarioObjectPicker scenarioObjectPicker;
 	std::vector<DefaultContextActionPtr> contextActions;
 	std::function<std::string()> projectFilenameGetter;
 	QWidget* parent = nullptr;
@@ -46,7 +47,7 @@ public:
 
 	Q_SLOT void update();
 
-	std::optional<PickedSceneObject> pickSceneObjectAtPointInWindow(const QPointF& position, const EntitySelectionPredicate& predicate = &EntitySelectionPredicateAlways) const;
+	std::optional<PickedScenarioObject> pickSceneObjectAtPointInWindow(const QPointF& position, const ScenarioObjectPredicate& predicate = &ScenarioObjectPredicateAlways) const;
 	std::optional<skybolt::sim::Vector3> pickPointOnPlanetAtPointInWindow(const QPointF& position) const;
 
 	//! handlers with lower priority numbers will be executed first
@@ -87,7 +88,7 @@ private:
 private:
 	skybolt::EngineRoot* mEngineRoot;
 	ViewportInputSystemPtr mViewportInput;
-	SceneSelectionModel* mSelectionModel;
+	ScenarioSelectionModel* mSelectionModel;
 	std::vector<DefaultContextActionPtr> mContextActions;
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> mViewport;
 	QMenu* mFilterMenu;
@@ -101,5 +102,5 @@ private:
 	skybolt::sim::Entity* mCurrentSimCamera = nullptr;
 	boost::signals2::scoped_connection mViewportCameraConnection;
 
-	SceneObjectPicker mSceneObjectPicker;
+	ScenarioObjectPicker mScenarioObjectPicker;
 };

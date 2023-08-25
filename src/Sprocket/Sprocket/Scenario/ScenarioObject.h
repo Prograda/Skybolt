@@ -8,7 +8,11 @@
 
 #include "Sprocket/SprocketFwd.h"
 #include "Sprocket/Registry.h"
+
+#include <SkyboltSim/SimMath.h>
+
 #include <functional>
+#include <optional>
 #include <vector>
 #include <string>
 #include <typeindex>
@@ -23,6 +27,9 @@ public:
 	virtual std::string getName() const = 0;
 	virtual const QIcon& getIcon() const = 0;
 	virtual ScenarioObjectPtr getParent() const { return nullptr; }
+
+	virtual std::optional<skybolt::sim::Vector3> getWorldPosition() const { return std::nullopt; } //!< Get position of the object in the world
+	virtual std::optional<skybolt::sim::Vector3> intersectRay(const skybolt::sim::Vector3& origin, const skybolt::sim::Vector3& dir, const glm::dmat4& viewProjTransform) const { return std::nullopt; }
 };
 
 template <typename T>
@@ -59,5 +66,3 @@ struct ScenarioObjectType
 	std::function<void(const ScenarioObject&)> objectRemover; //!< Removes object from the scenario. Has no effect if object is not removable. Never null.
 	ScenarioObjectRegistryPtr objectRegistry; //!< Registry of instantiated objects of this type. Never null.
 };
-
-using ScenarioObjectTypeMap = std::map<std::type_index, ScenarioObjectTypePtr>; //!< Type index is of the class derived from ScenarioObject which this type creates

@@ -9,10 +9,10 @@
 #include "SequencePlotWidget.h"
 #include "SequenceSerializer.h"
 #include <Sprocket/EditorPlugin.h>
-#include <Sprocket/SceneSelectionModel.h>
 #include <Sprocket/Icon/SprocketIcons.h>
 #include <Sprocket/Entity/EntityChooserDialogFactory.h>
 #include <Sprocket/Scenario/ScenarioObject.h>
+#include <Sprocket/Scenario/ScenarioSelectionModel.h>
 #include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Sequence/SequenceController.h>
@@ -166,7 +166,7 @@ public:
 			return new SequenceEditor(config);
 		};
 
-		QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
+		QObject::connect(config.selectionModel, &ScenarioSelectionModel::selectionChanged, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
 			selectionChanged(selected);
 		});
 	}

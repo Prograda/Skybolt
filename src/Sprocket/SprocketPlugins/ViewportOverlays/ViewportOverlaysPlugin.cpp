@@ -6,8 +6,8 @@
 
 #include <Sprocket/EditorPlugin.h>
 #include <Sprocket/QtUtil/QtMenuUtil.h>
-#include <Sprocket/SceneSelectionModel.h>
 #include <Sprocket/Scenario/EntityObjectType.h>
+#include <Sprocket/Scenario/ScenarioSelectionModel.h>
 #include <Sprocket/Viewport/VisEntityIcons.h>
 
 #include <SkyboltEngine/EngineRoot.h>
@@ -83,7 +83,7 @@ public:
 		mEngineRoot(config.engineRoot)
 	{
 		// Handle selection events
-		QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
+		QObject::connect(config.selectionModel, &ScenarioSelectionModel::selectionChanged, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
 			selectionChanged(selected);
 		});
 

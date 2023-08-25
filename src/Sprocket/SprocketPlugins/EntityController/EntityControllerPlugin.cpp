@@ -5,8 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <Sprocket/EditorPlugin.h>
-#include <Sprocket/SceneSelectionModel.h>
 #include <Sprocket/Scenario/EntityObjectType.h>
+#include <Sprocket/Scenario/ScenarioSelectionModel.h>
 #include <Sprocket/QtUtil/QtLayoutUtil.h>
 
 #include <SkyboltSim/Components/ControlInputsComponent.h>
@@ -344,7 +344,7 @@ public:
 		mToolWindow.name = "Entity Controller";
 		mToolWindow.widget = mEntityControllerWidget;
 
-		QObject::connect(config.selectionModel, &SceneSelectionModel::selectionChanged, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
+		QObject::connect(config.selectionModel, &ScenarioSelectionModel::selectionChanged, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
 			selectionChanged(selected);
 		});
 	}

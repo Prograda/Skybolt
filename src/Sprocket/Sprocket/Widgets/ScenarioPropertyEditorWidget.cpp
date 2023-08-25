@@ -30,7 +30,7 @@ ScenarioPropertyEditorWidget::ScenarioPropertyEditorWidget(const ScenarioPropert
 	setLayout(layout);
 	layout->addWidget(mPropertiesEditor);
 
-	connect(config.selectionModel, &SceneSelectionModel::selectionChanged, this, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
+	connect(config.selectionModel, &ScenarioSelectionModel::selectionChanged, this, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
 		selectionChanged(selected, deselected);
 	});
 

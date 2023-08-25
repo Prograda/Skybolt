@@ -8,6 +8,7 @@
 
 #include "ViewportMouseEventHandler.h"
 #include "Sprocket/Scenario/ScenarioObject.h"
+#include "Sprocket/Scenario/ScenarioObjectPredicate.h"
 #include "Sprocket/SprocketFwd.h"
 
 struct DefaultViewportMouseEventHandlerConfig
@@ -15,7 +16,8 @@ struct DefaultViewportMouseEventHandlerConfig
 	ViewportWidget* viewportWidget;
 	ViewportInputSystemPtr viewportInput;
 	ScenarioObjectRegistryPtr entityObjectRegistry;
-	SceneSelectionModel* sceneSelectionModel;
+	ScenarioSelectionModel* scenarioSelectionModel;
+	ScenarioObjectPredicate selectionPredicate;
 };
 
 class DefaultViewportMouseEventHandler : public ViewportMouseEventHandler
@@ -35,5 +37,6 @@ protected:
 	ViewportWidget* mViewportWidget;
 	ViewportInputSystemPtr mViewportInput;
 	ScenarioObjectRegistryPtr mEntityObjectRegistry;
-	SceneSelectionModel* mSelectionModel;
+	ScenarioSelectionModel* mSelectionModel;
+	ScenarioObjectPredicate mSelectionPredicate;
 };

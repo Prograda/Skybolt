@@ -37,7 +37,7 @@ struct EditorPluginConfig
 	UiControllerPtr uiController;
 	skybolt::EngineRoot* engineRoot;
 	skybolt::InputPlatformPtr inputPlatform;
-	SceneSelectionModel* selectionModel;
+	ScenarioSelectionModel* selectionModel;
 	skybolt::vis::VisRoot* visRoot;
 	QMainWindow* mainWindow;
 };

@@ -5,8 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "DefaultViewportMouseEventHandler.h"
-#include "Sprocket/SceneSelectionModel.h"
 #include "Sprocket/Input/ViewportInputSystem.h"
+#include "Sprocket/Scenario/ScenarioSelectionModel.h"
 #include "Sprocket/Widgets/ViewportWidget.h"
 
 #include <SkyboltSim/Components/NameComponent.h>
@@ -17,12 +17,14 @@ DefaultViewportMouseEventHandler::DefaultViewportMouseEventHandler(DefaultViewpo
 	mViewportWidget(config.viewportWidget),
 	mViewportInput(config.viewportInput),
 	mEntityObjectRegistry(std::move(config.entityObjectRegistry)),
-	mSelectionModel(config.sceneSelectionModel)
+	mSelectionModel(config.scenarioSelectionModel),
+	mSelectionPredicate(config.selectionPredicate)
 {
 	assert(mViewportWidget);
 	assert(mViewportInput);
 	assert(mEntityObjectRegistry);
 	assert(mSelectionModel);
+	assert(mSelectionPredicate);
 }
 
 bool DefaultViewportMouseEventHandler::mousePressed(const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers)
@@ -49,10 +51,9 @@ bool DefaultViewportMouseEventHandler::mouseReleased(const QPointF& position, Qt
 	if (button == Qt::MouseButton::LeftButton)
 	{
 		sim::EntityId selectedEntityId = sim::nullEntityId();
-		auto hasNamePredicate = [] (const skybolt::sim::Entity& e) { return !getName(e).empty(); };
 			
-		std::optional<PickedSceneObject> object = mViewportWidget->pickSceneObjectAtPointInWindow(position, hasNamePredicate);
-		ScenarioObjectPtr scenarioObject = object->entity ? mEntityObjectRegistry->findByName(getName(*object->entity)) : nullptr;
+		std::optional<PickedScenarioObject> pickedObject = mViewportWidget->pickSceneObjectAtPointInWindow(position, mSelectionPredicate);
+		ScenarioObjectPtr scenarioObject = pickedObject ? pickedObject->object : nullptr;
 		selectItems({scenarioObject});
 		return true;
 	}
