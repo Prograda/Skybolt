@@ -20,6 +20,8 @@ public:
 	ScenarioObjectPtr getParent() const override;
 
 	std::optional<skybolt::sim::Vector3> getWorldPosition() const override;
+	void setWorldPosition(const skybolt::sim::Vector3& position) override;
+
 	std::optional<skybolt::sim::Vector3> intersectRay(const skybolt::sim::Vector3& origin, const skybolt::sim::Vector3& dir, const glm::dmat4& viewProjTransform) const override;
 
 private:

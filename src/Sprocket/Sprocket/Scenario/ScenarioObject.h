@@ -29,7 +29,10 @@ public:
 	virtual ScenarioObjectPtr getParent() const { return nullptr; }
 
 	virtual std::optional<skybolt::sim::Vector3> getWorldPosition() const { return std::nullopt; } //!< Get position of the object in the world
-	virtual std::optional<skybolt::sim::Vector3> intersectRay(const skybolt::sim::Vector3& origin, const skybolt::sim::Vector3& dir, const glm::dmat4& viewProjTransform) const { return std::nullopt; }
+	virtual void setWorldPosition(const skybolt::sim::Vector3& position) {}
+
+	//! Intersects ray against the object. By default the object is assumed to be an icon with a world position, and fixed size in screen space.
+	virtual std::optional<skybolt::sim::Vector3> intersectRay(const skybolt::sim::Vector3& origin, const skybolt::sim::Vector3& dir, const glm::dmat4& viewProjTransform) const;
 };
 
 template <typename T>

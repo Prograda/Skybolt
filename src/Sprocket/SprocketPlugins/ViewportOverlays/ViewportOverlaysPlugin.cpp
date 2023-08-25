@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include "VisSelectionIcons.h"
 #include <Sprocket/EditorPlugin.h>
 #include <Sprocket/QtUtil/QtMenuUtil.h>
 #include <Sprocket/Scenario/EntityObjectType.h>
 #include <Sprocket/Scenario/ScenarioSelectionModel.h>
-#include <Sprocket/Viewport/VisEntityIcons.h>
 
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/SimVisBinding/ForcesVisBinding.h>
@@ -105,8 +105,8 @@ public:
 		// Create overlay visuals
 		auto hudGroup = mEngineRoot->scene->getBucketGroup(vis::Scene::Bucket::Hud);
 
-		mVisSelectedEntityIcon = new VisEntityIcons(mEngineRoot->programs, createEntitySelectionIcon());
-		hudGroup->addChild(mVisSelectedEntityIcon);
+		mVisSelectionIcons = new VisSelectionIcons(mEngineRoot->programs, createEntitySelectionIcon());
+		hudGroup->addChild(mVisSelectionIcons);
 
 		sim::World* world = &mEngineRoot->scenario->world;
 
@@ -148,20 +148,7 @@ public:
 
 	void selectionChanged(const SelectedScenarioObjects& selected)
 	{
-		std::set<sim::Entity*> selection;
-		for (const ScenarioObjectPtr& object : selected)
-		{
-			if (auto entityObject = dynamic_cast<const EntityObject*>(object.get()); entityObject)
-			{
-				mSelectedEntityId = entityObject->data;
-				auto entity = mEngineRoot->scenario->world.getEntityById(mSelectedEntityId);
-				if (entity)
-				{
-					selection.insert(entity);
-				}
-			}
-		}
-		mVisSelectedEntityIcon->setEntities(selection);
+		mVisSelectionIcons->setSelection(selected);
 	}
 
 	static glm::dvec3 toGlm(const osg::Vec3d& v)
@@ -171,7 +158,7 @@ public:
 
 	void update()
 	{
-		mVisSelectedEntityIcon->syncVis(*mCoordinateConverter);
+		mVisSelectionIcons->syncVis(*mCoordinateConverter);
 		mVisNameLabels->syncVis(*mCoordinateConverter);
 		mVisOrbits->syncVis(*mCoordinateConverter);
 		mForcesVisBinding->syncVis(*mCoordinateConverter);
@@ -180,7 +167,7 @@ public:
 private:
 	EngineRoot* mEngineRoot;
 	const GeocentricToNedConverter* mCoordinateConverter;
-	osg::ref_ptr<skybolt::VisEntityIcons> mVisSelectedEntityIcon;
+	osg::ref_ptr<skybolt::VisSelectionIcons> mVisSelectionIcons;
 	std::unique_ptr<skybolt::VisNameLabels> mVisNameLabels;
 	std::unique_ptr<skybolt::VisOrbits> mVisOrbits;
 	std::unique_ptr<skybolt::ForcesVisBinding> mForcesVisBinding;

@@ -5,11 +5,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "EntityObjectType.h"
+#include "ScenarioObjectIntersectionUtil.h"
 #include "Sprocket/Icon/SprocketIcons.h"
 #include "Sprocket/Viewport/PlanetPointPicker.h"
-#include "Sprocket/Viewport/ScreenTransformUtil.h"
 
-#include <SkyboltCommon/Math/IntersectionUtility.h>
 #include <SkyboltEngine/EntityFactory.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/Components/NameComponent.h>
@@ -91,6 +90,14 @@ std::optional<skybolt::sim::Vector3> EntityObject::getWorldPosition() const
 	return std::nullopt;
 }
 
+void EntityObject::setWorldPosition(const skybolt::sim::Vector3& position)
+{
+	if (sim::Entity* entity = mWorld->getEntityById(data); entity)
+	{
+		return setPosition(*entity, position);
+	}
+}
+
 std::optional<skybolt::sim::Vector3> EntityObject::intersectRay(const sim::Vector3& origin, const sim::Vector3& dir, const glm::dmat4& viewProjTransform) const
 {
 	if (sim::Entity* entity = mWorld->getEntityById(data); entity)
@@ -108,23 +115,7 @@ std::optional<skybolt::sim::Vector3> EntityObject::intersectRay(const sim::Vecto
 			// For other entity types, intersect with a sphere of fixed screenspace size at the object's position
 			if (auto entityPositionWorld = getPosition(*entity); entityPositionWorld)
 			{
-				sim::Vector3 tangent, binormal;
-				sim::getOrthonormalBasis(dir, tangent, binormal);
-
-				auto entityPositionNdc0 = worldToScreenNdcPoint(viewProjTransform, *entityPositionWorld);
-				auto entityPositionNdc1 = worldToScreenNdcPoint(viewProjTransform, *entityPositionWorld + tangent);
-				if (entityPositionNdc0 && entityPositionNdc1)
-				{
-					double ndcSizePerWorldUnit = glm::distance(*entityPositionNdc0, *entityPositionNdc1);
-
-					static constexpr double ndcEntityRadius = 0.03;
-					double worldRadius = ndcEntityRadius / ndcSizePerWorldUnit;
-
-					if (auto r = intersectRaySphere(origin, dir, *getPosition(*entity), worldRadius); r)
-					{
-						return origin + dir * double(r->first);
-					}
-				}
+				return intersectRayWithIcon(origin, dir, viewProjTransform, *entityPositionWorld);
 			}
 		}
 	}

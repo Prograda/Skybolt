@@ -23,6 +23,7 @@ public:
 	PropertyEditor(const PropertyEditorWidgetFactoryMap& factoryMap = getDefaultEditorWidgetFactoryMap(), QWidget* parent = nullptr);
 
 	void setModel(const PropertiesModelPtr& model);
+	PropertiesModelPtr getModel() const { return mModel; }
 
 private slots:
 	void modelReset(PropertiesModel* model);

@@ -17,7 +17,7 @@
 
 struct PickedScenarioObject
 {
-	ScenarioObjectPtr object; //!< The picked object
+	ScenarioObjectPtr object; //!< The picked object. Never null.
 	skybolt::sim::Vector3 position; //!< Position of the pick location
 };
 
