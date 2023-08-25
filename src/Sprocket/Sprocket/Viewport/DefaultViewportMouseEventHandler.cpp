@@ -53,8 +53,7 @@ bool DefaultViewportMouseEventHandler::mouseReleased(const QPointF& position, Qt
 		sim::EntityId selectedEntityId = sim::nullEntityId();
 			
 		std::optional<PickedScenarioObject> pickedObject = mViewportWidget->pickSceneObjectAtPointInWindow(position, mSelectionPredicate);
-		ScenarioObjectPtr scenarioObject = pickedObject ? pickedObject->object : nullptr;
-		selectItems({scenarioObject});
+		selectItems(pickedObject ? SelectedScenarioObjects({pickedObject->object}) : SelectedScenarioObjects());
 		return true;
 	}
 	return false;
