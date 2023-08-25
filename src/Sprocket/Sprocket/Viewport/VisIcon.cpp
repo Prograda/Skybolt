@@ -8,7 +8,6 @@
 
 #include <Viewport/VisEntityAttachables.h>
 #include <SkyboltVis/OsgGeometryFactory.h>
-#include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <osg/Depth>
 #include <osg/Geode>
 #include <osg/Group>
@@ -16,11 +15,11 @@
 
 namespace skybolt {
 
-osg::ref_ptr<osg::StateSet> createVisIconStateSet(const vis::ShaderPrograms& programs)
+osg::ref_ptr<osg::StateSet> createVisIconStateSet(const osg::ref_ptr<osg::Program>& program)
 {
 	osg::ref_ptr<osg::StateSet> ss = new osg::StateSet();
 
-	ss->setAttributeAndModes(programs.getRequiredProgram("hudGeometry"), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+	ss->setAttributeAndModes(program, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 
 	ss->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
 	ss->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);

@@ -7,6 +7,7 @@
 #include "VisEntityIcons.h"
 #include "VisIcon.h"
 #include <SkyboltVis/VisibilityCategory.h>
+#include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <osg/Geode>
 
 namespace skybolt {
@@ -16,7 +17,7 @@ using namespace sim;
 VisEntityIcons::VisEntityIcons(const vis::ShaderPrograms& programs, const osg::ref_ptr<osg::Texture>& iconTexture)
 {
 	setNodeMask(~vis::VisibilityCategory::shadowCaster);
-	osg::ref_ptr<osg::StateSet> ss = createVisIconStateSet(programs);
+	osg::ref_ptr<osg::StateSet> ss = createVisIconStateSet(programs.getRequiredProgram("hudGeometry"));
 	ss->setTextureAttribute(0, iconTexture, osg::StateAttribute::ON);
 	setStateSet(ss);
 }

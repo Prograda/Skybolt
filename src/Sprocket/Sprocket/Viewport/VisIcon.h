@@ -13,7 +13,7 @@
 
 namespace skybolt {
 
-osg::ref_ptr<osg::StateSet> createVisIconStateSet(const vis::ShaderPrograms& programs);
+osg::ref_ptr<osg::StateSet> createVisIconStateSet(const osg::ref_ptr<osg::Program>& program);
 
 osg::ref_ptr<osg::Geode> createVisIconGeode(float radius);
 

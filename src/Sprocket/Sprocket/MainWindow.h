@@ -21,7 +21,6 @@
 class QAction;
 
 namespace Ui { class MainWindow; }
-namespace skybolt { class VisEntityIcons; }
 
 struct MainWindowConfig
 {

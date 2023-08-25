@@ -42,12 +42,24 @@ void Polyline::setPoints(const osg::ref_ptr<osg::Vec3Array>& points)
 		mGeode->addDrawable(mGeometry);
 
 		// Add points to geometry
-		osg::ref_ptr<osg::Vec4Array> color = new osg::Vec4Array;
-		color->push_back(osg::Vec4(0.0, 1.0, 0.0, 1.0));
-		mGeometry->setColorArray(color);
+		mGeometry->setVertexArray(points);
+
+		osg::ref_ptr<osg::Vec4Array> colorArray = new osg::Vec4Array;
+		colorArray->push_back(mColor);
+		mGeometry->setColorArray(colorArray);
 		mGeometry->setColorBinding(osg::Geometry::BIND_OVERALL);
 
-		mGeometry->setVertexArray(points);
 		mGeometry->addPrimitiveSet(new osg::DrawArrays(GL_LINE_STRIP, 0, points->size()));
+	}
+}
+
+void Polyline::setColor(const osg::Vec4f& color)
+{
+	mColor = color;
+	if (mGeometry)
+	{
+		osg::ref_ptr<osg::Vec4Array> colorArray = new osg::Vec4Array;
+		colorArray->push_back(mColor);
+		mGeometry->setColorArray(colorArray);
 	}
 }

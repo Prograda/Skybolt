@@ -26,9 +26,12 @@ public:
 
 	void setPoints(const osg::ref_ptr<osg::Vec3Array>& points = nullptr);
 
+	void setColor(const osg::Vec4f& color);
+
 private:
 	osg::Geometry* mGeometry;
 	osg::Geode* mGeode;
+	osg::Vec4f mColor = osg::Vec4f(0,1,0,1);
 };
 
 } // namespace vis
