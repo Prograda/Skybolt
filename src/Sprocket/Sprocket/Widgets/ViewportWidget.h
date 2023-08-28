@@ -57,7 +57,7 @@ public:
 
 	QMenu* addVisibilityFilterableSubMenu(const QString& text, const skybolt::EntityVisibilityPredicateSetter& setter) const;
 
-	OsgWidget* getViewportCanvas() const { return mOsgWidget; }
+	QWidget* getViewportCanvas() const { return mOsgWidget; }
 	int getViewportWidth() const;
 	int getViewportHeight() const;
 	glm::dmat4 calcCurrentViewProjTransform() const;
@@ -87,12 +87,13 @@ private:
 
 private:
 	skybolt::EngineRoot* mEngineRoot;
+	skybolt::vis::VisRootPtr mVisRoot;
 	ViewportInputSystemPtr mViewportInput;
 	ScenarioSelectionModel* mSelectionModel;
 	std::vector<DefaultContextActionPtr> mContextActions;
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> mViewport;
 	QMenu* mFilterMenu;
-	OsgWidget* mOsgWidget;
+	QWidget* mOsgWidget;
 	QToolBar* mToolBar;
 	
 	std::multimap<int, ViewportMouseEventHandlerPtr> mMouseEventHandlers; //!< Key is priority, lower values executed first
@@ -101,6 +102,7 @@ private:
 	class CameraControllerWidget* mCameraControllerWidget;
 	skybolt::sim::Entity* mCurrentSimCamera = nullptr;
 	boost::signals2::scoped_connection mViewportCameraConnection;
+	bool mInputActive = false;
 
 	ScenarioObjectPicker mScenarioObjectPicker;
 };

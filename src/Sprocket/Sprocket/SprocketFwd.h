@@ -13,7 +13,7 @@ class EditorPlugin;
 class EntityChooserDialogFactory;
 struct EditorPluginConfig;
 class JsonProjectSerializable;
-class OsgWidget;
+class OsgWindow;
 class PropertyEditor;
 class PropertiesModel;
 struct QtProperty;

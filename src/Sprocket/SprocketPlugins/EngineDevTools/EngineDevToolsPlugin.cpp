@@ -6,7 +6,6 @@
 
 #include <Sprocket/EditorPlugin.h>
 #include <Sprocket/QtUtil/QtMenuUtil.h>
-#include <Sprocket/Viewport/OsgWidget.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltSim/System/System.h>

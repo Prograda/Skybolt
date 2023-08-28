@@ -9,19 +9,16 @@
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltVis/SkyboltVisFwd.h>
 
-#include <QOpenGLWidget>
+#include <QWindow>
 #include <osg/Camera>
 
-#define CONVERT_TO_SRGB_IN_SHADER // TODO: get rid of this when Qt implements this for windows (currently only implemented for XCB)
-
-class OsgWidget : public QOpenGLWidget
+class OsgWindow : public QWindow
 {
 	Q_OBJECT
 public:
-	OsgWidget(const skybolt::vis::VisRootPtr& visRoot, QWidget* parent = 0);
-	~OsgWidget() override;
+	OsgWindow(const skybolt::vis::VisRootPtr& visRoot);
+	~OsgWindow() override;
 
-	skybolt::vis::VisRoot* getVisRoot() const;
 	skybolt::vis::Window* getWindow() const;
 
 signals:
@@ -30,17 +27,14 @@ signals:
 	void mouseMoved(const QPointF& position, Qt::MouseButtons buttons);
 
 protected:
-	void initializeGL() override;
-	void resizeGL(int width, int height) override;
-	void paintGL() override;
-
 	void mousePressEvent(QMouseEvent* event) override;
 	void mouseReleaseEvent(QMouseEvent* event) override;
 	void mouseMoveEvent(QMouseEvent* event) override;
 	void keyPressEvent(QKeyEvent* event) override;
+	bool event(QEvent* event);
 
 private:
 	skybolt::vis::VisRootPtr mVisRoot;
-	std::shared_ptr<skybolt::vis::EmbeddedWindow> mWindow;
+	std::shared_ptr<class OsgViewWindow> mWindow;
 	osg::ref_ptr<osg::Camera::DrawCallback> mDrawCallback;
 };

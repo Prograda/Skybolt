@@ -28,7 +28,7 @@ static QString specializeImageSequenceFilenameTemplate(QString str, int frameNum
 
 void showCaptureImageSequenceDialog(const FrameImageWriter& frameImageWriter, const QString& defaultSequenceName, QWidget* parent)
 {
-	auto filenameTemplate = createQtProperty("Filename", "Video/" + defaultSequenceName + "/" + defaultSequenceName + ".####.jpg");
+	auto filenameTemplate = createQtProperty("Filename", "Video/" + defaultSequenceName + "/" + defaultSequenceName + ".####.png");
 	auto startTime = createQtProperty("Start Time", 0.0);
 	auto endTime = createQtProperty("End Time", 1.0);
 	auto frameRate = createQtProperty("Frame Rate", 30.0);

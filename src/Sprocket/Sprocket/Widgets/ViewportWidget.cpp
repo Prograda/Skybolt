@@ -14,7 +14,7 @@
 #include "Sprocket/Scenario/ScenarioSelectionModel.h"
 #include "Sprocket/QtUtil/QtDialogUtil.h"
 #include "Sprocket/Viewport/ViewportPropertiesModel.h"
-#include "Sprocket/Viewport/OsgWidget.h"
+#include "Sprocket/Viewport/OsgWindow.h"
 #include "Sprocket/Viewport/PlanetPointPicker.h"
 #include "Sprocket/Viewport/ScreenTransformUtil.h"
 #include "Sprocket/Widgets/CameraControllerWidget.h"
@@ -34,6 +34,7 @@
 #include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/System/SystemRegistry.h>
 #include <SkyboltVis/Scene.h>
+#include <SkyboltVis/VisRoot.h>
 #include <SkyboltVis/RenderOperation/DefaultRenderCameraViewport.h>
 #include <SkyboltVis/Window/CaptureScreenshot.h>
 #include <SkyboltVis/Window/Window.h>
@@ -49,6 +50,7 @@ using namespace skybolt;
 
 ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	mEngineRoot(config.engineRoot),
+	mVisRoot(config.visRoot),
 	mViewportInput(config.viewportInput),
 	mSelectionModel(config.selectionModel),
 	mScenarioObjectPicker(config.scenarioObjectPicker),
@@ -57,12 +59,12 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	QWidget(config.parent)
 {
 	assert(mEngineRoot);
+	assert(mVisRoot);
 	assert(mViewportInput);
 	assert(mSelectionModel);
 	assert(mScenarioObjectPicker);
 
-	mOsgWidget = new OsgWidget(config.visRoot, this);
-	mOsgWidget->setMouseTracking(true);
+	auto mOsgWindow = new OsgWindow(config.visRoot);
 
 	mToolBar = createViewportToolBar(config.projectFilenameGetter);
 
@@ -74,11 +76,12 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 		c.cloudRenderingParams = getCloudRenderingParams(mEngineRoot->engineSettings);
 		return c;
 	}());
-	mOsgWidget->getWindow()->getRenderOperationSequence().addOperation(mViewport);
+	mOsgWindow->getWindow()->getRenderOperationSequence().addOperation(mViewport);
 
-	mOsgWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+	mOsgWidget = QWidget::createWindowContainer(mOsgWindow, this);
 
-	connect(mOsgWidget, &OsgWidget::mousePressed, this, [this](const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {
+	connect(mOsgWindow, &OsgWindow::mousePressed, this, [this](const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {
+		mInputActive = true;
 		for (const auto& [priority, handler] : mMouseEventHandlers)
 		{
 			if (handler->mousePressed(position, button, modifiers))
@@ -88,7 +91,8 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 		}
 	});
 
-	connect(mOsgWidget, &OsgWidget::mouseReleased, this, [this](const QPointF& position, Qt::MouseButton button) {
+	connect(mOsgWindow, &OsgWindow::mouseReleased, this, [this](const QPointF& position, Qt::MouseButton button) {
+		mInputActive = false;
 		for (const auto& [priority, handler] : mMouseEventHandlers)
 		{
 			if (handler->mouseReleased(position, button))
@@ -102,7 +106,7 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 		}
 	});
 
-	connect(mOsgWidget, &OsgWidget::mouseMoved, this, [this](const QPointF& position, Qt::MouseButtons buttons) {
+	connect(mOsgWindow, &OsgWindow::mouseMoved, this, [this](const QPointF& position, Qt::MouseButtons buttons) {
 		for (const auto& [priority, handler] : mMouseEventHandlers)
 		{
 			if (handler->mouseMoved(position, buttons))
@@ -116,6 +120,7 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	{
 		QBoxLayout* layout = new QVBoxLayout();
 		layout->setMargin(0);
+		layout->setSpacing(0);
 		setLayout(layout);
 
 		layout->addWidget(mToolBar);
@@ -123,7 +128,7 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	}
 
 	mViewportCameraConnection = mViewportInput->cameraInputGenerated.connect([this] (const skybolt::sim::CameraController::Input& input) {
-		if (mCurrentSimCamera)
+		if (mCurrentSimCamera && mInputActive)
 		{
 			if (auto controller = mCurrentSimCamera->getFirstComponent<sim::CameraControllerComponent>(); controller)
 			{
@@ -140,7 +145,6 @@ ViewportWidget::~ViewportWidget() = default;
 
 void ViewportWidget::update()
 {
-	mOsgWidget->update(); // TODO only redraw if something changed
 	configure(*mViewportInput, getViewportWidth(), mEngineRoot->engineSettings);
 
 	auto simVisSystem = sim::findSystem<SimVisSystem>(*mEngineRoot->systemRegistry);
@@ -166,7 +170,9 @@ void ViewportWidget::captureImage(const std::filesystem::path& baseFilename)
 
 	showCaptureImageSequenceDialog([=](double time, const QString& filename) {
 			mEngineRoot->scenario->timeSource.setTime(time);
-			update();
+
+			mVisRoot->render();
+
 			bool fullyLoadEachFrameBeforeProgressing = false;
 			if (fullyLoadEachFrameBeforeProgressing)
 			{
@@ -174,11 +180,10 @@ void ViewportWidget::captureImage(const std::filesystem::path& baseFilename)
 				{
 					using namespace std::chrono_literals;
 					std::this_thread::sleep_for(1ms);
-					mOsgWidget->update();
+					mVisRoot->render();
 				}
 			}
-			QImage image = mOsgWidget->grabFramebuffer();
-			image.save(filename);
+			vis::captureScreenshot(*mVisRoot, filename.toStdString());
 		}, defaultSequenceName, this);
 
 	mOsgWidget->setMinimumSize(1, 1);

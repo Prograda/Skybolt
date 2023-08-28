@@ -125,6 +125,7 @@ ScenarioObjectsEditorWidget::ScenarioObjectsEditorWidget(const ScenarioObjectsEd
 
 	auto layout = new QVBoxLayout(this);
 	layout->setMargin(0);
+	layout->setSpacing(0);
 	setLayout(layout);
 
 	QToolBar* toolbar = new QToolBar(this);

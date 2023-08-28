@@ -22,7 +22,6 @@
 
 #include <boost/dll/import.hpp>
 
-class OsgWidget;
 class QMainWindow;
 
 struct UiController

@@ -84,6 +84,7 @@ osg::ref_ptr<RenderTarget> createDefaultRenderTarget()
 	camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 	camera->setCullingMode(osg::CullSettings::VIEW_FRUSTUM_SIDES_CULLING);
 	camera->setClearColor(osg::Vec4(0, 0, 0, 0));
+	camera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	return new RenderTarget(camera);
 }

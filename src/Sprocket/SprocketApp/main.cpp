@@ -84,6 +84,9 @@ public:
 		engineRoot->systemRegistry->push_back(viewportInputSystem);
 
 		vis::VisRootPtr visRoot = createVisRoot(*engineRoot);
+		QObject::connect(mMainWindow.get(), &MainWindow::updated, [=] {
+			visRoot->render();
+		});
 
 		{
 			EditorPluginConfig config;
