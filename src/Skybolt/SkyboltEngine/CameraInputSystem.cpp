@@ -110,7 +110,7 @@ void connectToCamera(CameraInputSystem& system, const sim::EntityPtr& camera)
 	});
 }
 
-void configure(CameraInputSystem& system, int screenWidthPixels, const nlohmann::json& engineSettings)
+void configure(CameraInputSystem& system, int screenHeightPixels, const nlohmann::json& engineSettings)
 {
 	float mouseSensitivity = engineSettings.at("mouse").at("sensitivity");
 	if (mouseSensitivity <= 0)
@@ -119,7 +119,7 @@ void configure(CameraInputSystem& system, int screenWidthPixels, const nlohmann:
 		mouseSensitivity = 1.f;
 	}
 
-	float rate = mouseSensitivity / screenWidthPixels;
+	float rate = mouseSensitivity / screenHeightPixels;
 	system.setCameraRotationAnglePerMousePixel(rate);
 }
 

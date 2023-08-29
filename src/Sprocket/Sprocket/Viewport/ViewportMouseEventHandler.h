@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Sprocket/SprocketFwd.h"
 #include <QMouseEvent>
 
 class ViewportMouseEventHandler
@@ -14,7 +15,7 @@ public:
 	virtual ~ViewportMouseEventHandler() = default;
 	
 	//! @return true if event was handled
-	virtual bool mousePressed(const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) { return false; }
-	virtual bool mouseReleased(const QPointF& position, Qt::MouseButton button) { return false; }
-	virtual bool mouseMoved(const QPointF& position, Qt::MouseButtons buttons) { return false; }
+	virtual bool mousePressed(ViewportWidget& widget, const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) { return false; }
+	virtual bool mouseReleased(ViewportWidget& widget, const QPointF& position, Qt::MouseButton button) { return false; }
+	virtual bool mouseMoved(ViewportWidget& widget, const QPointF& position, Qt::MouseButtons buttons) { return false; }
 };

@@ -10,12 +10,14 @@
 #include "Sprocket/Scenario/ScenarioObject.h"
 #include "Sprocket/Scenario/ScenarioObjectPredicate.h"
 #include "Sprocket/SprocketFwd.h"
+#include <SkyboltEngine/SkyboltEngineFwd.h>
+
+#include <boost/signals2/connection.hpp>
 
 struct DefaultViewportMouseEventHandlerConfig
 {
-	ViewportWidget* viewportWidget;
+	skybolt::EngineRoot* engineRoot;
 	ViewportInputSystemPtr viewportInput;
-	ScenarioObjectRegistryPtr entityObjectRegistry;
 	ScenarioSelectionModel* scenarioSelectionModel;
 	ScenarioObjectPredicate selectionPredicate;
 };
@@ -26,17 +28,18 @@ public:
 	DefaultViewportMouseEventHandler(DefaultViewportMouseEventHandlerConfig config);
 	~DefaultViewportMouseEventHandler() override = default;
 	
-	bool mousePressed(const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) override;
-	bool mouseReleased(const QPointF& position, Qt::MouseButton button) override;
-	bool mouseMoved(const QPointF& position, Qt::MouseButtons buttons) override;
+	bool mousePressed(ViewportWidget& widget, const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) override;
+	bool mouseReleased(ViewportWidget& widget, const QPointF& position, Qt::MouseButton button) override;
+	bool mouseMoved(ViewportWidget& widget, const QPointF& position, Qt::MouseButtons buttons) override;
 
 protected:
 	virtual void selectItems(const std::vector<ScenarioObjectPtr>& objects);
 
 protected:
-	ViewportWidget* mViewportWidget;
+	skybolt::EngineRoot* mEngineRoot;
 	ViewportInputSystemPtr mViewportInput;
-	ScenarioObjectRegistryPtr mEntityObjectRegistry;
 	ScenarioSelectionModel* mSelectionModel;
 	ScenarioObjectPredicate mSelectionPredicate;
+
+	boost::signals2::scoped_connection mViewportCameraConnection;
 };

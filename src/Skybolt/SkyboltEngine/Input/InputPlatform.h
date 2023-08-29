@@ -206,7 +206,8 @@ struct MouseEvent : public Event
 		Button4,
 		Button5,
 		Button6,
-		Button7
+		Button7,
+		ButtonCount
 	};
 
 	Type type;

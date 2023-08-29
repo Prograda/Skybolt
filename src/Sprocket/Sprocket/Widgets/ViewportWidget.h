@@ -18,7 +18,6 @@
 #include <SkyboltSim/World.h>
 #include <SkyboltVis/RenderOperation/RenderCameraViewport.h>
 
-#include <boost/signals2/connection.hpp>
 #include <filesystem>
 #include <QWidget>
 
@@ -28,9 +27,9 @@ class QToolBar;
 
 struct ViewportWidgetConfig
 {
+	QString viewportName = "DefaultViewport";
 	skybolt::EngineRoot* engineRoot;
 	skybolt::vis::VisRootPtr visRoot;
-	ViewportInputSystemPtr viewportInput;
 	ScenarioSelectionModel* selectionModel;
 	ScenarioObjectPicker scenarioObjectPicker;
 	std::vector<DefaultContextActionPtr> contextActions;
@@ -101,8 +100,6 @@ private:
 	QComboBox* mCameraCombo;
 	class CameraControllerWidget* mCameraControllerWidget;
 	skybolt::sim::Entity* mCurrentSimCamera = nullptr;
-	boost::signals2::scoped_connection mViewportCameraConnection;
-	bool mInputActive = false;
 
 	ScenarioObjectPicker mScenarioObjectPicker;
 };

@@ -60,6 +60,6 @@ CameraInputAxes createDefaultCameraInputAxes(const skybolt::InputPlatform& input
 
 void connectToCamera(CameraInputSystem& system, const sim::EntityPtr& camera);
 
-void configure(CameraInputSystem& system, int screenWidthPixels, const nlohmann::json& engineSettings);
+void configure(CameraInputSystem& system, int screenHeightPixels, const nlohmann::json& engineSettings);
 
 } // skybolt

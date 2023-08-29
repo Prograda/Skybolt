@@ -11,7 +11,7 @@
 #include <Sprocket/MainWindowUtil.h>
 #include <Sprocket/ContextAction/CreateContextActions.h>
 #include <Sprocket/Input/ViewportInputSystem.h>
-#include <Sprocket/Input/InputPlatformOis.h>
+#include <Sprocket/Input/InputPlatformQt.h>
 #include <Sprocket/Scenario/EntityObjectType.h>
 #include <Sprocket/Viewport/ScenarioObjectPicker.h>
 #include <Sprocket/Scenario/ScenarioSelectionModel.h>
@@ -76,7 +76,7 @@ public:
 
 		auto selectionModel = new ScenarioSelectionModel(mMainWindow.get());
 
-		auto inputPlatform = std::make_shared<InputPlatformOis>(std::to_string(size_t(mMainWindow->winId())), 800, 600); // TODO: get actual dimensions, which are currently only needed on Linux
+		auto inputPlatform = std::make_shared<InputPlatformQt>();
 		CameraInputAxes axes = createDefaultCameraInputAxes(*inputPlatform);
 		engineRoot->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, toValuesVector(axes)));
 
@@ -130,15 +130,21 @@ public:
 			}());
 			mMainWindow->addToolWindow("Explorer", widget);
 		}
-		{
-			auto entityObjectRegistry = findOptional(scenarioObjectTypes, std::type_index(typeid(EntityObject)));
-			assert(entityObjectRegistry);
 
+		auto viewportMouseEventHandler = std::make_shared<DefaultViewportMouseEventHandler>([&] {
+				DefaultViewportMouseEventHandlerConfig c;
+				c.engineRoot = engineRoot.get();
+				c.viewportInput = viewportInputSystem;
+				c.scenarioSelectionModel = selectionModel;
+				c.selectionPredicate = ScenarioObjectPredicateAlways;
+				return c;
+			}());
+
+		{
 			auto widget = new ViewportWidget([&] {
 				ViewportWidgetConfig c;
 				c.engineRoot = engineRoot.get();
 				c.visRoot = visRoot;
-				c.viewportInput = viewportInputSystem;
 				c.selectionModel = selectionModel;
 				c.scenarioObjectPicker = createScenarioObjectPicker(scenarioObjectTypes);
 				c.contextActions = createContextActions(*engineRoot);
@@ -146,15 +152,7 @@ public:
 				c.parent = mMainWindow.get();
 				return c;
 			}());
-			widget->addMouseEventHandler(std::make_shared<DefaultViewportMouseEventHandler>([&] {
-				DefaultViewportMouseEventHandlerConfig c;
-				c.viewportWidget = widget;
-				c.viewportInput = viewportInputSystem;
-				c.entityObjectRegistry = (*entityObjectRegistry)->objectRegistry;
-				c.scenarioSelectionModel = selectionModel;
-				c.selectionPredicate = ScenarioObjectPredicateAlways;
-				return c;
-			}()));
+			widget->addMouseEventHandler(viewportMouseEventHandler);
 
 			for (const auto& layer : getEntityVisibilityLayers(mEditorPlugins))
 			{

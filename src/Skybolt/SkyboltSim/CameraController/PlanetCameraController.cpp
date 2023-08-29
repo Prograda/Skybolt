@@ -68,8 +68,8 @@ void PlanetCameraController::update(float dt)
 		float fovHeightAtPlanetSurfaceInMeters = 2.0f * std::tan(mParams.fovY * 0.5f) * distFromSurface;
 		float planetSurfaceVisibleVerticalArcInRadians = fovHeightAtPlanetSurfaceInMeters / planet->radius;
 
-		mLatLon.lon -= planetSurfaceVisibleVerticalArcInRadians * yawDelta / mParams.fovY;
-		mLatLon.lat -= planetSurfaceVisibleVerticalArcInRadians * pitchDelta / mParams.fovY;
+		mLatLon.lon -= planetSurfaceVisibleVerticalArcInRadians * yawDelta;
+		mLatLon.lat -= planetSurfaceVisibleVerticalArcInRadians * pitchDelta;
 		mLatLon.lat = skybolt::math::clamp<double>(mLatLon.lat, -skybolt::math::halfPiD(), skybolt::math::halfPiD());
 	}
 

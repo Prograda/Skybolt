@@ -309,12 +309,12 @@ void MainWindow::loadProject(const nlohmann::json& json)
 		readScenario(*mEngineRoot->scenario, child);
 	});
 
-	ifChildExists(json, "windowGeometry", [this] (const nlohmann::json& child) {
+	ifChildExists(json, "mainWindowGeometry", [this] (const nlohmann::json& child) {
 		QString str = QString::fromStdString(child.get<std::string>());
 		restoreGeometry(QByteArray::fromBase64(str.toUtf8()));
 	});
 
-	ifChildExists(json, "windows", [this] (const nlohmann::json& child) {
+	ifChildExists(json, "windowLayout", [this] (const nlohmann::json& child) {
 		QString str = QString::fromStdString(child.get<std::string>());
 		mToolWindowManager->restoreState(toVariantMap(QByteArray::fromBase64(str.toUtf8())));
 	});
@@ -338,8 +338,8 @@ void MainWindow::save(QFile& file)
 void MainWindow::saveProject(nlohmann::json& json) const
 {
 	json["scenario"] = writeScenario(*mEngineRoot->scenario);
-	json["windows"] = toByteArray(mToolWindowManager->saveState()).toBase64().toStdString();
-	json["windowGeometry"] = saveGeometry().toBase64().toStdString();
+	json["windowLayout"] = toByteArray(mToolWindowManager->saveState()).toBase64().toStdString();
+	json["mainWindowGeometry"] = saveGeometry().toBase64().toStdString();
 	json["entities"] = writeEntities(mEngineRoot->scenario->world);
 
 	emit projectSaved(json);
@@ -412,6 +412,8 @@ void MainWindow::editEngineSettings()
 	{
 		settingsFilename = editor.getSettingsFilename();
 		mSettings.setValue(getSettingsFilenameKey(), settingsFilename);
+
+		mEngineRoot->engineSettings = editor.getJson();
 		writeJsonFile(editor.getJson(), settingsFilename.toStdString());
 	}
 }

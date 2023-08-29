@@ -8,7 +8,6 @@
 #include "CaptureImageDailog.h"
 #include "Sprocket/Entity/EntityListModel.h"
 #include "Sprocket/Icon/SprocketIcons.h"
-#include "Sprocket/Input/ViewportInputSystem.h"
 #include "Sprocket/Property/PropertyEditor.h"
 #include "Sprocket/Scenario/EntityObjectType.h"
 #include "Sprocket/Scenario/ScenarioSelectionModel.h"
@@ -51,7 +50,6 @@ using namespace skybolt;
 ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	mEngineRoot(config.engineRoot),
 	mVisRoot(config.visRoot),
-	mViewportInput(config.viewportInput),
 	mSelectionModel(config.selectionModel),
 	mScenarioObjectPicker(config.scenarioObjectPicker),
 	mContextActions(config.contextActions),
@@ -60,9 +58,10 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 {
 	assert(mEngineRoot);
 	assert(mVisRoot);
-	assert(mViewportInput);
 	assert(mSelectionModel);
 	assert(mScenarioObjectPicker);
+
+	setObjectName(config.viewportName);
 
 	auto mOsgWindow = new OsgWindow(config.visRoot);
 
@@ -81,10 +80,9 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	mOsgWidget = QWidget::createWindowContainer(mOsgWindow, this);
 
 	connect(mOsgWindow, &OsgWindow::mousePressed, this, [this](const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {
-		mInputActive = true;
 		for (const auto& [priority, handler] : mMouseEventHandlers)
 		{
-			if (handler->mousePressed(position, button, modifiers))
+			if (handler->mousePressed(*this, position, button, modifiers))
 			{
 				return;
 			}
@@ -92,10 +90,9 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	});
 
 	connect(mOsgWindow, &OsgWindow::mouseReleased, this, [this](const QPointF& position, Qt::MouseButton button) {
-		mInputActive = false;
 		for (const auto& [priority, handler] : mMouseEventHandlers)
 		{
-			if (handler->mouseReleased(position, button))
+			if (handler->mouseReleased(*this, position, button))
 			{
 				return;
 			}
@@ -109,7 +106,7 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	connect(mOsgWindow, &OsgWindow::mouseMoved, this, [this](const QPointF& position, Qt::MouseButtons buttons) {
 		for (const auto& [priority, handler] : mMouseEventHandlers)
 		{
-			if (handler->mouseMoved(position, buttons))
+			if (handler->mouseMoved(*this, position, buttons))
 			{
 				return;
 			}
@@ -126,27 +123,12 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 		layout->addWidget(mToolBar);
 		layout->addWidget(mOsgWidget);
 	}
-
-	mViewportCameraConnection = mViewportInput->cameraInputGenerated.connect([this] (const skybolt::sim::CameraController::Input& input) {
-		if (mCurrentSimCamera && mInputActive)
-		{
-			if (auto controller = mCurrentSimCamera->getFirstComponent<sim::CameraControllerComponent>(); controller)
-			{
-				if (controller->getSelectedController())
-				{
-					controller->getSelectedController()->setInput(input);
-				}
-			}
-		}
-	});
 }
 
 ViewportWidget::~ViewportWidget() = default;
 
 void ViewportWidget::update()
 {
-	configure(*mViewportInput, getViewportWidth(), mEngineRoot->engineSettings);
-
 	auto simVisSystem = sim::findSystem<SimVisSystem>(*mEngineRoot->systemRegistry);
 	assert(simVisSystem);
 	const GeocentricToNedConverter& coordinateConverter = simVisSystem->getCoordinateConverter();
@@ -388,23 +370,27 @@ static sim::Vector3 toSimVector3(const osg::Vec3f& v)
 
 void ViewportWidget::readProject(const nlohmann::json& projectJson)
 {
-	if (auto i = projectJson.find("viewport"); i != projectJson.end())
+	if (auto i = projectJson.find("viewports"); i != projectJson.end())
 	{
-		const nlohmann::json& child = i.value();
+		const nlohmann::json& viewportsChild = i.value();
+		if (auto i = viewportsChild.find(objectName().toStdString()); i != viewportsChild.end())
 		{
-			auto it = child.find("camera");
-			if (it != child.end())
+			const nlohmann::json& viewportJson = i.value();
 			{
-				std::string name = it.value();
-				sim::Entity* camera = mEngineRoot->scenario->world.findObjectByName(name);
-				setCamera(camera);
+				auto it = viewportJson.find("camera");
+				if (it != viewportJson.end())
+				{
+					std::string name = it.value();
+					sim::Entity* camera = mEngineRoot->scenario->world.findObjectByName(name);
+					setCamera(camera);
+				}
 			}
-		}
-		{
-			auto it = child.find("ambientLight");
-			if (it != child.end())
 			{
-				mEngineRoot->scene->setAmbientLightColor(toOsgVec3f(sim::readVector3(it.value())));
+				auto it = viewportJson.find("ambientLight");
+				if (it != viewportJson.end())
+				{
+					mEngineRoot->scene->setAmbientLightColor(toOsgVec3f(sim::readVector3(it.value())));
+				}
 			}
 		}
 	}
@@ -418,9 +404,10 @@ void ViewportWidget::writeProject(nlohmann::json& json) const
 {
 	if (mCurrentSimCamera)
 	{
-		nlohmann::json& child = json["viewport"];
-		child["camera"] = getName(*mCurrentSimCamera);
-		child["ambientLight"] = sim::writeJson(toSimVector3(mEngineRoot->scene->getAmbientLightColor()));
+		nlohmann::json& viewportsJson = json["viewports"];
+		nlohmann::json& viewportJson = viewportsJson[objectName().toStdString()];
+		viewportJson["camera"] = getName(*mCurrentSimCamera);
+		viewportJson["ambientLight"] = sim::writeJson(toSimVector3(mEngineRoot->scene->getAmbientLightColor()));
 	}
 }
 
