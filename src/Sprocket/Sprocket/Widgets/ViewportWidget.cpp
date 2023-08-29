@@ -39,6 +39,7 @@
 #include <SkyboltVis/Window/Window.h>
 
 #include <osg/Texture2D>
+#include <QApplication>
 #include <QBoxLayout>
 #include <QComboBox>
 #include <QMenu>
@@ -63,7 +64,7 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 
 	setObjectName(config.viewportName);
 
-	auto mOsgWindow = new OsgWindow(config.visRoot);
+	mOsgWindow = new OsgWindow(config.visRoot);
 
 	mToolBar = createViewportToolBar(config.projectFilenameGetter);
 
@@ -76,7 +77,6 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 		return c;
 	}());
 	mOsgWindow->getWindow()->getRenderOperationSequence().addOperation(mViewport);
-
 	mOsgWidget = QWidget::createWindowContainer(mOsgWindow, this);
 
 	connect(mOsgWindow, &OsgWindow::mousePressed, this, [this](const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {
@@ -129,6 +129,11 @@ ViewportWidget::~ViewportWidget() = default;
 
 void ViewportWidget::update()
 {
+	// Apply the OsgWidget cursor to the OsgWindow, as the window doesn't inheret the wrapper widget's cursor automatically
+	Qt::CursorShape cursorShape = QApplication::overrideCursor() ? QApplication::overrideCursor()->shape() : mOsgWidget->cursor().shape();
+	mOsgWindow->setCursor(QCursor(cursorShape));
+
+	// Update scene origin
 	auto simVisSystem = sim::findSystem<SimVisSystem>(*mEngineRoot->systemRegistry);
 	assert(simVisSystem);
 	const GeocentricToNedConverter& coordinateConverter = simVisSystem->getCoordinateConverter();

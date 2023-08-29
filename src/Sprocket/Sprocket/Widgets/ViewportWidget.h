@@ -92,6 +92,7 @@ private:
 	std::vector<DefaultContextActionPtr> mContextActions;
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> mViewport;
 	QMenu* mFilterMenu;
+	OsgWindow* mOsgWindow;
 	QWidget* mOsgWidget;
 	QToolBar* mToolBar;
 	

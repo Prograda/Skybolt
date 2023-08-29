@@ -85,6 +85,9 @@ OsgWindow::OsgWindow(const VisRootPtr& visRoot) :
 
 	mWindow = std::make_shared<OsgViewWindow>(createView(width(), height(), HWND(winId())));
 	mVisRoot->addWindow(mWindow);
+
+	mWindow->getGraphicsWindow().useCursor(true);
+	mWindow->getGraphicsWindow().setCursor(osgViewer::GraphicsWindow::MouseCursor::InheritCursor); // Inherit the Qt cursor
 }
 
 OsgWindow::~OsgWindow() = default;
