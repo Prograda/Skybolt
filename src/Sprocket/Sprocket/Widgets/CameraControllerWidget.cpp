@@ -100,21 +100,21 @@ void CameraControllerWidget::setCamera(sim::Entity* camera)
 	}));
 
 	// Target combo
-	if (auto target = cameraController->getTarget())
-	{
-		mCameraTargetCombo->setCurrentText(QString::fromStdString(sim::getName(*target)));
-	}
+	const sim::EntityId& targetId = cameraController->getTargetId();
+	sim::Entity* target = mWorld->getEntityById(targetId);
+	mCameraTargetCombo->setCurrentText(QString::fromStdString(target ? sim::getName(*target) : ""));
 		
 	connect(mCameraTargetCombo, &QComboBox::currentTextChanged, [=](const QString& text)
 	{
-		sim::Entity* object = mWorld->findObjectByName(text.toStdString());
-		if (object)
+		sim::Entity* entity = mWorld->findObjectByName(text.toStdString());
+		if (entity)
 		{
-			cameraController->setTarget(object);
+			cameraController->setTargetId(entity->getId());
 		}
 	});
 
-	mControllerConnections.push_back(cameraController->targetChanged.connect([this](sim::Entity* target) {
+	mControllerConnections.push_back(cameraController->targetChanged.connect([this](const sim::EntityId& targetId) {
+		sim::Entity* target = mWorld->getEntityById(targetId);
 		mCameraTargetCombo->blockSignals(true);
 		mCameraTargetCombo->setCurrentText(target ? QString::fromStdString(sim::getName(*target)) : "");
 		mCameraTargetCombo->blockSignals(false);

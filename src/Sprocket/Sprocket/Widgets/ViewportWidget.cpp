@@ -293,21 +293,6 @@ void ViewportWidget::setCamera(sim::Entity* simCamera)
 	}
 }
 
-void ViewportWidget::setCameraTarget(sim::Entity* target)
-{
-	if (mCurrentSimCamera)
-	{
-		vis::CameraPtr visCamera = getFirstVisCamera(*mCurrentSimCamera);
-		if (auto controller = mCurrentSimCamera->getFirstComponent<sim::CameraControllerComponent>(); controller)
-		{
-			if (controller->getSelectedController())
-			{
-				controller->getSelectedController()->setTarget(target);
-			}
-		}
-	}
-}
-
 QToolBar* ViewportWidget::createViewportToolBar(const std::function<std::string()>& projectFilenameGetter)
 {
 	QToolBar* toolbar = new QToolBar(this);

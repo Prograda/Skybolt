@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "SkyboltSim/Reflection.h"
+
 namespace skybolt {
 namespace sim {
 
@@ -13,7 +15,19 @@ struct EntityId
 {
 	std::uint32_t applicationId;
 	std::uint32_t entityId;
+
+	bool operator()() const
+	{
+		return applicationId != 0 || entityId != 0;
+	}
 };
+
+SKYBOLT_REFLECT_INLINE(EntityId)
+{
+	rttr::registration::class_<EntityId>("EntityId")
+		.property("applicationId", &EntityId::applicationId)
+		.property("entityId", &EntityId::entityId);
+}
 
 // TODO: replace these operators with <=> after upgrading to c++20
 inline bool operator < (const EntityId& a, const EntityId& b)

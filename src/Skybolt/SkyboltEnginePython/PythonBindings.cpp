@@ -15,6 +15,7 @@
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/CameraController/CameraController.h>
 #include <SkyboltSim/CameraController/CameraControllerSelector.h>
+#include <SkyboltSim/CameraController/Targetable.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Components/OrbitComponent.h>
@@ -259,6 +260,10 @@ PYBIND11_MODULE(skybolt, m) {
 		.def(py::init<Quaternion>())
 		.def_readwrite("orientation", &LtpNedOrientation::orientation);
 
+	py::class_<EntityId, std::shared_ptr<EntityId>>(m, "EntityId")
+		.def_readwrite("applicationId", &EntityId::applicationId)
+		.def_readwrite("entityId", &EntityId::entityId);
+
 	py::class_<Component, std::shared_ptr<Component>>(m, "Component");
 
 	py::class_<OrbitComponent, std::shared_ptr<OrbitComponent>, Component>(m, "OrbitComponent")
@@ -284,18 +289,19 @@ PYBIND11_MODULE(skybolt, m) {
 	py::class_<CameraControllerSelector, std::shared_ptr<CameraControllerSelector>>(m, "CameraControllerSelector")
 		.def("selectController", &CameraControllerSelector::selectController)
 		.def("getSelectedControllerName", &CameraControllerSelector::getSelectedControllerName)
-		.def("setTarget", &CameraControllerSelector::setTarget);
+		.def("setTargetId", &CameraControllerSelector::setTargetId);
 
 	py::class_<CameraControllerComponent, std::shared_ptr<CameraControllerComponent>, Component, CameraControllerSelector>(m, "CameraControllerComponent");
 
 	py::class_<ProceduralLifetimeComponent, std::shared_ptr<ProceduralLifetimeComponent>, Component>(m, "ProceduralLifetimeComponent")
 		.def(py::init());
 
-	py::class_<CameraController>(m, "CameraController")
-		.def("getTarget", &CameraController::getTarget)
-		.def("setTarget", &CameraController::setTarget);
+	py::class_<Targetable>(m, "Targetable")
+		.def("getTargetId", &Targetable::getTargetId)
+		.def("setTargetId", &Targetable::setTargetId);
 
 	py::class_<Entity, std::shared_ptr<Entity>>(m, "Entity")
+		.def("getId", &Entity::getId)
 		.def("getName", [](Entity* entity) { return getName(*entity); })
 		.def("getPosition", [](Entity* entity) {
 			return *getPosition(*entity);

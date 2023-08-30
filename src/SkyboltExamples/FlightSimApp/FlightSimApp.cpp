@@ -242,11 +242,11 @@ int main(int argc, char *argv[])
 		// Configure systems for player's aircraft
 		entityInputSystem->setEntity(aircraft);
 		hudSystem->setEntity(aircraft.get());
-		cameraControllerComponent->setTarget(aircraft.get());
+		cameraControllerComponent->setTargetId(aircraft->getId());
 
 		if (cameraControllerComponent2)
 		{
-			cameraControllerComponent2->setTarget(aircraft.get());
+			cameraControllerComponent2->setTargetId(aircraft->getId());
 		}
 
 		// Set time of day

@@ -6,6 +6,7 @@
 
 
 #include "CameraControllerSelector.h"
+#include "Targetable.h"
 
 #include <assert.h>
 
@@ -47,18 +48,24 @@ void CameraControllerSelector::selectController(const std::string& name)
 void CameraControllerSelector::addController(const std::string& name, const CameraControllerPtr& controller)
 {
 	mControllers[name] = controller;
-	controller->setTarget(mTarget);
+	if (auto targetable = dynamic_cast<Targetable*>(controller.get()); targetable)
+	{
+		targetable->setTargetId(mTargetId);
+	}
 }
 
-void CameraControllerSelector::setTarget(Entity* target)
+void CameraControllerSelector::setTargetId(const EntityId& targetId)
 {
-	if (target != getTarget())
+	if (targetId != getTargetId())
 	{
 		for (const auto& item : mControllers)
 		{
-			item.second->setTarget(target);
+			if (auto targetable = dynamic_cast<Targetable*>(item.second.get()); targetable)
+			{
+				targetable->setTargetId(targetId);
+			}
 		}
 
-		targetChanged(target);
+		targetChanged(targetId);
 	}
 }

@@ -13,7 +13,7 @@
 namespace skybolt {
 namespace sim {
 
-class CameraController : public EntityListener
+class CameraController
 {
 	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION();
 public:
@@ -40,18 +40,11 @@ public:
 	virtual void update(float dt) {}
 	virtual void setInput(const Input& input) {}
 
-	virtual Entity* getTarget() const { return mTarget; }
-	virtual void setTarget(Entity* target);
-
 	virtual void setActive(bool active) { mActive = active; }
 
-private:
-	void onDestroy(Entity* entity) override;
-
 protected:
-	sim::Node* mNodeComponent;
+	Node* mNodeComponent;
 	CameraComponent* mCameraComponent;
-	Entity* mTarget = nullptr;
 	bool mActive = false;
 };
 

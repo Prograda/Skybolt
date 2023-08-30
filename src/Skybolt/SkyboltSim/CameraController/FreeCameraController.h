@@ -21,7 +21,7 @@ public:
 		float fovY;
 	};
 
-	FreeCameraController(sim::Entity* camera, const Params& params);
+	FreeCameraController(Entity* camera, const Params& params);
 
 	void update(float dt) override;
 	void setInput(const Input& input) override { mInput = input; }

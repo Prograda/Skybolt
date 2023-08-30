@@ -9,10 +9,8 @@
 #include "SkyboltSim/CollisionGroupMasks.h"
 #include "SkyboltSim/Components/CameraComponent.h"
 #include "SkyboltSim/Components/Node.h"
-#include "SkyboltSim/World.h"
 
-using namespace skybolt;
-using namespace skybolt::sim;
+namespace skybolt::sim {
 
 CameraController::CameraController(Entity* camera)
 {
@@ -23,31 +21,6 @@ CameraController::CameraController(Entity* camera)
 
 CameraController::~CameraController()
 {
-	if (mTarget)
-	{
-		mTarget->removeListener(this);
-	}
 }
 
-void CameraController::setTarget(Entity* entity)
-{
-	if (mTarget != entity)
-	{
-		if (mTarget)
-		{
-			mTarget->removeListener(this);
-		}
-
-		if (entity)
-		{
-			entity->addListener(this);
-		}
-		mTarget = entity;
-	}
-}
-
-void CameraController::onDestroy(Entity* entity)
-{
-	assert(entity == mTarget);
-	setTarget(nullptr);
-}
+} // namespace skybolt::sim

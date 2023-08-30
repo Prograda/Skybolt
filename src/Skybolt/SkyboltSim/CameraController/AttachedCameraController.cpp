@@ -8,6 +8,7 @@
 #include "AttachedCameraController.h"
 #include "SkyboltSim/Components/AttachmentPointsComponent.h"
 #include "SkyboltSim/Entity.h"
+#include "SkyboltSim/World.h"
 #include "SkyboltSim/Components/CameraComponent.h"
 #include "SkyboltSim/Components/Node.h"
 #include <SkyboltCommon/MapUtility.h>
@@ -22,8 +23,9 @@ const float AttachedCameraController::msYawRate = 1.0f;
 const float AttachedCameraController::msPitchRate = 1.0f;
 const float AttachedCameraController::msZoomRate = 1.0f;
 
-AttachedCameraController::AttachedCameraController(sim::Entity* camera, const Params& params) :
+AttachedCameraController::AttachedCameraController(Entity* camera, World* world, const Params& params) :
 	CameraController(camera),
+	Targetable(world),
 	mParams(params)
 {
 	setZoom(0.5f);
@@ -43,19 +45,22 @@ void AttachedCameraController::update(float dt)
 	state.fovY = math::lerp(mParams.maxFovY, mParams.minFovY, mZoom);
 	state.nearClipDistance = 0.5;
 
-	if (mTarget && mAttachmentPoint)
+	if (mAttachmentPoint)
 	{
-		mNodeComponent->setPosition(calcAttachmentPointPosition(*mTarget, *mAttachmentPoint));
-		mNodeComponent->setOrientation(calcAttachmentPointOrientation(*mTarget, *mAttachmentPoint) * glm::angleAxis(mYaw, Vector3(0, 0, 1)) * glm::angleAxis(mPitch, Vector3(0, 1, 0)));
+		if (Entity* target = getTarget(); target)
+		{
+			mNodeComponent->setPosition(calcAttachmentPointPosition(*target, *mAttachmentPoint));
+			mNodeComponent->setOrientation(calcAttachmentPointOrientation(*target, *mAttachmentPoint) * glm::angleAxis(mYaw, Vector3(0, 0, 1)) * glm::angleAxis(mPitch, Vector3(0, 1, 0)));
+		}
 	}
 }
 
-void AttachedCameraController::setTarget(Entity* target)
+void AttachedCameraController::setTargetId(const EntityId& targetId)
 {
-	CameraController::setTarget(target);
+	Targetable::setTargetId(targetId);
 
 	mAttachmentPoint = nullptr;
-	if (target)
+	if (Entity* target = getTarget(); target)
 	{
 		auto points = target->getFirstComponent<AttachmentPointsComponent>();
 		if (points)

@@ -9,14 +9,16 @@
 
 #include "CameraController.h"
 #include "Pitchable.h"
+#include "Targetable.h"
 #include "Yawable.h"
 #include "Zoomable.h"
 
 namespace skybolt {
 namespace sim {
 
-class AttachedCameraController : public CameraController, public Pitchable, public Yawable, public Zoomable
+class AttachedCameraController : public CameraController, public Pitchable, public Targetable, public Yawable, public Zoomable
 {
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(CameraController, Pitchable, Targetable, Yawable, Zoomable);
 public:
 	struct Params
 	{
@@ -25,12 +27,14 @@ public:
 		std::string attachmentPointName;
 	};
 
-	AttachedCameraController(Entity* camera, const Params& params);
+	AttachedCameraController(Entity* camera, World* world, const Params& params);
 
 public: // CameraController interface
 	void update(float dt) override;
 	void setInput(const Input& input) override { mInput = input; }
-	void setTarget(Entity* target) override;
+
+public: // Targetable interface
+	void setTargetId(const EntityId& targetId) override;
 
 private:
 	Params mParams;

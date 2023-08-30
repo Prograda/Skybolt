@@ -54,7 +54,7 @@ static void createEntities(const EntityFactory& entityFactory, World& world, Cam
 	EntityPtr planet = entityFactory.createEntity("PlanetEarth");
 	world.addEntity(planet);
 
-	cameraControllerSelector.setTarget(planet.get());
+	cameraControllerSelector.setTargetId(planet->getId());
 }
 
 static osg::ref_ptr<HelpDisplayRenderOperation> createHelpDisplay()

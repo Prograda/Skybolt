@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <SkyboltCommon/Units.h>
+#include <SkyboltSim/Reflection.h>
+
 namespace skybolt {
 namespace sim {
 
@@ -24,7 +27,10 @@ protected:
 SKYBOLT_REFLECT_INLINE(Yawable)
 {
 	rttr::registration::class_<Yawable>("Yawable")
-		.property("pitch", &Yawable::getYaw, &Yawable::setYaw);
+		.property("yaw", &Yawable::getYaw, &Yawable::setYaw)
+		(    
+			rttr::metadata(PropertyMetadataType::Units, Units::Radians)
+		);
 }
 
 } // namespace sim

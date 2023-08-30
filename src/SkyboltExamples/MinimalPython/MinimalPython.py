@@ -24,7 +24,7 @@ earth = engine.entityFactory.createEntity("PlanetEarth")
 engine.world.addEntity(earth);
 
 component = camera.getFirstComponentOfType("CameraControllerComponent")
-component.setTarget(earth)
+component.setTargetId(earth.getId())
 component.selectController("Globe")
 
 sb.render(engine, visRoot)

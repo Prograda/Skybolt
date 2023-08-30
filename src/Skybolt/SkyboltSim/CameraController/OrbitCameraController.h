@@ -11,15 +11,16 @@
 #include "Pitchable.h"
 #include "Yawable.h"
 #include "Zoomable.h"
+#include "Targetable.h"
 
 #include <optional>
 
 namespace skybolt {
 namespace sim {
 
-class OrbitCameraController : public CameraController, public Pitchable, public Yawable, public Zoomable
+class OrbitCameraController : public CameraController, public Pitchable, public Targetable, public Yawable, public Zoomable
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(CameraController, Pitchable, Yawable, Zoomable);
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(CameraController, Pitchable, Targetable, Yawable, Zoomable);
 public:
 	struct Params
 	{
@@ -33,7 +34,7 @@ public:
 		Vector3 orientationLagTimeConstant = Vector3(0);
 	};
 
-	OrbitCameraController(Entity* camera, const Params& params);
+	OrbitCameraController(Entity* camera, World* world, const Params& params);
 
 	void setTargetOffset(const Vector3& offset) { mTargetOffset = offset; }
 	void setLagTimeConstant(float constant) { mLagTimeConstant = constant; }
@@ -44,7 +45,6 @@ public:
 	void updatePostDynamicsSubstep(TimeReal dtSubstep) override;
 	void update(float dt) override;
 	void setInput(const Input& input) override { mInput = input; }
-	void setTarget(Entity* target) override;
 
 private:
 	void resetFiltering();
@@ -54,7 +54,7 @@ private:
 	Vector3 mTargetPosition;
 	std::optional<Quaternion> mSmoothedTargetOrientation;
 	Vector3 mFilteredPlanetUp;
-	const Entity* mPrevTarget;
+	EntityId mPrevTargetId = nullEntityId();
 	Input mInput = Input::zero();
 	float mLagTimeConstant = 0;
 

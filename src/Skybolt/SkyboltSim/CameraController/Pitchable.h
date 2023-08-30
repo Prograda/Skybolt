@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <SkyboltCommon/Units.h>
 #include <SkyboltSim/Reflection.h>
 
 namespace skybolt {
@@ -26,7 +27,10 @@ protected:
 SKYBOLT_REFLECT_INLINE(Pitchable)
 {
 	rttr::registration::class_<Pitchable>("Pitchable")
-		.property("pitch", &Pitchable::getPitch, &Pitchable::setPitch);
+		.property("pitch", &Pitchable::getPitch, &Pitchable::setPitch)
+		(    
+			rttr::metadata(PropertyMetadataType::Units, Units::Radians)
+		);
 }
 
 } // namespace sim

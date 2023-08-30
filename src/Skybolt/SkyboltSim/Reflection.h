@@ -48,6 +48,10 @@
 	void rttr_auto_register_reflection_function_t<cls>()
 
 
+#define SKYBOLT_REFLECTION_REGISTRATION_FRIEND(cls) \
+	friend void rttr_auto_register_reflection_function_t<cls>();
+
+
 namespace skybolt::sim {
 
 template <typename T>

@@ -44,12 +44,14 @@ rttr::variant jsonToRttrVariant(const rttr::type& type, const nlohmann::json& js
 	static std::map<rttr::type::type_id, ToRttrVariantTranslator> translators = {
 		{ rttr::type::get<bool>().get_id(), createToRttrVariantTranslator<bool>() },
 		{ rttr::type::get<int>().get_id(), createToRttrVariantTranslator<int>() },
+		{ rttr::type::get<unsigned int>().get_id(), createToRttrVariantTranslator<unsigned int>() },
 		{ rttr::type::get<float>().get_id(), createToRttrVariantTranslator<float>() },
 		{ rttr::type::get<double>().get_id(), createToRttrVariantTranslator<double>() },
 		{ rttr::type::get<std::string>().get_id(), createToRttrVariantTranslator<std::string>() },
 
 		{ rttr::type::get<std::optional<bool>>().get_id(), createOptionalToRttrVariantTranslator<bool>() },
 		{ rttr::type::get<std::optional<int>>().get_id(), createOptionalToRttrVariantTranslator<int>() },
+		{ rttr::type::get<std::optional<unsigned int>>().get_id(), createOptionalToRttrVariantTranslator<unsigned int>() },
 		{ rttr::type::get<std::optional<float>>().get_id(), createOptionalToRttrVariantTranslator<float>() },
 		{ rttr::type::get<std::optional<double>>().get_id(), createOptionalToRttrVariantTranslator<double>() },
 		{ rttr::type::get<std::optional<std::string>>().get_id(), createToRttrVariantTranslator<std::string>() },
@@ -226,12 +228,14 @@ static nlohmann::json toJson(const rttr::variant& var)
 	static std::map<rttr::type::type_id, ToJsonTranslator> translators = {
 		{ rttr::type::get<bool>().get_id(), createToJsonTranslator<bool>() },
 		{ rttr::type::get<int>().get_id(), createToJsonTranslator<int>() },
+		{ rttr::type::get<unsigned int>().get_id(), createToJsonTranslator<unsigned int>() },
 		{ rttr::type::get<float>().get_id(), createToJsonTranslator<float>() },
 		{ rttr::type::get<double>().get_id(), createToJsonTranslator<double>() },
 		{ rttr::type::get<std::string>().get_id(), createToJsonTranslator<std::string>() },
 
 		{ rttr::type::get<std::optional<bool>>().get_id(), createOptionalToJsonTranslator<bool>() },
 		{ rttr::type::get<std::optional<int>>().get_id(), createOptionalToJsonTranslator<int>() },
+		{ rttr::type::get<std::optional<unsigned int>>().get_id(), createOptionalToJsonTranslator<unsigned int>() },
 		{ rttr::type::get<std::optional<float>>().get_id(), createOptionalToJsonTranslator<float>() },
 		{ rttr::type::get<std::optional<double>>().get_id(), createOptionalToJsonTranslator<double>() },
 		{ rttr::type::get<std::optional<std::string>>().get_id(), createOptionalToJsonTranslator<std::string>() },

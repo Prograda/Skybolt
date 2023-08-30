@@ -80,7 +80,6 @@ private:
 	void captureImage(const std::filesystem::path& baseFilename);
 
 	void setCamera(skybolt::sim::Entity* simCamera);
-	void setCameraTarget(skybolt::sim::Entity* target);
 
 	void showContextMenu(const QPoint& point);
 

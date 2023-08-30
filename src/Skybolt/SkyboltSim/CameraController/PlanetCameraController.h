@@ -10,14 +10,15 @@
 #include "CameraController.h"
 #include "LatLonSettable.h"
 #include "Pitchable.h"
+#include "Targetable.h"
 #include "Zoomable.h"
 
 namespace skybolt {
 namespace sim {
 
-class PlanetCameraController : public CameraController, public Pitchable, public LatLonSettable, public Zoomable
+class PlanetCameraController : public CameraController, public LatLonSettable, public Pitchable, public Targetable, public Zoomable
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(CameraController, Pitchable, LatLonSettable, Zoomable);
+	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(CameraController, LatLonSettable, Pitchable, Targetable, Zoomable);
 public:
 	struct Params
 	{
@@ -26,13 +27,12 @@ public:
 		float zoomRate;
 	};
 
-	PlanetCameraController(sim::Entity* camera, const Params& params);
+	PlanetCameraController(Entity* camera, World* world, const Params& params);
 
 public:
 	// CameraController interface
 	void update(float dt) override;
 	void setInput(const Input& input) override { mInput = input; }
-	void setTarget(Entity* target) override;
 
 private:
 	Params mParams;
