@@ -53,6 +53,13 @@ VisRoot::VisRoot(const DisplaySettings& settings) :
 
 bool VisRoot::render()
 {
+	if (mWindows.empty())
+	{
+		// Don't call Viewer::frame() if there are no windows,
+		// because the viewer might not be initialized yet, and there is nothing to render.
+		return true;
+	}
+
 	for (const auto& window : mWindows)
 	{
 		window->setLoadTimingPolicy(mLoadTimingPolicy);
