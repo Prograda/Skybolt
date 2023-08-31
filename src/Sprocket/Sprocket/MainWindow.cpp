@@ -493,11 +493,6 @@ void MainWindow::raiseToolWindow(QWidget* widget)
 	}
 }
 
-QMenuBar* MainWindow::getMenuBar() const
-{
-	return ui->menuBar;
-}
-
 void MainWindow::toolWindowActionToggled(bool state)
 {
 	int index = static_cast<QAction*>(sender())->data().toInt();

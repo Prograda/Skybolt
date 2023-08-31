@@ -54,8 +54,6 @@ public:
 	void raiseToolWindow(QWidget* widget);
 	void restoreToolWindowsState(const QString& stateBase64);
 
-	QMenuBar* getMenuBar() const;
-
 public slots:
 	void newProject(OverwriteMode overwriteMode = OverwriteMode::PromptToSaveChanges);
 	void openProject();
