@@ -174,11 +174,11 @@ public:
 			if (argc >= 2)
 			{
 				QString filename(argv[1]);
-				mMainWindow->open(filename);
+				mMainWindow->openProject(filename, MainWindow::OverwriteMode::OverwriteWithoutPrompt);
 			}
 			else
 			{
-				mMainWindow->newScenario();
+				mMainWindow->newProject(MainWindow::OverwriteMode::OverwriteWithoutPrompt);
 			}
 		}
 		catch (...)

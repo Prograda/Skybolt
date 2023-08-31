@@ -58,7 +58,7 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	assert(mEngineRoot);
 
 	RecentFilesMenuPopulator::FileOpener fileOpener = [this](const QString& filename) {
-		open(filename);
+		openProject(filename, OverwriteMode::PromptToSaveChanges);
 	};
 
 	ui->setupUi(this);
@@ -70,11 +70,10 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	setProjectFilename("");
 	
 	// Connect menus
-	QObject::connect(ui->actionNewScenario, SIGNAL(triggered()), this, SLOT(newScenario()));
-
-	QObject::connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(open()));
-	QObject::connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(save()));
-	QObject::connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(saveAs()));
+	QObject::connect(ui->actionNewScenario, SIGNAL(triggered()), this, SLOT(newProject()));
+	QObject::connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(openProject()));
+	QObject::connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(saveProject()));
+	QObject::connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
 	QObject::connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
 	QObject::connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(exit()));
 	QObject::connect(ui->actionSettings, SIGNAL(triggered()), this, SLOT(editEngineSettings()));
@@ -217,8 +216,34 @@ void createDefaultObjects(World& world, const EntityFactory& factory)
 	world.addEntity(factory.createEntity("MoonBillboard"));
 }
 
-void MainWindow::newScenario()
+bool MainWindow::saveChangesAndContinue()
 {
+	QMessageBox msgBox(this);
+	msgBox.setText("Do you want to save changes?");
+	msgBox.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+	msgBox.setDefaultButton(QMessageBox::Save);
+
+	switch (msgBox.exec())
+	{
+		case QMessageBox::Save:
+			return saveProject();
+		case QMessageBox::Discard:
+			return true;
+		case QMessageBox::Cancel:
+			return false;
+		default:
+			assert(!"Should never get here");
+	}
+	return true;
+}
+
+void MainWindow::newProject(OverwriteMode overwriteMode)
+{
+	if (overwriteMode == OverwriteMode::PromptToSaveChanges && !saveChangesAndContinue())
+	{
+		return;
+	}
+
 	const EntityFactory& factory = *mEngineRoot->entityFactory;
 	World& simWorld = mEngineRoot->scenario->world;
 
@@ -250,8 +275,13 @@ QString MainWindow::getDefaultProjectDirectory() const
 	return defaultDir;
 }
 
-void MainWindow::open()
+void MainWindow::openProject()
 {
+	if (!saveChangesAndContinue())
+	{
+		return;
+	}
+
 	QString filename = QFileDialog::getOpenFileName(nullptr, tr("Open Project"),
 		getDefaultProjectDirectory(), projectFileFilter);
 
@@ -260,7 +290,7 @@ void MainWindow::open()
 		QDir currentDir;
 		mSettings.setValue(defaultDirKey, currentDir.absoluteFilePath(filename));
 
-		open(filename);
+		openProject(filename, OverwriteMode::OverwriteWithoutPrompt); // the user has already been prompted to overwrite
 	}
 }
 
@@ -272,17 +302,27 @@ static QByteArray toByteArray(const QVariantMap& variant)
 	return array;
 }
 
-void MainWindow::open(const QString& filename)
+void MainWindow::openProject(const QString& filename, OverwriteMode overwriteMode)
 {
-	if (!QFileInfo::exists(filename))
+	if (overwriteMode == OverwriteMode::PromptToSaveChanges && !saveChangesAndContinue())
+	{
 		return;
+	}
+
+	if (!QFileInfo::exists(filename))
+	{
+		QMessageBox::critical(this, "", "Could not open file because it does not exist");
+		return;
+	}
 
 	QFile file(filename);
 
 	if (!file.open(QIODevice::ReadOnly))
+	{
+		QMessageBox::critical(this, "", "Could not open file. " + file.errorString());
 		return;
+	}
 
-	// TODO: prompt to save changes
 	clearProject();
 	createDefaultObjects(mEngineRoot->scenario->world, *mEngineRoot->entityFactory);
 
@@ -326,13 +366,22 @@ void MainWindow::loadProject(const nlohmann::json& json)
 	emit projectLoaded(json);
 }
 
-void MainWindow::save(QFile& file)
+bool MainWindow::saveProject(QFile& file)
 {
-	nlohmann::json json;
-	saveProject(json);
+	if (file.open(QIODevice::WriteOnly))
+	{
+		nlohmann::json json;
+		saveProject(json);
 
-	int indent = 4;
-	file.write(json.dump(indent).c_str());
+		int indent = 4;
+		file.write(json.dump(indent).c_str());
+		return true;
+	}
+	else
+	{
+		QMessageBox::critical(this, "", "Could not write to file. " + file.errorString());
+		return false;
+	}
 }
 
 void MainWindow::saveProject(nlohmann::json& json) const
@@ -345,23 +394,21 @@ void MainWindow::saveProject(nlohmann::json& json) const
 	emit projectSaved(json);
 }
 
-void MainWindow::save()
+bool MainWindow::saveProject()
 {
 	if (mProjectFilename.isEmpty())
 	{
-		saveAs();
+		saveProjectAs();
 	}
 	else
 	{
 		QFile file(mProjectFilename);
-		if (file.open(QIODevice::WriteOnly))
-		{
-			save(file);
-		}
+		return saveProject(file);
 	}
+	return false;
 }
 
-void MainWindow::saveAs()
+bool MainWindow::saveProjectAs()
 {
 	QString fileName = QFileDialog::getSaveFileName(nullptr, tr("Save Project"),
 		getDefaultProjectDirectory(), projectFileFilter);
@@ -372,15 +419,17 @@ void MainWindow::saveAs()
 			fileName += projectFileExtension;
 
 		QFile file(fileName);
-		if (file.open(QIODevice::WriteOnly))
+		if (!saveProject(file))
 		{
-			save(file);
+			return false;
 		}
 		setProjectFilename(fileName);
 
 		QDir currentDir;
 		mSettings.setValue(defaultDirKey, currentDir.absoluteFilePath(fileName));
+		return true;
 	}
+	return false;
 }
 
 void MainWindow::about()

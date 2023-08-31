@@ -39,9 +39,15 @@ public:
 
 	skybolt::EngineRoot* getEngineRoot() const { return mEngineRoot.get(); }
 
+	enum class OverwriteMode
+	{
+		PromptToSaveChanges,
+		OverwriteWithoutPrompt
+	};
+
 	void clearProject();
-	void open(const QString& filename);
-	void save(class QFile& file);
+	void openProject(const QString& filename, OverwriteMode overwriteMode = OverwriteMode::PromptToSaveChanges);
+	bool saveProject(class QFile& file);
 	QString getProjectFilename() const { return mProjectFilename; }
 
 	void addToolWindow(const QString& windowName, QWidget* window);
@@ -51,7 +57,13 @@ public:
 	QMenuBar* getMenuBar() const;
 
 public slots:
-	void newScenario();
+	void newProject(OverwriteMode overwriteMode = OverwriteMode::PromptToSaveChanges);
+	void openProject();
+	bool saveProject();
+	bool saveProjectAs();
+	void about();
+	void exit();
+	void editEngineSettings();
 
 signals:
 	void projectCleared();
@@ -60,18 +72,13 @@ signals:
 	void updated();
 
 private slots:
-	void open();
-	void save();
-	void saveAs();
 	void updateIfIntervalElapsed();
-	void about();
-	void exit();
-	void editEngineSettings();
 
 	void toolWindowActionToggled(bool state);
 	void toolWindowVisibilityChanged(QWidget* toolWindow, bool visible);
 
 protected:
+	bool saveChangesAndContinue(); //!< @returns action was not cancelled
 	virtual void loadProject(const nlohmann::json& json);
 	virtual void saveProject(nlohmann::json& json) const;
 
