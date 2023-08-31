@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <Sprocket/ApplicationUtil.h>
+#include <Sprocket/DarkStyle.h>
 #include <Sprocket/EditorPlugin.h>
 #include <Sprocket/EngineSettingsSerialization.h>
 #include <Sprocket/MainWindow.h>
@@ -16,7 +17,6 @@
 #include <Sprocket/Viewport/ScenarioObjectPicker.h>
 #include <Sprocket/Scenario/ScenarioSelectionModel.h>
 #include <Sprocket/Viewport/DefaultViewportMouseEventHandler.h>
-#include <Sprocket/ThirdParty/DarkStyle.h>
 #include <Sprocket/Widgets/ScenarioPropertyEditorWidget.h>
 #include <Sprocket/Widgets/ScenarioObjectsEditorWidget.h>
 #include <Sprocket/Widgets/TimelineControlWidget.h>
@@ -33,7 +33,7 @@
 #include <SkyboltVis/VisRoot.h>
 #include <SkyboltSim/World.h>
 
-#include <QSurfaceFormat>
+#include <QApplication>
 
 using namespace skybolt;
 
@@ -208,20 +208,6 @@ int main(int argc, char *argv[])
 	{
 		QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 		QCoreApplication::setApplicationName("Sprocket");
-
-		{
-			QSurfaceFormat format;
-			format.setSamples(4);
-
-#ifndef CONVERT_TO_SRGB_IN_SHADER
-			format.setColorSpace(QSurfaceFormat::sRGBColorSpace);
-#endif
-			format.setDepthBufferSize(24);
-
-			format.setProfile(QSurfaceFormat::CompatibilityProfile);
-
-			QSurfaceFormat::setDefaultFormat(format);
-		}
 
 		std::string pluginsDir = (getExecutablePath() / "plugins").string();
 		std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(getAllPluginFilepathsInDirectory(pluginsDir));

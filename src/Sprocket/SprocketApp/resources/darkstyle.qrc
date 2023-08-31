@@ -1,8 +1,5 @@
 <RCC>
     <qresource prefix="/">
-		<file>qdarkstyle_colinDuquesnoy/close.png</file>
-		<file>qdarkstyle_colinDuquesnoy/close-hover.png</file>
-		<file>qdarkstyle_colinDuquesnoy/close-pressed.png</file>
         <file>darkstyle/darkstyle.qss</file>
         <file>darkstyle/icon_close.png</file>
         <file>darkstyle/icon_restore.png</file>

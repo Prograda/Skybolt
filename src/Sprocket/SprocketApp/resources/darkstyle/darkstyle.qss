@@ -110,10 +110,6 @@ QDockWidget::title{
   border:1px solid rgba(25,25,25,75);
   border-bottom:2px solid rgba(25,25,25,75);
 }
-QDockWidget{
-  titlebar-close-icon:url(:/darkstyle/icon_close.png);
-  titlebar-normal-icon:url(:/darkstyle/icon_restore.png);
-}
 QDockWidget::close-button,QDockWidget::float-button{
   subcontrol-position:top right;
   subcontrol-origin:margin;
@@ -158,18 +154,6 @@ QTabBar{
   background-color:transparent;
   qproperty-drawBase:0;
   border-bottom:1px solid rgba(25,25,25,50%);
-}
-QTabBar::close-button {
-    border: 0;
-    margin: 2px;
-    padding: 0;
-    image: url(:/qdarkstyle_colinDuquesnoy/close.png);
-}
-QTabBar::close-button:hover {
-    image: url(:/qdarkstyle_colinDuquesnoy/close-hover.png);
-}
-QTabBar::close-button:pressed {
-    image: url(:/qdarkstyle_colinDuquesnoy/close-pressed.png);
 }
 QTabBar::tab{
   padding:4px 6px;
