@@ -18,7 +18,6 @@
 #include "Sprocket/Viewport/ScreenTransformUtil.h"
 #include "Sprocket/Widgets/CameraControllerWidget.h"
 
-#include <SkyboltCommon/Math/IntersectionUtility.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
@@ -26,11 +25,9 @@
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/JsonHelpers.h>
-#include <SkyboltSim/WorldUtil.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
-#include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/System/SystemRegistry.h>
 #include <SkyboltVis/Scene.h>
 #include <SkyboltVis/VisRoot.h>
@@ -407,72 +404,6 @@ void ViewportWidget::entityRemoved(const sim::EntityPtr& entity)
 	{
 		setCamera(nullptr);
 	}
-}
-
-static QAction* addCheckedAction(QMenu& menu, const QString& text, std::function<void(bool checked)> fn)
-{
-	QAction* action = menu.addAction(text, fn);
-	action->setCheckable(true);
-	return action;
-}
-
-QMenu* ViewportWidget::addVisibilityFilterableSubMenu(const QString& text, const EntityVisibilityPredicateSetter& setter) const
-{
-	QMenu* menu = mFilterMenu->addMenu(text);
-	QActionGroup* alignmentGroup = new QActionGroup(menu);
-
-	QAction* offAction = addCheckedAction(*menu, "Hide All", [=](bool checked) {
-		setter(EntityVisibilityFilterable::visibilityOff);
-	});
-
-	auto hasLineOfSight = [this](const sim::Entity& entity) {
-		if (const auto& entityPosition = getPosition(entity); entityPosition)
-		{
-			if (mCurrentSimCamera)
-			{
-				sim::Vector3 cameraPosition = *getPosition(*mCurrentSimCamera);
-				if (sim::Entity* planet = sim::findNearestEntityWithComponent<sim::PlanetComponent>(mEngineRoot->scenario->world.getEntities(), cameraPosition).get(); planet)
-				{
-					const sim::PlanetComponent& planetComponent = *planet->getFirstComponent<sim::PlanetComponent>();
-
-					sim::Vector3 planetPosition = *getPosition(*planet);
-					sim::Vector3 camToEntityDir = *entityPosition - cameraPosition;
-					double length = glm::length(camToEntityDir);
-					camToEntityDir /= length;
-
-					double effectivePlanetRadius = std::max(0.0, planetComponent.radius * 0.999); // use a slightly smaller radius for robustness
-					return !intersectRaySegmentSphere(cameraPosition, camToEntityDir, length, planetPosition, effectivePlanetRadius);
-				}
-			}
-		}
-		return true;
-	};
-
-	QAction* onAction = addCheckedAction(*menu, "Show All", [=](bool checked) {
-		setter(hasLineOfSight);
-	});
-
-	QAction* selectedAction = addCheckedAction(*menu, "Show Selected", [=](bool checked) {
-		setter([=](const sim::Entity& entity) {
-			for (const auto& object : mSelectionModel->getSelectedItems())
-			{
-				if (auto entityObject = dynamic_cast<EntityObject*>(object.get()); entityObject)
-				{
-					return (entityObject->data == entity.getId()) && hasLineOfSight(entity);
-				}
-			}
-			return false;
-		});
-	});
-
-	alignmentGroup->addAction(offAction);
-	alignmentGroup->addAction(onAction);
-	alignmentGroup->addAction(selectedAction);
-
-	setter(hasLineOfSight);
-	onAction->setChecked(true);
-
-	return menu;
 }
 
 int ViewportWidget::getViewportWidth() const

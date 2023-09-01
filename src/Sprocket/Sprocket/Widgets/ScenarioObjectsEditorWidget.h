@@ -28,8 +28,4 @@ class ScenarioObjectsEditorWidget : public QWidget
 {
 public:
 	ScenarioObjectsEditorWidget(const ScenarioObjectsEditorWidgetConfig& config);
-
-private:
-	skybolt::EngineRoot* mEngineRoot;
-	ScenarioTreeWidget* mScenarioTreeWidget;
 };

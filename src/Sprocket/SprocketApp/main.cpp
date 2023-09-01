@@ -17,6 +17,7 @@
 #include <Sprocket/Viewport/ScenarioObjectPicker.h>
 #include <Sprocket/Scenario/ScenarioSelectionModel.h>
 #include <Sprocket/Viewport/DefaultViewportMouseEventHandler.h>
+#include <Sprocket/Viewport/ViewportVisibilityFiltering.h>
 #include <Sprocket/Widgets/ScenarioPropertyEditorWidget.h>
 #include <Sprocket/Widgets/ScenarioObjectsEditorWidget.h>
 #include <Sprocket/Widgets/TimelineControlWidget.h>
@@ -34,6 +35,7 @@
 #include <SkyboltSim/World.h>
 
 #include <QApplication>
+#include <QMenu>
 
 using namespace skybolt;
 
@@ -48,10 +50,7 @@ static std::vector<EditorPluginPtr> loadEditorPlugins(const std::vector<EditorPl
 
 static vis::VisRootPtr createVisRoot(const EngineRoot& engineRoot)
 {
-	auto visRoot = std::make_shared<vis::VisRoot>(getDisplaySettingsFromEngineSettings(engineRoot.engineSettings));
-	// Since Qt manages the OpenGL context, ensure OSG renders on the Qt thread
-	visRoot->getViewer().setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
-	return visRoot;
+	return std::make_shared<vis::VisRoot>(getDisplaySettingsFromEngineSettings(engineRoot.engineSettings));
 }
 
 class Application : public QApplication
@@ -154,10 +153,9 @@ public:
 			}());
 			widget->addMouseEventHandler(viewportMouseEventHandler);
 
-			for (const auto& layer : getEntityVisibilityLayers(mEditorPlugins))
-			{
-				widget->addVisibilityFilterableSubMenu(QString::fromStdString(layer.first), layer.second);
-			}
+			EntityVisibilityPredicate basePredicate = createSelectedEntityVisibilityPredicateAndAddSubMenu(*widget->getVisibilityFilterMenu(), "See Through Planet", selectionModel);
+			basePredicate = predicateOr(basePredicate, createLineOfSightVisibilityPredicate(widget, &engineRoot->scenario->world));
+			addVisibilityLayerSubMenus(*widget->getVisibilityFilterMenu(), basePredicate, getEntityVisibilityLayers(mEditorPlugins), selectionModel);
 
 			mMainWindow->addToolWindow("Viewport", widget);
 

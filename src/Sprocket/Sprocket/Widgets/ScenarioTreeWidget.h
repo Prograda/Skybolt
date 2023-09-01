@@ -37,6 +37,10 @@ public:
 	ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config);
 	~ScenarioTreeWidget();
 
+protected:
+	virtual bool shouldDisplayItem(const ScenarioObject& object) const;
+	virtual std::optional<std::string> getParentFolderName(const ScenarioObject& object) const;
+
 private:
 	void addObjects(const std::type_index& sceneObjectType, const std::set<ScenarioObjectPtr>& objects);
 	void removeObjects(const std::type_index& sceneObjectType, const std::set<ScenarioObjectPtr>& objects);
@@ -45,20 +49,25 @@ private:
 	ActionContext toActionContext(const skybolt::sim::World& world, const TreeItem& item) const;
 	void showContextMenu(TreeItem& item, const QPoint& point);
 
-	TreeItemPtr getParent(const ScenarioObject& object) const;
+	TreeItemPtr getOrCreateFolder(const std::string& name);
+
+	TreeItemPtr getParent(const ScenarioObject& object); //!< Never returns null
 	void updateTreeItemParents();
 
 	std::vector<TreeItem*> getCurrentSelection() const;
 	void setCurrentSelection(const std::vector<TreeItem*>& items);
 
-private:
+protected:
 	skybolt::sim::World* mWorld;
+
+private:
 	const std::vector<DefaultContextActionPtr> mContextActions;
 	ScenarioObjectTypeMap mScenarioObjectTypes;
 	TreeItemModel* mModel;
 	QTreeView* mView;
-	std::map<std::type_index, TreeItemPtr> mScenarioObjectTypeToTreeParentMap;
 	std::vector<std::unique_ptr<struct ScenarioObjectRegistryListener>> mRegistryListeners;
 
+	TreeItemPtr mRootItem;
+	std::map<std::string, TreeItemPtr> mFoldersMap;
 	std::map<ScenarioObjectPtr, std::shared_ptr<ScenarioObjectTreeItem>> mItemsMap;
 };

@@ -54,7 +54,7 @@ public:
 	void addMouseEventHandler(const ViewportMouseEventHandlerPtr& handler, int priority = mouseEventHandlerDefaultPriority);
 	void removeMouseEventHandler(const ViewportMouseEventHandler& handler);
 
-	QMenu* addVisibilityFilterableSubMenu(const QString& text, const skybolt::EntityVisibilityPredicateSetter& setter) const;
+	QMenu* getVisibilityFilterMenu() const { return mFilterMenu; }
 
 	QWidget* getViewportCanvas() const { return mOsgWidget; }
 	int getViewportWidth() const;

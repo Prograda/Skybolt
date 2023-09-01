@@ -102,6 +102,14 @@ int TreeItemModel::getChildPosition(const TreeItem& item, const TreeItem& child)
 	return -1;
 }
 
+void TreeItemModel::removeItem(TreeItem& item)
+{
+	if (TreeItem* parent = getParent(item); parent)
+	{
+		removeChild(*parent, item);
+	}
+}
+
 QModelIndex TreeItemModel::index(int row, int column, const QModelIndex &parent) const
 {
 	if (!hasIndex(row, column, parent))

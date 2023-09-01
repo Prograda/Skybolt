@@ -49,6 +49,8 @@ public:
 	void clearChildren(TreeItem& item);
 	const std::vector<TreeItemPtr>& getChildren(TreeItem& item) const;
 
+	void removeItem(TreeItem& item);
+
 	//! @returns -1 if child is not a child of item
 	int getChildPosition(const TreeItem& item, const TreeItem& child);
 
