@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "SkyboltEngine/TimeSource.h"
+#include <SkyboltEngine/TimeSource.h>
+#include <SkyboltEngine/Scenario/Scenario.h>
 #include <QWidget>
 #include <QAction>
 
@@ -21,8 +22,11 @@ public:
 	skybolt::TimeSource* getTimeSource() const { return mSource; }
 	void setTimeSource(skybolt::TimeSource* source);
 
+	void setTemporalMode(skybolt::TemporalMode temporalMode);
+
 private:
 	skybolt::TimeSource* mSource;
+	skybolt::TemporalMode mTemporalMode = skybolt::TemporalMode::RandomAccess;
 
 	QAction* mPlayAction;
 	QAction* mForwardAction;

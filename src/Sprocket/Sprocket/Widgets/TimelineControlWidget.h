@@ -7,11 +7,12 @@
 #pragma once
 
 #include <SkyboltEngine/SkyboltEngineFwd.h>
+#include <SkyboltEngine/Scenario/Scenario.h>
 
 #include <QWidget>
 
 class TimelineControlWidget : public QWidget
 {
 public:
-	TimelineControlWidget(skybolt::TimeSource* timeSource, QWidget* parent = nullptr);
+	TimelineControlWidget(skybolt::TimeSource* timeSource, skybolt::ObservableValue<skybolt::TemporalMode>* temporalMode, QWidget* parent = nullptr);
 };

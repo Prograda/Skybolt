@@ -15,7 +15,7 @@
 
 using namespace skybolt;
 
-TimelineControlWidget::TimelineControlWidget(TimeSource* timeSource, QWidget* parent) :
+TimelineControlWidget::TimelineControlWidget(TimeSource* timeSource, ObservableValue<TemporalMode>* temporalMode, QWidget* parent) :
 	QWidget(parent)
 {
 	assert(timeSource);
@@ -30,6 +30,13 @@ TimelineControlWidget::TimelineControlWidget(TimeSource* timeSource, QWidget* pa
 	layout->addStretch();
 
 	timeline->setTimeSource(timeSource);
+	
+	timeline->setTemporalMode(temporalMode->get());
+	timeControl->setTemporalMode(temporalMode->get());
+	temporalMode->valueChanged.connect([timeline, timeControl] (const TemporalMode& oldValue, const TemporalMode& newValue) {
+		timeline->setTemporalMode(newValue);
+		timeControl->setTemporalMode(newValue);
+	});
 
 	timeSource->timeChanged.connect([=](double time)
 	{

@@ -50,7 +50,10 @@ static std::vector<EditorPluginPtr> loadEditorPlugins(const std::vector<EditorPl
 
 static vis::VisRootPtr createVisRoot(const EngineRoot& engineRoot)
 {
-	return std::make_shared<vis::VisRoot>(getDisplaySettingsFromEngineSettings(engineRoot.engineSettings));
+	auto visRoot = std::make_shared<vis::VisRoot>(getDisplaySettingsFromEngineSettings(engineRoot.engineSettings));
+	// TODO: change to drawing on background thread. Need to ensure thread safety.
+	visRoot->getViewer().setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
+	return visRoot;
 }
 
 class Application : public QApplication
@@ -82,9 +85,9 @@ public:
 		auto viewportInputSystem = std::make_shared<ViewportInputSystem>(inputPlatform, axes);
 		engineRoot->systemRegistry->push_back(viewportInputSystem);
 
-		vis::VisRootPtr visRoot = createVisRoot(*engineRoot);
+		mVisRoot = createVisRoot(*engineRoot);
 		QObject::connect(mMainWindow.get(), &MainWindow::updated, [=] {
-			visRoot->render();
+			mVisRoot->render();
 		});
 
 		{
@@ -96,7 +99,7 @@ public:
 			config.engineRoot = engineRoot.get();
 			config.selectionModel = selectionModel;
 			config.inputPlatform = inputPlatform;
-			config.visRoot = visRoot.get();
+			config.visRoot = mVisRoot.get();
 			config.mainWindow = mMainWindow.get();
 
 			mEditorPlugins = loadEditorPlugins(editorPluginFactories, config);
@@ -143,7 +146,7 @@ public:
 			auto widget = new ViewportWidget([&] {
 				ViewportWidgetConfig c;
 				c.engineRoot = engineRoot.get();
-				c.visRoot = visRoot;
+				c.visRoot = mVisRoot;
 				c.selectionModel = selectionModel;
 				c.scenarioObjectPicker = createScenarioObjectPicker(scenarioObjectTypes);
 				c.contextActions = createContextActions(*engineRoot);
@@ -163,7 +166,7 @@ public:
 			connectJsonProjectSerializable(*mMainWindow, *widget);
 		}
 		{
-			auto window = new TimelineControlWidget(&engineRoot->scenario->timeSource, mMainWindow.get());
+			auto window = new TimelineControlWidget(&engineRoot->scenario->timeSource, &engineRoot->scenario->temporalMode, mMainWindow.get());
 			mMainWindow->addToolWindow("Time Control", window);
 		}
 
@@ -196,6 +199,7 @@ public:
 	}
 
 private:
+	vis::VisRootPtr mVisRoot;
 	std::unique_ptr<MainWindow> mMainWindow;
 	std::vector<EditorPluginPtr> mEditorPlugins;
 };

@@ -21,7 +21,6 @@ TimeControlWidget::TimeControlWidget(QWidget* parent) :
 
 	mForwardAction = new QAction(getSprocketIcon(SprocketIcon::FastForward), tr("Forward"), this);
 	mForwardAction->setShortcut(tr("Ctrl+F"));
-	
 	mBackwardAction = new QAction(getSprocketIcon(SprocketIcon::FastRewind), tr("Backward"), this);
 	mBackwardAction->setShortcut(tr("Ctrl+B"));
 
@@ -81,5 +80,15 @@ void TimeControlWidget::setTimeSource(TimeSource* source)
 				break;
 			}
 		}));
+	}
+}
+
+void TimeControlWidget::setTemporalMode(TemporalMode temporalMode)
+{
+	if (mTemporalMode != temporalMode)
+	{
+		mTemporalMode = temporalMode;
+		mForwardAction->setVisible(temporalMode == TemporalMode::RandomAccess);
+		mBackwardAction->setVisible(temporalMode == TemporalMode::RandomAccess);
 	}
 }

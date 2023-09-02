@@ -7,6 +7,7 @@
 #pragma once
 
 #include <SkyboltEngine/TimeSource.h>
+#include <SkyboltEngine/Scenario/Scenario.h>
 #include <QWidget>
 #include <QLabel>
 #include <QSlider>
@@ -21,6 +22,7 @@ public:
 
 	skybolt::TimeSource* getTimeSource() const { return mSource; }
 	void setTimeSource(skybolt::TimeSource* source);
+	void setTemporalMode(skybolt::TemporalMode temporalMode);
 	void setBufferedRange(const skybolt::TimeRange& range);
 
 private:
@@ -33,6 +35,7 @@ private slots:
 
 private:
 	skybolt::TimeSource* mSource;
+	skybolt::TemporalMode mTemporalMode = skybolt::TemporalMode::RandomAccess;
 
 	QLabel* mTime;
 	QLabel* mDuration;

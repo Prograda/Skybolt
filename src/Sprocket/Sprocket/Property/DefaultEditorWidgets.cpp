@@ -214,6 +214,38 @@ static QWidget* createIntEditor(QtProperty* property, QWidget* parent)
 	return widget;
 }
 
+static QWidget* createEnumEditor(QtProperty* property, QWidget* parent)
+{
+	QStringList displayNames = property->property(PropertyMetadataNames::enumValueDisplayNames).toStringList();
+	auto widget = new QComboBox(parent);
+	widget->addItems(displayNames);
+	widget->setCurrentIndex(property->value.toInt());
+
+	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property]() {
+		widget->blockSignals(true);
+		widget->setCurrentIndex(property->value.toInt());
+		widget->blockSignals(false);
+	});
+
+	QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), property, [=](int newValue) {
+		property->setValue(newValue);
+	});
+
+	return widget;
+}
+
+static QWidget* createIntOrEnumEditor(QtProperty* property, QWidget* parent)
+{
+	if (property->property(PropertyMetadataNames::enumValueDisplayNames).isValid())
+	{
+		return createEnumEditor(property, parent);
+	}
+	else
+	{
+		return createIntEditor(property, parent);
+	}
+}
+
 static QWidget* createDoubleEditor(QtProperty* property, QWidget* parent)
 {
 	QLineEdit* widget = createDoubleLineEdit(parent);
@@ -328,7 +360,7 @@ static PropertyEditorWidgetFactoryMap createDefaultEditorWidgetFactoryMap()
 {
 	static PropertyEditorWidgetFactoryMap m = {
 		{ QMetaType::Type::QString, &createStringEditor },
-		{ QMetaType::Type::Int, &createIntEditor },
+		{ QMetaType::Type::Int, &createIntOrEnumEditor },
 		{ QMetaType::Type::Float, &createDoubleEditor },
 		{ QMetaType::Type::Double, &createDoubleEditor },
 		{ QMetaType::Type::Bool, &createBoolEditor },

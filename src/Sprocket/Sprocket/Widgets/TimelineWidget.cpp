@@ -97,13 +97,25 @@ void TimelineWidget::setTimeSource(TimeSource* source)
 
 		// Connect to new source
 		mConnections.push_back(connect(mSlider, &QSlider::valueChanged, [&](int valueInt) {
-			double value = double(valueInt) / double(mSlider->maximum() - mSlider->minimum());
-			value = math::lerp(mSource->getRange().start, mSource->getRange().end, value);
-			mSource->setTime(value);
+			if (mTemporalMode == skybolt::TemporalMode::RandomAccess)
+			{
+				double value = double(valueInt) / double(mSlider->maximum() - mSlider->minimum());
+				value = math::lerp(mSource->getRange().start, mSource->getRange().end, value);
+				mSource->setTime(value);
+			}
 		}));
 
 		mBoostConnections.push_back(mSource->timeChanged.connect([this] (double time) {timeChanged(time); }));
 		mBoostConnections.push_back(mSource->rangeChanged.connect([this](TimeRange range) {rangeChanged(range); }));
+	}
+}
+
+void TimelineWidget::setTemporalMode(TemporalMode temporalMode)
+{
+	if (mTemporalMode != temporalMode)
+	{
+		mTemporalMode = temporalMode;
+		mSlider->setEnabled(temporalMode == TemporalMode::RandomAccess);
 	}
 }
 
