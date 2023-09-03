@@ -20,7 +20,7 @@ class EntityListModel : public QStandardItemModel, public skybolt::sim::WorldLis
 {
 public:
 	typedef std::function<bool(const skybolt::sim::Entity&)> EntityPredicate;
-	EntityListModel(skybolt::sim::World* world, const EntityPredicate& predicate);
+	EntityListModel(skybolt::sim::World* world, const EntityPredicate& predicate, bool addBlankItem = false);
 
 	~EntityListModel();
 
@@ -32,10 +32,12 @@ private:
 	void entityAboutToBeRemoved(const skybolt::sim::EntityPtr& entity) override;
 
 private:
+	std::optional<QString> toItem(const skybolt::sim::Entity& entity) const;
 	void populateList();
 
 private:
 	skybolt::sim::World* mWorld;
 	EntityPredicate mPredicate;
-	std::map<skybolt::sim::Entity*, QStandardItem*> mItems;
+	bool mAddBlankItem;
+	std::set<QString> mItems;
 };

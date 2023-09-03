@@ -31,45 +31,40 @@ AttachedCameraController::AttachedCameraController(Entity* camera, World* world,
 	setZoom(0.5f);
 }
 
-void AttachedCameraController::update(float dt)
+void AttachedCameraController::update(SecondsD dt)
 {
 	mYaw += msYawRate * mInput.yawRate * dt;
 	mPitch += msPitchRate * mInput.tiltRate * dt;
 	mZoom += msZoomRate * mInput.zoomRate * dt;
-	mZoom = math::clamp(mZoom, 0.0f, 1.0f);
+	mZoom = math::clamp(mZoom, 0.0, 1.0);
     
     double maxPitch = math::halfPiD();
     mPitch = math::clamp(mPitch, -maxPitch, maxPitch);
 
 	CameraState& state = mCameraComponent->getState();
-	state.fovY = math::lerp(mParams.maxFovY, mParams.minFovY, mZoom);
+	state.fovY = math::lerp(mParams.maxFovY, mParams.minFovY, float(mZoom));
 	state.nearClipDistance = 0.5;
 
-	if (mAttachmentPoint)
+	if (Entity* target = getTarget(); target)
 	{
-		if (Entity* target = getTarget(); target)
+		if (const AttachmentPointPtr& attachmentPoint = findAttachmentPoint(*target))
 		{
-			mNodeComponent->setPosition(calcAttachmentPointPosition(*target, *mAttachmentPoint));
-			mNodeComponent->setOrientation(calcAttachmentPointOrientation(*target, *mAttachmentPoint) * glm::angleAxis(mYaw, Vector3(0, 0, 1)) * glm::angleAxis(mPitch, Vector3(0, 1, 0)));
+			mNodeComponent->setPosition(calcAttachmentPointPosition(*target, *attachmentPoint));
+			mNodeComponent->setOrientation(calcAttachmentPointOrientation(*target, *attachmentPoint) * glm::angleAxis(mYaw, Vector3(0, 0, 1)) * glm::angleAxis(mPitch, Vector3(0, 1, 0)));
 		}
 	}
 }
 
-void AttachedCameraController::setTargetId(const EntityId& targetId)
+AttachmentPointPtr AttachedCameraController::findAttachmentPoint(const Entity& entity) const
 {
-	Targetable::setTargetId(targetId);
-
-	mAttachmentPoint = nullptr;
-	if (Entity* target = getTarget(); target)
+	auto points = entity.getFirstComponent<AttachmentPointsComponent>();
+	if (points)
 	{
-		auto points = target->getFirstComponent<AttachmentPointsComponent>();
-		if (points)
+		auto point = findOptional(points->attachmentPoints, mParams.attachmentPointName);
+		if (point)
 		{
-			auto point = findOptional(points->attachmentPoints, mParams.attachmentPointName);
-			if (point)
-			{
-				mAttachmentPoint = *point;
-			}
+			return *point;;
 		}
 	}
+	return nullptr;
 }

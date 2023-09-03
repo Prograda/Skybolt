@@ -22,7 +22,7 @@ class PlanetCameraController : public CameraController, public LatLonSettable, p
 public:
 	struct Params
 	{
-		Real maxDistOnRadius; //!< Maximum alowed camera distance from the planet, divided by planet radius
+		double maxDistOnRadius; //!< Maximum alowed camera distance from the planet, divided by planet radius
 		float fovY;
 		float zoomRate;
 	};
@@ -31,7 +31,7 @@ public:
 
 public:
 	// CameraController interface
-	void update(float dt) override;
+	void update(SecondsD dt) override;
 	void setInput(const Input& input) override { mInput = input; }
 
 private:

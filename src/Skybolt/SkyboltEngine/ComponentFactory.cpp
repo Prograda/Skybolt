@@ -197,7 +197,7 @@ static sim::ComponentPtr loadNode(Entity* entity, const ComponentFactoryContext&
 static sim::ComponentPtr loadDynamicBody(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	Node* node = entity->getFirstComponentRequired<Node>().get();
-	Real mass = json.at("mass");
+	double mass = json.at("mass");
 	Vector3 momentOfInertia = readOptionalVector3(json, "momentOfInertia");
 
 	auto component = std::make_shared<SimpleDynamicBodyComponent>(node, mass, momentOfInertia);

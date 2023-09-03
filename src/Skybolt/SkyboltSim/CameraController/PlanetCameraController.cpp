@@ -34,7 +34,7 @@ PlanetCameraController::PlanetCameraController(sim::Entity* camera, World* world
 	mCameraComponent->getState().fovY = mParams.fovY;
 }
 
-void PlanetCameraController::update(float dt)
+void PlanetCameraController::update(SecondsD dt)
 {
 	if (Entity* target = getTarget(); target)
 	{
@@ -49,8 +49,8 @@ void PlanetCameraController::update(float dt)
 		float yawDelta = msYawRate * mInput.yawRate * dt;
 		float pitchDelta = msPitchRate * mInput.tiltRate * dt;
 		float zoomDelta = (mInput.zoomRate + mInput.forwardSpeed) * dt * msZoomRate;
-		mZoom = skybolt::math::clamp(mZoom + zoomDelta, 0.0f, 1.0f);
-		float maxDistance = mParams.maxDistOnRadius * (float)planet->radius;
+		mZoom = skybolt::math::clamp(mZoom + zoomDelta, 0.0, 1.0);
+		float maxDistance = mParams.maxDistOnRadius * planet->radius;
 
 		// Zoom control
 		float exponent = log(maxDistance - (float)planet->radius);

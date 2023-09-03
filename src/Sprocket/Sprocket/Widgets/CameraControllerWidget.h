@@ -20,8 +20,11 @@ class CameraControllerWidget : public QWidget, public skybolt::sim::WorldListene
 {
 public:
 	CameraControllerWidget(skybolt::sim::World* world, QWidget* parent = nullptr);
+	~CameraControllerWidget();
 
 	void setCamera(skybolt::sim::Entity* camera);
+
+	void update();
 
 public:
 	void entityRemoved(const skybolt::sim::EntityPtr& entity) override;

@@ -10,7 +10,7 @@
 using namespace skybolt::sim;
 
 RigidBody::RigidBody(btDiscreteDynamicsWorld* world, btCollisionShape* shape, int collisionGroupMask, int collisionFilterMask,
-					  Real mass, const btVector3 &inertia, const btVector3 &position, const btQuaternion &orientation, const btVector3 &velocity) :
+					  double mass, const btVector3 &inertia, const btVector3 &position, const btQuaternion &orientation, const btVector3 &velocity) :
 	btRigidBody(btRigidBody::btRigidBodyConstructionInfo(mass,
 		new btDefaultMotionState(btTransform(orientation, position)), shape, inertia)),
 	mWorld(world),

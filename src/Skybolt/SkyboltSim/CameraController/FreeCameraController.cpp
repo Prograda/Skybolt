@@ -20,14 +20,14 @@ FreeCameraController::FreeCameraController(Entity* camera, const Params& params)
 	mCameraComponent->getState().fovY = params.fovY;
 }
 
-void FreeCameraController::update(float dt)
+void FreeCameraController::update(SecondsD dt)
 {
 	mYaw += mInput.yawRate * dt;
 	mPitch += mInput.tiltRate * dt;
 	mZoom += mInput.zoomRate * dt;
-	mZoom = skybolt::math::clamp(mZoom, 0.0f, 1.0f);
+	mZoom = skybolt::math::clamp(mZoom, 0.0, 1.0);
 
-	mCameraComponent->getState().fovY = skybolt::math::lerp(mBaseFov, mBaseFov * 0.1f, mZoom);
+	mCameraComponent->getState().fovY = skybolt::math::lerp(mBaseFov, mBaseFov * 0.1f, float(mZoom));
 	
 	double speed = mInput.modifier1Pressed ? 10000.0 : (mInput.modifier2Pressed ? 100.0 : 1000.0);
 	Vector3 vel = Vector3(mInput.forwardSpeed, mInput.rightSpeed, 0.0f) * speed;

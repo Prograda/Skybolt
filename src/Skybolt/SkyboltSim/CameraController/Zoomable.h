@@ -16,11 +16,11 @@ class Zoomable
 	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION();
 public:
 	virtual ~Zoomable() = default;
-	virtual float getZoom() const { return mZoom; }
-	virtual void setZoom(float zoom) { mZoom = zoom; }
+	virtual double getZoom() const { return mZoom; }
+	virtual void setZoom(double zoom) { mZoom = zoom; }
 
 protected:
-	float mZoom = 0;
+	double mZoom = 0;
 };
 
 SKYBOLT_REFLECT_INLINE(Zoomable)

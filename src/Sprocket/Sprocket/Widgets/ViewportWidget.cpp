@@ -40,6 +40,7 @@
 #include <QBoxLayout>
 #include <QComboBox>
 #include <QMenu>
+#include <QSortFilterProxyModel>
 #include <QToolBar>
 #include <QToolButton>
 
@@ -126,6 +127,8 @@ ViewportWidget::~ViewportWidget() = default;
 
 void ViewportWidget::update()
 {
+	mCameraControllerWidget->update();
+
 	// Apply the OsgWidget cursor to the OsgWindow, as the window doesn't inheret the wrapper widget's cursor automatically
 	Qt::CursorShape cursorShape = QApplication::overrideCursor() ? QApplication::overrideCursor()->shape() : mOsgWidget->cursor().shape();
 	mOsgWindow->setCursor(QCursor(cursorShape));
@@ -297,11 +300,17 @@ QToolBar* ViewportWidget::createViewportToolBar(const std::function<std::string(
 	sim::World* world = &mEngineRoot->scenario->world;
 
 	{
+		auto cameraListModel = new EntityListModel(world, [] (const sim::Entity& entity) {
+			return entity.getFirstComponent<sim::CameraComponent>() != nullptr;
+		});
+
+		auto proxyModel = new QSortFilterProxyModel(this);
+		proxyModel->sort(0);
+		proxyModel->setSourceModel(cameraListModel);
+
 		mCameraCombo = new QComboBox();
 		mCameraCombo->setToolTip("Camera");
-		mCameraCombo->setModel(new EntityListModel(world, [] (const sim::Entity& entity) {
-			return entity.getFirstComponent<sim::CameraComponent>() != nullptr;
-		}));
+		mCameraCombo->setModel(proxyModel);
 
 		connect(mCameraCombo, &QComboBox::currentTextChanged, [=](const QString& text)
 		{

@@ -50,22 +50,29 @@ void CameraControllerSelector::addController(const std::string& name, const Came
 	mControllers[name] = controller;
 	if (auto targetable = dynamic_cast<Targetable*>(controller.get()); targetable)
 	{
-		targetable->setTargetId(mTargetId);
+		targetable->setTargetId(getTargetId());
 	}
 }
 
 void CameraControllerSelector::setTargetId(const EntityId& targetId)
 {
-	if (targetId != getTargetId())
+	for (const auto& item : mControllers)
 	{
-		for (const auto& item : mControllers)
+		if (auto targetable = dynamic_cast<Targetable*>(item.second.get()); targetable)
 		{
-			if (auto targetable = dynamic_cast<Targetable*>(item.second.get()); targetable)
-			{
-				targetable->setTargetId(targetId);
-			}
+			targetable->setTargetId(targetId);
 		}
-
-		targetChanged(targetId);
 	}
+}
+
+EntityId CameraControllerSelector::getTargetId() const
+{
+	if (mSelectedController)
+	{
+		if (auto targetable = dynamic_cast<Targetable*>(mSelectedController.get()); targetable)
+		{
+			return targetable->getTargetId();
+		}
+	}
+	return sim::nullEntityId();
 }

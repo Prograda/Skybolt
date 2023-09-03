@@ -21,7 +21,7 @@ struct RayTestResult
 {
 	Vector3 position;
 	Vector3 normal;
-	DistReal distance;
+	double distance;
 	bool hit;
 };
 
@@ -30,7 +30,7 @@ class BulletWorld
 public:
 	BulletWorld();
 
-	RigidBody* createRigidBody(btCollisionShape* shape, Real mass, const btVector3 &inertia, const btVector3 &position,
+	RigidBody* createRigidBody(btCollisionShape* shape, double mass, const btVector3 &inertia, const btVector3 &position,
 		const btQuaternion &orientation = btQuaternion::getIdentity(), const btVector3 &velocity = btVector3(0, 0, 0),
 		int collisionGroupMask = ~0, int collisionFilterMask = ~0);
 

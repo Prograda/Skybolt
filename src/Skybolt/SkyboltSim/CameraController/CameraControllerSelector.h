@@ -53,16 +53,14 @@ public:
 	}
 
 	void setTargetId(const EntityId& target);
-	const EntityId& getTargetId() const { return mTargetId; }
+	EntityId getTargetId() const;
 
 	boost::signals2::signal<void(const std::string&)> controllerSelected;
-	boost::signals2::signal<void(const EntityId&)> targetChanged;
 
 private:
 	ControllersMap mControllers;
 	std::string mSelectedName;
 	CameraControllerPtr mSelectedController;
-	EntityId mTargetId = nullEntityId();
 };
 
 } // namespace sim

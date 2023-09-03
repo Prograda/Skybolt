@@ -23,7 +23,7 @@ public:
 
 	FreeCameraController(Entity* camera, const Params& params);
 
-	void update(float dt) override;
+	void update(SecondsD dt) override;
 	void setInput(const Input& input) override { mInput = input; }
 
 private:

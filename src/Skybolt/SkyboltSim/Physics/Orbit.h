@@ -42,7 +42,7 @@ public:
 	OrbitTraverser(Orbit* orbit);
 
 	// returns -1 if orbit is invalid at theta
-	DistReal getRadius(DistReal theta) const;
+	double getRadius(double theta) const;
 
 private:
 	Orbit* mOrbit;

@@ -30,15 +30,14 @@ public:
 	AttachedCameraController(Entity* camera, World* world, const Params& params);
 
 public: // CameraController interface
-	void update(float dt) override;
+	void update(SecondsD dt) override;
 	void setInput(const Input& input) override { mInput = input; }
 
-public: // Targetable interface
-	void setTargetId(const EntityId& targetId) override;
+private:
+	AttachmentPointPtr findAttachmentPoint(const Entity& entity) const; //!< Can return null
 
 private:
 	Params mParams;
-	AttachmentPointPtr mAttachmentPoint;
 	Input mInput = Input::zero();
 
 	static const float msYawRate;

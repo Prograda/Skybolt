@@ -37,7 +37,7 @@ BulletWorld::BulletWorld() :
 
 }
 
-RigidBody* BulletWorld::createRigidBody(btCollisionShape* shape, Real mass,  const btVector3 &inertia, const btVector3 &position,
+RigidBody* BulletWorld::createRigidBody(btCollisionShape* shape, double mass,  const btVector3 &inertia, const btVector3 &position,
 										const btQuaternion &orientation, const btVector3 &velocity, int collisionGroupMask, int collisionFilterMask)
 {
 	RigidBody* body = new RigidBody(mDynamicsWorld.get(), shape, collisionGroupMask, collisionFilterMask, mass, inertia, position, orientation, velocity);

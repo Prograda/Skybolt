@@ -34,7 +34,7 @@ CameraControllerWidget::CameraControllerWidget(sim::World* world, QWidget* paren
 	mWorld(world),
 	QWidget(parent)
 {
-	assert(mWorld);
+	mWorld->addListener(this);
 
 	setLayout(new QHBoxLayout());
 	mCameraModeCombo = new QComboBox();
@@ -42,16 +42,21 @@ CameraControllerWidget::CameraControllerWidget(sim::World* world, QWidget* paren
 	mCameraModeCombo->setEnabled(false);
 	layout()->addWidget(mCameraModeCombo);
 
-	mTargetListModel = new EntityListModel(world, &entityPredicateAlwaysFalse);
+	mTargetListModel = new EntityListModel(world, &entityPredicateAlwaysFalse, /* addBlankItem */ true);
 	auto proxyModel = new QSortFilterProxyModel(this);
+	proxyModel->sort(0);
 	proxyModel->setSourceModel(mTargetListModel);
-		
 
 	mCameraTargetCombo = new QComboBox();
 	mCameraTargetCombo->setToolTip("Camera Target");
 	mCameraTargetCombo->setModel(proxyModel);
 	mCameraTargetCombo->setEnabled(false);
 	layout()->addWidget(mCameraTargetCombo);
+}
+
+CameraControllerWidget::~CameraControllerWidget()
+{
+	mWorld->removeListener(this);
 }
 
 void CameraControllerWidget::setCamera(sim::Entity* camera)
@@ -95,7 +100,6 @@ void CameraControllerWidget::setCamera(sim::Entity* camera)
 		mCameraModeCombo->blockSignals(true);
 		mCameraModeCombo->setCurrentText(QString::fromStdString(name));
 		mCameraModeCombo->blockSignals(false);
-
 		updateTargetFilterForControllerName(name);
 	}));
 
@@ -112,13 +116,28 @@ void CameraControllerWidget::setCamera(sim::Entity* camera)
 			cameraController->setTargetId(entity->getId());
 		}
 	});
+}
 
-	mControllerConnections.push_back(cameraController->targetChanged.connect([this](const sim::EntityId& targetId) {
-		sim::Entity* target = mWorld->getEntityById(targetId);
+void CameraControllerWidget::update()
+{
+	if (!mCamera)
+	{
+		return;
+	}
+
+	QString newTargetName;
+	if (sim::CameraControllerComponentPtr cameraController = mCamera->getFirstComponent<sim::CameraControllerComponent>(); cameraController)
+	{
+		sim::Entity* target = mWorld->getEntityById(cameraController->getTargetId());
+		newTargetName = QString::fromStdString(sim::getName(*target));
+	}
+
+	if (newTargetName != mCameraTargetCombo->currentText())
+	{
 		mCameraTargetCombo->blockSignals(true);
-		mCameraTargetCombo->setCurrentText(target ? QString::fromStdString(sim::getName(*target)) : "");
+		mCameraTargetCombo->setCurrentText(newTargetName);
 		mCameraTargetCombo->blockSignals(false);
-	}));
+	}
 }
 
 void CameraControllerWidget::entityRemoved(const sim::EntityPtr& entity)

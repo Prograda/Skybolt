@@ -16,12 +16,12 @@
 using namespace skybolt;
 using namespace skybolt::sim;
 
-EntityListModel::EntityListModel(World* world, const EntityPredicate& predicate) :
+EntityListModel::EntityListModel(World* world, const EntityPredicate& predicate, bool addBlankItem) :
 	mWorld(world),
+	mAddBlankItem(addBlankItem),
 	mPredicate(predicate)
 {
 	world->addListener(this);
-
 	populateList();
 }
 
@@ -34,39 +34,68 @@ EntityListModel::~EntityListModel()
 void EntityListModel::setEntityFilter(const EntityPredicate& predicate)
 {
 	mPredicate = predicate;
-
 	populateList();
 }
 
 // WorldListener interface
 void EntityListModel::entityAdded(const sim::EntityPtr& entity)
 {
-	if (mPredicate(*entity))
-	{
-		if (std::string name = getName(*entity); !name.empty())
-		{
-			auto item = new QStandardItem(QString::fromStdString(name));
-			appendRow(item);
-			mItems[entity.get()] = item;
-		}
-	}
+	populateList();
 }
 
 void EntityListModel::entityAboutToBeRemoved(const sim::EntityPtr& entity)
 {
-	if (auto i = mItems.find(entity.get()); i != mItems.end())
+	populateList();
+}
+
+std::optional<QString> EntityListModel::toItem(const sim::Entity& entity) const
+{
+	if (mPredicate(entity))
 	{
-		removeRow(i->second->row());
-		mItems.erase(i);
+		if (std::string name = getName(entity); !name.empty())
+		{
+			return QString::fromStdString(name);
+		}
 	}
+	return std::nullopt;
 }
 
 void EntityListModel::populateList()
 {
-	clear();
-	mItems.clear();
+	// Make a complete list of items we want in the list
+	std::set<QString> newItems;
+	if (mAddBlankItem)
+	{
+		newItems.insert("");
+	}
+
 	for (const auto& entity : mWorld->getEntities())
 	{
-		entityAdded(entity);
+		if (auto item = toItem(*entity); item)
+		{
+			newItems.insert(*item);
+		}
 	}
+
+	// Add new items
+	for (const QString& item : newItems)
+	{
+		if (mItems.find(item) == mItems.end())
+		{
+			insertRow(rowCount(), new QStandardItem(item));
+		}
+	}
+
+	// Remove old items
+	for (const QString& item : mItems)
+	{
+		if (newItems.find(item) == newItems.end())
+		{
+			if (auto items = findItems(item); !items.empty())
+			{
+				removeRow(items.front()->row());
+			}
+		}
+	}
+	std::swap(mItems, newItems);
 }

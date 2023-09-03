@@ -99,7 +99,7 @@ OrbitTraverser::OrbitTraverser(Orbit* orbit) :
 	mSemiLatusRectum = orbit->semiMajorAxis * (1.0 - orbit->eccentricity * orbit->eccentricity);
 }
 
-DistReal OrbitTraverser::getRadius(DistReal theta) const
+double OrbitTraverser::getRadius(double theta) const
 {
 	double denominator = 1 + mOrbit->eccentricity * cos(theta);
 	if (denominator <= 0.0)

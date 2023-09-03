@@ -16,8 +16,8 @@ struct CameraState
 {
 	CameraState() :
 		fovY(0.5f), nearClipDistance(0.5), farClipDistance(5e7) {}
-	sim::DistReal nearClipDistance;
-	sim::DistReal farClipDistance;
+	double nearClipDistance;
+	double farClipDistance;
 	float fovY;
 };
 
