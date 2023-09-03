@@ -11,8 +11,6 @@
 namespace skybolt {
 namespace sim {
 
-const double SimStepper::msDynamicsStepSize = 1.0 / 60.0;
-
 SimStepper::SimStepper(const SystemRegistryPtr& systems) :
 	mSystems(systems)
 {
@@ -45,15 +43,15 @@ void SimStepper::updateDynamicsStep(const std::vector<SystemPtr>& systems, Secon
 	// Calculate required number of substeps
 	double newStepTimer = mStepTimer + dt;
 
-	int requiredSteps = int(newStepTimer / msDynamicsStepSize);
-	if (requiredSteps > msMaxDynamicsSubsteps)
+	int requiredSteps = int(newStepTimer / mDynamicsStepSize);
+	if (mMaxDynamicsSubsteps && requiredSteps > *mMaxDynamicsSubsteps)
 	{
-		requiredSteps = msMaxDynamicsSubsteps;
-		double dt = (double)msMaxDynamicsSubsteps * msDynamicsStepSize;
+		requiredSteps = *mMaxDynamicsSubsteps;
+		double dt = (double)*mMaxDynamicsSubsteps * mDynamicsStepSize;
 		newStepTimer = mStepTimer + dt;
 	}
 
-	mStepTimer = newStepTimer - requiredSteps * msDynamicsStepSize;
+	mStepTimer = newStepTimer - requiredSteps * mDynamicsStepSize;
 
 	// Perform substeps
 	for (int i = 0; i < requiredSteps; i++)
@@ -62,12 +60,12 @@ void SimStepper::updateDynamicsStep(const std::vector<SystemPtr>& systems, Secon
 
 		for (const SystemPtr& system : *mSystems)
 		{
-			system->advanceSimTime(mCurrentTime, msDynamicsStepSize);
+			system->advanceSimTime(mCurrentTime, mDynamicsStepSize);
 		}
 		updateSystem(systems, UpdateStage::DynamicsSubStep);
 		updateSystem(systems, UpdateStage::PostDynamicsSubStep);
 
-		mCurrentTime += msDynamicsStepSize;
+		mCurrentTime += mDynamicsStepSize;
 	}
 }
 

@@ -25,7 +25,8 @@ static std::map<SprocketIcon, QIcon> createSprocketIcons()
 		{SprocketIcon::Save, "Icons/google/save.svg"},
 		{SprocketIcon::Screenshot, "Icons/google/screenshot_keyboard.svg"},
 		{SprocketIcon::Sequence, "Icons/google/playlist_play.svg"},
-		{SprocketIcon::Settings, "Icons/google/settings.svg"}
+		{SprocketIcon::Settings, "Icons/google/settings.svg"},
+		{SprocketIcon::Speed, "Icons/google/round-speed.svg"}
 	};
 
 	std::map<SprocketIcon, QIcon> icons;

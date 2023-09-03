@@ -55,7 +55,7 @@ void TimeSource::setState(const State& state)
 	}
 }
 
-void TimeSource::update(double dt)
+void TimeSource::advanceTime(double dt)
 {
 	if (mState == StatePlaying)
 	{

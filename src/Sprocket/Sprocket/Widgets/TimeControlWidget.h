@@ -13,24 +13,41 @@
 
 #include <boost/signals2.hpp>
 
+class QDialog;
+class QLabel;
+
 class TimeControlWidget : public QWidget
 {
 	Q_OBJECT
 public:
 	TimeControlWidget(QWidget* parent = 0);
+	~TimeControlWidget();
 
 	skybolt::TimeSource* getTimeSource() const { return mSource; }
 	void setTimeSource(skybolt::TimeSource* source);
 
-	void setTemporalMode(skybolt::TemporalMode temporalMode);
+	void setTimelineMode(skybolt::TimelineMode timelineMode);
+
+	double getRequestedTimeRate() const;
+	void setRequestedTimeRate(double rate);
+
+	void setActualTimeRate(double rateTimesRealtime);
+
+private:
+	void updateTimeRateLabel();
 
 private:
 	skybolt::TimeSource* mSource;
-	skybolt::TemporalMode mTemporalMode = skybolt::TemporalMode::RandomAccess;
+	skybolt::TimelineMode mTimelineMode = skybolt::TimelineMode::Free;
 
 	QAction* mPlayAction;
 	QAction* mForwardAction;
 	QAction* mBackwardAction;
+	QLabel* mTimeRateLabel;
+
+	std::unique_ptr<class TimeRateDialog> mTimeRateDialog;
+	double mRequestedTimeRate = 1;
+	double mActualTimeRate = 1;
 
 	std::vector<QMetaObject::Connection> mConnections;
 	std::vector<boost::signals2::scoped_connection> mBoostConnections;

@@ -12,17 +12,17 @@
 
 namespace skybolt {
 
-enum class TemporalMode
+enum class TimelineMode
 {
-	Progressive, //!< Simulation can only advance forward in time in contiguious time-steps. For example, dynamic model simulation.
-	RandomAccess //!< User can jump to any point in time as desired. For example, trajectory data playback.
+	Live, //!< Simulation can only advance forward in time in contiguious time-steps. For example, dynamic model simulation.
+	Free //!< User can jump to any point in time as desired. For example, trajectory data playback.
 };
 
 struct Scenario
 {
 	double startJulianDate = 2457982.9;
 	TimeSource timeSource = TimeRange(0, 6000);
-	ObservableValue<TemporalMode> temporalMode = TemporalMode::Progressive;
+	ObservableValue<TimelineMode> timelineMode = TimelineMode::Live;
 
 	sim::World world;
 };

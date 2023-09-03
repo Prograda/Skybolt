@@ -22,7 +22,6 @@
 #include <SkyboltEngine/Scenario/ScenarioSerialization.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
 #include <SkyboltSim/Physics/Astronomy.h>
-#include <SkyboltSim/System/SimStepper.h>
 #include <SkyboltSim/System/System.h>
 #include <SkyboltSim/System/SystemRegistry.h>
 #include <SkyboltVis/Camera.h>
@@ -65,8 +64,6 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	mViewMenuToolWindowSeparator = ui->menuView->addSeparator();
 	mRecentFilesMenuPopulator.reset(new RecentFilesMenuPopulator(ui->menuRecentFiles, &mSettings, fileOpener));
 
-	mSimStepper = std::make_unique<SimStepper>(mEngineRoot->systemRegistry);
-
 	setProjectFilename("");
 	
 	// Connect menus
@@ -86,9 +83,6 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 
 	setStatusBar(new QStatusBar(this));
 
-	float timeOfDayInHours = 20;
-	mEngineRoot->scenario->startJulianDate = calcJulianDate(2017, 8, 17, timeOfDayInHours);
-
 	clearProject();
 
 	// Update immediately to sync ths vis to the sim.
@@ -101,18 +95,6 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 MainWindow::~MainWindow()
 {
 	delete mToolWindowManager;
-
-	mSimStepper.reset();
-	mEngineRoot.reset();
-}
-
-void MainWindow::simulate(TimeSource& timeSource, float dt)
-{
-	SecondsD prevSimTime = timeSource.getTime();
-	timeSource.update(dt);
-	double dtSim = std::max(0.0, timeSource.getTime() - prevSimTime);
-	mSimStepper->setDynamicsEnabled(mEngineRoot->scenario->temporalMode.get() == TemporalMode::Progressive);
-	mSimStepper->step(dtSim);
 }
 
 static QString addSeparator(const QString& str)
@@ -125,8 +107,6 @@ static QString addSeparator(const QString& str)
 	return result;
 }
 
-const SecondsD minFrameDuration = 0.01;
-const SecondsD maxSimStepDuration = 0.2f;
 
 void MainWindow::update()
 {
@@ -134,16 +114,7 @@ void MainWindow::update()
 	mUpdateTimer.reset();
 	mUpdateTimer.start();
 
-	double simDt = std::min(wallDt, maxSimStepDuration);
-	simulate(mEngineRoot->scenario->timeSource, simDt);
-
-	for (const SystemPtr& system : *mEngineRoot->systemRegistry)
-	{
-		system->advanceWallTime(mWallTime, wallDt);
-	}
-	mWallTime += wallDt;
-
-	emit updated();
+	emit updated(wallDt);
 
 	QString status;
 	if (mEngineRoot->stats.terrainTileLoadQueueSize)
@@ -166,6 +137,7 @@ void MainWindow::update()
 	statusBar()->showMessage(status);
 }
 
+const SecondsD minFrameDuration = 0.01;
 void MainWindow::updateIfIntervalElapsed()
 {
 	QTimer::singleShot(0, this, SLOT(updateIfIntervalElapsed()));

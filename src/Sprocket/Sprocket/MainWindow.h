@@ -67,7 +67,7 @@ signals:
 	void projectCleared();
 	void projectLoaded(const nlohmann::json& json);
 	void projectSaved(nlohmann::json& json) const;
-	void updated();
+	void updated(skybolt::sim::SecondsD wallDt);
 
 private slots:
 	void updateIfIntervalElapsed();
@@ -92,13 +92,11 @@ private:
 
 private:
 	std::shared_ptr<skybolt::EngineRoot> mEngineRoot;
-		std::unique_ptr<skybolt::sim::SimStepper> mSimStepper;
 	std::unique_ptr<Ui::MainWindow> ui;
 	ToolWindowManager* mToolWindowManager;
 	std::vector<QAction*> mToolActions;
 	
 	cxxtimer::Timer mUpdateTimer; //!< Time since last update
-	skybolt::sim::SecondsD mWallTime = 0;
 
 	QString mProjectFilename;
 

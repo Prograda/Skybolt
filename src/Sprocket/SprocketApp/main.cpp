@@ -10,6 +10,7 @@
 #include <Sprocket/EngineSettingsSerialization.h>
 #include <Sprocket/MainWindow.h>
 #include <Sprocket/MainWindowUtil.h>
+#include <Sprocket/SimUpdater.h>
 #include <Sprocket/ContextAction/CreateContextActions.h>
 #include <Sprocket/Input/ViewportInputSystem.h>
 #include <Sprocket/Input/InputPlatformQt.h>
@@ -21,6 +22,7 @@
 #include <Sprocket/Widgets/ScenarioPropertyEditorWidget.h>
 #include <Sprocket/Widgets/ScenarioObjectsEditorWidget.h>
 #include <Sprocket/Widgets/TimelineControlWidget.h>
+#include <Sprocket/Widgets/TimeControlWidget.h>
 #include <Sprocket/Widgets/ViewportWidget.h>
 
 #include <SkyboltCommon/ContainerUtility.h>
@@ -142,8 +144,9 @@ public:
 				return c;
 			}());
 
+		ViewportWidget* viewportWidget;
 		{
-			auto widget = new ViewportWidget([&] {
+			viewportWidget = new ViewportWidget([&] {
 				ViewportWidgetConfig c;
 				c.engineRoot = engineRoot.get();
 				c.visRoot = mVisRoot;
@@ -154,21 +157,30 @@ public:
 				c.parent = mMainWindow.get();
 				return c;
 			}());
-			widget->addMouseEventHandler(viewportMouseEventHandler);
+			viewportWidget->addMouseEventHandler(viewportMouseEventHandler);
 
-			EntityVisibilityPredicate basePredicate = createSelectedEntityVisibilityPredicateAndAddSubMenu(*widget->getVisibilityFilterMenu(), "See Through Planet", selectionModel);
-			basePredicate = predicateOr(basePredicate, createLineOfSightVisibilityPredicate(widget, &engineRoot->scenario->world));
-			addVisibilityLayerSubMenus(*widget->getVisibilityFilterMenu(), basePredicate, getEntityVisibilityLayers(mEditorPlugins), selectionModel);
+			EntityVisibilityPredicate basePredicate = createSelectedEntityVisibilityPredicateAndAddSubMenu(*viewportWidget->getVisibilityFilterMenu(), "See Through Planet", selectionModel);
+			basePredicate = predicateOr(basePredicate, createLineOfSightVisibilityPredicate(viewportWidget, &engineRoot->scenario->world));
+			addVisibilityLayerSubMenus(*viewportWidget->getVisibilityFilterMenu(), basePredicate, getEntityVisibilityLayers(mEditorPlugins), selectionModel);
 
-			mMainWindow->addToolWindow("Viewport", widget);
-
-			QObject::connect(mMainWindow.get(), &MainWindow::updated, widget, &ViewportWidget::update);
-			connectJsonProjectSerializable(*mMainWindow, *widget);
+			mMainWindow->addToolWindow("Viewport", viewportWidget);
+			connectJsonProjectSerializable(*mMainWindow, *viewportWidget);
 		}
+		TimelineControlWidget* timeControlWidget;
 		{
-			auto window = new TimelineControlWidget(&engineRoot->scenario->timeSource, &engineRoot->scenario->temporalMode, mMainWindow.get());
-			mMainWindow->addToolWindow("Time Control", window);
+			timeControlWidget = new TimelineControlWidget(&engineRoot->scenario->timeSource, &engineRoot->scenario->timelineMode, mMainWindow.get());
+			mMainWindow->addToolWindow("Time Control", timeControlWidget);
 		}
+
+		mSimUpdater = std::make_unique<SimUpdater>(engineRoot);
+
+		QObject::connect(mMainWindow.get(), &MainWindow::updated, viewportWidget, [this, timeControlWidget, viewportWidget] (sim::SecondsD wallDt) {
+			mSimUpdater->setRequestedTimeRate(timeControlWidget->getTimeControlWidget()->getRequestedTimeRate());
+			mSimUpdater->update(wallDt);
+			
+			timeControlWidget->getTimeControlWidget()->setActualTimeRate(mSimUpdater->getActualTimeRate());
+			viewportWidget->update();
+		});
 
 		try
 		{
@@ -200,6 +212,7 @@ public:
 
 private:
 	vis::VisRootPtr mVisRoot;
+	std::unique_ptr<SimUpdater> mSimUpdater;
 	std::unique_ptr<MainWindow> mMainWindow;
 	std::vector<EditorPluginPtr> mEditorPlugins;
 };

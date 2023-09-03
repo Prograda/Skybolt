@@ -5,7 +5,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TimeControlWidget.h"
+#include "TimeRateDialog.h"
 #include "Icon/SprocketIcons.h"
+#include <QLabel>
 #include <QLayout>
 #include <QStyle>
 #include <QToolBar>
@@ -21,21 +23,51 @@ TimeControlWidget::TimeControlWidget(QWidget* parent) :
 
 	mForwardAction = new QAction(getSprocketIcon(SprocketIcon::FastForward), tr("Forward"), this);
 	mForwardAction->setShortcut(tr("Ctrl+F"));
+	
 	mBackwardAction = new QAction(getSprocketIcon(SprocketIcon::FastRewind), tr("Backward"), this);
 	mBackwardAction->setShortcut(tr("Ctrl+B"));
 
-	QToolBar *bar = new QToolBar;
+	auto rateAction = new QAction(getSprocketIcon(SprocketIcon::Speed), tr("Rate"), this);
+
+	mTimeRateLabel = new QLabel("", this);
+	mTimeRateLabel->setVisible(false);
+
+	QToolBar* bar = new QToolBar(this);
 	bar->addAction(mBackwardAction);
 	bar->addAction(mPlayAction);
 	bar->addAction(mForwardAction);
+	bar->addAction(rateAction);
 
-	setLayout(new QHBoxLayout);
-	layout()->setMargin(0);
-	layout()->addWidget(bar);
+	QWidget* rateActionWidget = bar->widgetForAction(rateAction);
+	connect(rateAction, &QAction::triggered, this, [this, rateActionWidget] {
+		if (!mTimeRateDialog)
+		{
+			mTimeRateDialog = std::make_unique<TimeRateDialog>(mRequestedTimeRate, this);
+			mTimeRateDialog->move(rateActionWidget->mapToGlobal(QPoint(20, -50)));
+
+			connect(mTimeRateDialog.get(), &TimeRateDialog::rateChanged, this, [this] (double newRate) {
+				mRequestedTimeRate = newRate;
+			});
+
+			connect(mTimeRateDialog.get(), &TimeRateDialog::closed, this, [this] {
+				mTimeRateDialog.reset();
+			});
+			mTimeRateDialog->show();
+		}		
+	});
+
+	auto layout = new QHBoxLayout(this);
+	layout->setMargin(0);
+	layout->addWidget(bar);
+	layout->addWidget(mTimeRateLabel, 0);
+	layout->addStretch();
 
 	setEnabled(false);
-	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+	setActualTimeRate(1);
 }
+
+TimeControlWidget::~TimeControlWidget() = default;
 
 void TimeControlWidget::setTimeSource(TimeSource* source)
 {
@@ -72,9 +104,11 @@ void TimeControlWidget::setTimeSource(TimeSource* source)
 			{
 			case TimeSource::StatePlaying:
 				mPlayAction->setIcon(getSprocketIcon(SprocketIcon::Pause));
+				mTimeRateLabel->setVisible(true);
 				break;
 			case TimeSource::StateStopped:
 				mPlayAction->setIcon(getSprocketIcon(SprocketIcon::Play));
+				mTimeRateLabel->setVisible(false);
 				break;
 			default:
 				break;
@@ -83,12 +117,45 @@ void TimeControlWidget::setTimeSource(TimeSource* source)
 	}
 }
 
-void TimeControlWidget::setTemporalMode(TemporalMode temporalMode)
+void TimeControlWidget::setTimelineMode(TimelineMode timelineMode)
 {
-	if (mTemporalMode != temporalMode)
+	if (mTimelineMode != timelineMode)
 	{
-		mTemporalMode = temporalMode;
-		mForwardAction->setVisible(temporalMode == TemporalMode::RandomAccess);
-		mBackwardAction->setVisible(temporalMode == TemporalMode::RandomAccess);
+		mTimelineMode = timelineMode;
+		mForwardAction->setVisible(timelineMode == TimelineMode::Free);
+		mBackwardAction->setVisible(timelineMode == TimelineMode::Free);
 	}
+}
+
+double TimeControlWidget::getRequestedTimeRate() const
+{
+	return mRequestedTimeRate;
+}
+
+void TimeControlWidget::setRequestedTimeRate(double rate)
+{
+	mRequestedTimeRate = rate;
+	updateTimeRateLabel();
+}
+
+void TimeControlWidget::setActualTimeRate(double rate)
+{
+	mActualTimeRate = rate;
+	updateTimeRateLabel();
+}
+
+void TimeControlWidget::updateTimeRateLabel()
+{
+	QString text = QString::number(mRequestedTimeRate, 'g', 3) + "x";
+	if (mRequestedTimeRate != mActualTimeRate)
+	{
+		text += " (" + QString::number(mActualTimeRate, 'g', 3) + "x actual)";
+		mTimeRateLabel->setStyleSheet("QLabel { color : yellow; }");
+	}
+	else
+	{
+		mTimeRateLabel->setStyleSheet("");
+	}
+
+	mTimeRateLabel->setText(text);
 }

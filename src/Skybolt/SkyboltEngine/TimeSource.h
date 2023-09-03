@@ -48,7 +48,7 @@ public:
 	State getState() const { return mState; }
 	void setState(const State& state);
 
-	void update(double dt);
+	void advanceTime(double dt);
 
 	boost::signals2::signal<void(const State&)> stateChanged;
 	boost::signals2::signal<void(double)> timeChanged;

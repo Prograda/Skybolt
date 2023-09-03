@@ -22,5 +22,5 @@ private:
 	skybolt::Scenario* mScenario;
 	QtPropertyPtr mDateTime;
 	QtPropertyPtr mDuration;
-	QtPropertyPtr mTemporalMode;
+	QtPropertyPtr mTimelineMode;
 };

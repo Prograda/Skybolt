@@ -15,7 +15,7 @@
 
 using namespace skybolt;
 
-TimelineControlWidget::TimelineControlWidget(TimeSource* timeSource, ObservableValue<TemporalMode>* temporalMode, QWidget* parent) :
+TimelineControlWidget::TimelineControlWidget(TimeSource* timeSource, ObservableValue<TimelineMode>* timelineMode, QWidget* parent) :
 	QWidget(parent)
 {
 	assert(timeSource);
@@ -25,17 +25,17 @@ TimelineControlWidget::TimelineControlWidget(TimeSource* timeSource, ObservableV
 
 	TimelineWidget* timeline = new TimelineWidget;
 	layout->addWidget(timeline);
-	TimeControlWidget* timeControl = new TimeControlWidget;
-	layout->addWidget(timeControl);
+	mTimeControlWidget = new TimeControlWidget;
+	layout->addWidget(mTimeControlWidget);
 	layout->addStretch();
 
 	timeline->setTimeSource(timeSource);
 	
-	timeline->setTemporalMode(temporalMode->get());
-	timeControl->setTemporalMode(temporalMode->get());
-	temporalMode->valueChanged.connect([timeline, timeControl] (const TemporalMode& oldValue, const TemporalMode& newValue) {
-		timeline->setTemporalMode(newValue);
-		timeControl->setTemporalMode(newValue);
+	timeline->setTimelineMode(timelineMode->get());
+	mTimeControlWidget->setTimelineMode(timelineMode->get());
+	timelineMode->valueChanged.connect([timeline, this] (const TimelineMode& oldValue, const TimelineMode& newValue) {
+		timeline->setTimelineMode(newValue);
+		mTimeControlWidget->setTimelineMode(newValue);
 	});
 
 	timeSource->timeChanged.connect([=](double time)
@@ -43,5 +43,5 @@ TimelineControlWidget::TimelineControlWidget(TimeSource* timeSource, ObservableV
 		timeline->setBufferedRange(TimeRange(0, time));
 	});
 
-	timeControl->setTimeSource(timeSource);
+	mTimeControlWidget->setTimeSource(timeSource);
 }

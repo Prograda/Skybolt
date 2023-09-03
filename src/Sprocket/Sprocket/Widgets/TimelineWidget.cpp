@@ -97,7 +97,7 @@ void TimelineWidget::setTimeSource(TimeSource* source)
 
 		// Connect to new source
 		mConnections.push_back(connect(mSlider, &QSlider::valueChanged, [&](int valueInt) {
-			if (mTemporalMode == skybolt::TemporalMode::RandomAccess)
+			if (mTimelineMode == skybolt::TimelineMode::Free)
 			{
 				double value = double(valueInt) / double(mSlider->maximum() - mSlider->minimum());
 				value = math::lerp(mSource->getRange().start, mSource->getRange().end, value);
@@ -110,12 +110,12 @@ void TimelineWidget::setTimeSource(TimeSource* source)
 	}
 }
 
-void TimelineWidget::setTemporalMode(TemporalMode temporalMode)
+void TimelineWidget::setTimelineMode(TimelineMode timelineMode)
 {
-	if (mTemporalMode != temporalMode)
+	if (mTimelineMode != timelineMode)
 	{
-		mTemporalMode = temporalMode;
-		mSlider->setEnabled(temporalMode == TemporalMode::RandomAccess);
+		mTimelineMode = timelineMode;
+		mSlider->setEnabled(timelineMode == TimelineMode::Free);
 	}
 }
 

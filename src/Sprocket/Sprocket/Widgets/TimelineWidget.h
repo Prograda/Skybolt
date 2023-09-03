@@ -22,7 +22,7 @@ public:
 
 	skybolt::TimeSource* getTimeSource() const { return mSource; }
 	void setTimeSource(skybolt::TimeSource* source);
-	void setTemporalMode(skybolt::TemporalMode temporalMode);
+	void setTimelineMode(skybolt::TimelineMode timelineMode);
 	void setBufferedRange(const skybolt::TimeRange& range);
 
 private:
@@ -35,7 +35,7 @@ private slots:
 
 private:
 	skybolt::TimeSource* mSource;
-	skybolt::TemporalMode mTemporalMode = skybolt::TemporalMode::RandomAccess;
+	skybolt::TimelineMode mTimelineMode = skybolt::TimelineMode::Free;
 
 	QLabel* mTime;
 	QLabel* mDuration;

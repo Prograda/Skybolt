@@ -26,7 +26,8 @@ enum class SprocketIcon
 	Save,
 	Screenshot,
 	Sequence,
-	Settings
+	Settings,
+	Speed
 };
 
 const QIcon& getSprocketIcon(SprocketIcon icon);

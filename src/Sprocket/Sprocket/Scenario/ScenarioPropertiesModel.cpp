@@ -42,12 +42,12 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 		});
 	}
 	{
-		mTemporalMode = createQtProperty("temporalMode", 0);
-		mTemporalMode->setProperty(PropertyMetadataNames::enumValueDisplayNames, QStringList({"Progressive", "Random Access"}));
-		mProperties.push_back(mTemporalMode);
+		mTimelineMode = createQtProperty("timelineMode", 0);
+		mTimelineMode->setProperty(PropertyMetadataNames::enumValueDisplayNames, QStringList({"Live", "Free"}));
+		mProperties.push_back(mTimelineMode);
 
-		connect(mTemporalMode.get(), &QtProperty::valueChanged, [this]() {
-			mScenario->temporalMode.set(skybolt::TemporalMode(mTemporalMode->value.toInt()));
+		connect(mTimelineMode.get(), &QtProperty::valueChanged, [this]() {
+			mScenario->timelineMode.set(skybolt::TimelineMode(mTimelineMode->value.toInt()));
 		});
 	}
 
@@ -71,6 +71,6 @@ void ScenarioPropertiesModel::update()
 		mDuration->setValue(mScenario->timeSource.getRange().end);
 	}
 	{
-		mTemporalMode->setValue(int(mScenario->temporalMode.get()));
+		mTimelineMode->setValue(int(mScenario->timelineMode.get()));
 	}
 }

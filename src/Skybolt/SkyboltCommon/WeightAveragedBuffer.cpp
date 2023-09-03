@@ -39,14 +39,18 @@ void WeightAveragedBuffer::clear()
 
 float WeightAveragedBuffer::getResult() const
 {
-	float result = 0;
+	float total = 0;
+	float totalWeight = 0;
 	int bufferSize = (int)mBuffer.size();
-	float invBufferSize = 1.0f / bufferSize;
 	
 	for (int i=0; i<bufferSize; i++)
-		result += mBuffer[i] * (i+1) * invBufferSize;
+	{
+		float weight = calcWeight(i);
+		total += mBuffer[i] * weight;
+		totalWeight += weight;
+	}
 
-	return result / ((bufferSize + 1)*0.5f);
+	return total / totalWeight;
 }
 
 } //namespace

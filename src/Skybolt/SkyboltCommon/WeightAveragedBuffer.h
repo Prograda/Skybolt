@@ -22,9 +22,20 @@ public:
 
 	float getResult() const;
 
-private:
+protected:
+	virtual float calcWeight(int index) const = 0;
+
+protected:
 	std::deque<float> mBuffer;
 	unsigned int mSize;
+};
+
+class UniformAveragedBuffer : public WeightAveragedBuffer
+{
+public:
+	UniformAveragedBuffer(unsigned int size) : WeightAveragedBuffer(size) {}
+
+	float calcWeight(int index) const override { return 1; }
 };
 
 } // namespace skybolt

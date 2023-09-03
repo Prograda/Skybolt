@@ -11,8 +11,15 @@
 
 #include <QWidget>
 
+class TimeControlWidget;
+
 class TimelineControlWidget : public QWidget
 {
 public:
-	TimelineControlWidget(skybolt::TimeSource* timeSource, skybolt::ObservableValue<skybolt::TemporalMode>* temporalMode, QWidget* parent = nullptr);
+	TimelineControlWidget(skybolt::TimeSource* timeSource, skybolt::ObservableValue<skybolt::TimelineMode>* timelineMode, QWidget* parent = nullptr);
+
+	TimeControlWidget* getTimeControlWidget() const { return mTimeControlWidget; }
+
+private:
+	TimeControlWidget* mTimeControlWidget;
 };
