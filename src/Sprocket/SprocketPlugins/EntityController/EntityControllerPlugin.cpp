@@ -290,7 +290,11 @@ public:
 		setEntity(nullptr);
 	}
 
-	void updatePreDynamics(const sim::System::StepArgs& args) override
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::BeginStateUpdate, updateState)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updateState()
 	{
 		if (!mEntity)
 		{

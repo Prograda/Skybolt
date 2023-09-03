@@ -30,7 +30,11 @@ public:
 
 	void setVisible(bool visible);
 
-	void updatePostDynamics(const System::StepArgs& args) override;
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::Attachments, updateState)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updateState();
 
 private:
 	osg::ref_ptr<osg::Camera> mCamera;

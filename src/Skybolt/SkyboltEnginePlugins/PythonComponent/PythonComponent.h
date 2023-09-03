@@ -19,7 +19,11 @@ public:
 	PythonComponent(sim::Entity* entity, JulianDateProvider julianDateProvider, const std::string& moduleName, const std::string& className);
 	~PythonComponent();
 
-	void updatePreDynamics(sim::TimeReal dt, sim::TimeReal dtWallClock) override;
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::BeginStateUpdate, updateState)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updateState();
 
 private:
 	sim::Entity* mEntity;

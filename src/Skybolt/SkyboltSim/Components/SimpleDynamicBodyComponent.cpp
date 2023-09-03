@@ -12,7 +12,7 @@
 namespace skybolt {
 namespace sim {
 
-SimpleDynamicBodyComponent::SimpleDynamicBodyComponent(Node* node, Real mass, const Vector3& momentofInertia) :
+SimpleDynamicBodyComponent::SimpleDynamicBodyComponent(Node* node, double mass, const Vector3& momentofInertia) :
 	mNode(node),
 	mMass(mass),
 	mMomentOfInertia(momentofInertia)
@@ -39,9 +39,16 @@ void SimpleDynamicBodyComponent::applyTorque(const Vector3& torque)
 	mTotalTorque += torque;
 }
 
-void SimpleDynamicBodyComponent::updateDynamicsSubstep(TimeReal dtSubstep)
+void SimpleDynamicBodyComponent::advanceSimTime(SecondsD newTime, SecondsD dtSubstep)
 {
-	double dt = (double)dtSubstep;
+	mElapsedDt += dtSubstep;
+}
+
+void SimpleDynamicBodyComponent::integrateTimeStep()
+{
+	SecondsD dt = 0;
+	std::swap(dt, mElapsedDt);
+
 	double halfDt2 = dt * dt * 0.5;
 
 	// Integrate linear dynamics using velocity-verlet https://en.wikipedia.org/wiki/Verlet_integration

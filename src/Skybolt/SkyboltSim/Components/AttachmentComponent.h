@@ -31,7 +31,9 @@ public:
 	void setParentEntityId(const EntityId& target = nullEntityId());
 	const EntityId& getParentEntityId() const { return mParentEntityId; }
 
-	void updatePostDynamics(TimeReal dt, TimeReal dtWallClock) override;
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::Attachments, setTargetStateToParent)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
 
 	void setPositionRelBody(const Vector3& positionRelBody) { mParams.positionRelBody = positionRelBody; }
 	void setOrientationRelBody(const Quaternion& orientationRelBody) { mParams.orientationRelBody = orientationRelBody; }

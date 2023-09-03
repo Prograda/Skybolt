@@ -35,7 +35,7 @@ SimVisSystem::~SimVisSystem()
 {
 }
 
-void SimVisSystem::updatePostDynamics(const System::StepArgs& args)
+void SimVisSystem::updateState()
 {
 	Vector3 origin = mSceneOriginProvider();
 

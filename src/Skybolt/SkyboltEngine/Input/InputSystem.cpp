@@ -18,14 +18,20 @@ InputSystem::InputSystem(const InputPlatformPtr& inputPlatform, const std::vecto
 	assert(mInputPlatform);
 }
 
-void InputSystem::updatePreDynamics(const System::StepArgs& args)
+void InputSystem::advanceWallTime(sim::SecondsD newTime, sim::SecondsD dt)
+{
+	mDtWallClock += dt;
+}
+
+void InputSystem::updateState()
 {
 	mInputPlatform->update();
 
 	for (const LogicalAxisPtr& axis : mAxes)
 	{
-		axis->update(args.dtWallClock);
+		axis->update(mDtWallClock);
 	}
+	mDtWallClock = 0;
 }
 
 } // namespace skybolt

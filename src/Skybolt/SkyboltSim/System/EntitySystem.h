@@ -18,15 +18,13 @@ class EntitySystem : public System
 public:
 	EntitySystem(World* world);
 
-	void updatePreDynamics(const StepArgs& args) override;
-	void updatePreDynamicsSubstep(double dtSubstep) override;
-	void updateDynamicsSubstep(double dtSubstep) override;
-	void updatePostDynamicsSubstep(double dtSubstep) override;
-	void updatePostDynamics(const StepArgs& args) override;
+	void setSimTime(SecondsD newTime) override;
+	void advanceWallTime(SecondsD newTime, SecondsD dt) override;
+	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
+	void update(UpdateStage stage) override;
 
 private:
 	World* mWorld;
-	std::vector<EntityPtr> mEntities;
 };
 
 } // namespace sim

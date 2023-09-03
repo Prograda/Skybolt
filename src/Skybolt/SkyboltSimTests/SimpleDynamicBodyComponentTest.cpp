@@ -15,29 +15,30 @@
 using namespace skybolt;
 using namespace skybolt::sim;
 
-static void integrateOverTime(SimpleDynamicBodyComponent& body, TimeReal duration, const std::function<void()>& preStepAction)
+static void integrateOverTime(SimpleDynamicBodyComponent& body, SecondsD duration, const std::function<void()>& preStepAction)
 {
-	constexpr TimeReal dt = 0.01f;
-	for (TimeReal t = 0; t < duration; t += dt)
+	constexpr SecondsD dt = 0.01f;
+	for (SecondsD t = 0; t < duration; t += dt)
 	{
 		preStepAction();
-		body.updateDynamicsSubstep(dt);
+		body.advanceSimTime(t, dt);
+		body.update(UpdateStage::DynamicsSubStep);
 	}
 }
 
 TEST_CASE("Body accelerates under force")
 {
 	Node node;
-	Real mass = 5;
+	double mass = 5;
 	Vector3 momentOfInertia(2, 3, 4);
 	SimpleDynamicBodyComponent body(&node, mass, momentOfInertia);
 
 	// Calculate expected results
 	// https://www.calculatorsoup.com/calculators/physics/displacement_v_a_t.php
-	float t = 3;
-	float f = 10;
-	Real a = f / mass;
-	Real s = 0.5f * a * t * t;
+	double t = 3;
+	double f = 10;
+	double a = f / mass;
+	double s = 0.5 * a * t * t;
 
 	// Simulate
 	integrateOverTime(body, t, [&] {
@@ -52,7 +53,7 @@ TEST_CASE("Body accelerates under force")
 TEST_CASE("Body rotates under torque")
 {
 	Node node;
-	Real mass = 5;
+	double mass = 5;
 	Vector3 momentOfInertia(2, 3, 4);
 	SimpleDynamicBodyComponent body(&node, mass, momentOfInertia);
 
@@ -60,8 +61,8 @@ TEST_CASE("Body rotates under torque")
 	// https://www.calculatorsoup.com/calculators/physics/displacement_v_a_t.php
 	float t = 3;
 	float T = 0.1f;
-	Real a = T / Real(momentOfInertia.x);
-	Real theta = 0.5f * a * t * t;
+	double a = T / momentOfInertia.x;
+	double theta = 0.5 * a * t * t;
 
 	// Simulate
 	integrateOverTime(body, t, [&] {
@@ -78,7 +79,7 @@ TEST_CASE("Body rotates under torque")
 TEST_CASE("Force at distance produces torque")
 {
 	Node node;
-	Real mass = 5;
+	double mass = 5;
 	Vector3 momentOfInertia(2, 3, 4);
 	SimpleDynamicBodyComponent body(&node, mass, momentOfInertia);
 	Vector3 centerOfMass(0.2, 0.3, 0.4);
@@ -89,8 +90,8 @@ TEST_CASE("Force at distance produces torque")
 	float t = 3;
 	float f = 0.1f;
 	float offset = 0.5f;
-	Real a = f * offset / Real(momentOfInertia.x);
-	Real theta = 0.5f * a * t * t;
+	double a = f * offset / momentOfInertia.x;
+	double theta = 0.5 * a * t * t;
 
 	// Simulate
 	integrateOverTime(body, t, [&] {

@@ -40,14 +40,22 @@ public:
 
 	boost::signals2::signal<void(const skybolt::sim::CameraController::Input&)> cameraInputGenerated;
 
-public:
-	void updatePreDynamics(const skybolt::sim::System::StepArgs& args) override;
+public: // SimUpdatable interface
+
+	void advanceWallTime(sim::SecondsD newTime, sim::SecondsD dt) override;
+
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::BeginStateUpdate, generateCameraInput)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void generateCameraInput();
 
 protected: // EventListener interface
 	void onEvent(const skybolt::Event &evt) override;
 
 protected:
 	skybolt::InputPlatformPtr mInputPlatform;
+	sim::SecondsD mDtWallClock = 0;
 
 private:
 	CameraInputAxes mAxes;

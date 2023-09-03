@@ -116,7 +116,7 @@ BulletWheelsComponent::~BulletWheelsComponent()
 	mWorld->removeAction(mVehicle.get());
 }
 
-void BulletWheelsComponent::updatePreDynamics(TimeReal dt, TimeReal dtWallClock)
+void BulletWheelsComponent::updatePreDynamics()
 {
 	if (mSteering)
 	{

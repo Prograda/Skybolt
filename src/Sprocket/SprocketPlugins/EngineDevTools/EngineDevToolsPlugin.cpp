@@ -30,7 +30,12 @@ class EngineDevToolsSystem : public sim::System
 {
 public:
 	EngineDevToolsSystem(std::function<void()> updatable) : mUpdatable(updatable) {}
-	void updatePreDynamics(const sim::System::StepArgs& args) override
+
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::Input, update)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void update()
 	{
 		mUpdatable();
 	}

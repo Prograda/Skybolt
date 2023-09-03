@@ -13,9 +13,14 @@ class EntityInputSystem : public sim::System
 public:
 	EntityInputSystem(const std::vector<LogicalAxisPtr>& axes);
 
-	void updatePreDynamics(const sim::System::StepArgs& args) override;
-
 	void setEntity(const sim::EntityPtr& entity);
+
+public:
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::BeginStateUpdate, updateState)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updateState();
 
 private:
 	sim::EntityPtr mEntity;

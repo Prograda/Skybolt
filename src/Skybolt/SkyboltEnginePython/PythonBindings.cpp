@@ -133,10 +133,7 @@ static bool attachCameraToWindowWithEngine(sim::Entity& camera, vis::Window& win
 static void stepSim(EngineRoot& engineRoot, double dt)
 {
 	SimStepper stepper(engineRoot.systemRegistry);
-	System::StepArgs args;
-	args.dtSim = dt;
-	args.dtWallClock = dt;
-	stepper.step(args);
+	stepper.step(dt);
 }
 
 static bool render(EngineRoot& engineRoot, vis::VisRoot& visRoot)

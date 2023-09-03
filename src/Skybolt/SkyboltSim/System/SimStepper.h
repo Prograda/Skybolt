@@ -20,14 +20,20 @@ public:
 	SimStepper(const SystemRegistryPtr& systems);
 	~SimStepper();
 
-	void step(const System::StepArgs& args);
+	void step(SecondsD dt);
+	void setDynamicsEnabled(bool enabled) { mDynamicsEnabled = enabled; }
 
 private:
-	void updateDynamicsStep(const System::StepArgs& args);
+	void updateDynamicsStep(const std::vector<SystemPtr>& systems, SecondsD dt);
+
+	void updateSystem(const std::vector<SystemPtr>& systems, UpdateStage stage);
 
 private:
 	SystemRegistryPtr mSystems;
-	double mStepTimer = 0;
+	SecondsD mCurrentTime = 0;
+	SecondsD mStepTimer = 0;
+	bool mDynamicsEnabled = true;
+
 	static const double msDynamicsStepSize;
 	static const int msMaxDynamicsSubsteps = 10;
 };

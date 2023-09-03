@@ -16,9 +16,15 @@ ParticleSystemComponent::ParticleSystemComponent(const ParticleSystemPtr& partic
 	assert(mParticleSystem);
 }
 
-void ParticleSystemComponent::updatePreDynamics(TimeReal dt, TimeReal dtWallClock)
+void ParticleSystemComponent::advanceSimTime(SecondsD newTime, SecondsD dt)
 {
-	mParticleSystem->update(dt);
+	mSimTimeDt += dt;
+}
+
+void ParticleSystemComponent::updateState()
+{
+	mParticleSystem->update(mSimTimeDt);
+	mSimTimeDt = 0;
 }
 
 } // namespace sim

@@ -18,29 +18,46 @@ EntitySystem::EntitySystem(World* world) :
 	assert(mWorld);
 }
 
-void EntitySystem::updatePreDynamics(const System::StepArgs& args)
+void EntitySystem::setSimTime(SecondsD newTime)
 {
-	// Take a copy of the entities container so that the list doesn't change during timestep,
-	// even if entities are added to or removed from the world.
-	mEntities = mWorld->getEntities();
-
-	for (const EntityPtr& entity : mEntities)
+	for (const EntityPtr& entity : mWorld->getEntities())
 	{
-		if (entity->isDynamicsEnabled())
-		{
-			entity->updatePreDynamics(args.dtSim, args.dtWallClock);
-		}
+		entity->setSimTime(newTime);
 	}
 }
 
-void EntitySystem::updatePreDynamicsSubstep(double dtSubstep)
+void EntitySystem::advanceWallTime(SecondsD newTime, SecondsD dt)
 {
-	for (const EntityPtr& entity : mEntities)
+	for (const EntityPtr& entity : mWorld->getEntities())
 	{
-		if (entity->isDynamicsEnabled())
-		{
-			entity->updatePreDynamicsSubstep(dtSubstep);
+		entity->advanceWallTime(newTime, dt);
+	}
+}
 
+void EntitySystem::advanceSimTime(SecondsD newTime, SecondsD dt)
+{
+	for (const EntityPtr& entity : mWorld->getEntities())
+	{
+		entity->advanceSimTime(newTime, dt);
+	}
+}
+
+void EntitySystem::update(UpdateStage stage)
+{
+	// Take a copy of the entities container so that the list doesn't change during timestep
+	// due to entities being added or removed from the world.
+	std::vector<EntityPtr> entities = mWorld->getEntities();
+
+	for (const EntityPtr& entity : entities)
+	{
+		if (!entity->isDynamicsEnabled() &&
+			(stage == UpdateStage::PreDynamicsSubStep || stage == UpdateStage::DynamicsSubStep || stage == UpdateStage::PostDynamicsSubStep))
+		{
+			continue;
+		}
+
+		if (entity->isDynamicsEnabled() && stage == UpdateStage::PreDynamicsSubStep)
+		{
 			// Apply gravity
 			auto position = getPosition(*entity);
 			auto body = entity->getFirstComponent<DynamicBodyComponent>();
@@ -50,45 +67,9 @@ void EntitySystem::updatePreDynamicsSubstep(double dtSubstep)
 				body->applyCentralForce(force);
 			}
 		}
-	}
-}
 
-void EntitySystem::updateDynamicsSubstep(double dtSubstep)
-{
-	for (const EntityPtr& entity : mEntities)
-	{
-		if (entity->isDynamicsEnabled())
-		{
-			entity->updateDynamicsSubstep(dtSubstep);
-		}
+		entity->update(stage);
 	}
-}
-
-void EntitySystem::updatePostDynamicsSubstep(double dtSubstep)
-{
-	for (const EntityPtr& entity : mEntities)
-	{
-		if (entity->isDynamicsEnabled())
-		{
-			entity->updatePostDynamicsSubstep(dtSubstep);
-		}
-	}
-}
-
-void EntitySystem::updatePostDynamics(const System::StepArgs& args)
-{
-	for (const EntityPtr& entity : mEntities)
-	{
-		if (entity->isDynamicsEnabled())
-		{
-			entity->updatePostDynamics(args.dtSim, args.dtWallClock);
-		}
-	}
-	for (const EntityPtr& entity : mEntities)
-	{
-		entity->updateAttachments(args.dtSim, args.dtWallClock);
-	}
-	mEntities.clear(); // clear container so that ownership is not held
 }
 
 } // namespace sim

@@ -25,7 +25,7 @@ ReactionControlSystemComponent::ReactionControlSystemComponent(const ReactionCon
 	assert(mPedal);
 }
 
-void ReactionControlSystemComponent::updatePreDynamicsSubstep(TimeReal dt)
+void ReactionControlSystemComponent::updateState()
 {
 	Vector3 throttle(mStick->value, mPedal->value);
 	Vector3 torque = throttle * mParams.torque;

@@ -19,7 +19,11 @@ public:
 	HudSystem(const osg::ref_ptr<osg::Camera>& parentCamera, const std::function<double()>& verticalFovProvider);
 	~HudSystem() override;
 
-	void updatePostDynamics(const sim::System::StepArgs& args) override;
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::Attachments, updateState)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updateState();
 
 	//! @param entity may be null
 	void setEntity(sim::Entity* entity);

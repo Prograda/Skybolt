@@ -78,7 +78,7 @@ static btCollisionShape* loadPlanetCollisionShape(const PlanetComponent& planet,
 
 static sim::ComponentPtr loadBulletDynamicBody(BulletWorld& world, Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
-	Real mass = json.at("mass");
+	double mass = json.at("mass");
 	btVector3 velocity(0, 0, 0);
 	int collisionGroupMask = CollisionGroupMasks::simBody;
 	int collisionFilterMask = ~0;
@@ -111,13 +111,24 @@ public:
 		assert(mWorld);
 	}
 
-	void updateDynamicsSubstep(double dtSubstep) override
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::DynamicsSubStep, performSubStep)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void advanceSimTime(SecondsD newTime, SecondsD dt) override
 	{
-		mWorld->getDynamicsWorld()->stepSimulation(dtSubstep, 0, dtSubstep);
+		mDt += dt;
+	}
+
+	void performSubStep()
+	{
+		mWorld->getDynamicsWorld()->stepSimulation(mDt, 0, mDt);
+		mDt = 0;
 	};
 
 private:
 	BulletWorld* mWorld;
+	double mDt = 0;
 };
 
 const std::string dynamicBodyComponentName = "dynamicBody";

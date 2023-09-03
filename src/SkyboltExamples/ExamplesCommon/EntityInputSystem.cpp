@@ -10,7 +10,7 @@ EntityInputSystem::EntityInputSystem(const std::vector<LogicalAxisPtr>& axes) :
 {
 }
 
-void EntityInputSystem::updatePreDynamics(const StepArgs& args)
+void EntityInputSystem::updateState()
 {
 	if (mEntity)
 	{

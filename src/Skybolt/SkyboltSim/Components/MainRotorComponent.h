@@ -55,8 +55,6 @@ class MainRotorComponent : public Component
 public:
 	MainRotorComponent(const MainRotorComponentConfig& config);
 
-	void updatePreDynamicsSubstep(TimeReal dt);
-
 	void setNormalizedRpm(float rpm) { mDriverRpm = rpm; }
 
 	float getPitchAngle() const {return mPitch;}
@@ -68,6 +66,15 @@ public:
 	const Quaternion& getTppOrientationRelBody() const {return mTppOriRelBody;}
 
 	float getTppPitchOffset() const { return mParams->tppPitchOffset; }
+
+public: // SimUpdatable interface
+	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
+
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::PreDynamicsSubStep, updatePreDynamicsSubstep)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updatePreDynamicsSubstep();
 
 private:
 	float calculateInducedVelocity(float velSqLength) const;
@@ -92,6 +99,7 @@ private:
 	float mTppPitch; //!< Tip-plane-path pitch
 	float mTppRoll; //!< Tip-plane-path roll
 	Quaternion mTppOriRelBody;
+	SecondsD mDt = 0;
 };
 
 } // namespace sim

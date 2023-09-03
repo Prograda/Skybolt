@@ -37,8 +37,16 @@ static double calcAirDensity(double altitude)
 	return atmosphere.getDensity(altitude);
 }
 
-void FuselageComponent::updatePreDynamicsSubstep(TimeReal dt)
+void FuselageComponent::advanceSimTime(SecondsD newTime, SecondsD dt)
 {
+	mDt += dt;
+}
+
+void FuselageComponent::updatePreDynamicsSubstep()
+{
+	SecondsD dt = 0;
+	std::swap(mDt, dt);
+
 	const Vector3& velocityLocal = glm::inverse(mNode->getOrientation()) * mBody->getLinearVelocity();
 
 	// angle of attack and side slip

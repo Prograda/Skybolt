@@ -29,7 +29,7 @@ KinematicBody::~KinematicBody()
 	mWorld->destroyRigidBody(mBody);
 }
 
-void KinematicBody::updatePreDynamics(TimeReal dt, TimeReal dtWallClock)
+void KinematicBody::updatePreDynamics()
 {
 	mBody->setPosition(toBtVector3(mNode->getPosition()));
 	mBody->setOrientation(toBtQuaternion(mNode->getOrientation()));

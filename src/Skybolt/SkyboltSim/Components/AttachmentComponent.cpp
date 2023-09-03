@@ -36,11 +36,6 @@ void AttachmentComponent::setParentEntityId(const EntityId& entityId)
 	setTargetStateToParent();
 }
 
-void AttachmentComponent::updatePostDynamics(TimeReal dt, TimeReal dtWallClock)
-{
-	setTargetStateToParent();
-}
-
 void AttachmentComponent::setTargetStateToParent()
 {
 	if (mParentEntityId == nullEntityId())

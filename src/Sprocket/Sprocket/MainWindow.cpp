@@ -106,25 +106,13 @@ MainWindow::~MainWindow()
 	mEngineRoot.reset();
 }
 
-double minFrameDuration = 0.01;
-
 void MainWindow::simulate(TimeSource& timeSource, float dt)
 {
-	if (timeSource.getTime() == 0)
-	{
-		mLatestSimTime = timeSource.getTime();
-	}
-
+	SecondsD prevSimTime = timeSource.getTime();
 	timeSource.update(dt);
-	double dtSim = std::max(0.0, timeSource.getTime() - mLatestSimTime);
-	if (dtSim > 0.0)
-	{
-		mLatestSimTime = timeSource.getTime();
-	}
-	System::StepArgs args;
-	args.dtSim = dtSim;
-	args.dtWallClock = dt;
-	mSimStepper->step(args);
+	double dtSim = std::max(0.0, timeSource.getTime() - prevSimTime);
+	mSimStepper->setDynamicsEnabled(mEngineRoot->scenario->temporalMode.get() == TemporalMode::Progressive);
+	mSimStepper->step(dtSim);
 }
 
 static QString addSeparator(const QString& str)
@@ -137,15 +125,23 @@ static QString addSeparator(const QString& str)
 	return result;
 }
 
+const SecondsD minFrameDuration = 0.01;
+const SecondsD maxSimStepDuration = 0.2f;
+
 void MainWindow::update()
 {
-	double dt = double(mUpdateTimer.count<std::chrono::milliseconds>()) / 1000.0;
+	double wallDt = double(mUpdateTimer.count<std::chrono::milliseconds>()) / 1000.0;
 	mUpdateTimer.reset();
 	mUpdateTimer.start();
 
-	mEngineRoot->scenario->timeSource.update(dt);
+	double simDt = std::min(wallDt, maxSimStepDuration);
+	simulate(mEngineRoot->scenario->timeSource, simDt);
 
-	simulate(mEngineRoot->scenario->timeSource, dt);
+	for (const SystemPtr& system : *mEngineRoot->systemRegistry)
+	{
+		system->advanceWallTime(mWallTime, wallDt);
+	}
+	mWallTime += wallDt;
 
 	emit updated();
 

@@ -189,7 +189,11 @@ public:
 		assert(mClient);
 	}
 
-	void updatePreDynamics(sim::TimeReal dt, sim::TimeReal dtWallClock) override
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::Input, update)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void update()
 	{
 		mClient->sendFrame();
 		mClient->update();

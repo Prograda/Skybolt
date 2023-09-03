@@ -70,7 +70,7 @@ PythonComponent::~PythonComponent()
 {
 }
 
-void PythonComponent::updatePreDynamics(sim::TimeReal dt, sim::TimeReal dtWallClock)
+void PythonComponent::updateState()
 {
 	auto utcTime = julianDateToPythonDateTime(mJulianDateProvider());
 	mPythonData->object.attr("update")(utcTime);

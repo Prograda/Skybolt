@@ -32,7 +32,11 @@ class ReactionControlSystemComponent : public Component
 public:
 	ReactionControlSystemComponent(const ReactionControlSystemComponentConfig& config);
 
-	void updatePreDynamicsSubstep(TimeReal dt) override;
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::BeginStateUpdate, updateState)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updateState();
 
 private:
 	const ReactionControlSystemParams mParams;

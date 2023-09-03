@@ -18,7 +18,7 @@ DrivetrainComponent::DrivetrainComponent(const std::shared_ptr<BulletWheelsCompo
 	assert(mThrottle);
 }
 
-void DrivetrainComponent::updatePreDynamics(TimeReal dt, TimeReal dtWallClock)
+void DrivetrainComponent::updatePreDynamics()
 {
 	mWheels->setDrivingForce(mThrottle->value * mMaxForce);
 }

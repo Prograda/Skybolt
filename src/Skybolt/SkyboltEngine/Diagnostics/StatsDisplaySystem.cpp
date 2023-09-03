@@ -94,7 +94,7 @@ struct ContextData_bugFix : public osg::ContextData
         }
 };
 
-void StatsDisplaySystem::updatePostDynamics(const System::StepArgs& args)
+void StatsDisplaySystem::updateState()
 {
 	osg::Viewport* viewport = mCamera->getViewport();
 	mStatsHud->setAspectRatio(viewport->width() / viewport->height());

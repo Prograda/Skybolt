@@ -23,7 +23,11 @@ class RocketMotorComponent : public Component
 public:
 	RocketMotorComponent(const RocketMotorComponentParams& params, Node* node, DynamicBodyComponent* body, const ControlInputFloatPtr& input);
 
-	void updatePreDynamicsSubstep(TimeReal dt);
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::PreDynamicsSubStep, updatePreDynamicsSubstep)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updatePreDynamicsSubstep();
 
 private:
 	const RocketMotorComponentParams mParams;

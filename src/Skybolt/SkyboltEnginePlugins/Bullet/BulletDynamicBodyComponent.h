@@ -24,13 +24,11 @@ class BulletWorld;
 class BulletDynamicBodyComponent : public DynamicBodyComponent
 {
 	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(DynamicBodyComponent);
-public:
-	BulletDynamicBodyComponent(BulletWorld* world, Node* node, Real mass, const btVector3 &momentOfInertia, btCollisionShape* shape,
+
+public: // DynamicBodyComponent interface
+	BulletDynamicBodyComponent(BulletWorld* world, Node* node, double mass, const btVector3 &momentOfInertia, btCollisionShape* shape,
 		const btVector3 &velocity, int collisionGroupMask, int collisionFilterMask);
 	~BulletDynamicBodyComponent() override;
-
-	void updatePreDynamics(TimeReal dt, TimeReal dtWallClock) override;
-	void updatePostDynamics(TimeReal dt, TimeReal dtWallClock) override;
 
 	void setDynamicsEnabled(bool enabled) override;
 
@@ -41,8 +39,8 @@ public:
 	void setAngularVelocity(const Vector3& v) override;
 	Vector3 getAngularVelocity() const override;
 
-	void setMass(Real mass) override;
-	Real getMass() const override { return mMass; }
+	void setMass(double mass) override;
+	double getMass() const override { return mMass; }
 
 	void setCenterOfMass(const Vector3& relPosition) override;
 
@@ -59,11 +57,20 @@ public:
 
 	RigidBody* getRigidBody() const { return mBody; }
 
-public:
+public: // Component interface
 	std::vector<std::type_index> getExposedTypes() const override
 	{
 		return {typeid(DynamicBodyComponent), typeid(BulletDynamicBodyComponent)};
 	}
+
+public: // SimUpdatable interface
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::BeginStateUpdate, updatePreDynamics)
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::EndStateUpdate, updatePostDynamics)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updatePreDynamics();
+	void updatePostDynamics();
 
 protected:
 	void setPosition(const Vector3& position);
@@ -73,17 +80,15 @@ protected:
 	RigidBody* mBody;
 
 private:
+	const double mMinSpeedForCcdSquared;
 	BulletWorld* mWorld;
 	Node* mNode;
 	btVector3 mMomentOfInertia;
 	Vector3 mNodePosition;
 	Quaternion mNodeOrientation;
 	btVector3 mCenterOfMass = btVector3(0,0,0); //!< Position of RigidBody relative to Node component in body axes.
-	Real mMass;
+	double mMass;
 
-
-	float mTimeSinceCollided;
-	float mMinSpeedForCcdSquared;
 	bool mForceIntegrationEnabled;
 };
 

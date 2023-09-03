@@ -29,13 +29,21 @@ PropellerComponent::PropellerComponent(const PropellerComponentConfig& config) :
 	assert(mBody);
 }
 
-void PropellerComponent::updatePreDynamicsSubstep(TimeReal dt)
+void PropellerComponent::advanceSimTime(SecondsD newTime, SecondsD dt)
 {
+	mDt += dt;
+}
+
+void PropellerComponent::updatePreDynamicsSubstep()
+{
+	SecondsD dt = 0;
+	std::swap(mDt, dt);
+
 	// Apply control input
 	float desiredPitch = getUnitNormalized(*mInput) * mParams.pitchRange + mParams.minPitch;
 
 	 // First order lag function of peddle input
-	mPitch += desiredPitch - mPitch * std::min(1.0f, mParams.pitchResponseRate * dt);
+	mPitch += desiredPitch - mPitch * std::min(1.0f, mParams.pitchResponseRate * float(dt));
 	mRpm = mDriverRpm * mParams.rpmMultiplier;
 
 	const float thrust = mRpm * mPitch * mParams.thrustPerRpmPerPitch;

@@ -30,20 +30,32 @@ CameraControllerComponent::CameraControllerComponent(const ControllersMap& contr
 {
 }
 
-void CameraControllerComponent::updatePostDynamicsSubstep(TimeReal dtSubstep)
+void CameraControllerComponent::advanceSimTime(SecondsD newTime, SecondsD dt)
 {
-	if (getSelectedController())
-	{
-		getSelectedController()->updatePostDynamicsSubstep(dtSubstep);
-	}
+	mSimDt += dt;
 }
 
-void CameraControllerComponent::updateAttachments(TimeReal dt, TimeReal dtWallClock)
+void CameraControllerComponent::advanceWallTime(SecondsD newTime, SecondsD dt)
+{
+	mWallDt += dt;
+}
+
+void CameraControllerComponent::postDynamicsSubStep()
 {
 	if (getSelectedController())
 	{
-		getSelectedController()->update(dtWallClock);
+		getSelectedController()->updatePostDynamicsSubstep(mSimDt);
 	}
+	mSimDt = 0;
+}
+
+void CameraControllerComponent::updateAttachments()
+{
+	if (getSelectedController())
+	{
+		getSelectedController()->update(mWallDt);
+	}
+	mWallDt = 0;
 }
 
 } // namespace sim

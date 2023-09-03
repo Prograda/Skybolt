@@ -53,20 +53,20 @@ static Quaternion safeSlerp(const Quaternion& a, const Quaternion& b, double t)
 	return glm::slerp(sSafe, b, t);
 }
 
-void OrbitCameraController::updatePostDynamicsSubstep(TimeReal dtSubstep)
+void OrbitCameraController::updatePostDynamicsSubstep(SecondsD dtSubstep)
 {
 	if (Entity* entity = getTarget(); entity)
 	{
 		Quaternion orientation = *getOrientation(*entity);
 		if (mSmoothedTargetOrientation)
 		{
-			orientation = safeSlerp(*mSmoothedTargetOrientation, orientation, (double)calcFirstOrderLagInterpolationFactor(dtSubstep, mLagTimeConstant));
+			orientation = safeSlerp(*mSmoothedTargetOrientation, orientation, calcFirstOrderLagInterpolationFactor(dtSubstep, double(mLagTimeConstant)));
 		}
 		mSmoothedTargetOrientation = orientation;
 	}
 }
 
-void OrbitCameraController::update(float dt)
+void OrbitCameraController::update(SecondsD dt)
 {
 	if (mTargetId != mPrevTargetId)
 	{
@@ -79,7 +79,7 @@ void OrbitCameraController::update(float dt)
 	mYaw += msYawRate * mInput.yawRate * dt;
 	mPitch += msPitchRate * mInput.tiltRate * dt;
 	mZoom += msZoomRate * mInput.zoomRate * dt;
-	mZoom = math::clamp(mZoom, 0.0f, 1.0f);
+	mZoom = math::clamp(mZoom, 0.0, 1.0);
     
     double maxPitch = math::halfPiD();
     mPitch = math::clamp(mPitch, -maxPitch, maxPitch);
@@ -152,7 +152,7 @@ void OrbitCameraController::update(float dt)
 	}
 
 	// Zoom control
-	float dist = mParams.maxDist + mZoom * (mParams.minDist - mParams.maxDist);
+	double dist = mParams.maxDist + mZoom * (mParams.minDist - mParams.maxDist);
 
 	// Derive camera position
 	mNodeComponent->setPosition(mTargetPosition + mNodeComponent->getOrientation() * (Vector3(-dist, 0, 0) + mTargetOffset));

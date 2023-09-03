@@ -25,7 +25,11 @@ public:
 
 	~KinematicBody();
 
-	void updatePreDynamics(TimeReal dt, TimeReal dtWallClock) override;
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::BeginStateUpdate, updatePreDynamics)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updatePreDynamics();
 
 private:
 	BulletWorld* mWorld;

@@ -52,16 +52,34 @@ static InputDevicePtr getFirstKeyboard(const skybolt::InputPlatform& platform)
 	return keyboards.empty() ? nullptr : keyboards.front();
 }
 
-void CameraInputSystem::updatePreDynamics(const skybolt::sim::System::StepArgs& args)
+void CameraInputSystem::advanceWallTime(sim::SecondsD newTime, sim::SecondsD dt)
 {
+	mDtWallClock += dt;
+}
+
+void CameraInputSystem::generateCameraInput()
+{
+	sim::SecondsD dt = 0;
+	std::swap(mDtWallClock, dt);
+
 	InputDevicePtr keyboard = getFirstKeyboard(*mInputPlatform);
 
-	float dt = args.dtWallClock;
 	mInput.forwardSpeed = getAxisValueOrDefault(mAxes, CameraInputAxisType::Forward, 0.f);
 	mInput.rightSpeed = getAxisValueOrDefault(mAxes, CameraInputAxisType::Right, 0.f);
-	mInput.yawRate /= dt;
-	mInput.tiltRate /= dt;
-	mInput.zoomRate /= dt;
+	
+	if (dt > 0)
+	{
+		mInput.yawRate /= dt;
+		mInput.tiltRate /= dt;
+		mInput.zoomRate /= dt;
+	}
+	else
+	{
+		mInput.yawRate = 0;
+		mInput.tiltRate = 0;
+		mInput.zoomRate = 0;
+	}
+
 	mInput.modifier1Pressed = keyboard ? keyboard->isButtonPressed(KC_LSHIFT) : false;
 	mInput.modifier2Pressed = keyboard ? keyboard->isButtonPressed(KC_LCONTROL) : false;
 

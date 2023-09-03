@@ -14,14 +14,13 @@
 namespace skybolt {
 namespace sim {
 
-BulletDynamicBodyComponent::BulletDynamicBodyComponent(BulletWorld* world, Node* node, Real mass, const btVector3 &momentOfInertia, btCollisionShape* shape,
+BulletDynamicBodyComponent::BulletDynamicBodyComponent(BulletWorld* world, Node* node, double mass, const btVector3 &momentOfInertia, btCollisionShape* shape,
 	const btVector3 &velocity, int collisionGroupMask, int collisionFilterMask) :
+	mMinSpeedForCcdSquared(5.0 * 5.0),
 	mWorld(world),
 	mNode(node),
 	mMomentOfInertia(momentOfInertia),
 	mMass(mass),
-	mTimeSinceCollided(std::numeric_limits<float>::infinity()),
-	mMinSpeedForCcdSquared(5.0f * 5.0f),
 	mForceIntegrationEnabled(true)
 {
 	mBody = mWorld->createRigidBody(shape, mass, mMomentOfInertia, btVector3(0,0,0), btQuaternion::getIdentity(), velocity, collisionGroupMask, collisionFilterMask);
@@ -38,7 +37,7 @@ BulletDynamicBodyComponent::~BulletDynamicBodyComponent()
 	mWorld->destroyRigidBody(mBody);
 }
 
-void BulletDynamicBodyComponent::updatePreDynamics(TimeReal dt, TimeReal dtWallClock)
+void BulletDynamicBodyComponent::updatePreDynamics()
 {
 	mForces.clear();
 	// Reset position and orientation if the node was moved by an external source since the last timestep
@@ -55,7 +54,7 @@ void BulletDynamicBodyComponent::updatePreDynamics(TimeReal dt, TimeReal dtWallC
 	}
 }
 
-void BulletDynamicBodyComponent::updatePostDynamics(TimeReal dt, TimeReal dtWallClock)
+void BulletDynamicBodyComponent::updatePostDynamics()
 {
 	// Calculate new node position
 	btVector3 worldSpaceCenterOfMass = quatRotate(mBody->getOrientation(), mCenterOfMass);
@@ -73,7 +72,7 @@ void BulletDynamicBodyComponent::updatePostDynamics(TimeReal dt, TimeReal dtWall
 			btTransform t = mBody->getCenterOfMassTransform();
 			btVector3 aabbMin, aabbMax;
 			mBody->getCollisionShape()->getAabb(t, aabbMin, aabbMax);
-			DistReal radius = aabbMax.distance(aabbMin) * 0.5;
+			double radius = aabbMax.distance(aabbMin) * 0.5;
 
 			newNodePosition = res.position;
 			t.setOrigin(toBtVector3(res.position) + worldSpaceCenterOfMass + toBtVector3(res.normal) * radius);
@@ -168,7 +167,7 @@ void BulletDynamicBodyComponent::setCenterOfMass(const Vector3& relPosition)
 	setPosition(mNodePosition); // update rigid body position
 }
 
-void BulletDynamicBodyComponent::setMass(Real mass)
+void BulletDynamicBodyComponent::setMass(double mass)
 {
 	mMass = mass;
 	if (mForceIntegrationEnabled)

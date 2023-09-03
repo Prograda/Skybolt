@@ -16,17 +16,23 @@ using namespace sim;
 void runMainLoop(vis::VisRoot& visRoot, EngineRoot& engineRoot, UpdateLoop::ShouldExit shouldExit, SimPausedPredicate paused)
 {
 	// Run main loop
-	auto simStepper = std::make_shared<SimStepper>(engineRoot.systemRegistry);
+	auto systemRegistry = engineRoot.systemRegistry;
+	auto simStepper = std::make_shared<SimStepper>(systemRegistry);
 
-	double prevElapsedTime = 0;
-	double minFrameDuration = 0.01;
+	SecondsD minFrameDuration = 0.01;
+	SecondsD currentWallTime = 0;
 
 	UpdateLoop loop(minFrameDuration);
 	loop.exec([&](float dtWallClock) {
-		System::StepArgs args;
-		args.dtSim = paused() ? 0.0 : dtWallClock;
-		args.dtWallClock = dtWallClock;
-		simStepper->step(args);
+		SecondsD dtSim = paused() ? 0.0 : dtWallClock;
+		simStepper->step(dtSim);
+
+		for (const auto& system : *systemRegistry)
+		{
+			system->advanceWallTime(currentWallTime, dtWallClock);
+		}
+		currentWallTime += dtWallClock;
+
 		return visRoot.render();
 	}, shouldExit);
 }

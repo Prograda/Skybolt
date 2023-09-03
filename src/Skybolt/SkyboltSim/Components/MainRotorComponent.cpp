@@ -39,8 +39,16 @@ MainRotorComponent::MainRotorComponent(const MainRotorComponentConfig& config) :
 	assert(mCollectiveInput);
 }
 
-void MainRotorComponent::updatePreDynamicsSubstep(TimeReal dt)
+void MainRotorComponent::advanceSimTime(SecondsD newTime, SecondsD dt)
 {
+	mDt += dt;
+}
+
+void MainRotorComponent::updatePreDynamicsSubstep()
+{
+	SecondsD dt = 0;
+	std::swap(mDt, dt);
+
 	// Apply controls
 	mTppPitch = mCyclicInput->value.y * mParams->maxTppPitch + mParams->tppPitchOffset;
 	mTppRoll = mCyclicInput->value.x * mParams->maxTppRoll;

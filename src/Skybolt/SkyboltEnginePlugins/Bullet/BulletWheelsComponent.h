@@ -36,7 +36,7 @@ struct BulletWheelsComponentConfig
 {
 	btDynamicsWorld* world;
 	btRigidBody* body;
-	Real mass;
+	double mass;
 	std::vector<WheelConfig> wheels;
 	ControlInputFloatPtr steering; //!< Optional. If null, steering is disabled.
 };
@@ -47,7 +47,11 @@ public:
 	BulletWheelsComponent(const BulletWheelsComponentConfig& config);
 	~BulletWheelsComponent() override;
 
-	void updatePreDynamics(TimeReal dt, TimeReal dtWallClock) override;
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::BeginStateUpdate, updatePreDynamics)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updatePreDynamics();
 
 	void setDrivingForce(double force);
 

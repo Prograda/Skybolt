@@ -96,7 +96,9 @@ private:
 	std::unique_ptr<Ui::MainWindow> ui;
 	ToolWindowManager* mToolWindowManager;
 	std::vector<QAction*> mToolActions;
+	
 	cxxtimer::Timer mUpdateTimer; //!< Time since last update
+	skybolt::sim::SecondsD mWallTime = 0;
 
 	QString mProjectFilename;
 
@@ -104,6 +106,4 @@ private:
 
 	QSettings mSettings;
 	std::unique_ptr<class RecentFilesMenuPopulator> mRecentFilesMenuPopulator;
-
-	double mLatestSimTime = 0;
 };

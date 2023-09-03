@@ -23,7 +23,7 @@ RocketMotorComponent::RocketMotorComponent(const RocketMotorComponentParams& par
 	assert(mInput);
 }
 
-void RocketMotorComponent::updatePreDynamicsSubstep(TimeReal dt)
+void RocketMotorComponent::updatePreDynamicsSubstep()
 {
 	float thrust = mInput->value * mParams.maxThrust;
 	mBody->applyCentralForce(mNode->getOrientation() * Vector3(thrust, 0, 0));

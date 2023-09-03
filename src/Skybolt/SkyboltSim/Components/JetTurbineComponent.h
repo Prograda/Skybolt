@@ -24,13 +24,22 @@ class JetTurbineComponent : public Component
 public:
 	JetTurbineComponent(const JetTurbineParams& params, const ControlInputFloatPtr &input);
 
-	void updatePreDynamicsSubstep(TimeReal dt);
 	float getRpm() const {return mEngineRpm;}
+
+public: // SimUpdatable interface
+	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
+
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::PreDynamicsSubStep, updatePreDynamicsSubstep)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updatePreDynamicsSubstep();
 
 private:
 	const JetTurbineParams mParams;
 	ControlInputFloatPtr mInput;
 	float mEngineRpm;
+	SecondsD mDt = 0;
 };
 
 } // namespace sim

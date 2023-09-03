@@ -13,10 +13,6 @@
 namespace skybolt {
 namespace sim {
 
-typedef float TimeReal;
-typedef double DistReal;
-typedef float Real;
-
 typedef glm::dvec3 Vector3;
 typedef glm::dquat Quaternion;
 typedef glm::dmat3 Matrix3;
@@ -28,8 +24,8 @@ void getOrthonormalBasis(const Vector3 &normal, Vector3 &tangent, Vector3 &binor
 //! Generates an orientation from a direction, with arbitrary roll angle
 Matrix3 getOrientationFromDirection(const Vector3& direction);
 
-DistReal posInfinity();
-DistReal negInfinity();
+double posInfinity();
+double negInfinity();
 
 } // namespace sim
 } // namespace skybolt

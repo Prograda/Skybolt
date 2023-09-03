@@ -7,26 +7,20 @@
 #pragma once
 
 #include "SkyboltSim/Reflection.h"
-#include "SkyboltSim/SimMath.h"
+#include "SkyboltSim/SimUpdatable.h"
 #include <SkyboltCommon/TypedItemContainer.h>
 
 namespace skybolt {
 namespace sim {
 
-class Component
+class Component : public SimUpdatable
 {
 	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION()
 public:
 	virtual ~Component() {}
 
-	// TODO: these update hooks should be made more generic. Components should register when they want to be updated.
-	virtual void updatePreDynamics(TimeReal dt, TimeReal dtWallClock) {};
-	virtual void updatePreDynamicsSubstep(TimeReal dtSubstep) {}
-	virtual void updateDynamicsSubstep(TimeReal dtSubstep) {}
-	virtual void updatePostDynamicsSubstep(TimeReal dtSubstep) {}
-	virtual void updatePostDynamics(TimeReal dt, TimeReal dtWallClock) {};
-	virtual void updateAttachments(TimeReal dt, TimeReal dtWallClock) {};
-
+	// FIXME: @deprecated. Please call Entity::setDynamicsEnabled instead.
+	// Ideally we wouldn't have this method here, but it's needed to allow components to respond to a change in entity dynamics enabled state.
 	virtual void setDynamicsEnabled(bool enabled) {};
 
 	//! @returns types this component will be registered as in the type system, used by TypedItemContainer

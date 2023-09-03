@@ -25,7 +25,11 @@ public:
 	SimVisSystem(const sim::World* world, const vis::ScenePtr& scene);
 	~SimVisSystem();
 
-	void updatePostDynamics(const System::StepArgs& args) override;
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::Output, updateState)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updateState();
 
 	const GeocentricToNedConverter& getCoordinateConverter() const { return *mCoordinateConverter; }
 

@@ -57,10 +57,17 @@ class FuselageComponent : public Component
 public:
 	FuselageComponent(const FuselageComponentConfig& config);
 
-	void updatePreDynamicsSubstep(TimeReal dt);
-
 	float getAngleOfAttack() const { return mAngleOfAttack; }
 	float getSideSlipAngle() const { return mSideSlipAngle; }
+
+public: // SimUpdatable interface
+	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
+
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::PreDynamicsSubStep, updatePreDynamicsSubstep)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updatePreDynamicsSubstep();
 
 private:
 	Vector3 calcDragForce(const Vector3 &velocityLocal, const Vector3 &dragDirection, float density) const;
@@ -76,6 +83,7 @@ private:
 
 	float mAngleOfAttack = 0;
 	float mSideSlipAngle = 0;
+	SecondsD mDt = 0;
 };
 
 } // namespace sim

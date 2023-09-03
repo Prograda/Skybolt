@@ -17,12 +17,18 @@ class ParticleSystemComponent : public Component
 public:
 	ParticleSystemComponent(const ParticleSystemPtr& particleSystem);
 
-	void updatePreDynamics(TimeReal dt, TimeReal dtWallClock) override;
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::EndStateUpdate, updateState)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
+	void updateState();
 
 	const ParticleSystemPtr& getParticleSystem() const { return mParticleSystem; }
 
 private:
 	ParticleSystemPtr mParticleSystem;
+	SecondsD mSimTimeDt = 0;
 };
 
 } // namespace sim

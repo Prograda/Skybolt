@@ -146,7 +146,7 @@ static void drawControlInputs(VisHud& hud, const glm::vec2& position, const Cont
 	}
 }
 
-void HudSystem::updatePostDynamics(const sim::System::StepArgs& args)
+void HudSystem::updateState()
 {
 	bool showHud = false;
 	if (mEntity && mEnabled)

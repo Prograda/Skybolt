@@ -9,7 +9,7 @@
 #include "SkyboltSimFwd.h"
 #include "Component.h"
 #include "EntityId.h"
-#include "SimMath.h"
+#include "SimUpdatable.h"
 #include <SkyboltCommon/Exception.h>
 #include <SkyboltCommon/Listenable.h>
 #include <SkyboltCommon/TypedItemContainer.h>
@@ -28,18 +28,11 @@ public:
 	virtual void onDestroy(Entity* entity) {}
 };
 
-class Entity : public skybolt::Listenable<EntityListener>
+class Entity : public skybolt::Listenable<EntityListener>, public SimUpdatable
 {
 public:
 	explicit Entity(const EntityId& id);
 	virtual ~Entity();
-
-	void updatePreDynamics(TimeReal dt, TimeReal dtWallClock);
-	void updatePreDynamicsSubstep(TimeReal dtSubstep);
-	void updateDynamicsSubstep(TimeReal dtSubstep);
-	void updatePostDynamicsSubstep(TimeReal dtSubstep);
-	void updatePostDynamics(TimeReal dt, TimeReal dtWallClock);
-	void updateAttachments(TimeReal dt, TimeReal dtWallClock);
 
 	void setDynamicsEnabled(bool enabled);
 	bool isDynamicsEnabled() const { return mDynamicsEnabled; }
@@ -76,6 +69,12 @@ public:
 	}
 
 	const EntityId& getId() const { return mId; }
+
+public: // SimUpdatable interface
+	void setSimTime(SecondsD newTime) override;
+	void advanceWallTime(SecondsD newTime, SecondsD dt) override;
+	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
+	void update(UpdateStage stage) override;
 
 private:
 	const EntityId mId; //!< Globally unique ID of entity

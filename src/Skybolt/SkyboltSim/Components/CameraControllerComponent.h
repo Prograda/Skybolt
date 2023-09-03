@@ -26,8 +26,20 @@ class CameraControllerComponent : public CameraControllerSelector, public Compon
 	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(Component)
 public:
 	CameraControllerComponent(const ControllersMap& controllers);
-	void updatePostDynamicsSubstep(TimeReal dtSubstep) override;
-	void updateAttachments(TimeReal dt, TimeReal dtWallClock) override;
+
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::PostDynamicsSubStep, postDynamicsSubStep)
+		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::Attachments, updateAttachments)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
+	void advanceWallTime(SecondsD newTime, SecondsD dt) override;
+	void postDynamicsSubStep();
+	void updateAttachments();
+
+private:
+	SecondsD mSimDt = 0;
+	SecondsD mWallDt = 0;
 };
 
 SKYBOLT_REFLECT_EXTERN(CameraControllerComponent)

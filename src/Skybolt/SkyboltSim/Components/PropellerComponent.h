@@ -38,8 +38,6 @@ class PropellerComponent : public Component
 public:
 	PropellerComponent(const PropellerComponentConfig& config);
 
-	void updatePreDynamicsSubstep(TimeReal dt);
-
 	void setDriverRpm(float rpm) {mDriverRpm = rpm;}
 
 	float getPitchAngle() const {return mPitch;}
@@ -49,6 +47,15 @@ public:
 
 	const Vector3& getPositionRelBody() const {return mPositionRelBody;}
 	const Quaternion& getOrientationRelBody() const {return mOrientationRelBody;}
+
+public: // SimUpdatable interface
+	void advanceSimTime(SecondsD newTime, SecondsD dt) override;
+
+	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
+		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::PreDynamicsSubStep, updatePreDynamicsSubstep)
+	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
+
+	void updatePreDynamicsSubstep();
 
 private:
 	const PropellerParams mParams;
@@ -61,6 +68,7 @@ private:
 	float mPitch;
 	float mRotationAngle;
 	float mRpm;
+	SecondsD mDt = 0;
 };
 
 } // namespace sim

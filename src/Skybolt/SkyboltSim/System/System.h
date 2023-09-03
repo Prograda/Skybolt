@@ -6,25 +6,16 @@
 
 #pragma once
 
+#include "SkyboltSim/SimUpdatable.h"
+
 namespace skybolt {
 namespace sim {
 
-class System
+class System : public SimUpdatable
 {
 public:
-	virtual ~System() {}
-
-	struct StepArgs
-	{
-		double dtSim;
-		double dtWallClock;
-	};
-
-	virtual void updatePreDynamics(const StepArgs& args) {};
-	virtual void updatePreDynamicsSubstep(double dtSubstep) {};
-	virtual void updateDynamicsSubstep(double dtSubstep) {};
-	virtual void updatePostDynamicsSubstep(double dtSubstep) {};
-	virtual void updatePostDynamics(const StepArgs& args) {};
+	System() = default;
+	~System() override = default;
 };
 
 } // namespace sim
