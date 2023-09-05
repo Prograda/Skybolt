@@ -88,9 +88,6 @@ public:
 		engineRoot->systemRegistry->push_back(viewportInputSystem);
 
 		mVisRoot = createVisRoot(*engineRoot);
-		QObject::connect(mMainWindow.get(), &MainWindow::updated, [=] {
-			mVisRoot->render();
-		});
 
 		{
 			EditorPluginConfig config;
@@ -180,6 +177,8 @@ public:
 			
 			timeControlWidget->getTimeControlWidget()->setActualTimeRate(mSimUpdater->getActualTimeRate());
 			viewportWidget->update();
+
+			mVisRoot->render();
 		});
 
 		try

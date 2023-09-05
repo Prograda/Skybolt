@@ -27,7 +27,6 @@
 #include <SkyboltVis/Camera.h>
 
 #include <filesystem>
-#include <boost/log/trivial.hpp>
 
 #include <ToolWindowManager/ToolWindowManagerArea.h>
 

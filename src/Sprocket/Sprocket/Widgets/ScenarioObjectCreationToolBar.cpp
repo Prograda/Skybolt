@@ -68,10 +68,11 @@ static QString modalNameInputDialog(const QString& defaultName, StringValidator 
 	return "";
 }
 
-static void connectTreeItemTypeMenuAction(const ScenarioObjectTypePtr& type, QAction* action, const std::string& instanceName, const std::string& templateName = "")
+static void connectTreeItemTypeMenuAction(const ScenarioObjectTypePtr& type, QAction* action, const std::string& instanceBaseName, const std::string& templateName = "")
 {
 	QObject::connect(action, &QAction::triggered, [=]()
 	{
+		std::string instanceName = type->objectRegistry->createUniqueItemName(instanceBaseName);
 		type->objectCreator(instanceName, templateName);
 	});
 }
@@ -88,8 +89,7 @@ static QMenu* createCreateMenu(const ScenarioObjectTypeMap& types)
 			{
 				QAction* action = new QAction(QString::fromStdString(type->name));
 				menu->addAction(action);
-				std::string instanceName = type->objectRegistry->createUniqueItemName(type->name);
-				connectTreeItemTypeMenuAction(type, action, instanceName);
+				connectTreeItemTypeMenuAction(type, action, type->name);
 			}
 			else
 			{
@@ -99,8 +99,7 @@ static QMenu* createCreateMenu(const ScenarioObjectTypeMap& types)
 				{
 					QAction* action = new QAction(QString::fromStdString(templateName));
 					subMenu->addAction(action);
-					std::string instanceName = type->objectRegistry->createUniqueItemName(templateName);
-					connectTreeItemTypeMenuAction(type, action, instanceName, templateName);
+					connectTreeItemTypeMenuAction(type, action, templateName, templateName);
 				}
 			}
 		}
