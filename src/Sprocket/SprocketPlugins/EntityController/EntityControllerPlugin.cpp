@@ -367,7 +367,7 @@ public:
 	{
 		if (auto entityObject = getFirstSelectedScenarioObjectOfType<EntityObject>(selected); entityObject)
 		{
-			sim::Entity* entity = mEngineRoot->scenario->world.getEntityById(entityObject->data);
+			sim::Entity* entity = mEngineRoot->scenario->world.getEntityById(entityObject->data).get();
 			mEntityControllerWidget->setEntity(entity);
 			mJoystickInputSystem->setEntity(entity);
 		}

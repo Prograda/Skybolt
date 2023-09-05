@@ -105,12 +105,12 @@ void CameraControllerWidget::setCamera(sim::Entity* camera)
 
 	// Target combo
 	const sim::EntityId& targetId = cameraController->getTargetId();
-	sim::Entity* target = mWorld->getEntityById(targetId);
+	sim::Entity* target = mWorld->getEntityById(targetId).get();
 	mCameraTargetCombo->setCurrentText(QString::fromStdString(target ? sim::getName(*target) : ""));
 		
 	connect(mCameraTargetCombo, &QComboBox::currentTextChanged, [=](const QString& text)
 	{
-		sim::Entity* entity = mWorld->findObjectByName(text.toStdString());
+		sim::Entity* entity = mWorld->findObjectByName(text.toStdString()).get();
 		if (entity)
 		{
 			cameraController->setTargetId(entity->getId());
@@ -128,7 +128,7 @@ void CameraControllerWidget::update()
 	QString newTargetName;
 	if (sim::CameraControllerComponentPtr cameraController = mCamera->getFirstComponent<sim::CameraControllerComponent>(); cameraController)
 	{
-		sim::Entity* target = mWorld->getEntityById(cameraController->getTargetId());
+		sim::Entity* target = mWorld->getEntityById(cameraController->getTargetId()).get();
 		newTargetName = QString::fromStdString(sim::getName(*target));
 	}
 

@@ -73,7 +73,7 @@ static sim::Entity* getParentEntity(const sim::Entity& entity)
 
 ScenarioObjectPtr EntityObject::getParent() const
 {
-	if (sim::Entity* entity = mWorld->getEntityById(data); entity)
+	if (sim::Entity* entity = mWorld->getEntityById(data).get(); entity)
 	{
 		sim::Entity* parent = getParentEntity(*entity);
 		return parent ? mRegistry->findByName(sim::getName(*parent)) : nullptr;
@@ -83,7 +83,7 @@ ScenarioObjectPtr EntityObject::getParent() const
 
 std::optional<skybolt::sim::Vector3> EntityObject::getWorldPosition() const
 {
-	if (sim::Entity* entity = mWorld->getEntityById(data); entity)
+	if (sim::Entity* entity = mWorld->getEntityById(data).get(); entity)
 	{
 		return getPosition(*entity);
 	}
@@ -92,7 +92,7 @@ std::optional<skybolt::sim::Vector3> EntityObject::getWorldPosition() const
 
 void EntityObject::setWorldPosition(const skybolt::sim::Vector3& position)
 {
-	if (sim::Entity* entity = mWorld->getEntityById(data); entity)
+	if (sim::Entity* entity = mWorld->getEntityById(data).get(); entity)
 	{
 		return setPosition(*entity, position);
 	}
@@ -100,7 +100,7 @@ void EntityObject::setWorldPosition(const skybolt::sim::Vector3& position)
 
 std::optional<skybolt::sim::Vector3> EntityObject::intersectRay(const sim::Vector3& origin, const sim::Vector3& dir, const glm::dmat4& viewProjTransform) const
 {
-	if (sim::Entity* entity = mWorld->getEntityById(data); entity)
+	if (sim::Entity* entity = mWorld->getEntityById(data).get(); entity)
 	{
 		if (auto component = entity->getFirstComponent<sim::PlanetComponent>().get(); component)
 		{
@@ -133,11 +133,11 @@ ScenarioObjectTypePtr createEntityObjectType(sim::World* world, EntityFactory* e
 		world->addEntity(entity);
 	};
 	t->isObjectRemovable = [world] (const ScenarioObject& object) {
-		sim::Entity* entity = world->getEntityById(static_cast<const EntityObject*>(&object)->data);
+		sim::Entity* entity = world->getEntityById(static_cast<const EntityObject*>(&object)->data).get();
 		return entity ? isDeletable(*entity) : false;
 	};
 	t->objectRemover = [world] (const ScenarioObject& object) {
-		if (sim::Entity* entity = world->getEntityById(static_cast<const EntityObject*>(&object)->data); entity)
+		if (sim::Entity* entity = world->getEntityById(static_cast<const EntityObject*>(&object)->data).get(); entity)
 		{
 			world->removeEntity(entity);
 		}

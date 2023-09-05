@@ -43,7 +43,7 @@ void AttachmentComponent::setTargetStateToParent()
 		return;
 	}
 
-	if (Entity* parentEntity = mWorld->getEntityById(mParentEntityId); parentEntity)
+	if (const EntityPtr& parentEntity = mWorld->getEntityById(mParentEntityId); parentEntity)
 	{
 		// Update position and orientation
 		auto optionalPosition = getPosition(*parentEntity);

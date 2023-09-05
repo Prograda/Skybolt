@@ -40,10 +40,10 @@ public:
 	inline const Entities &getEntities() const { return mEntities; }
 
 	//! @return null if entity not found
-	Entity* getEntityById(EntityId id) const;
+	EntityPtr getEntityById(EntityId id) const;
 
 	//! @return null if entity not found
-	Entity* findObjectByName(const std::string& name) const;
+	EntityPtr findObjectByName(const std::string& name) const;
 
 private:
 	Entities mEntities;

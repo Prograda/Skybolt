@@ -79,7 +79,7 @@ SimVisSystem::SceneOriginProvider SimVisSystem::sceneOriginFromEntity(const sim:
 {
 	assert(world);
 	return [=]{
-		if (sim::Entity* entity = world->getEntityById(entityId); entity)
+		if (sim::Entity* entity = world->getEntityById(entityId).get(); entity)
 		{
 			auto position = getPosition(*entity);
 			{

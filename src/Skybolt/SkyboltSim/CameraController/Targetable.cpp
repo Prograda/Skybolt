@@ -30,7 +30,7 @@ void Targetable::setTargetId(const EntityId& targetId)
 
 Entity* Targetable::getTarget() const
 {
-	return mWorld->getEntityById(mTargetId);
+	return mWorld->getEntityById(mTargetId).get();
 }
 
 const std::string& Targetable::getTargetName() const
@@ -45,7 +45,7 @@ const std::string& Targetable::getTargetName() const
 
 void Targetable::setTargetName(const std::string& targetName)
 {
-	if (Entity* entity = mWorld->findObjectByName(targetName); entity)
+	if (const EntityPtr& entity = mWorld->findObjectByName(targetName); entity)
 	{
 		mTargetId = entity->getId();
 	}

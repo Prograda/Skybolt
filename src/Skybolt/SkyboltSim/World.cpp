@@ -83,11 +83,11 @@ void World::removeAllEntities()
 	}
 }
 
-Entity* World::getEntityById(EntityId id) const
+EntityPtr World::getEntityById(EntityId id) const
 {
 	if (auto i = mIdToEntityMap.find(id); i != mIdToEntityMap.end())
 	{
-		return i->second.get();
+		return i->second;
 	}
 	return nullptr;
 }
@@ -105,9 +105,9 @@ Vector3 World::calcGravity(const Vector3& position, double mass) const
 	return Vector3(0, 0, 0);
 }
 
-Entity* World::findObjectByName(const std::string& name) const
+EntityPtr World::findObjectByName(const std::string& name) const
 {
-	return findOptional(mNameToEntityMap, name).value_or(nullptr).get();
+	return findOptional(mNameToEntityMap, name).value_or(nullptr);
 }
 
 } // namespace sim

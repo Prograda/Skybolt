@@ -40,7 +40,7 @@ std::shared_ptr<EntityStateSequenceController> readEntityStateSequenceController
 
 	ifChildExists(json, "entityName", [&] (const nlohmann::json& child) {
 		std::string entityName = child.get<std::string>();
-		sim::Entity* entity = world.findObjectByName(entityName);
+		sim::Entity* entity = world.findObjectByName(entityName).get();
 		if (entity)
 		{
 			controller->setEntity(entity);

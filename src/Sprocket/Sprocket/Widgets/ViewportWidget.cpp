@@ -226,7 +226,7 @@ void ViewportWidget::showContextMenu(const QPoint& point)
 		sim::Entity* selectedEntity = nullptr;
 		if (auto item = getFirstSelectedScenarioObjectOfType<EntityObject>(mSelectionModel->getSelectedItems()); item)
 		{
-			selectedEntity = mEngineRoot->scenario->world.getEntityById(item->data);
+			selectedEntity = mEngineRoot->scenario->world.getEntityById(item->data).get();
 		}
 
 		ActionContext context;
@@ -314,7 +314,7 @@ QToolBar* ViewportWidget::createViewportToolBar(const std::function<std::string(
 
 		connect(mCameraCombo, &QComboBox::currentTextChanged, [=](const QString& text)
 		{
-			sim::Entity* object = world->findObjectByName(text.toStdString());
+			sim::Entity* object = world->findObjectByName(text.toStdString()).get();
 			setCamera(object);
 		});
 
@@ -377,7 +377,7 @@ void ViewportWidget::readProject(const nlohmann::json& projectJson)
 				if (it != viewportJson.end())
 				{
 					std::string name = it.value();
-					sim::Entity* camera = mEngineRoot->scenario->world.findObjectByName(name);
+					sim::Entity* camera = mEngineRoot->scenario->world.findObjectByName(name).get();
 					setCamera(camera);
 				}
 			}

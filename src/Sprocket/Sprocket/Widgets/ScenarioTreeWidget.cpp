@@ -273,7 +273,7 @@ ActionContext ScenarioTreeWidget::toActionContext(const sim::World& world, const
 	{
 		if (auto entityScenarioObject = dynamic_cast<EntityObject*>(scenarioObject.get()); entityScenarioObject)
 		{
-			context.entity = world.getEntityById(entityScenarioObject->data);
+			context.entity = world.getEntityById(entityScenarioObject->data).get();
 		}
 	}
 	return context;

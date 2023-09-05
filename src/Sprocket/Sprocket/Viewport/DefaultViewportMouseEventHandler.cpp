@@ -39,7 +39,7 @@ bool DefaultViewportMouseEventHandler::mousePressed(ViewportWidget& widget, cons
 			if (sim::Entity* camera = widget.getCamera(); camera)
 			{
 				mViewportCameraConnection = mViewportInput->cameraInputGenerated.connect([this, cameraId = camera->getId()] (const skybolt::sim::CameraController::Input& input) {
-					if (sim::Entity* camera = mEngineRoot->scenario->world.getEntityById(cameraId); camera)
+					if (sim::Entity* camera = mEngineRoot->scenario->world.getEntityById(cameraId).get(); camera)
 					{
 						if (auto controller = camera->getFirstComponent<sim::CameraControllerComponent>(); controller)
 						{
