@@ -10,4 +10,5 @@ struct PropertyMetadataNames
 {
     static constexpr char* attributeType = "AttributeType"; //!< Property value is Datum enum stored as an int
 	static constexpr char* enumValueDisplayNames = "EnumValueDisplayNames"; //!< Property value is a QStringList containing the display names of the enum values of a property
+	static constexpr char* multiLine = "MultiLine"; //!< Property value is a bool indicating whether text should be rendered as multiple lines
 };

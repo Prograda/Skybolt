@@ -83,7 +83,8 @@ enum class AttributeType
 enum class PropertyMetadataType
 {
 	Units, //!< Value is Units enum giving the measurement units of the property
-	AttributeType //!< Value is AttributeType enum giving information about the physical meaning of the property values
+	AttributeType, //!< Value is AttributeType enum giving information about the physical meaning of the property values
+	MultiLine //!< Value is a bool indicating whether text should be rendered as multiple lines
 };
 
 } // namespace skybolt::sim

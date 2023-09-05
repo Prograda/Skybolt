@@ -68,6 +68,18 @@ void PropertyEditor::modelReset(PropertiesModel* model)
 	mGridLayout->setRowStretch(r, 1);
 }
 
+static void setEditable(QWidget& widget, bool editable)
+{
+	if (QVariant v = widget.property("readOnly"); !v.isNull())
+	{
+		widget.setProperty("readOnly", !editable);
+	}
+	else
+	{
+		widget.setEnabled(editable);
+	}
+}
+
 QWidget* PropertyEditor::createEditor(QtProperty* property)
 {
 	auto i = mFactoryMap.find(property->value.userType());
@@ -75,7 +87,8 @@ QWidget* PropertyEditor::createEditor(QtProperty* property)
 	{
 		if (QWidget* widget = i->second(property, this); widget)
 		{
-			widget->setEnabled(property->enabled);
+			setEditable(*widget, property->enabled);
+
 			connect(property, &QtProperty::enabledChanged, widget, [=](bool enabled) {
 				widget->setEnabled(enabled);
 			});

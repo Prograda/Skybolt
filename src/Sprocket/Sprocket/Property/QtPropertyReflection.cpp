@@ -148,6 +148,10 @@ static void addMetadata(QtProperty& qtProperty, const rttr::property& rttrProper
 	{
 		qtProperty.setProperty(PropertyMetadataNames::attributeType, variant.get_value<int>());
 	}
+	if (auto variant = rttrProperty.get_metadata(sim::PropertyMetadataType::MultiLine); variant.is_valid())
+	{
+		qtProperty.setProperty(PropertyMetadataNames::multiLine, variant.get_value<bool>());
+	}
 }
 
 using PropertyFactory = std::function<QtPropertyUpdaterApplier(const RttrInstanceGetter& instanceGetter, const rttr::property& property)>;
@@ -160,6 +164,7 @@ PropertyFactory createPropertyFactory(const QtValueT& defaultValue)
 		
 		QString name = QString::fromStdString(property.get_name().to_string());
 		r.property = createQtProperty(name, defaultValue);
+		r.property->enabled = !property.is_readonly();
 		addMetadata(*r.property, property);
 		
 		r.updater = [instanceGetter, property] (QtProperty& qtProperty) {
@@ -201,6 +206,7 @@ PropertyFactory createOptionalPropertyFactory(const QtValueT& defaultValue)
 
 		QtPropertyUpdaterApplier r;
 		r.property = createQtProperty(name, QVariant::fromValue(optionalProperty));
+		r.property->enabled = !property.is_readonly();
 		QObject::connect(baseProperty.get(), &QtProperty::valueChanged, r.property.get(), &QtProperty::valueChanged);
 
 		r.updater = [instanceGetter, property, defaultValue] (QtProperty& qtProperty) {

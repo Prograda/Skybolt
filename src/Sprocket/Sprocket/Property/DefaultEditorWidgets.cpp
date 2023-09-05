@@ -22,6 +22,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QSpinBox>
+#include <QTextEdit>
 #include <QVector3D>
 
 using namespace skybolt;
@@ -177,7 +178,7 @@ static PositionEditor* createWorldPositionEditor(QtProperty* property, QWidget* 
 	return widget;
 }
 
-static QWidget* createStringEditor(QtProperty* property, QWidget* parent)
+static QWidget* createSingleLineStringEditor(QtProperty* property, QWidget* parent)
 {
 	QLineEdit* widget = new QLineEdit(parent);
 	widget->setText(property->value.toString());
@@ -193,6 +194,37 @@ static QWidget* createStringEditor(QtProperty* property, QWidget* parent)
 	});
 
 	return widget;
+}
+
+static QWidget* createMultiLineStringEditor(QtProperty* property, QWidget* parent)
+{
+	QTextEdit* widget = new QTextEdit(parent);
+	widget->setText(property->value.toString());
+
+	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property]() {
+		widget->blockSignals(true);
+		widget->setText(property->value.toString());
+		widget->blockSignals(false);
+	});
+
+	QObject::connect(widget, &QTextEdit::textChanged, property, [=]() {
+		property->setValue(widget->toPlainText());
+	});
+
+	return widget;
+}
+
+
+static QWidget* createStringEditor(QtProperty* property, QWidget* parent)
+{
+	if (auto value = property->property(PropertyMetadataNames::multiLine); value.isValid() && value.toBool())
+	{
+		return createMultiLineStringEditor(property, parent);
+	}
+	else
+	{
+		return createSingleLineStringEditor(property, parent);
+	}
 }
 
 static QWidget* createIntEditor(QtProperty* property, QWidget* parent)
