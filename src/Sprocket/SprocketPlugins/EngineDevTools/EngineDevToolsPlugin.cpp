@@ -16,8 +16,12 @@
 #include <SkyboltVis/RenderOperation/RenderOperationUtil.h>
 #include <SkyboltVis/Shader/ShaderSourceFileChangeMonitor.h>
 
+#include <QBoxLayout>
 #include <QMainWindow>
 #include <QMenuBar>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QTextEdit>
 
 #include <boost/config.hpp>
 #include <boost/dll/alias.hpp>
@@ -70,6 +74,9 @@ public:
 			QAction* action = devMenu->addAction("Live Shader Editing");
 			action->setCheckable(true);
 			QObject::connect(action, &QAction::triggered, [this](bool visible) { setLiveShaderEditingEnabled(visible); });
+		}
+		{
+			QAction* action = devMenu->addAction("View Systems...", [this](bool visible) { showSystemList(); });
 		}
 
 		mEngineRoot->systemRegistry->push_back(std::make_shared<EngineDevToolsSystem>([this] {
@@ -133,6 +140,30 @@ public:
 		{
 			mShaderSourceFileChangeMonitor = std::make_unique<vis::ShaderSourceFileChangeMonitor>(mEngineRoot->programs);
 		}
+	}
+
+	void showSystemList()
+	{
+		QString str;
+		for (const auto& system : *mEngineRoot->systemRegistry)
+		{
+			str += QString(typeid(*system).name()) + "\n";
+		}
+
+		QDialog dialog;
+		dialog.setWindowTitle("System List");
+		QVBoxLayout layout(&dialog);
+
+		auto textEdit = new QTextEdit(&dialog);
+		textEdit->setPlainText(str);
+		textEdit->setReadOnly(true);
+		layout.addWidget(textEdit);
+
+		auto closeButton = new QPushButton("Close", &dialog);
+		layout.addWidget(closeButton);
+		QObject::connect(closeButton, &QPushButton::pressed, &dialog, &QDialog::accept);
+
+		dialog.exec();
 	}
 
 private:
