@@ -128,8 +128,10 @@ void CameraControllerWidget::update()
 	QString newTargetName;
 	if (sim::CameraControllerComponentPtr cameraController = mCamera->getFirstComponent<sim::CameraControllerComponent>(); cameraController)
 	{
-		sim::Entity* target = mWorld->getEntityById(cameraController->getTargetId()).get();
-		newTargetName = QString::fromStdString(sim::getName(*target));
+		if (sim::Entity* target = mWorld->getEntityById(cameraController->getTargetId()).get(); target)
+		{
+			newTargetName = QString::fromStdString(sim::getName(*target));
+		}
 	}
 
 	if (newTargetName != mCameraTargetCombo->currentText())
