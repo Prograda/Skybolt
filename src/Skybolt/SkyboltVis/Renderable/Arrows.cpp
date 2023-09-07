@@ -19,12 +19,12 @@ Arrows::Arrows(const Params& params) :
 {
 	mGeode = new osg::Geode();
 	mGeode->getOrCreateStateSet()->setAttribute(params.program);
-	mSwitch->addChild(mGeode);
+	mTransform->addChild(mGeode);
 }
 
 Arrows::~Arrows()
 {
-	mSwitch->removeChild(mGeode);
+	mTransform->removeChild(mGeode);
 }
 
 const float arrowHeadNormalScale = 0.1f;

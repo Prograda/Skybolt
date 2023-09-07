@@ -18,12 +18,12 @@ Polyline::Polyline(const Params& params) :
 {
 	mGeode = new osg::Geode();
 	mGeode->getOrCreateStateSet()->setAttribute(params.program);
-	mSwitch->addChild(mGeode);
+	mTransform->addChild(mGeode);
 }
 
 Polyline::~Polyline()
 {
-	mSwitch->removeChild(mGeode);
+	mTransform->removeChild(mGeode);
 }
 
 void Polyline::setPoints(const osg::ref_ptr<osg::Vec3Array>& points)
