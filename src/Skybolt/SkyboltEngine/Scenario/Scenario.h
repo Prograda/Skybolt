@@ -27,4 +27,6 @@ struct Scenario
 	sim::World world;
 };
 
+double getCurrentJulianDate(const Scenario& scenario);
+
 } // namespace skybolt

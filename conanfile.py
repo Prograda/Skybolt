@@ -115,8 +115,7 @@ class SkyboltConan(ConanFile):
 
         if self.options.enable_python:
             cmake.definitions["BUILD_PYTHON_BINDINGS"] = "true"
-            cmake.definitions["BUILD_PYTHON_COMPONENT_PLUGIN"] = "true"
-            
+
         if self.options.enable_sprocket:
             cmake.definitions["BUILD_SEQUENCE_EDITOR_PLUGIN"] = "true"
             cmake.definitions["BUILD_SPROCKET"] = "true"

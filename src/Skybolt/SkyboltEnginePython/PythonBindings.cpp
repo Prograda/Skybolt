@@ -18,7 +18,6 @@
 #include <SkyboltSim/CameraController/Targetable.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
-#include <SkyboltSim/Components/OrbitComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/ParentReferenceComponent.h>
@@ -218,15 +217,6 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("merge", &Box3d::merge)
 		.def_readwrite("minimum", &Box3d::minimum)
 		.def_readwrite("maximum", &Box3d::maximum);
-
-	py::class_<Orbit>(m, "Orbit")
-		.def(py::init())
-		.def_readwrite("semiMajorAxis", &Orbit::semiMajorAxis)
-		.def_readwrite("eccentricity", &Orbit::eccentricity)
-		.def_readwrite("inclination", &Orbit::inclination)
-		.def_readwrite("rightAscension", &Orbit::rightAscension)
-		.def_readwrite("argumentOfPeriapsis", &Orbit::argumentOfPeriapsis)
-		.def_readwrite("trueAnomaly", &Orbit::trueAnomaly);
 		
 	py::class_<CameraState>(m, "CameraState")
 		.def(py::init())
@@ -262,10 +252,6 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_readwrite("entityId", &EntityId::entityId);
 
 	py::class_<Component, std::shared_ptr<Component>>(m, "Component");
-
-	py::class_<OrbitComponent, std::shared_ptr<OrbitComponent>, Component>(m, "OrbitComponent")
-		.def(py::init())
-		.def_readwrite("orbit", &OrbitComponent::orbit);
 
 	py::class_<MainRotorComponent, std::shared_ptr<MainRotorComponent>, Component>(m, "MainRotorComponent")
 		.def("getPitchAngle", &MainRotorComponent::getPitchAngle)
@@ -330,7 +316,8 @@ PYBIND11_MODULE(skybolt, m) {
 			py::arg("templateName"), py::arg("name") = "", py::arg("position") = math::dvec3Zero(), py::arg("orientation") = math::dquatIdentity());
 
 	py::class_<Scenario>(m, "Scenario")
-		.def_readwrite("startJulianDate", &Scenario::startJulianDate);
+		.def_readwrite("startJulianDate", &Scenario::startJulianDate)
+		.def_property_readonly("currentJulianDate", [](Scenario* scenario) {return getCurrentJulianDate(*scenario); });
 
 	py::class_<EngineRoot>(m, "EngineRoot")
 		.def_property_readonly("world", [](const EngineRoot& r) {return &r.scenario->world; }, py::return_value_policy::reference_internal)

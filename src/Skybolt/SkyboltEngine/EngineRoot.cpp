@@ -157,9 +157,8 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	programs = vis::createShaderPrograms();
 	scene.reset(new vis::Scene(new osg::StateSet()));
 
-	Scenario* scenarioPtr = scenario.get();
-	auto julianDateProvider = [=]() {
-		return scenarioPtr->startJulianDate + scenarioPtr->timeSource.getTime() / (60.0 * 60.0 * 24.0);
+	auto julianDateProvider = [scenario = scenario.get()]() {
+		return getCurrentJulianDate(*scenario);
 	};
 
 	auto componentFactoryRegistry = std::make_shared<ComponentFactoryRegistry>();

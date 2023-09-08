@@ -38,7 +38,9 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 	{
 		mEntity->addListener(this);
 
-		addProperty(createQtProperty(QLatin1String("name"), QString()), [this](QtProperty& property) {
+		QtPropertyPtr nameProperty = createQtProperty(QLatin1String("name"), QString());
+		nameProperty->setEnabled(false);
+		addProperty(nameProperty, [this](QtProperty& property) {
 			property.setValue(QString::fromStdString(getName(*mEntity)));
 		});
 

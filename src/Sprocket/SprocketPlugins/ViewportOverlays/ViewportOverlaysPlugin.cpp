@@ -15,7 +15,6 @@
 #include <SkyboltEngine/SimVisBinding/GeocentricToNedConverter.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
 #include <SkyboltEngine/SimVisBinding/VisNameLabels.h>
-#include <SkyboltEngine/SimVisBinding/VisOrbits.h>
 #include <SkyboltVis/Scene.h>
 #include <SkyboltVis/Renderable/Arrows.h>
 
@@ -119,14 +118,6 @@ public:
 		osg::ref_ptr<osg::Program> unlitColoredProgram = mEngineRoot->programs.getRequiredProgram("unlitColored");
 
 		{
-			vis::Polyline::Params params;
-			params.program = unlitColoredProgram;
-			mVisOrbits.reset(new VisOrbits(world, hudGroup, params, [scenario = mEngineRoot->scenario.get()] {
-				return scenario->startJulianDate + scenario->timeSource.getTime();
-			}));
-		}
-	
-		{
 			vis::Arrows::Params params;
 			params.program = unlitColoredProgram;
 
@@ -145,8 +136,7 @@ public:
 	{
 		return {
 			{"Labels", toEntityVisibilityPredicateSetter(mVisNameLabels.get())},
-			{"Forces", toEntityVisibilityPredicateSetter(mForcesVisBinding.get())},
-			{"Orbits", toEntityVisibilityPredicateSetter(mVisOrbits.get())}
+			{"Forces", toEntityVisibilityPredicateSetter(mForcesVisBinding.get())}
 		};
 	}
 
@@ -164,7 +154,6 @@ public:
 	{
 		mVisSelectionIcons->syncVis(*mCoordinateConverter);
 		mVisNameLabels->syncVis(*mCoordinateConverter);
-		mVisOrbits->syncVis(*mCoordinateConverter);
 		mForcesVisBinding->syncVis(*mCoordinateConverter);
 	}
 
@@ -173,7 +162,6 @@ private:
 	const GeocentricToNedConverter* mCoordinateConverter;
 	osg::ref_ptr<skybolt::VisSelectionIcons> mVisSelectionIcons;
 	std::unique_ptr<skybolt::VisNameLabels> mVisNameLabels;
-	std::unique_ptr<skybolt::VisOrbits> mVisOrbits;
 	std::unique_ptr<skybolt::ForcesVisBinding> mForcesVisBinding;
 
 	sim::EntityId mSelectedEntityId;

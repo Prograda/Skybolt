@@ -36,7 +36,6 @@ class Updatable;
 class VisHud;
 class VisNameLabels;
 class VisObjectsComponent;
-class VisOrbits;
 
 typedef std::shared_ptr<CameraInputSystem> CameraInputSystemPtr;
 typedef std::shared_ptr<ComponentFactory> ComponentFactoryPtr;

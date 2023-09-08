@@ -35,6 +35,19 @@ TEST_CASE("calcEarthAxialTilt")
 	CHECK(almostEqual(0.409054590532109, tilt, 1e-8));
 }
 
+TEST_CASE("calcHourAngleOfVernalEquinox")
+{
+	/* #Tested against python script:
+		import pyorbital.astronomy as astronomy
+		from datetime import datetime
+
+		d = datetime(1,2,3)
+		julian_date = astronomy.jdate(d)
+		greenwich_mean_sidreal_time = astronomy.gmst(d)
+	*/
+
+	CHECK(calcHourAngleOfVernalEquinox(1721458.5) == Approx(2.317479475338125).margin(1e-14));
+}
 
 TEST_CASE("convertEclipticToEquatorial")
 {

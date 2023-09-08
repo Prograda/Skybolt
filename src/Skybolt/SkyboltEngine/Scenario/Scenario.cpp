@@ -4,19 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-
 #pragma once
 
-#include "SkyboltSim/Component.h"
-#include "SkyboltSim/Physics/Orbit.h"
+#include "Scenario.h"
 
 namespace skybolt {
-namespace sim {
 
-struct OrbitComponent : public Component
+double getCurrentJulianDate(const Scenario& scenario)
 {
-	Orbit orbit;
-};
+	return scenario.startJulianDate + scenario.timeSource.getTime() / (60.0 * 60.0 * 24.0);
+}
 
-} // namespace sim
 } // namespace skybolt

@@ -75,11 +75,13 @@ LatLon convertEclipticToEquatorial(double julianDate, const LatLon& ecliptic)
 	return equatorial;
 }
 
-//! a.k.a Greenwich mean sidereal time
-static double calcHourAngleOfVernalEquinox(double julianDate)
+double calcHourAngleOfVernalEquinox(double julianDate)
 {
+	// Based on https://github.com/pytroll/pyorbital/blob/main/pyorbital/astronomy.py
 	double T = (julianDate - 2451545.0) / 36525;
-	return 4.894961 + 230121.675315 * T;
+	double theta = 67310.54841 + T * (876600 * 3600.0 + 8640184.812866 + T * (0.093104 - T * 6.2 * 10e-6));
+
+	return math::normalizeAngleTwoPi(theta * math::degToRadD() / 240.0);
 }
 
 double calcHourAngle(double julianDate, const LatLon& equatorial, const LatLon& observer)
@@ -103,12 +105,6 @@ AzEl convertEquatorialToHorizontal(double julianDate, const LatLon& equatorial, 
 	horizontal.azimuth = std::atan2(yp, xp) + skybolt::math::piD();
 	horizontal.elevation = std::atan2(zp, sqrt(xp * xp + yp * yp));
 	return horizontal;
-}
-
-Quaternion getEquatorialToEcefRotation(double julianDate)
-{
-	double hourAngle = calcHourAngleOfVernalEquinox(julianDate);
-	return glm::angleAxis(hourAngle, Vector3(0, 0, 1));
 }
 
 LatLon calcSunEclipticPosition(double julianDate)

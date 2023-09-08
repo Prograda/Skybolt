@@ -20,8 +20,3 @@ OPTION(BUILD_JSBSIM_PLUGIN "Build JSBSim Component Plugin")
 if (BUILD_JSBSIM_PLUGIN)
 	add_subdirectory(JsbSim)
 endif()
-
-OPTION(BUILD_PYTHON_COMPONENT_PLUGIN "Build Python Component Plugin")
-if (BUILD_PYTHON_COMPONENT_PLUGIN)
-	add_subdirectory(PythonComponent)
-endif()
