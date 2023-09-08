@@ -20,7 +20,7 @@ public:
 
 private:
 	skybolt::Scenario* mScenario;
-	QtPropertyPtr mDateTime;
+	QtPropertyPtr mStartDateTime;
 	QtPropertyPtr mDuration;
 	QtPropertyPtr mTimelineMode;
 };
