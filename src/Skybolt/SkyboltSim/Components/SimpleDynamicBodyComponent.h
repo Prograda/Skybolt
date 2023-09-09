@@ -15,13 +15,7 @@ class SimpleDynamicBodyComponent : public DynamicBodyComponent
 {
 	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(DynamicBodyComponent);
 public:
-	SimpleDynamicBodyComponent(Node* node, double mass, const Vector3& momentofInertia);
-	void setLinearVelocity(const Vector3& v) override { mLinearVelocity = v; }
-	Vector3 getLinearVelocity() const override  { return mLinearVelocity; }
-
-	//! Angular velocity is in world space
-	void setAngularVelocity(const Vector3& v) override { mAngularVelocity = v; }
-	Vector3 getAngularVelocity() const override  { return mAngularVelocity; }
+	SimpleDynamicBodyComponent(Node* node, Motion* motion, double mass, const Vector3& momentofInertia);
 
 	double getMass() const override  { return mMass; }
 
@@ -55,13 +49,12 @@ public: // SimUpdatable interface
 
 private:
 	Node* mNode;
+	Motion* mMotion;
 	double mMass;
 	Vector3 mMomentOfInertia;
 	Vector3 mCenterOfMass = math::dvec3Zero();
 
 	SecondsD mElapsedDt;
-	Vector3 mLinearVelocity = math::dvec3Zero(); //!< World space
-	Vector3 mAngularVelocity = math::dvec3Zero(); //!< World space
 
 	Vector3 mTotalForce = math::dvec3Zero(); //!< World space
 	Vector3 mTotalTorque = math::dvec3Zero(); //!< World space

@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "AttachmentComponent.h"
-#include "DynamicBodyComponent.h"
+#include "Motion.h"
 #include "SkyboltSim/World.h"
 
 #include <assert.h>
@@ -55,12 +55,12 @@ void AttachmentComponent::setTargetStateToParent()
 		}
 
 		// Update velocity
-		if (auto childBody = mChildEntity->getFirstComponent<DynamicBodyComponent>(); childBody)
+		if (auto childMotion = mChildEntity->getFirstComponent<Motion>(); childMotion)
 		{
-			if (auto parentBody = parentEntity->getFirstComponent<DynamicBodyComponent>())
+			if (auto parentMotion = parentEntity->getFirstComponent<Motion>())
 			{
-				childBody->setLinearVelocity(parentBody->getLinearVelocity());
-				childBody->setAngularVelocity(parentBody->getAngularVelocity());
+				childMotion->linearVelocity = parentMotion->linearVelocity;
+				childMotion->angularVelocity = parentMotion->angularVelocity;
 			}
 		}
 	}

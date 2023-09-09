@@ -23,6 +23,7 @@ class Entity;
 struct EntityId;
 struct LatLon;
 class MainRotorComponent;
+class Motion;
 class NameComponent;
 class Node;
 struct Orientation;

@@ -6,17 +6,21 @@
 
 
 #include "SimpleDynamicBodyComponent.h"
+#include "Motion.h"
 #include "Node.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 
 namespace skybolt {
 namespace sim {
 
-SimpleDynamicBodyComponent::SimpleDynamicBodyComponent(Node* node, double mass, const Vector3& momentofInertia) :
+SimpleDynamicBodyComponent::SimpleDynamicBodyComponent(Node* node, Motion* motion, double mass, const Vector3& momentofInertia) :
 	mNode(node),
+	mMotion(motion),
 	mMass(mass),
 	mMomentOfInertia(momentofInertia)
 {
+	assert(mNode);
+	assert(mMotion);
 }
 
 void SimpleDynamicBodyComponent::applyCentralForce(const Vector3& force)
@@ -55,8 +59,8 @@ void SimpleDynamicBodyComponent::integrateTimeStep()
 	if (mMass > 0)
 	{
 		Vector3 acceleration = mTotalForce / (double)mMass;
-		mNode->setPosition(mNode->getPosition() + mLinearVelocity * dt + acceleration * halfDt2);
-		mLinearVelocity += acceleration * dt;
+		mNode->setPosition(mNode->getPosition() + mMotion->linearVelocity * dt + acceleration * halfDt2);
+		mMotion->linearVelocity += acceleration * dt;
 	}
 
 	// Integrate angular dynamics using velocity-verlet
@@ -67,7 +71,7 @@ void SimpleDynamicBodyComponent::integrateTimeStep()
 		Vector3 angularAcceleration = ori * (torqueBodySpace / mMomentOfInertia);
 
 		// https://gafferongames.com/post/physics_in_3d/
-		Vector3 angularDisplacement = mAngularVelocity * dt + angularAcceleration * halfDt2;
+		Vector3 angularDisplacement = mMotion->angularVelocity * dt + angularAcceleration * halfDt2;
 		Quaternion angularDisplacementQuat(
 			0,
 			angularDisplacement.x, 
@@ -78,7 +82,7 @@ void SimpleDynamicBodyComponent::integrateTimeStep()
 		ori = normalize(ori);
 		mNode->setOrientation(ori);
 
-		mAngularVelocity += angularAcceleration * dt;
+		mMotion->angularVelocity += angularAcceleration * dt;
 	}
 
 	// Reset accumulated forces and torques

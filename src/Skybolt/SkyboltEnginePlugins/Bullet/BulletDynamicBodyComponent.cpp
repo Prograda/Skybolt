@@ -8,28 +8,31 @@
 #include "BulletDynamicBodyComponent.h"
 #include "BulletWorld.h"
 #include "BulletTypeConversion.h"
+#include <SkyboltSim/Components/Motion.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/CollisionGroupMasks.h>
 
 namespace skybolt {
 namespace sim {
 
-BulletDynamicBodyComponent::BulletDynamicBodyComponent(BulletWorld* world, Node* node, double mass, const btVector3 &momentOfInertia, btCollisionShape* shape,
-	const btVector3 &velocity, int collisionGroupMask, int collisionFilterMask) :
+BulletDynamicBodyComponent::BulletDynamicBodyComponent(const BulletDynamicBodyComponentConfig& config) :
 	mMinSpeedForCcdSquared(5.0 * 5.0),
-	mWorld(world),
-	mNode(node),
-	mMomentOfInertia(momentOfInertia),
-	mMass(mass),
+	mWorld(config.world),
+	mNode(config.node),
+	mMotion(config.motion),
+	mMomentOfInertia(config.momentOfInertia),
+	mMass(config.mass),
 	mForceIntegrationEnabled(true)
 {
-	mBody = mWorld->createRigidBody(shape, mass, mMomentOfInertia, btVector3(0,0,0), btQuaternion::getIdentity(), velocity, collisionGroupMask, collisionFilterMask);
+	mBody = mWorld->createRigidBody(config.shape, config.mass, mMomentOfInertia, btVector3(0,0,0), btQuaternion::getIdentity(), config.velocity, config.collisionGroupMask, config.collisionFilterMask);
 	mBody->setFriction(1.0);
 	mBody->setDamping(0.0, 0.0);
 	mBody->setUserPointer(this);
 
 	setPosition(mNode->getPosition());
 	setOrientation(mNode->getOrientation());
+	mBody->setLinearVelocity(toBtVector3(mMotion->linearVelocity));
+	mBody->setAngularVelocity(toBtVector3(mMotion->angularVelocity));
 }
 
 BulletDynamicBodyComponent::~BulletDynamicBodyComponent()
@@ -52,6 +55,9 @@ void BulletDynamicBodyComponent::updatePreDynamics()
 	{
 		setOrientation(mNode->getOrientation());
 	}
+
+	mMotion->linearVelocity = toGlmDvec3(mBody->getLinearVelocity());
+	mMotion->angularVelocity = toGlmDvec3(mBody->getAngularVelocity());
 }
 
 void BulletDynamicBodyComponent::updatePostDynamics()
@@ -87,6 +93,8 @@ void BulletDynamicBodyComponent::updatePostDynamics()
 	// Update node position and orientation
 	mNode->setPosition(newNodePosition);
 	mNode->setOrientation(toGlmDquat(mBody->getOrientation()));
+	mBody->setLinearVelocity(toBtVector3(mMotion->linearVelocity));
+	mBody->setAngularVelocity(toBtVector3(mMotion->angularVelocity));
 }
 
 void BulletDynamicBodyComponent::setDynamicsEnabled(bool enabled)
@@ -101,26 +109,6 @@ void BulletDynamicBodyComponent::setDynamicsEnabled(bool enabled)
 		mBody->setMassProps(0, mMomentOfInertia);
 		mBody->setLinearVelocity(btVector3(0,0,0));
 	}
-}
-
-void BulletDynamicBodyComponent::setLinearVelocity(const Vector3& v)
-{
-	mBody->setLinearVelocity(toBtVector3(v));
-}
-
-Vector3 BulletDynamicBodyComponent::getLinearVelocity() const
-{
-	return toGlmDvec3(mBody->getLinearVelocity());
-}
-
-void BulletDynamicBodyComponent::setAngularVelocity(const Vector3& v)
-{
-	mBody->setAngularVelocity(toBtVector3(v));
-}
-
-Vector3 BulletDynamicBodyComponent::getAngularVelocity() const
-{
-	return toGlmDvec3(mBody->getAngularVelocity());
 }
 
 void BulletDynamicBodyComponent::setPosition(const Vector3& position)

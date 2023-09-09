@@ -7,7 +7,7 @@
 #include "MoveToAirportContextAction.h"
 #include "Sprocket/QtUtil/QtDialogUtil.h"
 #include <SkyboltEngine/TemplateNameComponent.h>
-#include <SkyboltSim/Components/DynamicBodyComponent.h>
+#include <SkyboltSim/Components/Motion.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Spatial/LatLon.h>
 #include <SkyboltSim/Spatial/Orientation.h>
@@ -79,11 +79,11 @@ void MoveToAirportContextAction::execute(Entity& entity) const
 
 			setOrientation(entity, sim::toGeocentric(LtpNedOrientation(glm::angleAxis(bearing, Vector3(0, 0, 1))), latLon).orientation);
 
-			DynamicBodyComponent* body = entity.getFirstComponent<DynamicBodyComponent>().get();
-			if (body)
+			Motion* motion = entity.getFirstComponent<Motion>().get();
+			if (motion)
 			{
-				body->setLinearVelocity(math::dvec3Zero());
-				body->setAngularVelocity(math::dvec3Zero());
+				motion->linearVelocity = math::dvec3Zero();
+				motion->angularVelocity = math::dvec3Zero();
 			}
 		}
 	}

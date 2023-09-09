@@ -7,6 +7,7 @@
 #include "FuselageComponent.h"
 #include "SkyboltSim/Components/DynamicBodyComponent.h"
 #include "SkyboltSim/Components/Node.h"
+#include "SkyboltSim/Components/Motion.h"
 #include "SkyboltSim/Physics/Atmosphere.h"
 #include "SkyboltSim/Spatial/GreatCircle.h"
 
@@ -18,11 +19,13 @@ namespace sim {
 FuselageComponent::FuselageComponent(const FuselageComponentConfig& config) :
 	mParams(config.params),
 	mNode(config.node),
+	mMotion(config.motion),
 	mBody(config.body),
 	mStickInput(config.stickInput),
 	mRudderInput(config.rudderInput)
 {
 	assert(mNode);
+	assert(mMotion);
 	assert(mBody);
 }
 
@@ -47,7 +50,7 @@ void FuselageComponent::updatePreDynamicsSubstep()
 	SecondsD dt = 0;
 	std::swap(mDt, dt);
 
-	const Vector3& velocityLocal = glm::inverse(mNode->getOrientation()) * mBody->getLinearVelocity();
+	const Vector3& velocityLocal = glm::inverse(mNode->getOrientation()) * mMotion->linearVelocity;
 
 	// angle of attack and side slip
 	mAngleOfAttack = (float)std::atan2(velocityLocal.z, velocityLocal.x);
@@ -71,11 +74,11 @@ void FuselageComponent::updatePreDynamicsSubstep()
 	const float airDensity = calcAirDensity(calcAltitude(mNode->getPosition()));
 	lift = Vector3(0.0f, 0.0f, -liftCoeff * mParams.liftArea * 0.5f * airDensity * glm::dot(velocityLocal, velocityLocal));
 
-	double speed = glm::length(mBody->getLinearVelocity());
+	double speed = glm::length(mMotion->linearVelocity);
 	//apply forces
 	if (speed > 0.0f)
 	{
-		Vector3 drag = calcDragForce(velocityLocal, -mBody->getLinearVelocity() / speed, airDensity);
+		Vector3 drag = calcDragForce(velocityLocal, -mMotion->linearVelocity / speed, airDensity);
 		mBody->applyCentralForce(drag);
 	}
 
@@ -86,7 +89,7 @@ void FuselageComponent::updatePreDynamicsSubstep()
 	const float maxEffVelSqForMoments = 100.0f * 100.0f; // TODO: unhack
 	float velSqLengthEff = (speed*speed < maxEffVelSqForMoments) ? speed : maxEffVelSqForMoments;
 
-	const Vector3 localAngularVelocity = glm::inverse(orientation) * mBody->getAngularVelocity();
+	const Vector3 localAngularVelocity = glm::inverse(orientation) * mMotion->angularVelocity;
 
 	const Vector3 moment = calcMoment(localAngularVelocity, sin(mAngleOfAttack), sin(mSideSlipAngle), velSqLengthEff, airDensity);
 

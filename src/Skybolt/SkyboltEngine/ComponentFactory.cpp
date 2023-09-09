@@ -23,6 +23,7 @@
 #include <SkyboltSim/Components/FuselageComponent.h>
 #include <SkyboltSim/Components/JetTurbineComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
+#include <SkyboltSim/Components/Motion.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Components/PropellerComponent.h>
 #include <SkyboltSim/Components/ReactionControlSystemComponent.h>
@@ -66,6 +67,7 @@ static sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryCont
 	FuselageComponentConfig config;
 	config.params = params;
 	config.node = entity->getFirstComponentRequired<Node>().get();
+	config.motion = entity->getFirstComponentRequired<Motion>().get();
 	config.body = entity->getFirstComponentRequired<DynamicBodyComponent>().get();
 
 	auto inputs = entity->getFirstComponent<ControlInputsComponent>();
@@ -104,6 +106,7 @@ static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryCon
 	MainRotorComponentConfig config;
 	config.params = params;
 	config.node = entity->getFirstComponentRequired<Node>().get();
+	config.motion = entity->getFirstComponentRequired<Motion>().get();
 	config.body = entity->getFirstComponentRequired<DynamicBodyComponent>().get();
 	config.positionRelBody = readVector3(json.at("positionRelBody"));
 	config.orientationRelBody = readQuaternion(json.at("orientationRelBody"));
@@ -194,13 +197,19 @@ static sim::ComponentPtr loadNode(Entity* entity, const ComponentFactoryContext&
 	return std::make_shared<Node>();
 }
 
+static sim::ComponentPtr loadMotion(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	return std::make_shared<Motion>();
+}
+
 static sim::ComponentPtr loadDynamicBody(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	Node* node = entity->getFirstComponentRequired<Node>().get();
+	Motion* motion = entity->getFirstComponentRequired<Motion>().get();
 	double mass = json.at("mass");
 	Vector3 momentOfInertia = readOptionalVector3(json, "momentOfInertia");
 
-	auto component = std::make_shared<SimpleDynamicBodyComponent>(node, mass, momentOfInertia);
+	auto component = std::make_shared<SimpleDynamicBodyComponent>(node, motion, mass, momentOfInertia);
 	component->setCenterOfMass(readOptionalVector3(json, "centerOfMass"));
 	return component;
 }
@@ -304,6 +313,7 @@ void addDefaultFactories(ComponentFactoryRegistry& registry)
 	registry["cameraController"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadCameraController);
 	registry["controlInputs"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadControlInputs);
 	registry["node"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadNode);
+	registry["motion"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadMotion);
 	registry["dynamicBody"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadDynamicBody);
 	registry["fuselage"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadFuselage);
 	registry["reactionControlSystem"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadReactonControlSystem);

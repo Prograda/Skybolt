@@ -15,6 +15,7 @@
 #include <SkyboltSim/CollisionGroupMasks.h>
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/Components/ControlInputsComponent.h>
+#include <SkyboltSim/Components/Motion.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Components/OceanComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
@@ -94,8 +95,19 @@ static sim::ComponentPtr loadBulletDynamicBody(BulletWorld& world, Entity* entit
 		momentOfInertia *= 0.25;
 	}
 
-	auto body = std::make_shared<BulletDynamicBodyComponent>(&world, entity->getFirstComponentRequired<sim::Node>().get(), mass, momentOfInertia, shape,
-		velocity, collisionGroupMask, collisionFilterMask);
+	auto body = std::make_shared<BulletDynamicBodyComponent>([&] {
+		BulletDynamicBodyComponentConfig c;
+		c.world = &world;
+		c.node = entity->getFirstComponentRequired<sim::Node>().get();
+		c.motion = entity->getFirstComponentRequired<sim::Motion>().get();
+		c.mass = mass;
+		c.momentOfInertia = momentOfInertia;
+		c.shape = shape;
+		c.velocity = velocity;
+		c.collisionGroupMask = collisionGroupMask;
+		c.collisionFilterMask = collisionFilterMask;
+		return c;
+	}());
 
 	body->setCenterOfMass(readOptionalVector3(json, "centerOfMass"));
 

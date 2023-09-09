@@ -21,23 +21,28 @@ namespace sim {
 
 class BulletWorld;
 
+struct BulletDynamicBodyComponentConfig
+{
+	BulletWorld* world;
+	Node* node;
+	Motion* motion;
+	double mass;
+	btVector3 momentOfInertia;
+	btCollisionShape* shape;
+	btVector3 velocity;
+	int collisionGroupMask;
+	int collisionFilterMask;
+};
+
 class BulletDynamicBodyComponent : public DynamicBodyComponent
 {
 	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(DynamicBodyComponent);
 
 public: // DynamicBodyComponent interface
-	BulletDynamicBodyComponent(BulletWorld* world, Node* node, double mass, const btVector3 &momentOfInertia, btCollisionShape* shape,
-		const btVector3 &velocity, int collisionGroupMask, int collisionFilterMask);
+	BulletDynamicBodyComponent(const BulletDynamicBodyComponentConfig& config);
 	~BulletDynamicBodyComponent() override;
 
 	void setDynamicsEnabled(bool enabled) override;
-
-	void setLinearVelocity(const Vector3& v) override;
-	Vector3 getLinearVelocity() const override;
-
-	//! Angular velocity is in world space
-	void setAngularVelocity(const Vector3& v) override;
-	Vector3 getAngularVelocity() const override;
 
 	void setMass(double mass) override;
 	double getMass() const override { return mMass; }
@@ -83,6 +88,7 @@ private:
 	const double mMinSpeedForCcdSquared;
 	BulletWorld* mWorld;
 	Node* mNode;
+	Motion* mMotion;
 	btVector3 mMomentOfInertia;
 	Vector3 mNodePosition;
 	Quaternion mNodeOrientation;

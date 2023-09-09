@@ -8,6 +8,7 @@
 #include "MainRotorComponent.h"
 #include "SkyboltSim/Components/DynamicBodyComponent.h"
 #include "SkyboltSim/Components/Node.h"
+#include "SkyboltSim/Components/Motion.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltCommon/Units.h>
 
@@ -19,6 +20,7 @@ namespace sim {
 MainRotorComponent::MainRotorComponent(const MainRotorComponentConfig& config) :
 	mParams(config.params),
 	mNode(config.node),
+	mMotion(config.motion),
 	mBody(config.body),
 	mDriverRpm(0.0f),
 	mPitch(config.params->minPitch),
@@ -34,6 +36,7 @@ MainRotorComponent::MainRotorComponent(const MainRotorComponentConfig& config) :
 	mCollectiveInput(config.collectiveInput)
 {
 	assert(mNode);
+	assert(mMotion);
 	assert(mBody);
 	assert(mCyclicInput);
 	assert(mCollectiveInput);
@@ -65,7 +68,7 @@ void MainRotorComponent::updatePreDynamicsSubstep()
 
 	// Calc lift
 	Quaternion bodyOrientation = mNode->getOrientation();
-	const Vector3 velocityLocal = glm::inverse(bodyOrientation) * mBody->getLinearVelocity();
+	const Vector3 velocityLocal = glm::inverse(bodyOrientation) * mMotion->linearVelocity;
 	float velSqLength = (float)glm::dot(velocityLocal, velocityLocal);
 
 	float inducedVel = calculateInducedVelocity(velSqLength); // induced velocity curve lookup
@@ -126,7 +129,7 @@ float MainRotorComponent::calculateBladeElementLift(const Vector3& heliVelRelTpp
 Vector3 MainRotorComponent::calculateLift(float inducedVel) const
 {
 	//calculate relative velocity experienced by rotor tpp plane
-	Vector3 tppFrameHeliVel = glm::inverse(mNode->getOrientation() * mTppOriRelBody) * mBody->getLinearVelocity();
+	Vector3 tppFrameHeliVel = glm::inverse(mNode->getOrientation() * mTppOriRelBody) * mMotion->linearVelocity;
 	tppFrameHeliVel += (double)inducedVel * Vector3(0, 0, -1); //add induced velocity to the TPP (induced vel is downward)
 	float tppFrameRotorVel = mParams->diskRadius * mRpm * skybolt::rpmToRadPerSec;
 

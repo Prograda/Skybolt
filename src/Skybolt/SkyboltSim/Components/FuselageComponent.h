@@ -47,6 +47,7 @@ struct FuselageComponentConfig
 {
 	FuselageParams params;
 	Node* node;
+	Motion* motion;
 	DynamicBodyComponent* body;
 	ControlInputVec2Ptr stickInput; //!< Optional. Range is [-1, 1]. Positive backward and right.
 	ControlInputFloatPtr rudderInput; //!< Optional. Range [-1, 1]
@@ -77,6 +78,7 @@ private:
 private:
 	const FuselageParams mParams;
 	Node* mNode;
+	Motion* mMotion;
 	DynamicBodyComponent* mBody;
 	ControlInputVec2Ptr mStickInput;
 	ControlInputFloatPtr mRudderInput;

@@ -40,6 +40,7 @@ struct MainRotorComponentConfig
 {
 	MainRotorParamsPtr params;
 	Node* node;
+	Motion* motion;
 	DynamicBodyComponent* body;
 	Vector3 positionRelBody;
 	Quaternion orientationRelBody;
@@ -84,6 +85,7 @@ private:
 private:
 	MainRotorParamsPtr mParams;
 	Node* mNode;
+	Motion* mMotion;
 	DynamicBodyComponent* mBody;
 	ControlInputVec2Ptr mCyclicInput; //!< range is [-1, 1]. Positive backward and right.
 	ControlInputFloatPtr mCollectiveInput; //!< range [0, 1]

@@ -5,8 +5,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 
-#include <SkyboltSim/Components/SimpleDynamicBodyComponent.h>
+#include <SkyboltSim/Components/Motion.h>
 #include <SkyboltSim/Components/Node.h>
+#include <SkyboltSim/Components/SimpleDynamicBodyComponent.h>
 #include <SkyboltSim/SimMath.h>
 #include <catch2/catch.hpp>
 
@@ -29,9 +30,10 @@ static void integrateOverTime(SimpleDynamicBodyComponent& body, SecondsD duratio
 TEST_CASE("Body accelerates under force")
 {
 	Node node;
+	Motion motion;
 	double mass = 5;
 	Vector3 momentOfInertia(2, 3, 4);
-	SimpleDynamicBodyComponent body(&node, mass, momentOfInertia);
+	SimpleDynamicBodyComponent body(&node, &motion, mass, momentOfInertia);
 
 	// Calculate expected results
 	// https://www.calculatorsoup.com/calculators/physics/displacement_v_a_t.php
@@ -53,9 +55,10 @@ TEST_CASE("Body accelerates under force")
 TEST_CASE("Body rotates under torque")
 {
 	Node node;
+	Motion motion;
 	double mass = 5;
 	Vector3 momentOfInertia(2, 3, 4);
-	SimpleDynamicBodyComponent body(&node, mass, momentOfInertia);
+	SimpleDynamicBodyComponent body(&node, &motion, mass, momentOfInertia);
 
 	// Calculate expected results
 	// https://www.calculatorsoup.com/calculators/physics/displacement_v_a_t.php
@@ -79,9 +82,10 @@ TEST_CASE("Body rotates under torque")
 TEST_CASE("Force at distance produces torque")
 {
 	Node node;
+	Motion motion;
 	double mass = 5;
 	Vector3 momentOfInertia(2, 3, 4);
-	SimpleDynamicBodyComponent body(&node, mass, momentOfInertia);
+	SimpleDynamicBodyComponent body(&node, &motion, mass, momentOfInertia);
 	Vector3 centerOfMass(0.2, 0.3, 0.4);
 	body.setCenterOfMass(centerOfMass);
 

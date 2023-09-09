@@ -8,7 +8,7 @@
 #include "Entity.h"
 #include "Component.h"
 #include "World.h"
-#include "Components/DynamicBodyComponent.h"
+#include "Components/Motion.h"
 #include "Components/Node.h"
 
 namespace skybolt {
@@ -111,10 +111,10 @@ std::optional<Quaternion> getOrientation(const Entity& entity)
 
 std::optional<Vector3> getVelocity(const Entity& entity)
 {
-	auto* component = entity.getFirstComponent<DynamicBodyComponent>().get();
+	auto* component = entity.getFirstComponent<Motion>().get();
 	if (component)
 	{
-		return component->getLinearVelocity();
+		return component->linearVelocity;
 	}
 	return std::nullopt;
 }
@@ -152,9 +152,9 @@ void setOrientation(Entity& entity, const Quaternion& orientation)
 
 void setVelocity(Entity& entity, const Vector3& velocity)
 {
-	if (auto* body = entity.getFirstComponent<DynamicBodyComponent>().get())
+	if (auto* component = entity.getFirstComponent<Motion>().get())
 	{
-		body->setLinearVelocity(velocity);
+		component->linearVelocity = velocity;
 	}
 }
 

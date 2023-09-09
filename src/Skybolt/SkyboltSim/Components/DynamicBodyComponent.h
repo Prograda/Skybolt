@@ -31,13 +31,6 @@ class DynamicBodyComponent : public Component
 {
 	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(Component);
 public:
-	virtual void setLinearVelocity(const Vector3& v) = 0;
-	virtual Vector3 getLinearVelocity() const = 0;
-	
-	//! Angular velocity is in world space
-	virtual void setAngularVelocity(const Vector3& v) = 0;
-	virtual Vector3 getAngularVelocity() const = 0;
-
 	virtual void setMass(double mass) = 0;
 	virtual double getMass() const = 0;
 
