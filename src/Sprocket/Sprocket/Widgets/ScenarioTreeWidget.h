@@ -65,7 +65,7 @@ private:
 	ScenarioObjectTypeMap mScenarioObjectTypes;
 	TreeItemModel* mModel;
 	QTreeView* mView;
-	std::vector<std::unique_ptr<struct ScenarioObjectRegistryListener>> mRegistryListeners;
+	std::map<ScenarioObjectRegistryPtr, std::unique_ptr<struct ScenarioObjectRegistryListener>> mRegistryListeners;
 
 	TreeItemPtr mRootItem;
 	std::map<std::string, TreeItemPtr> mFoldersMap;

@@ -117,7 +117,7 @@ ScenarioTreeWidget::ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config) :
 
 		auto listener = std::make_unique<ScenarioObjectRegistryListener>(this, id, type->objectRegistry);
 		type->objectRegistry->addListener(listener.get());
-		mRegistryListeners.push_back(std::move(listener));
+		mRegistryListeners[type->objectRegistry] = std::move(listener);
 	}
 
 	mView->expandAll();
@@ -127,7 +127,13 @@ ScenarioTreeWidget::ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config) :
 	});
 }
 
-ScenarioTreeWidget::~ScenarioTreeWidget() = default;
+ScenarioTreeWidget::~ScenarioTreeWidget()
+{
+	for (const auto& [registry, listener] : mRegistryListeners)
+	{
+		registry->removeListener(listener.get());
+	}
+}
 
 bool ScenarioTreeWidget::shouldDisplayItem(const ScenarioObject& object) const
 {

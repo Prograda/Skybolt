@@ -77,9 +77,9 @@ static void connectTreeItemTypeMenuAction(const ScenarioObjectTypePtr& type, QAc
 	});
 }
 
-static QMenu* createCreateMenu(const ScenarioObjectTypeMap& types)
+static QMenu* createCreateMenu(const ScenarioObjectTypeMap& types, QWidget* parent)
 {
-	QMenu* menu = new QMenu();
+	QMenu* menu = new QMenu(parent);
 
 	for (const auto& [id, type] : types)
 	{
@@ -87,17 +87,17 @@ static QMenu* createCreateMenu(const ScenarioObjectTypeMap& types)
 		{
 			if (type->templateNames.empty())
 			{
-				QAction* action = new QAction(QString::fromStdString(type->name));
+				QAction* action = new QAction(QString::fromStdString(type->name), menu);
 				menu->addAction(action);
 				connectTreeItemTypeMenuAction(type, action, type->name);
 			}
 			else
 			{
-				QMenu* subMenu = new QMenu(QString::fromStdString(type->name));
+				QMenu* subMenu = new QMenu(QString::fromStdString(type->name), menu);
 				menu->addMenu(subMenu);
 				for (const auto& templateName : type->templateNames)
 				{
-					QAction* action = new QAction(QString::fromStdString(templateName));
+					QAction* action = new QAction(QString::fromStdString(templateName), menu);
 					subMenu->addAction(action);
 					connectTreeItemTypeMenuAction(type, action, templateName, templateName);
 				}
@@ -127,8 +127,7 @@ QToolBar* createScenarioObjectCreationToolbar(ScenarioSelectionModel* selectionM
 	deleteButton->setEnabled(false);
 	toolbar->addWidget(deleteButton);
 
-	QMenu* menu = createCreateMenu(scenarioObjectTypes);
-
+	QMenu* menu = createCreateMenu(scenarioObjectTypes, parent);
 	createButton->setMenu(menu);
 	createButton->setPopupMode(QToolButton::InstantPopup);
 
@@ -146,7 +145,7 @@ QToolBar* createScenarioObjectCreationToolbar(ScenarioSelectionModel* selectionM
 		deleteButton->setEnabled(enabled);
 	});
 
-	QObject::connect(deleteButton, &QToolButton::pressed, [selectionModel, scenarioObjectTypes]()
+	QObject::connect(deleteButton, &QToolButton::pressed, parent, [selectionModel, scenarioObjectTypes]()
 	{
 		if (const auto& object = getFirstSelectedScenarioObject(selectionModel->getSelectedItems()); object)
 		{
