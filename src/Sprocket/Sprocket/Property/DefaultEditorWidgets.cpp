@@ -61,10 +61,10 @@ public:
 		
 		for (const QString& label : componentLabels)
 		{
+			int index = (int)mEditors.size();
 			mEditors.push_back(addDoubleEditor(*layout, label));
-
-			connect(mEditors.back(), &QLineEdit::textEdited, this, [this](const QString& text) {
-				componentEdited((int)mEditors.size() - 1, text.toDouble());
+			connect(mEditors.back(), &QLineEdit::editingFinished, this, [this, index]() {
+				componentEdited(index, mEditors[index]->text().toDouble());
 			});
 		}
 	}
