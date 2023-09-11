@@ -146,6 +146,11 @@ QModelIndex TreeItemModel::index(TreeItem* item) const
 			++row;
 		}
 	}
+	else
+	{
+		// If item does not have a parent, it's the invisible root item which is represented by the null index.
+		return QModelIndex();
+	}
 
 	return createIndex(row, 0, item);
 }
