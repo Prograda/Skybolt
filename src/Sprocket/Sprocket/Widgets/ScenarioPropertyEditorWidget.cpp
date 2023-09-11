@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "ScenarioPropertyEditorWidget.h"
+#include "Sprocket/QtUtil/QtScrollAreaUtil.h"
 #include "Sprocket/QtUtil/QtTimerUtil.h"
 #include "Sprocket/Widgets/TreeItems.h"
 
@@ -28,7 +29,7 @@ ScenarioPropertyEditorWidget::ScenarioPropertyEditorWidget(const ScenarioPropert
 	auto layout = new QVBoxLayout(this);
 	layout->setMargin(0);
 	setLayout(layout);
-	layout->addWidget(mPropertiesEditor);
+	layout->addWidget(wrapWithVerticalScrollBar(mPropertiesEditor, this));
 
 	connect(config.selectionModel, &ScenarioSelectionModel::selectionChanged, this, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
 		selectionChanged(selected, deselected);

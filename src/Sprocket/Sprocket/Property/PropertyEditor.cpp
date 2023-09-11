@@ -19,9 +19,8 @@ using namespace skybolt;
 PropertyEditor::PropertyEditor(const PropertyEditorWidgetFactoryMap& factoryMap, QWidget* parent) :
 	QWidget(parent),
 	mFactoryMap(factoryMap),
-	mGridLayout(new QGridLayout)
+	mGridLayout(new QGridLayout(this))
 {
-	setLayout(mGridLayout);
 }
 
 void PropertyEditor::setModel(const PropertiesModelPtr& model)

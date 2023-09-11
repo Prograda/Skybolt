@@ -6,6 +6,7 @@
 
 #include "SettingsEditor.h"
 #include "Property/PropertyEditor.h"
+#include "QtUtil/QtScrollAreaUtil.h"
 
 #include <QBoxLayout>
 #include <QLabel>
@@ -111,11 +112,7 @@ SettingsEditor::SettingsEditor(const QString& settingsFilename, const nlohmann::
 		mSettingsModel = std::make_shared<PropertiesModel>(properties);
 		PropertyEditor* editor = new PropertyEditor();
 		editor->setModel(mSettingsModel);
-
-		QScrollArea* scrollArea = new QScrollArea;
-		scrollArea->setWidget(editor);
-		scrollArea->setWidgetResizable(true);
-		layout->addWidget(scrollArea, 1);
+		layout->addWidget(wrapWithVerticalScrollBar(editor, this), 1);
 	}
 }
 
