@@ -123,7 +123,7 @@ template <>
 sim::Quaternion qtValueToSim(const rttr::property& property, const QVariant& value)
 {
 	sim::Vector3 euler = toVector3(value.value<QVector3D>());
-	return skybolt::math::quatFromEuler(euler * skybolt::math::radToDegD());
+	return skybolt::math::quatFromEuler(euler * skybolt::math::degToRadD());
 }
 
 template <>
