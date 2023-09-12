@@ -39,7 +39,6 @@ public:
 
 protected:
 	virtual bool shouldDisplayItem(const ScenarioObject& object) const;
-	virtual std::optional<std::string> getParentFolderName(const ScenarioObject& object) const;
 
 private:
 	void addObjects(const std::type_index& sceneObjectType, const std::set<ScenarioObjectPtr>& objects);
@@ -49,7 +48,7 @@ private:
 	ActionContext toActionContext(const skybolt::sim::World& world, const TreeItem& item) const;
 	void showContextMenu(TreeItem& item, const QPoint& point);
 
-	TreeItemPtr getOrCreateFolder(const std::string& name);
+	TreeItemPtr createFolder(TreeItem& parent, const std::string& name);
 
 	TreeItemPtr getParent(const ScenarioObject& object); //!< Never returns null
 	void updateTreeItemParents();
@@ -68,6 +67,5 @@ private:
 	std::map<ScenarioObjectRegistryPtr, std::unique_ptr<struct ScenarioObjectRegistryListener>> mRegistryListeners;
 
 	TreeItemPtr mRootItem;
-	std::map<std::string, TreeItemPtr> mFoldersMap;
 	std::map<ScenarioObjectPtr, std::shared_ptr<ScenarioObjectTreeItem>> mItemsMap;
 };

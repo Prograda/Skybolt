@@ -31,7 +31,9 @@ using SequenceObject = ScenarioObjectT<StateSequenceControllerPtr>;
 static void addItem(Registry<ScenarioObject>& registry, const StateSequenceControllerPtr& controller, const std::string& name)
 {
 	QIcon icon = getSprocketIcon(SprocketIcon::Sequence);
-	registry.add(std::make_shared<SequenceObject>(name, icon, controller));
+	auto object = std::make_shared<SequenceObject>(name, icon, controller);
+	object->setDirectory(ScenarioObjectPath({"Sequence"}));
+	registry.add(object);
 }
 
 static StateSequenceControllerPtr toSequenceController(const SequenceObject& item)
@@ -104,14 +106,11 @@ public:
 			setTime(time);
 		}));
 
-		QIcon icon = getSprocketIcon(SprocketIcon::Sequence);
-
 		{
 			auto type = std::make_shared<ScenarioObjectType>();
 			type->name = "Sequence";
-			type->category = "Sequence";
 			type->templateNames = {"Entity", "DateTime"};
-			type->objectCreator = [this, icon](const std::string& name, const std::string& subType) {
+			type->objectCreator = [this](const std::string& name, const std::string& subType) {
 				StateSequenceControllerPtr sequence;
 				if (subType == "Entity")
 				{
@@ -122,9 +121,7 @@ public:
 					sequence = std::make_shared<JulianDateSequenceController>(std::make_shared<DoubleStateSequence>(), mEngineRoot->scenario.get());
 				}
 				assert(sequence);
-				auto item = std::make_shared<SequenceObject>(name, icon, sequence);
-				mSequenceObjectRegistry->add(item);
-				return item;
+				addItem(*mSequenceObjectRegistry, sequence, name);
 			};
 			type->isObjectRemovable = [] (const ScenarioObject& item) { return true; };
 			type->objectRemover = [this](const ScenarioObject& item) {

@@ -21,6 +21,7 @@
 #include <SkyboltEngine/Scenario/Scenario.h>
 #include <SkyboltEngine/Scenario/ScenarioSerialization.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
+#include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Physics/Astronomy.h>
 #include <SkyboltSim/System/System.h>
 #include <SkyboltSim/System/SystemRegistry.h>
@@ -81,8 +82,6 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	setCentralWidget(mToolWindowManager);
 
 	setStatusBar(new QStatusBar(this));
-
-	clearProject();
 
 	// Update immediately to sync ths vis to the sim.
 	// Necessary because Qt may decide to render the viewport before the update timer fires for the first time.
@@ -158,15 +157,20 @@ static QVariantMap toVariantMap(const QByteArray& array)
 	return variantMap;
 }
 
-#define FOREACH_CALL(container, fn, ...) \
-for (const auto& __item__ : container) \
-	__item__->fn(__VA_ARGS__);
+//! Create objects that are present in every project
+void createBackgroundEntities(World& world, const EntityFactory& factory)
+{
+	world.addEntity(factory.createEntity("Stars"));
+	world.addEntity(factory.createEntity("SunBillboard"));
+	world.addEntity(factory.createEntity("MoonBillboard"));
+}
 
 void MainWindow::clearProject()
 {
 	setProjectFilename("");
 
 	mEngineRoot->scenario->world.removeAllEntities();
+	createBackgroundEntities(mEngineRoot->scenario->world, *mEngineRoot->entityFactory);
 
 	emit projectCleared();
 }
@@ -174,13 +178,6 @@ void MainWindow::clearProject()
 void MainWindow::restoreToolWindowsState(const QString& stateBase64)
 {
 	mToolWindowManager->restoreState(toVariantMap(QByteArray::fromBase64(stateBase64.toUtf8())));
-}
-
-void createDefaultObjects(World& world, const EntityFactory& factory)
-{
-	world.addEntity(factory.createEntity("Stars"));
-	world.addEntity(factory.createEntity("SunBillboard"));
-	world.addEntity(factory.createEntity("MoonBillboard"));
 }
 
 bool MainWindow::saveChangesAndContinue()
@@ -215,16 +212,7 @@ void MainWindow::newProject(OverwriteMode overwriteMode)
 	World& simWorld = mEngineRoot->scenario->world;
 
 	clearProject();
-
-	// Create camera
-	sim::EntityPtr camera = factory.createEntity("Camera");
-	simWorld.addEntity(camera);
-
-	createDefaultObjects(simWorld, factory);
-
-	// Create earth
-	auto planet = factory.createEntity("PlanetEarth");
-	simWorld.addEntity(planet);
+	createNewProjectEntities();
 }
 
 QString projectFileExtension = ".proj";
@@ -291,7 +279,6 @@ void MainWindow::openProject(const QString& filename, OverwriteMode overwriteMod
 	}
 
 	clearProject();
-	createDefaultObjects(mEngineRoot->scenario->world, *mEngineRoot->entityFactory);
 
 	setProjectFilename(filename);
 
@@ -349,6 +336,21 @@ bool MainWindow::saveProject(QFile& file)
 		QMessageBox::critical(this, "", "Could not write to file. " + file.errorString());
 		return false;
 	}
+}
+
+void MainWindow::createNewProjectEntities()
+{
+	sim::World& world = mEngineRoot->scenario->world;
+	EntityFactory& factory = *mEngineRoot->entityFactory;
+
+	// Create earth
+	auto planet = factory.createEntity("PlanetEarth");
+	world.addEntity(planet);
+
+	// Create camera
+	sim::EntityPtr camera = factory.createEntity("Camera");
+	camera->getFirstComponentRequired<CameraControllerComponent>()->setTargetId(planet->getId());
+	world.addEntity(camera);
 }
 
 void MainWindow::saveProject(nlohmann::json& json) const

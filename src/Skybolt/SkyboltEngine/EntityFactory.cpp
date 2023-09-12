@@ -10,6 +10,7 @@
 #include "EngineStats.h"
 #include "TemplateNameComponent.h"
 #include "VisObjectsComponent.h"
+#include "Scenario/ScenarioMetadataComponent.h"
 #include "SimVisBinding/SimVisBinding.h"
 #include "SimVisBinding/GeocentricToNedConverter.h"
 #include "SimVisBinding/CameraSimVisBinding.h"
@@ -600,19 +601,25 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 		simVisBindingComponent->bindings.push_back(binding);
 	}
 
-	entity->addComponent(std::make_shared<NameComponent>("Earth"));
-
 	std::shared_ptr<PlanetStatsUpdater> statsUpdater = std::make_shared<PlanetStatsUpdater>(context.stats, static_cast<vis::Planet*>(visObject.get()));
 	entity->addComponent(statsUpdater);
 }
 
 typedef std::function<void(Entity*, const EntityFactory::Context&, VisObjectsComponentPtr&, const SimVisBindingsComponentPtr&, const nlohmann::json&)> VisComponentLoader;
 
+static std::shared_ptr<ScenarioMetadataComponent> createDefaultEntityScenarioMetadataComponent()
+{
+	auto component = std::make_shared<ScenarioMetadataComponent>();
+	component->directory = {"Entity"};
+	return component;
+}
+
 EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const std::string& instanceName, const Vector3& position, const Quaternion& orientation) const
 {
 	EntityPtr entity = std::make_shared<sim::Entity>(generateNextEntityId());
 
 	entity->addComponent(std::make_shared<NameComponent>(instanceName));
+	entity->addComponent(createDefaultEntityScenarioMetadataComponent());
 
 	SimVisBindingsComponentPtr simVisBindingComponent(new SimVisBindingsComponent);
 	entity->addComponent(simVisBindingComponent);

@@ -17,7 +17,9 @@ class EntityObject : public ScenarioObjectT<skybolt::sim::EntityId>
 {
 public:
 	EntityObject(EntityObjectRegistry* registry, skybolt::sim::World* world, const skybolt::sim::Entity& entity);
-	ScenarioObjectPtr getParent() const override;
+	
+	const skybolt::ScenarioObjectPath& getDirectory() const override;
+	void setDirectory(const skybolt::ScenarioObjectPath& path) override;
 
 	std::optional<skybolt::sim::Vector3> getWorldPosition() const override;
 	void setWorldPosition(const skybolt::sim::Vector3& position) override;
@@ -29,4 +31,6 @@ private:
 	skybolt::sim::World* mWorld;
 };
 
-ScenarioObjectTypePtr createEntityObjectType(skybolt::sim::World* world, skybolt::EntityFactory* entityFactory);
+using EntityObjectFactory = std::function<EntityObjectPtr(EntityObjectRegistry* registry, skybolt::sim::World* world, const skybolt::sim::Entity& entity)>;
+EntityObjectFactory createDefaultEntityObjectFactory();
+ScenarioObjectTypePtr createEntityObjectType(skybolt::sim::World* world, skybolt::EntityFactory* entityFactory, EntityObjectFactory entityObjectFactory = createDefaultEntityObjectFactory());

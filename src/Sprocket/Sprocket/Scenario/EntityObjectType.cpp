@@ -10,33 +10,38 @@
 #include "Sprocket/Viewport/PlanetPointPicker.h"
 
 #include <SkyboltEngine/EntityFactory.h>
+#include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/Components/NameComponent.h>
-#include <SkyboltSim/Components/ParentReferenceComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
-#include <SkyboltSim/Components/ProceduralLifetimeComponent.h>
 
 using namespace skybolt;
 
 static bool isDeletable(const sim::Entity& entity)
 {
-	return !entity.getFirstComponent<sim::ProceduralLifetimeComponent>().get();
+	if (auto metadata = entity.getFirstComponent<ScenarioMetadataComponent>(); metadata)
+	{
+		return metadata->deletable;
+	}
+	return false;
 }
 
 class EntityObjectRegistry : public Registry<ScenarioObject>, public sim::WorldListener
 {
 public:
-	EntityObjectRegistry(sim::World* world) :
-		mWorld(world)
+	EntityObjectRegistry(sim::World* world, EntityObjectFactory entityObjectFactory) :
+		mWorld(world),
+		mEntityObjectFactory(std::move(entityObjectFactory))
 	{
 		assert(mWorld);
+		assert(mEntityObjectFactory);
 	}
 
 	void entityAdded(const skybolt::sim::EntityPtr& entity) override
 	{
 		if (!getName(*entity).empty())
 		{
-			auto object = std::make_shared<EntityObject>(this, mWorld, *entity);
+			auto object = mEntityObjectFactory(this, mWorld, *entity);
 			add(object);
 		}
 	}
@@ -52,6 +57,7 @@ public:
 
 private:
 	sim::World* mWorld;
+	EntityObjectFactory mEntityObjectFactory;
 };
 
 EntityObject::EntityObject(EntityObjectRegistry* registry, sim::World* world, const sim::Entity& entity) :
@@ -63,22 +69,27 @@ EntityObject::EntityObject(EntityObjectRegistry* registry, sim::World* world, co
 	assert(mWorld);
 }
 
-static sim::Entity* getParentEntity(const sim::Entity& entity)
-{
-	sim::ParentReferenceComponent* component = entity.getFirstComponent<sim::ParentReferenceComponent>().get();
-	sim::Entity* parent = component ? component->getParent() : nullptr;
-	assert(parent != &entity);
-	return parent;
-}
-
-ScenarioObjectPtr EntityObject::getParent() const
+const ScenarioObjectPath& EntityObject::getDirectory() const
 {
 	if (sim::Entity* entity = mWorld->getEntityById(data).get(); entity)
 	{
-		sim::Entity* parent = getParentEntity(*entity);
-		return parent ? mRegistry->findByName(sim::getName(*parent)) : nullptr;
+		if (auto component = entity->getFirstComponent<ScenarioMetadataComponent>().get(); component)
+		{
+			return component->directory;
+		}
 	}
-	return nullptr;
+	return mDirectory;
+}
+
+void EntityObject::setDirectory(const ScenarioObjectPath& path)
+{
+	if (sim::Entity* entity = mWorld->getEntityById(data).get(); entity)
+	{
+		if (auto component = entity->getFirstComponent<ScenarioMetadataComponent>().get(); component)
+		{
+			component->directory = path;
+		}
+	}
 }
 
 std::optional<skybolt::sim::Vector3> EntityObject::getWorldPosition() const
@@ -122,11 +133,17 @@ std::optional<skybolt::sim::Vector3> EntityObject::intersectRay(const sim::Vecto
 	return std::nullopt;
 }
 
-ScenarioObjectTypePtr createEntityObjectType(sim::World* world, EntityFactory* entityFactory)
+EntityObjectFactory createDefaultEntityObjectFactory()
+{
+	return [] (EntityObjectRegistry* registry, skybolt::sim::World* world, const skybolt::sim::Entity& entity) {
+		return std::make_shared<EntityObject>(registry, world, entity);
+	};
+}
+
+ScenarioObjectTypePtr createEntityObjectType(sim::World* world, EntityFactory* entityFactory, EntityObjectFactory entityObjectFactory)
 {
 	auto t = std::make_shared<ScenarioObjectType>();
 	t->name = "Entity";
-	t->category = "Entity";
 	t->templateNames = entityFactory->getTemplateNames();
 	t->objectCreator = [world, entityFactory] (const std::string& instanceName, const std::string& templateName) {
 		sim::EntityPtr entity = entityFactory->createEntity(templateName);
@@ -142,7 +159,7 @@ ScenarioObjectTypePtr createEntityObjectType(sim::World* world, EntityFactory* e
 			world->removeEntity(entity);
 		}
 	};
-	auto entityObjectRegistry = std::make_shared<EntityObjectRegistry>(world);
+	auto entityObjectRegistry = std::make_shared<EntityObjectRegistry>(world, std::move(entityObjectFactory));
 	world->addListener(entityObjectRegistry.get());
 	t->objectRegistry = entityObjectRegistry;
 

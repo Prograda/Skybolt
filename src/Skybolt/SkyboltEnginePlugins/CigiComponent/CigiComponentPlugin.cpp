@@ -7,13 +7,13 @@
 #include "CigiClient.h"
 
 #include <SkyboltEngine/EngineRoot.h>
+#include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
 #include <SkyboltEngine/Plugin/Plugin.h>
 #include <SkyboltSim/SimMath.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/Components/AttachmentComponent.h>
 #include <SkyboltSim/Components/CameraComponent.h>
-#include <SkyboltSim/Components/ParentReferenceComponent.h>
-#include <SkyboltSim/Components/ProceduralLifetimeComponent.h>
+#include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Spatial/LatLonAlt.h>
@@ -140,8 +140,7 @@ public:
 		{
 			std::string templateName = it->second;
 			sim::EntityPtr entity = mEngineRoot->entityFactory->createEntity(templateName);
-			entity->addComponent(std::make_shared<ParentReferenceComponent>(mCigiGatewayEntity));
-			entity->addComponent(std::make_shared<ProceduralLifetimeComponent>());
+			entity->addComponent(createScenarioMetadataComponent());
 			entity->setDynamicsEnabled(false);
 
 			mEngineRoot->scenario->world.addEntity(entity);
@@ -159,8 +158,7 @@ public:
 	CigiCameraPtr createCamera() override
 	{
 		sim::EntityPtr entity = mEngineRoot->entityFactory->createEntity("Camera");
-		entity->addComponent(std::make_shared<ParentReferenceComponent>(mCigiGatewayEntity));
-		entity->addComponent(std::make_shared<ProceduralLifetimeComponent>());
+		entity->addComponent(createScenarioMetadataComponent());
 		mEngineRoot->scenario->world.addEntity(entity);
 		return std::make_shared<MyCigiCamera>(&mEngineRoot->scenario->world, entity);
 	}
@@ -169,6 +167,16 @@ public:
 	{
 		sim::EntityPtr simEntity = static_cast<MyCigiCamera*>(cigiCamera.get())->mEntity;
 		mEngineRoot->scenario->world.removeEntity(simEntity.get());
+	}
+
+private:
+	std::shared_ptr<ScenarioMetadataComponent> createScenarioMetadataComponent() const
+	{
+		auto metadata = std::make_shared<ScenarioMetadataComponent>();
+		metadata->serializable = false;
+		metadata->deletable = false;
+		metadata->directory = { "Entity", getName(*mCigiGatewayEntity) };
+		return metadata;
 	}
 
 private:

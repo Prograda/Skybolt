@@ -16,6 +16,8 @@
 #include <Sprocket/Input/InputPlatformQt.h>
 #include <Sprocket/Scenario/EntityObjectType.h>
 #include <Sprocket/Viewport/ScenarioObjectPicker.h>
+#include "Sprocket/Scenario/EntityObjectType.h"
+#include "Sprocket/Scenario/ScenarioDescObjectType.h"
 #include <Sprocket/Scenario/ScenarioSelectionModel.h>
 #include <Sprocket/Viewport/DefaultViewportMouseEventHandler.h>
 #include <Sprocket/Viewport/ViewportVisibilityFiltering.h>
@@ -105,7 +107,9 @@ public:
 			addToolWindows(*mMainWindow, mEditorPlugins);
 		}
 
-		const ScenarioObjectTypeMap& scenarioObjectTypes = getSceneObjectTypes(mEditorPlugins, engineRoot.get());
+		ScenarioObjectTypeMap scenarioObjectTypes = getSceneObjectTypes(mEditorPlugins, engineRoot.get());
+		scenarioObjectTypes[typeid(EntityObject)] = createEntityObjectType(&engineRoot->scenario->world, engineRoot->entityFactory.get());
+		scenarioObjectTypes[typeid(ScenarioDescObject)] = createScenarioDescObjectType(engineRoot->scenario.get());
 
 		{
 			auto widget = new ScenarioPropertyEditorWidget([&] {

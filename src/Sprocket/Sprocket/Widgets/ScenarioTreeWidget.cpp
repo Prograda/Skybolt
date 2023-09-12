@@ -140,18 +140,6 @@ bool ScenarioTreeWidget::shouldDisplayItem(const ScenarioObject& object) const
 	return true;
 }
 
-std::optional<std::string> ScenarioTreeWidget::getParentFolderName(const ScenarioObject& object) const
-{
-	if (auto type = findOptional(mScenarioObjectTypes, std::type_index(typeid(object))).value_or(nullptr); type)
-	{
-		if (!type->category.empty())
-		{
-			return type->category;
-		}
-	}
-	return std::nullopt;
-}
-
 void ScenarioTreeWidget::addObjects(const std::type_index& sceneObjectType, const std::set<ScenarioObjectPtr>& objects)
 {
 	std::vector<TreeItemPtr> children;
@@ -209,37 +197,30 @@ void ScenarioTreeWidget::setCurrentSelection(const std::vector<TreeItem*>& items
 	}
 }
 
-TreeItemPtr ScenarioTreeWidget::getOrCreateFolder(const std::string& name)
+TreeItemPtr ScenarioTreeWidget::createFolder(TreeItem& parent, const std::string& name)
 {
-	if (auto item = findOptional(mFoldersMap, name); item)
-	{
-		return *item;
-	}
-
 	QIcon folderIcon = getSprocketIcon(SprocketIcon::Folder);
 	auto item = std::make_shared<SimpleTreeItem>(QString::fromStdString(name), folderIcon);
-	mModel->addChildren(*mRootItem, { item });
-	mFoldersMap[name] = item;
+	mModel->addChildren(parent, { item });
 	return item;
 }
 
 TreeItemPtr ScenarioTreeWidget::getParent(const ScenarioObject& object)
 {
-	TreeItemPtr parent;
-	if (ScenarioObjectPtr objectParent = object.getParent(); objectParent)
+	ScenarioObjectPath directory = object.getDirectory();
+
+	TreeItemPtr parent = mRootItem;
+	for (const std::string& folder : directory)
 	{
-		if (auto treeItem = findOptional(mItemsMap, objectParent); treeItem)
+		TreeItemPtr child = mModel->findChildByName(*parent, folder);
+
+		if (!child)
 		{
-			return *treeItem;
+			child = createFolder(*parent, folder);
 		}
+		parent = child;
 	}
-
-	if (auto category = getParentFolderName(object); category)
-	{
-		return getOrCreateFolder(*category);
-	}
-
-	return mRootItem;
+	return parent;
 }
 
 void ScenarioTreeWidget::updateTreeItemParents()

@@ -1,9 +1,9 @@
 #include "ScenarioSerialization.h"
 #include "Scenario.h"
 #include <SkyboltEngine/EntityFactory.h>
+#include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
 #include <SkyboltEngine/TemplateNameComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
-#include <SkyboltSim/Components/ProceduralLifetimeComponent.h>
 #include <SkyboltSim/JsonHelpers.h>
 #include <SkyboltSim/Serialization/Serialization.h>
 #include <SkyboltSim/World.h>
@@ -97,12 +97,21 @@ void readEntities(World& world, EntityFactory& factory, const nlohmann::json& js
 	}
 }
 
+static bool isSerializable(const Entity& entity)
+{
+	if (auto metadata = entity.getFirstComponent<ScenarioMetadataComponent>(); metadata)
+	{
+		return metadata->serializable;
+	}
+	return true;
+}
+
 nlohmann::json writeEntities(const World& world)
 {
 	nlohmann::json json;
 	for (const EntityPtr& entity : world.getEntities())
 	{
-		if (!entity->getFirstComponent<ProceduralLifetimeComponent>())
+		if (isSerializable(*entity))
 		{
 			const std::string& name = getName(*entity);
 			auto templateNameComponent = entity->getFirstComponent<TemplateNameComponent>();

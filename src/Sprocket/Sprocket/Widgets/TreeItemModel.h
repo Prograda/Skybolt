@@ -48,6 +48,7 @@ public:
 	void removeChild(TreeItem& item, const TreeItem& child);
 	void clearChildren(TreeItem& item);
 	const std::vector<TreeItemPtr>& getChildren(TreeItem& item) const;
+	TreeItemPtr findChildByName(const TreeItem& item, const std::string& name) const; //!< @returns nullptr if not found
 
 	void removeItem(TreeItem& item);
 

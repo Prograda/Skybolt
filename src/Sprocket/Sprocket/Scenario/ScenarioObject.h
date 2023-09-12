@@ -9,6 +9,7 @@
 #include "Sprocket/SprocketFwd.h"
 #include "Sprocket/Registry.h"
 
+#include <SkyboltEngine/Scenario/ScenarioObjectPath.h>
 #include <SkyboltSim/SimMath.h>
 
 #include <functional>
@@ -26,7 +27,13 @@ public:
 
 	virtual std::string getName() const = 0;
 	virtual const QIcon& getIcon() const = 0;
-	virtual ScenarioObjectPtr getParent() const { return nullptr; }
+
+	virtual const skybolt::ScenarioObjectPath& getDirectory() const
+	{
+		static skybolt::ScenarioObjectPath path;
+		return path;
+	}
+	virtual void setDirectory(const skybolt::ScenarioObjectPath& path) {}
 
 	virtual std::optional<skybolt::sim::Vector3> getWorldPosition() const { return std::nullopt; } //!< Get position of the object in the world
 	virtual void setWorldPosition(const skybolt::sim::Vector3& position) {}
@@ -47,11 +54,17 @@ public:
 	std::string getName() const override { return name; }
 	const QIcon& getIcon() const override { return icon; }
 
+	const skybolt::ScenarioObjectPath& getDirectory() const override { return mDirectory; }
+	void setDirectory(const skybolt::ScenarioObjectPath& path) override { mDirectory = path; }
+
 	virtual const T& getData() const { return data; }
 
 	const std::string name;
 	const QIcon icon;
 	const T data;
+
+protected:
+	skybolt::ScenarioObjectPath mDirectory;
 };
 
 using ScenarioObjectRegistry = Registry<ScenarioObject>;
@@ -62,7 +75,6 @@ struct ScenarioObjectType
 	virtual ~ScenarioObjectType() = default;
 
 	std::string name; //!< Name of the type
-	std::string category; //!< Name of the category which objects of this type should be grouped under in GUI. If empty, objects will treated as 'top level' rather than being grouped.
 	std::vector<std::string> templateNames; //!< Names of each templates of each type. For example, if the type is "entity", the templates would be things like "cargo ship" etc. Can be empty.
 	std::function<void(const std::string& instanceName, const std::string& templateName)> objectCreator; //!< Creates object. Null if objects of this type cannot be created by user.
 	std::function<bool(const ScenarioObject&)> isObjectRemovable; //!< Returns true if object can be removed by user. Never null.

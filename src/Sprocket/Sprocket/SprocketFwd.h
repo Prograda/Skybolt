@@ -9,8 +9,9 @@
 #include <functional>
 #include <memory>
 
-class EditorPlugin;
 class EntityChooserDialogFactory;
+class EntityObject;
+class EditorPlugin;
 struct EditorPluginConfig;
 class JsonProjectSerializable;
 class OsgWindow;
@@ -27,6 +28,7 @@ class ViewportInputSystem;
 class ViewportMouseEventHandler;
 class ViewportWidget;
 
+using EntityObjectPtr = std::shared_ptr<EntityObject>;
 using EditorPluginPtr = std::shared_ptr<EditorPlugin>;
 using EntityChooserDialogFactoryPtr = std::shared_ptr<EntityChooserDialogFactory>;
 using PropertiesModelPtr = std::shared_ptr<PropertiesModel>;

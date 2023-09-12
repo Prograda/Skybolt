@@ -48,11 +48,7 @@ PropertyEditorWidgetFactoryMap getPropertyEditorWidgetFactories(const std::vecto
 
 ScenarioObjectTypeMap getSceneObjectTypes(const std::vector<EditorPluginPtr>& plugins, EngineRoot* engineRoot)
 {
-	ScenarioObjectTypeMap objectTypes = {
-		{ typeid(EntityObject), createEntityObjectType(&engineRoot->scenario->world, engineRoot->entityFactory.get()) },
-		{ typeid(ScenarioDescObject), createScenarioDescObjectType(engineRoot->scenario.get()) }
-	};
-
+	ScenarioObjectTypeMap objectTypes;
 	for (const EditorPluginPtr& plugin : plugins)
 	{
 		auto types = plugin->getSceneObjectTypes();

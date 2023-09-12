@@ -8,6 +8,7 @@
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EntityFactory.h>
 #include <SkyboltEngine/WindowUtil.h>
+#include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
 #include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
 #include <SkyboltEngine/VisObjectsComponent.h>
@@ -20,8 +21,6 @@
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
-#include <SkyboltSim/Components/ParentReferenceComponent.h>
-#include <SkyboltSim/Components/ProceduralLifetimeComponent.h>
 #include <SkyboltSim/Spatial/Frustum.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Spatial/Orientation.h>
@@ -44,6 +43,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 
 namespace py = pybind11;
 
@@ -161,7 +161,11 @@ static py::array_t<std::uint8_t> captureScreenshotToImage(vis::VisRoot& visRoot)
     return result;
 }
 
+PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
+
 PYBIND11_MODULE(skybolt, m) {
+	py::bind_vector<std::vector<std::string>>(m, "VectorString");
+
 	py::class_<Vector3>(m, "Vector3")
 		.def(py::init())
 		.def(py::init<double, double, double>())
@@ -259,9 +263,10 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("getTppOrientationRelBody", &MainRotorComponent::getTppOrientationRelBody)
 		.def("setNormalizedRpm", &MainRotorComponent::setNormalizedRpm);
 
-	py::class_<ParentReferenceComponent, std::shared_ptr<ParentReferenceComponent>, Component>(m, "ParentReferenceComponent")
-		.def(py::init<sim::Entity*>())
-		.def("getParent", &ParentReferenceComponent::getParent);
+	py::class_<ScenarioMetadataComponent, std::shared_ptr<ScenarioMetadataComponent>, Component>(m, "ScenarioMetadataComponent")
+		.def_readwrite("serializable", &ScenarioMetadataComponent::serializable)
+		.def_readwrite("deletable", &ScenarioMetadataComponent::deletable)
+		.def_readwrite("directory", &ScenarioMetadataComponent::directory);
 
 	py::class_<CameraComponent, std::shared_ptr<CameraComponent>, Component>(m, "CameraComponent")
 		.def_property("state",
@@ -275,9 +280,6 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("setTargetId", &CameraControllerSelector::setTargetId);
 
 	py::class_<CameraControllerComponent, std::shared_ptr<CameraControllerComponent>, Component, CameraControllerSelector>(m, "CameraControllerComponent");
-
-	py::class_<ProceduralLifetimeComponent, std::shared_ptr<ProceduralLifetimeComponent>, Component>(m, "ProceduralLifetimeComponent")
-		.def(py::init());
 
 	py::class_<Targetable>(m, "Targetable")
 		.def("getTargetId", &Targetable::getTargetId)

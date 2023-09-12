@@ -76,9 +76,10 @@ private slots:
 	void toolWindowVisibilityChanged(QWidget* toolWindow, bool visible);
 
 protected:
-	bool saveChangesAndContinue(); //!< @returns action was not cancelled
+	virtual bool saveChangesAndContinue(); //!< @returns action was not cancelled
 	virtual void loadProject(const nlohmann::json& json);
 	virtual void saveProject(nlohmann::json& json) const;
+	virtual void createNewProjectEntities();
 
 	virtual void update();
 

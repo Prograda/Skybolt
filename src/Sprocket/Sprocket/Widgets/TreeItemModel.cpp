@@ -88,6 +88,19 @@ const std::vector<TreeItemPtr>& TreeItemModel::getChildren(TreeItem& item) const
 	return item.mChildren;
 }
 
+TreeItemPtr TreeItemModel::findChildByName(const TreeItem& item, const std::string& name) const
+{
+	const std::vector<TreeItemPtr>& children = item.mChildren;
+	for (const auto& child : children)
+	{
+		if (child->getName() == name)
+		{
+			return child;
+		}
+	}
+	return nullptr;
+}
+
 int TreeItemModel::getChildPosition(const TreeItem& item, const TreeItem& child)
 {
 	int i = 0;
