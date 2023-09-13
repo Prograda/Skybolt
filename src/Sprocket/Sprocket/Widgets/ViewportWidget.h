@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Sprocket/SprocketFwd.h"
-#include "Sprocket/JsonProjectSerializable.h"
+#include "Sprocket/JsonScenarioSerializable.h"
 #include "Sprocket/ContextAction/ActionContext.h"
 #include "Sprocket/Scenario/ScenarioObject.h"
 #include "Sprocket/Viewport/ScenarioObjectPicker.h"
@@ -33,11 +33,11 @@ struct ViewportWidgetConfig
 	ScenarioSelectionModel* selectionModel;
 	ScenarioObjectPicker scenarioObjectPicker;
 	std::vector<DefaultContextActionPtr> contextActions;
-	std::function<std::string()> projectFilenameGetter;
+	std::function<std::string()> scenarioFilenameGetter;
 	QWidget* parent = nullptr;
 };
 
-class ViewportWidget : public QWidget, public JsonProjectSerializable, public skybolt::sim::WorldListener
+class ViewportWidget : public QWidget, public JsonScenarioSerializable, public skybolt::sim::WorldListener
 {
 	Q_OBJECT
 public:
@@ -66,16 +66,16 @@ public:
 	QToolBar* getToolBar() const { return mToolBar; }
 
 
-public: // JsonProjectSerializable
-	void resetProject() override;
-	void readProject(const nlohmann::json& json) override;
-	void writeProject(nlohmann::json& json) const override;
+public: // JsonScenarioSerializable
+	void resetScenario() override;
+	void readScenario(const nlohmann::json& json) override;
+	void writeScenario(nlohmann::json& json) const override;
 
 public:
 	void entityRemoved(const skybolt::sim::EntityPtr& entity) override;
 
 private:
-	QToolBar* createViewportToolBar(const std::function<std::string()>& projectFilenameGetter);
+	QToolBar* createViewportToolBar(const std::function<std::string()>& scenarioFilenameGetter);
 
 	void captureImage(const std::filesystem::path& baseFilename);
 

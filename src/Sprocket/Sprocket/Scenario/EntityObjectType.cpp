@@ -35,6 +35,11 @@ public:
 	{
 		assert(mWorld);
 		assert(mEntityObjectFactory);
+
+		for (const auto& entity : mWorld->getEntities())
+		{
+			entityAdded(entity);
+		}
 	}
 
 	void entityAdded(const skybolt::sim::EntityPtr& entity) override

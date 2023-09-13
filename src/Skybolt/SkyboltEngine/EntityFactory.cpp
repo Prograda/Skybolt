@@ -618,8 +618,8 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 {
 	EntityPtr entity = std::make_shared<sim::Entity>(generateNextEntityId());
 
+	// Create required components
 	entity->addComponent(std::make_shared<NameComponent>(instanceName));
-	entity->addComponent(createDefaultEntityScenarioMetadataComponent());
 
 	SimVisBindingsComponentPtr simVisBindingComponent(new SimVisBindingsComponent);
 	entity->addComponent(simVisBindingComponent);
@@ -627,6 +627,7 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 	VisObjectsComponentPtr visObjectsComponent(new VisObjectsComponent(mContext.scene));
 	entity->addComponent(visObjectsComponent);
 
+	// Create additional components from json
 	ComponentFactoryContext componentFactoryContext;
 	componentFactoryContext.julianDateProvider = mContext.julianDateProvider;
 	componentFactoryContext.scheduler = mContext.scheduler;
@@ -676,8 +677,14 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 		}
 	}
 
-	Node* node = entity->getFirstComponent<Node>().get();
-	if (node)
+	// Add default ScenarioMetadataComponent if one wasn't in the json file
+	if (!entity->getFirstComponent<ScenarioMetadataComponent>())
+	{
+		entity->addComponent(createDefaultEntityScenarioMetadataComponent());
+	}
+
+	// Initialise entity pose
+	if (Node* node = entity->getFirstComponent<Node>().get(); node)
 	{
 		node->setPosition(position);
 		node->setOrientation(orientation);

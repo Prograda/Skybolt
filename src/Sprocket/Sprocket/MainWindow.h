@@ -7,16 +7,14 @@
 #pragma once
 
 #include "SprocketFwd.h"
+#include "JsonScenarioSerializable.h"
 
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Plugin/PluginHelpers.h>
-#include <SkyboltSim/SkyboltSimFwd.h>
 
 #include <QMainWindow>
 #include <QSettings>
 #include <ToolWindowManager/ToolWindowManager.h>
-
-#include <cxxtimer/cxxtimer.hpp>
 
 class QAction;
 
@@ -24,12 +22,13 @@ namespace Ui { class MainWindow; }
 
 struct MainWindowConfig
 {
+	ScenarioWorkspacePtr workspace;
 	std::shared_ptr<skybolt::EngineRoot> engineRoot; //!< Never null
 	QWidget *parent = nullptr;
 	Qt::WindowFlags flags = Qt::WindowFlags();
 };
 
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow, public JsonScenarioSerializable
 {
 	Q_OBJECT
 
@@ -39,68 +38,53 @@ public:
 
 	skybolt::EngineRoot* getEngineRoot() const { return mEngineRoot.get(); }
 
+	void addToolWindow(const QString& windowName, QWidget* window);
+	void raiseToolWindow(QWidget* widget);
+	void restoreToolWindowsState(const QString& stateBase64);
+
 	enum class OverwriteMode
 	{
 		PromptToSaveChanges,
 		OverwriteWithoutPrompt
 	};
 
-	void clearProject();
-	void openProject(const QString& filename, OverwriteMode overwriteMode = OverwriteMode::PromptToSaveChanges);
-	bool saveProject(class QFile& file);
-	QString getProjectFilename() const { return mProjectFilename; }
+	virtual void newScenario(OverwriteMode mode);
+	virtual void openScenario(const QString& filename, OverwriteMode mode);
 
-	void addToolWindow(const QString& windowName, QWidget* window);
-	void raiseToolWindow(QWidget* widget);
-	void restoreToolWindowsState(const QString& stateBase64);
+public: // JsonScenarioSerializable interface
+	void readScenario(const nlohmann::json& json) override;
+	void writeScenario(nlohmann::json& json) const override;
 
 public slots:
-	void newProject(OverwriteMode overwriteMode = OverwriteMode::PromptToSaveChanges);
-	void openProject();
-	bool saveProject();
-	bool saveProjectAs();
+	void newScenario();
+	void openScenario();
+	bool saveScenario();
+	bool saveScenarioAs();
 	void about();
 	void exit();
 	void editEngineSettings();
-
-signals:
-	void projectCleared();
-	void projectLoaded(const nlohmann::json& json);
-	void projectSaved(nlohmann::json& json) const;
-	void updated(skybolt::sim::SecondsD wallDt);
+	void scenarioFilenameChanged(const QString& filename);
 
 private slots:
-	void updateIfIntervalElapsed();
-
 	void toolWindowActionToggled(bool state);
 	void toolWindowVisibilityChanged(QWidget* toolWindow, bool visible);
 
 protected:
 	virtual bool saveChangesAndContinue(); //!< @returns action was not cancelled
-	virtual void loadProject(const nlohmann::json& json);
-	virtual void saveProject(nlohmann::json& json) const;
-	virtual void createNewProjectEntities();
 
 	virtual void update();
 
 private:
-	QString getDefaultProjectDirectory() const;
+	QString getDefaultScenarioDirectory() const;
 	void closeEvent(QCloseEvent*);
 
-	void setProjectFilename(const QString& filename);
-
-	void simulate(skybolt::TimeSource& timeSource, float dt);
-
 private:
+	ScenarioWorkspacePtr mWorkspace;
 	std::shared_ptr<skybolt::EngineRoot> mEngineRoot;
 	std::unique_ptr<Ui::MainWindow> ui;
 	ToolWindowManager* mToolWindowManager;
 	std::vector<QAction*> mToolActions;
 	
-	cxxtimer::Timer mUpdateTimer; //!< Time since last update
-
-	QString mProjectFilename;
-
 	QAction* mViewMenuToolWindowSeparator;
 
 	QSettings mSettings;

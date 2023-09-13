@@ -12,20 +12,13 @@
 #include "RecentFilesMenuPopulator.h"
 #include "QtUtil/QtDialogUtil.h"
 #include "Property/PropertyEditor.h"
+#include "Scenario/ScenarioWorkspace.h"
 #include "Widgets/SettingsEditor.h"
 
 #include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltCommon/Json/WriteJsonFile.h>
 #include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/EngineStats.h>
-#include <SkyboltEngine/Scenario/Scenario.h>
-#include <SkyboltEngine/Scenario/ScenarioSerialization.h>
-#include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
-#include <SkyboltSim/Components/CameraControllerComponent.h>
-#include <SkyboltSim/Physics/Astronomy.h>
-#include <SkyboltSim/System/System.h>
-#include <SkyboltSim/System/SystemRegistry.h>
-#include <SkyboltVis/Camera.h>
 
 #include <filesystem>
 
@@ -36,10 +29,7 @@
 #include <QCloseEvent>
 #include <QFileDialog>
 #include <QMessageBox>
-#include <QTimer>
 #include <QToolBar>
-
-#include <osgDB/Registry>
 
 #include <algorithm>
 #include <chrono>
@@ -51,26 +41,30 @@ using namespace skybolt::sim;
 MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	QMainWindow(windowConfig.parent, windowConfig.flags),
 	ui(new Ui::MainWindow),
+	mWorkspace(windowConfig.workspace),
 	mEngineRoot(windowConfig.engineRoot),
 	mSettings(QApplication::applicationName())
 {
+	assert(mWorkspace);
 	assert(mEngineRoot);
 
+	connectJsonScenarioSerializable(*mWorkspace, *this);
+	connect(mWorkspace.get(), &ScenarioWorkspace::scenarioFilenameChanged, this, &MainWindow::scenarioFilenameChanged);
+	scenarioFilenameChanged(mWorkspace->getScenarioFilename());
+
 	RecentFilesMenuPopulator::FileOpener fileOpener = [this](const QString& filename) {
-		openProject(filename, OverwriteMode::PromptToSaveChanges);
+		openScenario(filename, OverwriteMode::PromptToSaveChanges);
 	};
 
 	ui->setupUi(this);
 	mViewMenuToolWindowSeparator = ui->menuView->addSeparator();
 	mRecentFilesMenuPopulator.reset(new RecentFilesMenuPopulator(ui->menuRecentFiles, &mSettings, fileOpener));
 
-	setProjectFilename("");
-	
 	// Connect menus
-	QObject::connect(ui->actionNewScenario, SIGNAL(triggered()), this, SLOT(newProject()));
-	QObject::connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(openProject()));
-	QObject::connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(saveProject()));
-	QObject::connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(saveProjectAs()));
+	QObject::connect(ui->actionNewScenario, SIGNAL(triggered()), this, SLOT(newScenario()));
+	QObject::connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(openScenario()));
+	QObject::connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(saveScenario()));
+	QObject::connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(saveScenarioAs()));
 	QObject::connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
 	QObject::connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(exit()));
 	QObject::connect(ui->actionSettings, SIGNAL(triggered()), this, SLOT(editEngineSettings()));
@@ -82,18 +76,9 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	setCentralWidget(mToolWindowManager);
 
 	setStatusBar(new QStatusBar(this));
-
-	// Update immediately to sync ths vis to the sim.
-	// Necessary because Qt may decide to render the viewport before the update timer fires for the first time.
-	update();
-
-	QTimer::singleShot(0, this, SLOT(updateIfIntervalElapsed()));
 }
 
-MainWindow::~MainWindow()
-{
-	delete mToolWindowManager;
-}
+MainWindow::~MainWindow() = default;
 
 static QString addSeparator(const QString& str)
 {
@@ -108,12 +93,6 @@ static QString addSeparator(const QString& str)
 
 void MainWindow::update()
 {
-	double wallDt = double(mUpdateTimer.count<std::chrono::milliseconds>()) / 1000.0;
-	mUpdateTimer.reset();
-	mUpdateTimer.start();
-
-	emit updated(wallDt);
-
 	QString status;
 	if (mEngineRoot->stats.terrainTileLoadQueueSize)
 	{
@@ -135,44 +114,12 @@ void MainWindow::update()
 	statusBar()->showMessage(status);
 }
 
-const SecondsD minFrameDuration = 0.01;
-void MainWindow::updateIfIntervalElapsed()
-{
-	QTimer::singleShot(0, this, SLOT(updateIfIntervalElapsed()));
-
-	double elapsed = double(mUpdateTimer.count<std::chrono::milliseconds>()) / 1000.0;
-	if (elapsed < minFrameDuration)
-	{
-		return;
-	}
-
-	update();
-}
-
 static QVariantMap toVariantMap(const QByteArray& array)
 {
 	QVariantMap variantMap;
 	QDataStream stream(const_cast<QByteArray*>(&array), QIODevice::OpenMode::enum_type::ReadOnly);
 	stream >> variantMap;
 	return variantMap;
-}
-
-//! Create objects that are present in every project
-void createBackgroundEntities(World& world, const EntityFactory& factory)
-{
-	world.addEntity(factory.createEntity("Stars"));
-	world.addEntity(factory.createEntity("SunBillboard"));
-	world.addEntity(factory.createEntity("MoonBillboard"));
-}
-
-void MainWindow::clearProject()
-{
-	setProjectFilename("");
-
-	mEngineRoot->scenario->world.removeAllEntities();
-	createBackgroundEntities(mEngineRoot->scenario->world, *mEngineRoot->entityFactory);
-
-	emit projectCleared();
 }
 
 void MainWindow::restoreToolWindowsState(const QString& stateBase64)
@@ -190,7 +137,7 @@ bool MainWindow::saveChangesAndContinue()
 	switch (msgBox.exec())
 	{
 		case QMessageBox::Save:
-			return saveProject();
+			return saveScenario();
 		case QMessageBox::Discard:
 			return true;
 		case QMessageBox::Cancel:
@@ -201,26 +148,27 @@ bool MainWindow::saveChangesAndContinue()
 	return true;
 }
 
-void MainWindow::newProject(OverwriteMode overwriteMode)
+void MainWindow::newScenario()
 {
-	if (overwriteMode == OverwriteMode::PromptToSaveChanges && !saveChangesAndContinue())
+	newScenario(OverwriteMode::PromptToSaveChanges);
+}
+
+void MainWindow::newScenario(OverwriteMode mode)
+{
+	if (mode == OverwriteMode::PromptToSaveChanges && !saveChangesAndContinue())
 	{
 		return;
 	}
 
-	const EntityFactory& factory = *mEngineRoot->entityFactory;
-	World& simWorld = mEngineRoot->scenario->world;
-
-	clearProject();
-	createNewProjectEntities();
+	mWorkspace->newScenario();
 }
 
-QString projectFileExtension = ".proj";
-QString projectFileFilter = "Project Files (*" + projectFileExtension + ")";
+QString scenarioFileExtension = ".scn";
+QString scenarioFileFilter = "Scenario Files (*" + scenarioFileExtension + ")";
 
 QString defaultDirKey = "defaultDir";
 
-QString MainWindow::getDefaultProjectDirectory() const
+QString MainWindow::getDefaultScenarioDirectory() const
 {
 	QString defaultDir = mSettings.value(defaultDirKey).toString();
 	if (defaultDir.isEmpty())
@@ -230,7 +178,7 @@ QString MainWindow::getDefaultProjectDirectory() const
 	return defaultDir;
 }
 
-void MainWindow::openProject()
+void MainWindow::openScenario()
 {
 	if (!saveChangesAndContinue())
 	{
@@ -238,14 +186,29 @@ void MainWindow::openProject()
 	}
 
 	QString filename = QFileDialog::getOpenFileName(nullptr, tr("Open Project"),
-		getDefaultProjectDirectory(), projectFileFilter);
+		getDefaultScenarioDirectory(), scenarioFileFilter);
 
+	mRecentFilesMenuPopulator->addFilename(filename);
 	if (!filename.isEmpty())
 	{
-		QDir currentDir;
-		mSettings.setValue(defaultDirKey, currentDir.absoluteFilePath(filename));
+		OverwriteMode mode = OverwriteMode::OverwriteWithoutPrompt; // we've already prompted the user, so don't do it again
+		openScenario(filename, mode);
+	}
+}
 
-		openProject(filename, OverwriteMode::OverwriteWithoutPrompt); // the user has already been prompted to overwrite
+void MainWindow::openScenario(const QString& filename, OverwriteMode mode)
+{
+	if (mode == OverwriteMode::PromptToSaveChanges && !saveChangesAndContinue())
+	{
+		return;
+	}
+
+	QDir currentDir;
+	mSettings.setValue(defaultDirKey, currentDir.absoluteFilePath(filename));
+
+	if (auto errorMessage = mWorkspace->loadScenario(filename); errorMessage)
+	{
+		QMessageBox::critical(this, "", *errorMessage);
 	}
 }
 
@@ -257,52 +220,8 @@ static QByteArray toByteArray(const QVariantMap& variant)
 	return array;
 }
 
-void MainWindow::openProject(const QString& filename, OverwriteMode overwriteMode)
+void MainWindow::readScenario(const nlohmann::json& json)
 {
-	if (overwriteMode == OverwriteMode::PromptToSaveChanges && !saveChangesAndContinue())
-	{
-		return;
-	}
-
-	if (!QFileInfo::exists(filename))
-	{
-		QMessageBox::critical(this, "", "Could not open file because it does not exist");
-		return;
-	}
-
-	QFile file(filename);
-
-	if (!file.open(QIODevice::ReadOnly))
-	{
-		QMessageBox::critical(this, "", "Could not open file. " + file.errorString());
-		return;
-	}
-
-	clearProject();
-
-	setProjectFilename(filename);
-
-	try
-	{
-		std::string content = file.readAll().toStdString();
-		nlohmann::json json = nlohmann::json::parse(content);
-
-		loadProject(json);
-		mRecentFilesMenuPopulator->addFilename(filename);
-	}
-	catch (std::exception &e)
-	{
-		QMessageBox::critical(this, "Error", e.what());
-		clearProject();
-	}
-}
-
-void MainWindow::loadProject(const nlohmann::json& json)
-{
-	ifChildExists(json, "scenario", [this] (const nlohmann::json& child) {
-		readScenario(*mEngineRoot->scenario, child);
-	});
-
 	ifChildExists(json, "mainWindowGeometry", [this] (const nlohmann::json& child) {
 		QString str = QString::fromStdString(child.get<std::string>());
 		restoreGeometry(QByteArray::fromBase64(str.toUtf8()));
@@ -312,87 +231,46 @@ void MainWindow::loadProject(const nlohmann::json& json)
 		QString str = QString::fromStdString(child.get<std::string>());
 		mToolWindowManager->restoreState(toVariantMap(QByteArray::fromBase64(str.toUtf8())));
 	});
-
-	ifChildExists(json, "entities", [this] (const nlohmann::json& child) {
-		readEntities(mEngineRoot->scenario->world, *mEngineRoot->entityFactory, child);
-	});
-
-	emit projectLoaded(json);
 }
 
-bool MainWindow::saveProject(QFile& file)
+void MainWindow::writeScenario(nlohmann::json& json) const
 {
-	if (file.open(QIODevice::WriteOnly))
-	{
-		nlohmann::json json;
-		saveProject(json);
-
-		int indent = 4;
-		file.write(json.dump(indent).c_str());
-		return true;
-	}
-	else
-	{
-		QMessageBox::critical(this, "", "Could not write to file. " + file.errorString());
-		return false;
-	}
-}
-
-void MainWindow::createNewProjectEntities()
-{
-	sim::World& world = mEngineRoot->scenario->world;
-	EntityFactory& factory = *mEngineRoot->entityFactory;
-
-	// Create earth
-	auto planet = factory.createEntity("PlanetEarth");
-	world.addEntity(planet);
-
-	// Create camera
-	sim::EntityPtr camera = factory.createEntity("Camera");
-	camera->getFirstComponentRequired<CameraControllerComponent>()->setTargetId(planet->getId());
-	world.addEntity(camera);
-}
-
-void MainWindow::saveProject(nlohmann::json& json) const
-{
-	json["scenario"] = writeScenario(*mEngineRoot->scenario);
 	json["windowLayout"] = toByteArray(mToolWindowManager->saveState()).toBase64().toStdString();
 	json["mainWindowGeometry"] = saveGeometry().toBase64().toStdString();
-	json["entities"] = writeEntities(mEngineRoot->scenario->world);
-
-	emit projectSaved(json);
 }
 
-bool MainWindow::saveProject()
+bool MainWindow::saveScenario()
 {
-	if (mProjectFilename.isEmpty())
+	if (mWorkspace->getScenarioFilename().isEmpty())
 	{
-		saveProjectAs();
+		saveScenarioAs();
 	}
 	else
 	{
-		QFile file(mProjectFilename);
-		return saveProject(file);
+		QFile file(mWorkspace->getScenarioFilename());
+		if (auto errorMessage = mWorkspace->saveScenario(file); errorMessage)
+		{
+			QMessageBox::critical(this, "", *errorMessage);
+		}
 	}
 	return false;
 }
 
-bool MainWindow::saveProjectAs()
+bool MainWindow::saveScenarioAs()
 {
-	QString fileName = QFileDialog::getSaveFileName(nullptr, tr("Save Project"),
-		getDefaultProjectDirectory(), projectFileFilter);
+	QString fileName = QFileDialog::getSaveFileName(nullptr, tr("Save Scenario"),
+		getDefaultScenarioDirectory(), scenarioFileFilter);
 
 	if (!fileName.isEmpty())
 	{
-		if (!fileName.endsWith(projectFileExtension, Qt::CaseInsensitive))
-			fileName += projectFileExtension;
+		if (!fileName.endsWith(scenarioFileExtension, Qt::CaseInsensitive))
+			fileName += scenarioFileExtension;
 
 		QFile file(fileName);
-		if (!saveProject(file))
+		if (auto errorMessage = mWorkspace->saveScenario(file); errorMessage)
 		{
-			return false;
+			QMessageBox::critical(this, "", *errorMessage);
 		}
-		setProjectFilename(fileName);
 
 		QDir currentDir;
 		mSettings.setValue(defaultDirKey, currentDir.absoluteFilePath(fileName));
@@ -478,26 +356,12 @@ void MainWindow::toolWindowVisibilityChanged(QWidget* toolWindow, bool visible)
 	mToolActions[index]->blockSignals(false);
 }
 
-void MainWindow::setProjectFilename(const QString& filename)
+void MainWindow::scenarioFilenameChanged(const QString& filename)
 {
-	if (!mProjectFilename.isEmpty())
-	{
-		std::string folder = std::filesystem::path(mProjectFilename.toStdString()).parent_path().string();
-		auto& pathList = osgDB::Registry::instance()->getDataFilePathList();
-		if (auto i = std::find(pathList.begin(), pathList.end(), folder); i != pathList.end())
-		{
-			pathList.erase(i);
-		}
-	}
-
-	mProjectFilename = filename;
 	QString title = QApplication::applicationName();
-	if (!mProjectFilename.isEmpty())
+	if (!filename.isEmpty())
 	{
-		title += " - " + mProjectFilename;
+		title += " - " + filename;
 	}
 	setWindowTitle(title);
-
-	std::string folder = std::filesystem::path(mProjectFilename.toStdString()).parent_path().string();
-	osgDB::Registry::instance()->getDataFilePathList().push_back(folder);
 }

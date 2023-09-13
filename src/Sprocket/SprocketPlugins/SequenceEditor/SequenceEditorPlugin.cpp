@@ -170,20 +170,20 @@ public:
 
 	~SequenceEditorPlugin() override = default;
 
-	void resetProject() override
+	void resetScenario() override
 	{
 		mSequenceObjectRegistry->clear();
 		mRecordingControllers.clear();
 	}
 
-	void readProject(const nlohmann::json& json) override
+	void readScenario(const nlohmann::json& json) override
 	{
 		ifChildExists(json, "sequences", [&] (const nlohmann::json& child) {
 			readSequences(*mSequenceObjectRegistry, child, mEngineRoot->scenario.get());
 		});
 	}
 
-	void writeProject(nlohmann::json& json)
+	void writeScenario(nlohmann::json& json)
 	{
 		json["sequences"] = writeSequences(*mSequenceObjectRegistry);
 	}

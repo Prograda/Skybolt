@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Sprocket/JsonProjectSerializable.h"
+#include "Sprocket/JsonScenarioSerializable.h"
 #include "Sprocket/SprocketFwd.h"
 #include "Sprocket/Scenario/ScenarioObject.h"
 #include "Sprocket/Property/PropertyEditor.h"
@@ -43,7 +43,7 @@ struct EditorPluginConfig
 
 using EntityVisibilityLayerMap = std::map<std::string, skybolt::EntityVisibilityPredicateSetter>;
 
-class BOOST_SYMBOL_VISIBLE EditorPlugin : public JsonProjectSerializable
+class BOOST_SYMBOL_VISIBLE EditorPlugin : public JsonScenarioSerializable
 {
 public:
 	static std::string factorySymbolName() { return "createEditorPlugin"; }

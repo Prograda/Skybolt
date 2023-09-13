@@ -46,6 +46,11 @@
 
 using namespace skybolt;
 
+static sim::Entity* getSelectedCamera(const sim::World& world, const QComboBox& comboBox)
+{
+	return world.findObjectByName(comboBox.currentText().toStdString()).get();
+}
+
 ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	mEngineRoot(config.engineRoot),
 	mVisRoot(config.visRoot),
@@ -64,7 +69,7 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 
 	mOsgWindow = new OsgWindow(config.visRoot);
 
-	mToolBar = createViewportToolBar(config.projectFilenameGetter);
+	mToolBar = createViewportToolBar(config.scenarioFilenameGetter);
 
 	mViewport = new vis::DefaultRenderCameraViewport([&]{
 		vis::DefaultRenderCameraViewportConfig c;
@@ -76,6 +81,9 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	}());
 	mOsgWindow->getWindow()->getRenderOperationSequence().addOperation(mViewport);
 	mOsgWidget = QWidget::createWindowContainer(mOsgWindow, this);
+
+	sim::World* world = &mEngineRoot->scenario->world;
+	setCamera(getSelectedCamera(*world, *mCameraCombo));
 
 	connect(mOsgWindow, &OsgWindow::mousePressed, this, [this](const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {
 		for (const auto& [priority, handler] : mMouseEventHandlers)
@@ -293,7 +301,7 @@ void ViewportWidget::setCamera(sim::Entity* simCamera)
 	}
 }
 
-QToolBar* ViewportWidget::createViewportToolBar(const std::function<std::string()>& projectFilenameGetter)
+QToolBar* ViewportWidget::createViewportToolBar(const std::function<std::string()>& scenarioFilenameGetter)
 {
 	QToolBar* toolbar = new QToolBar(this);
 
@@ -311,20 +319,17 @@ QToolBar* ViewportWidget::createViewportToolBar(const std::function<std::string(
 		mCameraCombo = new QComboBox();
 		mCameraCombo->setToolTip("Camera");
 		mCameraCombo->setModel(proxyModel);
-
-		connect(mCameraCombo, &QComboBox::currentTextChanged, [=](const QString& text)
-		{
-			sim::Entity* object = world->findObjectByName(text.toStdString()).get();
-			setCamera(object);
-		});
-
 		toolbar->addWidget(mCameraCombo);
 
 		mCameraControllerWidget = new CameraControllerWidget(world);
 		toolbar->addWidget(mCameraControllerWidget);
+
+		connect(mCameraCombo, &QComboBox::currentTextChanged, [=](const QString& text) {
+			setCamera(getSelectedCamera(*world, *mCameraCombo));
+		});
 	}
 
-	toolbar->addAction(getSprocketIcon(SprocketIcon::Screenshot), "Capture Image", [this, projectFilenameGetter] { captureImage(projectFilenameGetter()); });
+	toolbar->addAction(getSprocketIcon(SprocketIcon::Screenshot), "Capture Image", [this, scenarioFilenameGetter] { captureImage(scenarioFilenameGetter()); });
 
 	{
 		QToolButton* toolButton = new QToolButton(this);
@@ -349,7 +354,7 @@ QToolBar* ViewportWidget::createViewportToolBar(const std::function<std::string(
 	return toolbar;
 }
 
-void ViewportWidget::resetProject()
+void ViewportWidget::resetScenario()
 {
 	mEngineRoot->scene->setAmbientLightColor(osg::Vec3f(0,0,0));
 }
@@ -364,7 +369,7 @@ static sim::Vector3 toSimVector3(const osg::Vec3f& v)
 	return sim::Vector3(v.x(), v.y(), v.z());
 }
 
-void ViewportWidget::readProject(const nlohmann::json& projectJson)
+void ViewportWidget::readScenario(const nlohmann::json& projectJson)
 {
 	if (auto i = projectJson.find("viewports"); i != projectJson.end())
 	{
@@ -392,11 +397,11 @@ void ViewportWidget::readProject(const nlohmann::json& projectJson)
 	}
 	else
 	{
-		resetProject();
+		resetScenario();
 	}
 }
 
-void ViewportWidget::writeProject(nlohmann::json& json) const
+void ViewportWidget::writeScenario(nlohmann::json& json) const
 {
 	if (mCurrentSimCamera)
 	{

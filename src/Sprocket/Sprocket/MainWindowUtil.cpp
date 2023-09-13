@@ -6,17 +6,10 @@
 
 #include "MainWindowUtil.h"
 #include "MainWindow.h"
-#include "JsonProjectSerializable.h"
 #include "EditorPlugin.h"
+#include "Scenario/ScenarioWorkspace.h"
 
-void connectJsonProjectSerializable(MainWindow& mainWindow, JsonProjectSerializable& serializable)
-{
-	QObject::connect(&mainWindow, &MainWindow::projectCleared, [serializable = &serializable] { serializable->resetProject(); });
-	QObject::connect(&mainWindow, &MainWindow::projectLoaded, [serializable = &serializable] (const nlohmann::json& json) { serializable->readProject(json); });
-	QObject::connect(&mainWindow, &MainWindow::projectSaved, [serializable = &serializable] (nlohmann::json& json) { serializable->writeProject(json); });
-}
-
-void addToolWindows(MainWindow& mainWindow, const std::vector<EditorPluginPtr>& plugins)
+void addToolWindows(MainWindow& mainWindow, ScenarioWorkspace& workspace, const std::vector<EditorPluginPtr>& plugins)
 {
 	for (const EditorPluginPtr& plugin : plugins)
 	{
@@ -24,7 +17,7 @@ void addToolWindows(MainWindow& mainWindow, const std::vector<EditorPluginPtr>& 
 		for (const auto& window : windows)
 		{
 			mainWindow.addToolWindow(window.name, window.widget);
-			connectJsonProjectSerializable(mainWindow, *plugin);
+			connectJsonScenarioSerializable(workspace, *plugin);
 		}
 	}
 }

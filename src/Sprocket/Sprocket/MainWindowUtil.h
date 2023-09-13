@@ -11,6 +11,4 @@
 
 class MainWindow;
 
-void connectJsonProjectSerializable(MainWindow& mainWindow, JsonProjectSerializable& serializable);
-
-void addToolWindows(MainWindow& mainWindow, const std::vector<EditorPluginPtr>& plugins);
+void addToolWindows(MainWindow& mainWindow, ScenarioWorkspace& workspace, const std::vector<EditorPluginPtr>& plugins);

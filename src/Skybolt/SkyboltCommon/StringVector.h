@@ -29,10 +29,10 @@ inline std::string toDelimitedString(const StringVector& vec)
 	return r;
 }
 
-inline StringVector parseStringList(const std::string& str)
+inline StringVector parseStringList(const std::string& str, const std::string& delimeters = ",")
 {
 	StringVector vec;
-	boost::split(vec, str, boost::is_any_of(","), boost::token_compress_on);
+	boost::split(vec, str, boost::is_any_of(delimeters), boost::token_compress_on);
 	for (std::string& item : vec)
 	{
 		boost::trim(item);

@@ -6,9 +6,12 @@
 
 #pragma once
 
+#include <SkyboltSim/Chrono.h>
+#include <functional>
+
 class QObject;
 class QTimer;
 
-#include <functional>
+QTimer* createAndStartIntervalTimer(int intervalMilliseconds, QObject* parent, std::function<void()> updateAction);
 
-QTimer* createAndStartIntervalTimer(int intervalMilliseconds, QObject* parent, std::function<void()> callback);
+QTimer* createAndStartIntervalDtTimer(int intervalMilliseconds, QObject* parent, std::function<void(skybolt::sim::SecondsD dt)> updateAction);

@@ -5,6 +5,9 @@
 		{"camera": {
 		}},
     {"cameraController": {
-    }}
+    }},
+	{"scenarioMetadata": {
+		"scenarioObjectDirectory": "Camera"
+	}}
 	]
 }

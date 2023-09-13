@@ -29,7 +29,8 @@ struct ScenarioObjectRegistryListener : public RegistryListener<ScenarioObject>
 		mScenarioTreeWidget(scenarioTreeWidget),
 		mSceneObjectType(sceneObjectType),
 		mRegistry(registry)
-	{}
+	{
+	}
 
 	void itemAdded(const ScenarioObjectPtr& object) override
 	{

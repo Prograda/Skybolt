@@ -13,7 +13,7 @@
 
 namespace skybolt {
 
-void readScenario(Scenario& scenario, const nlohmann::json& value);
+void readScenario(Scenario& scenario, EntityFactory& entityFactory, const nlohmann::json& value);
 
 nlohmann::json writeScenario(const Scenario& scenario);
 

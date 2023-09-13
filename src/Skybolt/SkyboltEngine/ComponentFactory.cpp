@@ -6,6 +6,9 @@
 
 #include "ComponentFactory.h"
 
+#include <SkyboltCommon/StringVector.h>
+#include <SkyboltCommon/Json/JsonHelpers.h>
+#include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
 #include <SkyboltSim/CollisionGroupMasks.h>
 #include <SkyboltSim/CameraController/AttachedCameraController.h>
 #include <SkyboltSim/CameraController/FreeCameraController.h>
@@ -30,7 +33,6 @@
 #include <SkyboltSim/Components/RocketMotorComponent.h>
 #include <SkyboltSim/Components/ShipWakeComponent.h>
 #include <SkyboltSim/JsonHelpers.h>
-#include <SkyboltCommon/Json/JsonHelpers.h>
 
 namespace skybolt {
 
@@ -307,6 +309,13 @@ static sim::ComponentPtr loadAssetDescription(Entity* entity, const ComponentFac
 	return std::make_shared<AssetDescriptionComponent>(desc);
 }
 
+static sim::ComponentPtr loadScenarioMetadata(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	auto component = std::make_shared<ScenarioMetadataComponent>();
+	component->directory = parseStringList(json.at("scenarioObjectDirectory").get<std::string>(), "/");
+	return component;
+}
+
 void addDefaultFactories(ComponentFactoryRegistry& registry)
 {
 	registry["camera"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadCamera);
@@ -324,6 +333,7 @@ void addDefaultFactories(ComponentFactoryRegistry& registry)
 	registry["attachment"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAttachment);
 	registry["attachmentPoint"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAttachmentPoint);
 	registry["assetDescription"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAssetDescription);
+	registry["scenarioMetadata"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadScenarioMetadata);
 }
 
 } // namespace skybolt

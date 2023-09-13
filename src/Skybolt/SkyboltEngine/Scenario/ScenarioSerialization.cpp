@@ -15,10 +15,14 @@ using namespace skybolt::sim;
 
 namespace skybolt {
 
-void readScenario(Scenario& scenario, const nlohmann::json& object)
+void readScenario(Scenario& scenario, EntityFactory& entityFactory, const nlohmann::json& json)
 {
-	scenario.startJulianDate = object.at("julianDate");
-	scenario.timeSource.setRange(TimeRange(0, object.at("duration")));
+	scenario.startJulianDate = json.at("julianDate");
+	scenario.timeSource.setRange(TimeRange(0, json.at("duration")));
+
+	ifChildExists(json, "entities", [&] (const nlohmann::json& child) {
+		readEntities(scenario.world, entityFactory, child);
+	});
 }
 
 nlohmann::json writeScenario(const Scenario& scenario)
@@ -26,6 +30,7 @@ nlohmann::json writeScenario(const Scenario& scenario)
 	nlohmann::json json;
 	json["julianDate"] = scenario.startJulianDate;
 	json["duration"] = scenario.timeSource.getRange().end;
+	json["entities"] = writeEntities(scenario.world);
 	return json;
 }
 

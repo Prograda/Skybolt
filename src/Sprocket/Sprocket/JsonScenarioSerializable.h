@@ -8,12 +8,12 @@
 
 #include <nlohmann/json.hpp>
 
-class JsonProjectSerializable
+class JsonScenarioSerializable
 {
 public:
-	virtual ~JsonProjectSerializable() = default;
+	virtual ~JsonScenarioSerializable() = default;
 
-	virtual void resetProject() {};
-	virtual void readProject(const nlohmann::json& json) {};
-	virtual void writeProject(nlohmann::json& json) const {};
+	virtual void resetScenario() {};
+	virtual void readScenario(const nlohmann::json& json) {};
+	virtual void writeScenario(nlohmann::json& json) const {};
 };
