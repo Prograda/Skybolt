@@ -95,7 +95,7 @@ private:
 	btVector3 mCenterOfMass = btVector3(0,0,0); //!< Position of RigidBody relative to Node component in body axes.
 	double mMass;
 
-	bool mForceIntegrationEnabled;
+	bool mDynamicsEnabled;
 };
 
 } // namespace sim

@@ -22,7 +22,7 @@ BulletDynamicBodyComponent::BulletDynamicBodyComponent(const BulletDynamicBodyCo
 	mMotion(config.motion),
 	mMomentOfInertia(config.momentOfInertia),
 	mMass(config.mass),
-	mForceIntegrationEnabled(true)
+	mDynamicsEnabled(true)
 {
 	mBody = mWorld->createRigidBody(config.shape, config.mass, mMomentOfInertia, btVector3(0,0,0), btQuaternion::getIdentity(), config.velocity, config.collisionGroupMask, config.collisionFilterMask);
 	mBody->setFriction(1.0);
@@ -43,63 +43,70 @@ BulletDynamicBodyComponent::~BulletDynamicBodyComponent()
 void BulletDynamicBodyComponent::updatePreDynamics()
 {
 	mForces.clear();
-	// Reset position and orientation if the node was moved by an external source since the last timestep
-	auto newNodePosition = mNode->getPosition();
-	if (mNodePosition != newNodePosition)
-	{
-		setPosition(mNode->getPosition());
-	}
 
-	auto newNodeOrientation = mNode->getOrientation();
-	if (mNodeOrientation != newNodeOrientation)
+	if (mDynamicsEnabled)
 	{
-		setOrientation(mNode->getOrientation());
-	}
+		// Reset position and orientation if the node was moved by an external source since the last timestep
+		auto newNodePosition = mNode->getPosition();
+		if (mNodePosition != newNodePosition)
+		{
+			setPosition(mNode->getPosition());
+		}
 
-	mMotion->linearVelocity = toGlmDvec3(mBody->getLinearVelocity());
-	mMotion->angularVelocity = toGlmDvec3(mBody->getAngularVelocity());
+		auto newNodeOrientation = mNode->getOrientation();
+		if (mNodeOrientation != newNodeOrientation)
+		{
+			setOrientation(mNode->getOrientation());
+		}
+
+		mBody->setLinearVelocity(toBtVector3(mMotion->linearVelocity));
+		mBody->setAngularVelocity(toBtVector3(mMotion->angularVelocity));
+	}
 }
 
 void BulletDynamicBodyComponent::updatePostDynamics()
 {
-	// Calculate new node position
-	btVector3 worldSpaceCenterOfMass = quatRotate(mBody->getOrientation(), mCenterOfMass);
-	Vector3 newNodePosition = toGlmDvec3(mBody->getPosition() - worldSpaceCenterOfMass);
-
-	btVector3 velocity = mBody->getLinearVelocity();
-	if (velocity.length2() > mMinSpeedForCcdSquared)
+	if (mDynamicsEnabled)
 	{
-		// cheap and simple CCD
-		// Note - we're using this instead of Bullet CCD because Bullet doesn't generate impulse for CCD
-		const RayTestResult &res = mWorld->testRay(mNodePosition, newNodePosition, CollisionGroupMasks::terrain);
-		if (res.hit)
+		// Calculate new node position
+		btVector3 worldSpaceCenterOfMass = quatRotate(mBody->getOrientation(), mCenterOfMass);
+		Vector3 newNodePosition = toGlmDvec3(mBody->getPosition() - worldSpaceCenterOfMass);
+
+		btVector3 velocity = mBody->getLinearVelocity();
+		if (velocity.length2() > mMinSpeedForCcdSquared)
 		{
-			// Correct body's position
-			btTransform t = mBody->getCenterOfMassTransform();
-			btVector3 aabbMin, aabbMax;
-			mBody->getCollisionShape()->getAabb(t, aabbMin, aabbMax);
-			double radius = aabbMax.distance(aabbMin) * 0.5;
+			// cheap and simple CCD
+			// Note - we're using this instead of Bullet CCD because Bullet doesn't generate impulse for CCD
+			const RayTestResult &res = mWorld->testRay(mNodePosition, newNodePosition, CollisionGroupMasks::terrain);
+			if (res.hit)
+			{
+				// Correct body's position
+				btTransform t = mBody->getCenterOfMassTransform();
+				btVector3 aabbMin, aabbMax;
+				mBody->getCollisionShape()->getAabb(t, aabbMin, aabbMax);
+				double radius = aabbMax.distance(aabbMin) * 0.5;
 
-			newNodePosition = res.position;
-			t.setOrigin(toBtVector3(res.position) + worldSpaceCenterOfMass + toBtVector3(res.normal) * radius);
-			mBody->setWorldTransform(t);
-			mBody->proceedToTransform(t);
+				newNodePosition = res.position;
+				t.setOrigin(toBtVector3(res.position) + worldSpaceCenterOfMass + toBtVector3(res.normal) * radius);
+				mBody->setWorldTransform(t);
+				mBody->proceedToTransform(t);
 
-			// Correct body's velocity
-			mBody->setLinearVelocity(btVector3(0, 0, 0));
+				// Correct body's velocity
+				mBody->setLinearVelocity(btVector3(0, 0, 0));
+			}
 		}
-	}
 
-	// Update node position and orientation
-	mNode->setPosition(newNodePosition);
-	mNode->setOrientation(toGlmDquat(mBody->getOrientation()));
-	mBody->setLinearVelocity(toBtVector3(mMotion->linearVelocity));
-	mBody->setAngularVelocity(toBtVector3(mMotion->angularVelocity));
+		// Update node position and orientation
+		mNode->setPosition(newNodePosition);
+		mNode->setOrientation(toGlmDquat(mBody->getOrientation()));
+		mMotion->linearVelocity = toGlmDvec3(mBody->getLinearVelocity());
+		mMotion->angularVelocity = toGlmDvec3(mBody->getAngularVelocity());
+	}
 }
 
 void BulletDynamicBodyComponent::setDynamicsEnabled(bool enabled)
 {
-	mForceIntegrationEnabled = enabled;
+	mDynamicsEnabled = enabled;
 	if (enabled)
 	{
 		mBody->setMassProps(mMass, mMomentOfInertia);
@@ -158,7 +165,7 @@ void BulletDynamicBodyComponent::setCenterOfMass(const Vector3& relPosition)
 void BulletDynamicBodyComponent::setMass(double mass)
 {
 	mMass = mass;
-	if (mForceIntegrationEnabled)
+	if (mDynamicsEnabled)
 	{
 		mBody->setMassProps(mass, mMomentOfInertia);
 	}
