@@ -12,6 +12,7 @@
 
 in vec3 texCoord;
 uniform sampler2D mainColorTexture;
+uniform sampler2D mainDepthTexture;
 uniform sampler2D cloudsColorTexture;
 
 out vec4 color;
@@ -31,4 +32,5 @@ void main()
 #endif
 	
 	color.rgb = toneMap(color.rgb);
+	gl_FragDepth = texture(mainDepthTexture, texCoord.xy).r;
 }

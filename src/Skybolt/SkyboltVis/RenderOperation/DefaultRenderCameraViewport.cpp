@@ -27,15 +27,22 @@
 #include "SkyboltVis/Shadow/ShadowMapGenerator.h"
 #include "SkyboltVis/Shader/ShaderProgramRegistry.h"
 
+#include <osg/Depth>
+
 namespace skybolt {
 namespace vis {
 
-static std::shared_ptr<ScreenQuad> createFullscreenQuad(const osg::ref_ptr<osg::Program>& program)
+static std::shared_ptr<ScreenQuad> createFinalCompositeFullscreenQuad(const osg::ref_ptr<osg::Program>& program)
 {
 	osg::ref_ptr<osg::StateSet> stateSet = new osg::StateSet();
-	stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
-	stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+	stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
 	stateSet->setAttribute(program);
+
+	// Always pass because the final composite writes out depth from the main pass texture to every pixel in the backbuffer's depth buffer
+	osg::Depth* depth = new osg::Depth;
+	depth->setFunction(osg::Depth::ALWAYS);
+	stateSet->setAttributeAndModes(depth, osg::StateAttribute::ON);
+
 	return std::make_shared<ScreenQuad>(stateSet);
 }
 
@@ -80,7 +87,7 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 	mMainPassTexture->setScene(mScene->getBucketGroup(Scene::Bucket::Default));
 
 	mFinalRenderTarget = createDefaultRenderTarget();
-	mFinalRenderTarget->setScene(createFullscreenQuad(config.programs->getRequiredProgram("compositeFinal"))->_getNode());
+	mFinalRenderTarget->setScene(createFinalCompositeFullscreenQuad(config.programs->getRequiredProgram("compositeFinal"))->_getNode());
 	mFinalRenderTarget->setRelativeRect(config.relativeRect);
 
 	mSequence = std::make_unique<RenderOperationSequence>();
@@ -169,11 +176,15 @@ DefaultRenderCameraViewport::DefaultRenderCameraViewport(const DefaultRenderCame
 		if (!mMainPassTexture->getOutputTextures().empty())
 		{
 			auto ss = mFinalRenderTarget->getOrCreateStateSet();
+
 			ss->setTextureAttribute(0, mMainPassTexture->getOutputTextures().front());
 			ss->addUniform(createUniformSampler2d("mainColorTexture", 0));
 
-			ss->setTextureAttribute(1, cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[0]);
-			ss->addUniform(createUniformSampler2d("cloudsColorTexture", 1));
+			ss->setTextureAttribute(1, mMainPassTexture->getDepthTexture());
+			ss->addUniform(createUniformSampler2d("mainDepthTexture", 1));
+
+			ss->setTextureAttribute(2, cloudsTarget->getOutputTextures().empty() ? nullptr : cloudsTarget->getOutputTextures()[0]);
+			ss->addUniform(createUniformSampler2d("cloudsColorTexture", 2));
 		}
 	}), (int)RenderOperationOrder::FinalComposite);
 
