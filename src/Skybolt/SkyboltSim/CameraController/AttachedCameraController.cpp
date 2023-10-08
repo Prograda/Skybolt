@@ -16,12 +16,22 @@
 
 #include <assert.h>
 
-using namespace skybolt;
-using namespace skybolt::sim;
+namespace skybolt::sim {
 
 const float AttachedCameraController::msYawRate = 1.0f;
 const float AttachedCameraController::msPitchRate = 1.0f;
 const float AttachedCameraController::msZoomRate = 1.0f;
+
+SKYBOLT_REFLECT_BEGIN(AttachedCameraController)
+{
+	registry.type<AttachedCameraController>("AttachedCameraController")
+		.superType<CameraController>()
+		.superType<Pitchable>()
+		.superType<Targetable>()
+		.superType<Yawable>()
+		.superType<Zoomable>();
+}
+SKYBOLT_REFLECT_END
 
 AttachedCameraController::AttachedCameraController(Entity* camera, World* world, const Params& params) :
 	CameraController(camera),
@@ -68,3 +78,5 @@ AttachmentPointPtr AttachedCameraController::findAttachmentPoint(const Entity& e
 	}
 	return nullptr;
 }
+
+} // namespace skybolt::sim

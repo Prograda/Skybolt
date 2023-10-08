@@ -23,7 +23,6 @@ struct AttachmentParams
 //! Component that attaches a child entity to a parent entity
 class AttachmentComponent : public Component
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(Component)
 public:
 	AttachmentComponent(const AttachmentParams& params, const World* world, Entity* childEntity);
 	~AttachmentComponent();

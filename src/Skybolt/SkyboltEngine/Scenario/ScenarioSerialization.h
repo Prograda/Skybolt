@@ -7,18 +7,19 @@
 #pragma once
 
 #include <SkyboltEngine/SkyboltEngineFwd.h>
+#include <SkyboltReflection/SkyboltReflectionFwd.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
 
 #include <nlohmann/json.hpp>
 
 namespace skybolt {
 
-void readScenario(Scenario& scenario, EntityFactory& entityFactory, const nlohmann::json& value);
+void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, EntityFactory& entityFactory, const nlohmann::json& value);
 
-nlohmann::json writeScenario(const Scenario& scenario);
+nlohmann::json writeScenario(refl::TypeRegistry& typeRegistry, const Scenario& scenario);
 
-void readEntities(sim::World& world, EntityFactory& factory, const nlohmann::json& value);
+void readEntities(refl::TypeRegistry& registry, sim::World& world, EntityFactory& factory, const nlohmann::json& value);
 
-nlohmann::json writeEntities(const sim::World& world);
+nlohmann::json writeEntities(refl::TypeRegistry& registry, const sim::World& world);
 
 } // namespace skybolt

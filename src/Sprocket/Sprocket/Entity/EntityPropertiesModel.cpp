@@ -6,6 +6,8 @@
 
 #include "EntityPropertiesModel.h"
 #include "Sprocket/Property/QtPropertyReflection.h"
+#include <SkyboltCommon/MapUtility.h>
+#include <SkyboltReflection/Reflection.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Entity.h>
 
@@ -13,9 +15,11 @@
 
 using namespace skybolt;
 
-EntityPropertiesModel::EntityPropertiesModel(sim::Entity* entity) :
+EntityPropertiesModel::EntityPropertiesModel(refl::TypeRegistry* typeRegistry, sim::Entity* entity) :
+	mTypeRegistry(typeRegistry),
 	mEntity(nullptr)
 {
+	assert(mTypeRegistry);
 	setEntity(entity);
 }
 
@@ -46,8 +50,11 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 
 		for (const sim::ComponentPtr& component : mEntity->getComponents())
 		{
-			RttrInstanceGetter getter = [component] { return component; };
-			addRttrPropertiesToModel(*this, sim::getProperties(*component), getter);
+			if (refl::TypePtr type = mTypeRegistry->getMostDerivedType(*component); type)
+			{
+				ReflInstanceGetter getter = [this, component] { return refl::createNonOwningInstance(mTypeRegistry, component.get()); };
+				addRttrPropertiesToModel(*mTypeRegistry, *this, toValuesVector(type->getProperties()), getter);
+			}
 		}
 
 		addProperty(createQtProperty("dynamicsEnabled", false),

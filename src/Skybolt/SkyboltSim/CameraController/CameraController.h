@@ -15,7 +15,6 @@ namespace sim {
 
 class CameraController
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION();
 public:
 	struct Input
 	{

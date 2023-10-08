@@ -6,15 +6,15 @@
 
 #pragma once
 
+#include "SkyboltSim/PropertyMetadata.h"
 #include <SkyboltCommon/Units.h>
-#include <SkyboltSim/Reflection.h>
+#include <SkyboltReflection/Reflection.h>
 
 namespace skybolt {
 namespace sim {
 
 class Yawable
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION();
 public:
 	virtual ~Yawable() = default;
 	virtual double getYaw() const { return mYaw; }
@@ -24,14 +24,12 @@ protected:
 	double mYaw = 0;
 };
 
-SKYBOLT_REFLECT_INLINE(Yawable)
+SKYBOLT_REFLECT_BEGIN(Yawable)
 {
-	rttr::registration::class_<Yawable>("Yawable")
-		.property("yaw", &Yawable::getYaw, &Yawable::setYaw)
-		(    
-			rttr::metadata(PropertyMetadataType::Units, Units::Radians)
-		);
+	registry.type<Yawable>("Yawable")
+		.property("yaw", &Yawable::getYaw, &Yawable::setYaw, {{PropertyMetadataNames::units, Units::Radians}});
 }
+SKYBOLT_REFLECT_END
 
 } // namespace sim
 } // namespace skybolt

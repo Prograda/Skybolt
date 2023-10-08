@@ -6,15 +6,15 @@
 
 #pragma once
 
+#include "SkyboltSim/PropertyMetadata.h"
 #include <SkyboltCommon/Units.h>
-#include <SkyboltSim/Reflection.h>
+#include <SkyboltReflection/Reflection.h>
 
 namespace skybolt {
 namespace sim {
 
 class Pitchable
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION();
 public:
 	~Pitchable() = default;
 	virtual double getPitch() const { return mPitch; }
@@ -24,14 +24,12 @@ protected:
 	double mPitch = 0;
 };
 
-SKYBOLT_REFLECT_INLINE(Pitchable)
+SKYBOLT_REFLECT_BEGIN(Pitchable)
 {
-	rttr::registration::class_<Pitchable>("Pitchable")
-		.property("pitch", &Pitchable::getPitch, &Pitchable::setPitch)
-		(    
-			rttr::metadata(PropertyMetadataType::Units, Units::Radians)
-		);
+	registry.type<Pitchable>("Pitchable")
+		.property("pitch", &Pitchable::getPitch, &Pitchable::setPitch, {{PropertyMetadataNames::units, Units::Radians}});
 }
+SKYBOLT_REFLECT_END
 
 } // namespace sim
 } // namespace skybolt

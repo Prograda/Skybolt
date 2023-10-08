@@ -13,11 +13,13 @@
 namespace skybolt {
 namespace sim {
 
-SKYBOLT_REFLECT(AttachmentComponent)
+SKYBOLT_REFLECT_BEGIN(AttachmentComponent)
 {
-	rttr::registration::class_<AttachmentComponent>("AttachmentComponent")
+	registry.type<AttachmentComponent>("AttachmentComponent")
+		.superType<Component>()
 		.property("parentEntityId", &AttachmentComponent::getParentEntityId, &AttachmentComponent::setParentEntityId);
 }
+SKYBOLT_REFLECT_END
 
 AttachmentComponent::AttachmentComponent(const AttachmentParams& params, const World* world, Entity* childEntity) :
 	mParams(params),
@@ -25,7 +27,7 @@ AttachmentComponent::AttachmentComponent(const AttachmentParams& params, const W
 	mChildEntity(childEntity)
 {
 	assert(mWorld);
-	assert(mParentObject);
+	assert(mChildEntity);
 }
 
 AttachmentComponent::~AttachmentComponent() = default;

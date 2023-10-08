@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Sprocket/Property/PropertyModel.h"
-#include <SkyboltSim/Reflection.h>
+#include <SkyboltReflection/Reflection.h>
 #include <SkyboltCommon/Updatable.h>
 
 #include <functional>
@@ -20,8 +20,8 @@ struct QtPropertyUpdaterApplier
 	PropertiesModel::QtPropertyApplier applier; //!< Null for read-only properties
 };
 
-using RttrInstanceGetter = std::function<rttr::instance()>;
+using ReflInstanceGetter = std::function<std::optional<skybolt::refl::Instance>()>;
 
-std::optional<QtPropertyUpdaterApplier> rttrPropertyToQt(const RttrInstanceGetter& instanceGetter, const rttr::property& property);
+std::optional<QtPropertyUpdaterApplier> reflPropertyToQt(skybolt::refl::TypeRegistry& typeRegistry, const ReflInstanceGetter& instanceGetter, const skybolt::refl::PropertyPtr& property);
 
-void addRttrPropertiesToModel(PropertiesModel& model, const rttr::array_range<rttr::property>& properties, const RttrInstanceGetter& instanceGetter);
+void addRttrPropertiesToModel(skybolt::refl::TypeRegistry& typeRegistry, PropertiesModel& model, const std::vector<skybolt::refl::PropertyPtr>& properties, const ReflInstanceGetter& instanceGetter);

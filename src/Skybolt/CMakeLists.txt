@@ -17,6 +17,8 @@ endif()
 add_subdirectory (SkyboltEnginePlugins)
 
 add_subdirectory (SkyboltEngineTests)
+add_subdirectory (SkyboltReflection)
+add_subdirectory (SkyboltReflectionTests)
 add_subdirectory (SkyboltSim)
 add_subdirectory (SkyboltSimTests)
 add_subdirectory (SkyboltVis)

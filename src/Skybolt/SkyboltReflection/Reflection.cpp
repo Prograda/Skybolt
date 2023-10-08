@@ -1,0 +1,124 @@
+/* Copyright 2012-2020 Matthew Reid
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+#include "Reflection.h"
+
+namespace skybolt::refl {
+
+void Property::addMetadata(const MetadataMap& metadata)
+{
+	mMetadata.insert(metadata.begin(), metadata.end());
+}
+
+void Property::addMetadata(const std::string& name, const std::any& value)
+{
+	mMetadata[name] = value;
+}
+
+std::any Property::getMetadata(const std::string& name) const
+{
+	if (auto i = mMetadata.find(name); i != mMetadata.end())
+	{
+		return i->second;
+	}
+	return {};
+}
+
+void Type::addProperty(const PropertyPtr& property)
+{
+	mProperties[property->getName()] = property;
+}
+
+PropertyPtr Type::getProperty(const std::string& name)
+{
+	if (auto i = mProperties.find(name); i != mProperties.end())
+	{
+		return i->second;
+	}
+	for (const auto& [index, type] : mSuperTypes)
+	{
+		if (const auto& property = type.first->getProperty(name); property)
+		{
+			return property;
+		}
+	}
+	return nullptr;
+}
+
+Type::PropertyMap Type::getProperties() const
+{
+	Type::PropertyMap r = mProperties;
+	for (const auto& [index, type] : mSuperTypes)
+	{
+		const auto& superTypeProperties = type.first->getProperties();
+		r.insert(superTypeProperties.begin(), superTypeProperties.end());
+	}
+	return r;
+}
+
+void Type::addSuperType(const TypePtr& super, std::ptrdiff_t offsetFromThisToSuper)
+{
+	mSuperTypes[super->getTypeIndex()] = {super, offsetFromThisToSuper};
+}
+
+std::optional<std::ptrdiff_t> Type::getOffsetFromThisToSuper(const std::type_index& super) const
+{
+	if (auto i = mSuperTypes.find(super); i != mSuperTypes.end())
+	{
+		return i->second.second;
+	}
+	return std::nullopt;
+}
+
+std::vector<RegistrationHandler> globalHandlers;
+
+void addDeferredRegistrationHandler(RegistrationHandler handler)
+{
+	globalHandlers.emplace_back(std::move(handler));
+}
+
+void registerDeferredTypes(TypeRegistry& registry)
+{
+	std::vector<TypeDefinitionRegistrationHandler> typeDefinitionRegistrationHandlers;
+	TypeRegistryBuilder builder(registry, [&] (TypeDefinitionRegistrationHandler registry) {
+		typeDefinitionRegistrationHandlers.push_back(registry);
+	});
+
+	// Register types
+	for (const auto& handler : globalHandlers)
+	{
+		handler(builder);
+	}
+
+	// Perform delayed registration of type definitions. This is performed as a second step
+	// so that types are registered for properties to refer to.
+	for (const auto& i : typeDefinitionRegistrationHandlers)
+	{
+		i(registry);
+	}
+}
+
+TypeRegistry::TypeRegistry()
+{
+	registerDeferredTypes(*this);
+}
+
+void TypeRegistry::addType(const TypePtr& type)
+{
+	mTypesByName[type->getName()] = type;
+	mTypesByTypeIndex[type->getTypeIndex()] = type;
+}
+
+TypePtr TypeRegistry::getTypeByName(const std::string& name) const
+{
+	if (auto i = mTypesByName.find(name); i != mTypesByName.end())
+	{
+		return i->second;
+	}
+	return nullptr;
+}
+
+} // namespace skybolt::refl

@@ -12,29 +12,27 @@
 namespace skybolt {
 namespace sim {
 
-class Targetable;
-SKYBOLT_REFLECT_EXTERN(Targetable)
-
 class Targetable
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION();
 public:
 	Targetable(World* world);
+	virtual ~Targetable() = default;
+
 	virtual const EntityId& getTargetId() const { return mTargetId; }
 	virtual void setTargetId(const EntityId& target);
 
-protected:
 	Entity* getTarget() const;
 
-private:
-	SKYBOLT_REFLECTION_REGISTRATION_FRIEND(Targetable)
-	const std::string& getTargetName() const; //! @returns empty string if target is invalid
+	// Helper methods used by serialization. FIXME: These should be hidden.
+	const std::string& getTargetName() const;
 	void setTargetName(const std::string& targetName);
 
 protected:
 	World* mWorld;
 	EntityId mTargetId = nullEntityId();
 };
+
+SKYBOLT_REFLECT_EXTERN(Targetable)
 
 } // namespace sim
 } // namespace skybolt

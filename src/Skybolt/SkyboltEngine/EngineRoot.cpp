@@ -108,6 +108,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	scheduler(new px_sched::Scheduler),
 	fileLocator(locateFile),
 	scenario(std::make_unique<Scenario>()),
+	typeRegistry(std::make_unique<refl::TypeRegistry>()),
 	engineSettings(config.engineSettings)
 {
 	int threadCount = determineThreadCountFromHardwareAndUserLimits();

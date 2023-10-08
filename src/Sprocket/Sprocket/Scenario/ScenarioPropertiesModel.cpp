@@ -5,7 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "ScenarioPropertiesModel.h"
-#include "Sprocket/Property/PropertyMetadata.h"
+#include "Sprocket/Property/QtPropertyMetadata.h"
 #include "Sprocket/QtUtil/QtDateTimeUtil.h"
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/Components/NameComponent.h>
@@ -39,7 +39,7 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 	}
 	{
 		mTimelineMode = createQtProperty("timelineMode", 0);
-		mTimelineMode->setProperty(PropertyMetadataNames::enumValueDisplayNames, QStringList({"Live", "Free"}));
+		mTimelineMode->setProperty(QtPropertyMetadataNames::enumValueDisplayNames, QStringList({"Live", "Free"}));
 		mProperties.push_back(mTimelineMode);
 
 		connect(mTimelineMode.get(), &QtProperty::valueChanged, [this]() {

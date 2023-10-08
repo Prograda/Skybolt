@@ -42,7 +42,6 @@ class SkyboltConan(ConanFile):
         "earcut/2.2.3@_/_",
         "glm/0.9.9.8@_/_",
         "nlohmann_json/3.10.5@_/_",
-		"rttr/0.9.6@_/_",
         "zlib/1.2.13@_/_", # Indirect dependency. Specified to resolve version clash between qt and openscenegraph.
         "libjpeg/9e@_/_", # Indirect dependency. Specified to resolve version clash between qt and openscenegraph.
         "zstd/1.5.4" # Indirect dependency. Specified to resolve version clash between libtiff and libmysqlclient.
@@ -131,7 +130,7 @@ class SkyboltConan(ConanFile):
     def package_info(self):
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.names["cmake_find_package"] = "Skybolt"
-        self.cpp_info.libs = ["AircraftHud", "SkyboltEngine", "SkyboltVis", "SkyboltSim", "SkyboltCommon"]
+        self.cpp_info.libs = ["AircraftHud", "SkyboltEngine", "SkyboltVis", "SkyboltSim", "SkyboltReflection", "SkyboltCommon"]
 		
         if self.options.enable_fft_ocean and not self.options.shared_plugins:
             self.cpp_info.libs.append("FftOcean")

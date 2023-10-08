@@ -13,7 +13,6 @@ namespace sim {
 
 class SimpleDynamicBodyComponent : public DynamicBodyComponent
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(DynamicBodyComponent);
 public:
 	SimpleDynamicBodyComponent(Node* node, Motion* motion, double mass, const Vector3& momentofInertia);
 
@@ -61,6 +60,8 @@ private:
 
 	std::vector<AppliedForce> mCurrentForces; //!< For visualization purposes. Used to populate mForces in base class.
 };
+
+SKYBOLT_REFLECT_EXTERN(SimpleDynamicBodyComponent);
 
 } // namespace sim
 } // namespace skybolt

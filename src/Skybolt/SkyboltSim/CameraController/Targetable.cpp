@@ -11,11 +11,12 @@
 namespace skybolt {
 namespace sim {
 
-SKYBOLT_REFLECT(Targetable)
+SKYBOLT_REFLECT_BEGIN(Targetable)
 {
-	rttr::registration::class_<Targetable>("Targetable")
+	registry.type<Targetable>("Targetable")
 		.property("targetName", &Targetable::getTargetName, &Targetable::setTargetName);
 }
+SKYBOLT_REFLECT_END
 
 Targetable::Targetable(World* world) :
 	mWorld(world)

@@ -29,7 +29,6 @@ struct AppliedForce
 // Emits CollisionEvent upon collision
 class DynamicBodyComponent : public Component
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(Component);
 public:
 	virtual void setMass(double mass) = 0;
 	virtual double getMass() const = 0;

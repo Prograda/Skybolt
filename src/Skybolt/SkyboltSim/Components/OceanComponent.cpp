@@ -9,11 +9,13 @@
 namespace skybolt {
 namespace sim {
 
-SKYBOLT_REFLECT(OceanComponent)
+SKYBOLT_REFLECT_BEGIN(OceanComponent)
 {
-	rttr::registration::class_<OceanComponent>("OceanComponent")
+	registry.type<OceanComponent>("OceanComponent")
+		.superType<Component>()
 		.property("waveHeight", &OceanComponent::waveHeight);
 }
+SKYBOLT_REFLECT_END
 
 } // namespace sim
 } // namespace skybolt

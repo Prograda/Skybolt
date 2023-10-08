@@ -6,28 +6,33 @@
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
-#include <SkyboltSim/Reflection.h>
+#include <SkyboltReflection/Reflection.h>
 #include <Sprocket/Property/QtPropertyReflection.h>
 #include <Sprocket/Property/SprocketMetaTypes.h>
+
+namespace refl = skybolt::refl;
 
 struct TestObject
 {
 	int intProperty;
 };
 
-SKYBOLT_REFLECT_INLINE(TestObject)
+SKYBOLT_REFLECT_BEGIN(TestObject)
 {
-	rttr::registration::class_<TestObject>("TestObject")
+	registry.type<TestObject>("TestObject")
 		.property("intProperty", &TestObject::intProperty);
 }
+SKYBOLT_REFLECT_END
 
 TEST_CASE("Reflect basic property to Qt")
 {
-	TestObject object;
-	RttrInstanceGetter instanceGetter = [&] { return rttr::instance(object); };
-	rttr::property rttrProperty = rttr::type::get(object).get_property("intProperty");
+	refl::TypeRegistry typeRegistry;
 
-	std::optional<QtPropertyUpdaterApplier> qtProperty = rttrPropertyToQt(instanceGetter, rttrProperty);
+	TestObject object;
+	ReflInstanceGetter instanceGetter = [&] { return refl::createNonOwningInstance(&typeRegistry, &object); };
+	refl::PropertyPtr reflProperty = typeRegistry.getTypeRequired<TestObject>()->getProperty("intProperty");
+
+	std::optional<QtPropertyUpdaterApplier> qtProperty = reflPropertyToQt(typeRegistry, instanceGetter, reflProperty);
 	REQUIRE(qtProperty);
 	auto property = qtProperty->property.get();
 	REQUIRE(property);
@@ -48,19 +53,22 @@ struct TestObjectContainingOptional
 	std::optional<double> value;
 };
 
-SKYBOLT_REFLECT_INLINE(TestObjectContainingOptional)
+SKYBOLT_REFLECT_BEGIN(TestObjectContainingOptional)
 {
-	rttr::registration::class_<TestObjectContainingOptional>("TestObjectContainingOptional")
+	registry.type<TestObjectContainingOptional>("TestObjectContainingOptional")
 		.property("value", &TestObjectContainingOptional::value);
 }
+SKYBOLT_REFLECT_END
 
 TEST_CASE("Reflect optional property to Qt")
 {
-	TestObjectContainingOptional object;
-	RttrInstanceGetter instanceGetter = [&] { return rttr::instance(object); };
-	rttr::property rttrProperty = rttr::type::get(object).get_property("value");
+	refl::TypeRegistry typeRegistry;
 
-	std::optional<QtPropertyUpdaterApplier> qtProperty = rttrPropertyToQt(instanceGetter, rttrProperty);
+	TestObjectContainingOptional object;
+	ReflInstanceGetter instanceGetter = [&] { return refl::createNonOwningInstance(&typeRegistry, &object); };
+	refl::PropertyPtr reflProperty = typeRegistry.getTypeRequired<TestObjectContainingOptional>()->getProperty("value");
+
+	std::optional<QtPropertyUpdaterApplier> qtProperty = reflPropertyToQt(typeRegistry, instanceGetter, reflProperty);
 	REQUIRE(qtProperty);
 	auto property = qtProperty->property.get();
 	REQUIRE(property);

@@ -15,6 +15,13 @@
 namespace skybolt {
 namespace sim {
 
+SKYBOLT_REFLECT_BEGIN(BulletDynamicBodyComponent)
+{
+	registry.type<BulletDynamicBodyComponent>("SimpleDynamicBodyComponent")
+		.superType<DynamicBodyComponent>();
+}
+SKYBOLT_REFLECT_END
+
 BulletDynamicBodyComponent::BulletDynamicBodyComponent(const BulletDynamicBodyComponentConfig& config) :
 	mMinSpeedForCcdSquared(5.0 * 5.0),
 	mWorld(config.world),

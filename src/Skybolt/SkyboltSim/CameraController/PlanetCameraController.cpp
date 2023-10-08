@@ -17,13 +17,23 @@
 
 #include <assert.h>
 
-using namespace skybolt::sim;
-using namespace skybolt;
+namespace skybolt::sim {
 
 const float PlanetCameraController::msYawRate = 1.f;
 const float PlanetCameraController::msPitchRate = 1.f;
 const float PlanetCameraController::msZoomRate = 0.2f;
 constexpr float pitchControlSensitivity = 2.f;
+
+SKYBOLT_REFLECT_BEGIN(PlanetCameraController)
+{
+	registry.type<PlanetCameraController>("PlanetCameraController")
+		.superType<CameraController>()
+		.superType<LatLonSettable>()
+		.superType<Pitchable>()
+		.superType<Targetable>()
+		.superType<Zoomable>();
+}
+SKYBOLT_REFLECT_END
 
 PlanetCameraController::PlanetCameraController(sim::Entity* camera, World* world, const Params& params) :
 	CameraController(camera),
@@ -82,3 +92,5 @@ void PlanetCameraController::update(SecondsD dt)
 		mNodeComponent->setPosition(surfacePosition + mNodeComponent->getOrientation() * Vector3(-distFromSurface, 0, 0));
 	}
 }
+
+} // namespace skybolt::sim

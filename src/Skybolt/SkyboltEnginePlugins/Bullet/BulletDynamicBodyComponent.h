@@ -36,8 +36,6 @@ struct BulletDynamicBodyComponentConfig
 
 class BulletDynamicBodyComponent : public DynamicBodyComponent
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(DynamicBodyComponent);
-
 public: // DynamicBodyComponent interface
 	BulletDynamicBodyComponent(const BulletDynamicBodyComponentConfig& config);
 	~BulletDynamicBodyComponent() override;
@@ -97,6 +95,8 @@ private:
 
 	bool mDynamicsEnabled;
 };
+
+SKYBOLT_REFLECT_EXTERN(BulletDynamicBodyComponent);
 
 } // namespace sim
 } // namespace skybolt

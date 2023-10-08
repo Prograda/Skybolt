@@ -15,46 +15,47 @@ using namespace skybolt::sim;
 
 namespace skybolt {
 
-void readScenario(Scenario& scenario, EntityFactory& entityFactory, const nlohmann::json& json)
+void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, EntityFactory& entityFactory, const nlohmann::json& json)
 {
 	scenario.startJulianDate = json.at("julianDate");
 	scenario.timeSource.setRange(TimeRange(0, json.at("duration")));
 
 	ifChildExists(json, "entities", [&] (const nlohmann::json& child) {
-		readEntities(scenario.world, entityFactory, child);
+		readEntities(typeRegistry, scenario.world, entityFactory, child);
 	});
 }
 
-nlohmann::json writeScenario(const Scenario& scenario)
+nlohmann::json writeScenario(refl::TypeRegistry& typeRegistry, const Scenario& scenario)
 {
 	nlohmann::json json;
 	json["julianDate"] = scenario.startJulianDate;
 	json["duration"] = scenario.timeSource.getRange().end;
-	json["entities"] = writeEntities(scenario.world);
+	json["entities"] = writeEntities(typeRegistry, scenario.world);
 	return json;
 }
 
-static void readEntityComponents(World& world, sim::Entity& entity, const nlohmann::json& json)
+static void readEntityComponents(refl::TypeRegistry& registry, World& world, sim::Entity& entity, const nlohmann::json& json)
 {
 	for (const auto& component : entity.getComponents())
 	{
-		std::string typeName = sim::getType(*component).get_name().to_string();
-		ifChildExists(json, typeName, [&] (const nlohmann::json& componentJson) {
-			readReflectedObject(rttr::instance(*component), componentJson);
+		refl::TypePtr type = registry.getOrCreateMostDerivedType(*component);
+		ifChildExists(json, type->getName(), [&] (const nlohmann::json& componentJson) {
+			refl::Instance instance = refl::createNonOwningInstance(&registry, component.get());
+			readReflectedObject(registry, instance, componentJson);
 		});
 	}
 }
 
-static nlohmann::json writeEntityComponents(const sim::Entity& entity)
+static nlohmann::json writeEntityComponents(refl::TypeRegistry& registry, const sim::Entity& entity)
 {
 	nlohmann::json json;
 	for (const auto& component : entity.getComponents())
 	{
-		const rttr::type& type = sim::getType(*component);
-		std::string typeName = type.get_name().to_string();
-		if (nlohmann::json componentJson = writeReflectedObject(*component); !componentJson.is_null())
+		refl::TypePtr type = registry.getOrCreateMostDerivedType(*component);
+		refl::Instance instance = refl::createNonOwningInstance(&registry, component.get());
+		if (nlohmann::json componentJson = writeReflectedObject(registry, instance); !componentJson.is_null())
 		{
-			json[typeName] = componentJson;
+			json[type->getName()] = componentJson;
 		}
 	}
 
@@ -72,17 +73,17 @@ static sim::EntityPtr readEntity(World& world, EntityFactory& factory, const std
 	return body;
 }
 
-static nlohmann::json writeEntity(const Entity& entity, const std::string& templateName)
+static nlohmann::json writeEntity(refl::TypeRegistry& registry, const Entity& entity, const std::string& templateName)
 {
 	nlohmann::json json;
 	json["template"] = templateName;
 	json["dynamicsEnabled"] = entity.isDynamicsEnabled();
-	json["components"] = writeEntityComponents(entity);
+	json["components"] = writeEntityComponents(registry, entity);
 
 	return json;
 }
 
-void readEntities(World& world, EntityFactory& factory, const nlohmann::json& json)
+void readEntities(refl::TypeRegistry& registry, World& world, EntityFactory& factory, const nlohmann::json& json)
 {
 	std::vector<sim::EntityPtr> entities;
 
@@ -96,7 +97,7 @@ void readEntities(World& world, EntityFactory& factory, const nlohmann::json& js
 	for (const auto& [key, entity] : json.items())
 	{
 		ifChildExists(entity, "components", [&](const nlohmann::json& components){
-			readEntityComponents(world, *entities[i], components);
+			readEntityComponents(registry, world, *entities[i], components);
 		});
 		++i;
 	}
@@ -111,7 +112,7 @@ static bool isSerializable(const Entity& entity)
 	return true;
 }
 
-nlohmann::json writeEntities(const World& world)
+nlohmann::json writeEntities(refl::TypeRegistry& registry, const World& world)
 {
 	nlohmann::json json;
 	for (const EntityPtr& entity : world.getEntities())
@@ -122,7 +123,7 @@ nlohmann::json writeEntities(const World& world)
 			auto templateNameComponent = entity->getFirstComponent<TemplateNameComponent>();
 			if (!name.empty() && templateNameComponent)
 			{
-				json[name] = writeEntity(*entity, templateNameComponent->name);
+				json[name] = writeEntity(registry, *entity, templateNameComponent->name);
 			}
 		}
 	}

@@ -57,7 +57,7 @@ void TreeItemModel::removeChildren(TreeItem& item, int position, int count)
 	if (count == 0)
 		return;
 
-	beginRemoveRows(index(&item), position, position + count);
+	beginRemoveRows(index(&item), position, position + count - 1);
 
 	for (int i = position; i < position + count; ++i)
 	{
@@ -103,16 +103,16 @@ TreeItemPtr TreeItemModel::findChildByName(const TreeItem& item, const std::stri
 
 int TreeItemModel::getChildPosition(const TreeItem& item, const TreeItem& child)
 {
-	int i = 0;
+	int i = -1;
 	for (const auto& c : item.mChildren)
 	{
+		++i;
 		if (c.get() == &child)
 		{
 			return i;
 		}
-		++i;
 	}
-	return -1;
+	return i;
 }
 
 void TreeItemModel::removeItem(TreeItem& item)

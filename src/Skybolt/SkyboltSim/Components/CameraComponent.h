@@ -7,7 +7,7 @@
 #pragma once
 
 #include "SkyboltSim/Component.h"
-#include "SkyboltSim/Reflection.h"
+#include <SkyboltReflection/Reflection.h>
 
 namespace skybolt {
 namespace sim {
@@ -23,13 +23,12 @@ struct CameraState
 
 class CameraComponent : public Component
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(Component)
 public:
 	const CameraState &getState() const {return mState;}
 	CameraState &getState() { return mState; }
 
 	// Conveniance methods
-	float getFovY() { return mState.fovY; }
+	float getFovY() const { return mState.fovY; }
 	void setFovY(float v) { mState.fovY = v; }
 
 private:

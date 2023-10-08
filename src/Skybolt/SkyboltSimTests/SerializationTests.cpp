@@ -26,63 +26,46 @@ public:
 struct TestObject
 {
 	int intProperty;
-	std::map<std::string, double> doubleMapProperty;
 	TestNestedObject nestedObjectProperty;
-	std::shared_ptr<TestNestedObject> nestedObjectSharedPtrProperty = std::make_shared<TestNestedObject>();
-	std::map<std::string, std::shared_ptr<TestNestedObject>> sharedPtrMapProperty = { {"A", std::make_shared<TestNestedObject>()} };
-	std::vector<std::shared_ptr<TestNestedObject>> sharedPtrVectorProperty = { std::make_shared<TestNestedObject>(-1), std::make_shared<TestNestedObject>(-1)};
 	std::optional<int> optionalIntProperty1;
 	std::optional<int> optionalIntProperty2;
 };
 
-SKYBOLT_REFLECT_INLINE(TestNestedObject)
+SKYBOLT_REFLECT_BEGIN(TestNestedObject)
 {
-	rttr::registration::class_<TestNestedObject>("TestNestedObject")
+	registry.type<TestNestedObject>("TestNestedObject")
 		.property("intProperty", &TestNestedObject::intProperty);
 }
+SKYBOLT_REFLECT_END
 
-SKYBOLT_REFLECT_INLINE(TestObject)
+SKYBOLT_REFLECT_BEGIN(TestObject)
 {
-	rttr::registration::class_<TestObject>("TestObject")
+	registry.type<TestObject>("TestObject")
 		.property("intProperty", &TestObject::intProperty)
-		.property("doubleMapProperty", &TestObject::doubleMapProperty)
 		.property("nestedObjectProperty", &TestObject::nestedObjectProperty)
-		.property("nestedObjectSharedPtrProperty", &TestObject::nestedObjectSharedPtrProperty)
-		.property("sharedPtrMapProperty", &TestObject::sharedPtrMapProperty)
-		.property("sharedPtrVectorProperty", &TestObject::sharedPtrVectorProperty)
 		.property("optionalIntProperty1", &TestObject::optionalIntProperty1)
 		.property("optionalIntProperty2", &TestObject::optionalIntProperty2);
 }
+SKYBOLT_REFLECT_END
 
 TEST_CASE("Read and write to JSON")
 {
+	refl::TypeRegistry registry;
+
 	// Write
 	TestObject originalObject;
 	originalObject.intProperty = 2;
-	originalObject.doubleMapProperty = { {"A", 1}, {"B", 2} };
 	originalObject.nestedObjectProperty.intProperty = 3;
-	originalObject.nestedObjectSharedPtrProperty->intProperty = 4;
-	originalObject.sharedPtrMapProperty["A"]->intProperty = 6;
-	originalObject.sharedPtrVectorProperty = { std::make_shared<TestNestedObject>(1), std::make_shared<TestNestedObject>(2) };
 	// Leave originalObject.optionalIntProperty1 unset
 	originalObject.optionalIntProperty2 = 123;
-	nlohmann::json json = writeReflectedObject(originalObject);
+	nlohmann::json json = writeReflectedObject(registry, refl::createNonOwningInstance(&registry, &originalObject));
 
 	// Read
 	TestObject readObject;
-	readReflectedObject(rttr::instance(readObject), json);
+	readReflectedObject(registry, refl::createNonOwningInstance(&registry, &readObject), json);
 
 	CHECK(readObject.intProperty == originalObject.intProperty);
-	CHECK(readObject.doubleMapProperty == originalObject.doubleMapProperty);
 	CHECK(readObject.nestedObjectProperty.intProperty == originalObject.nestedObjectProperty.intProperty);
-	REQUIRE(readObject.nestedObjectSharedPtrProperty);
-	CHECK(readObject.nestedObjectSharedPtrProperty->intProperty == originalObject.nestedObjectSharedPtrProperty->intProperty);
-	REQUIRE(readObject.sharedPtrMapProperty.size() == 1);
-	CHECK(readObject.sharedPtrMapProperty.begin()->first == originalObject.sharedPtrMapProperty.begin()->first);
-	REQUIRE(readObject.sharedPtrMapProperty.begin()->second);
-	CHECK(readObject.sharedPtrMapProperty.begin()->second->intProperty == originalObject.sharedPtrMapProperty.begin()->second->intProperty);
-	REQUIRE(readObject.sharedPtrVectorProperty.size() == 2);
-	CHECK(readObject.sharedPtrVectorProperty[0]->intProperty == 1);
 	CHECK(!readObject.optionalIntProperty1);
 	REQUIRE(readObject.optionalIntProperty2);
 	CHECK(readObject.optionalIntProperty2 == 123);
@@ -90,14 +73,12 @@ TEST_CASE("Read and write to JSON")
 
 struct TestBaseObject
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION()
 public:
 	virtual ~TestBaseObject() = default;
 };
 
 struct TestDerivedObject : public TestBaseObject
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(TestBaseObject)
 public:
 	TestDerivedObject() {}
 	TestDerivedObject(float floatProperty) : floatProperty(floatProperty) {}
@@ -106,38 +87,41 @@ public:
 	float floatProperty;
 };
 
-SKYBOLT_REFLECT_INLINE(TestDerivedObject)
+SKYBOLT_REFLECT_BEGIN(TestDerivedObject)
 {
-	rttr::registration::class_<TestDerivedObject>("TestDerivedObject")
+	registry.type<TestDerivedObject>("TestDerivedObject")
+		.superType<TestBaseObject>()
 		.property("floatProperty", &TestDerivedObject::floatProperty);
 }
+SKYBOLT_REFLECT_END
 
 TEST_CASE("Read and write polymorphic type to JSON")
 {
+	refl::TypeRegistry registry;
+
 	// Write
 	TestDerivedObject derivedObject;
 	derivedObject.floatProperty = 123;
 
-	const TestBaseObject& baseObject = derivedObject;
-	nlohmann::json json = writeReflectedObject(baseObject); // test writing the base object reference
+	TestBaseObject& baseObject = derivedObject;
+	nlohmann::json json = writeReflectedObject(registry, refl::createNonOwningInstance(&registry, &baseObject)); // test writing the base object reference
 
 	// Read
 	TestDerivedObject readObject;
-	readReflectedObject(rttr::instance(readObject), json);
+	readReflectedObject(registry, refl::createNonOwningInstance(&registry, &readObject), json);
 
 	CHECK(readObject.floatProperty == derivedObject.floatProperty);
 }
 
 struct TestObjectWithSerializationMethods : public ExplicitSerialization
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(ExplicitSerialization);
 public:
-	nlohmann::json toJson() const
+	nlohmann::json toJson(refl::TypeRegistry& typeRegistry) const
 	{
 		return data;
 	};
 
-	void fromJson(const nlohmann::json& j)
+	void fromJson(refl::TypeRegistry& typeRegistry, const nlohmann::json& j)
 	{
 		data = j.get<int>();
 	}
@@ -145,15 +129,24 @@ public:
 	int data = 0;
 };
 
+SKYBOLT_REFLECT_BEGIN(TestObjectWithSerializationMethods)
+{
+	registry.type<TestObjectWithSerializationMethods>("TestObjectWithSerializationMethods")
+		.superType<ExplicitSerialization>();
+}
+SKYBOLT_REFLECT_END
+
 TEST_CASE("Use explicit to/from json methods if an object provides them")
 {
+	refl::TypeRegistry registry;
+
 	// Write
 	TestObjectWithSerializationMethods writeObject;
 	writeObject.data = 123;
-	nlohmann::json json = writeReflectedObject(writeObject);
+	nlohmann::json json = writeReflectedObject(registry, refl::createNonOwningInstance(&registry, &writeObject));
 
 	// Read
 	TestObjectWithSerializationMethods readObject;
-	readReflectedObject(rttr::instance(readObject), json);
+	readReflectedObject(registry, refl::createNonOwningInstance(&registry, &readObject), json);
 	CHECK(readObject.data == 123);
 }

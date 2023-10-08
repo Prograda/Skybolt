@@ -697,7 +697,6 @@ EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::v
 	mContext(context)
 {
 	assert(context.julianDateProvider);
-	assert(context.entityNameRegistry);
 	assert(context.programs);
 	assert(context.simWorld);
 	assert(context.stats);

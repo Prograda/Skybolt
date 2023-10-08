@@ -15,14 +15,23 @@
 
 #include <assert.h>
 
-using namespace skybolt::sim;
-using namespace skybolt;
+namespace skybolt::sim {
 
 const float OrbitCameraController::msYawRate = 1.0f;
 const float OrbitCameraController::msPitchRate = 1.0f;
 const float OrbitCameraController::msZoomRate = 1.0f;
 const float OrbitCameraController::msPlanetAlignTransitionRate = 2.0f;
 
+SKYBOLT_REFLECT_BEGIN(OrbitCameraController)
+{
+	registry.type<OrbitCameraController>("OrbitCameraController")
+		.superType<CameraController>()
+		.superType<Pitchable>()
+		.superType<Targetable>()
+		.superType<Yawable>()
+		.superType<Zoomable>();
+}
+SKYBOLT_REFLECT_END
 
 OrbitCameraController::OrbitCameraController(sim::Entity* camera, sim::World* world, const Params& params) :
 	CameraController(camera),
@@ -157,3 +166,5 @@ void OrbitCameraController::update(SecondsD dt)
 	// Derive camera position
 	mNodeComponent->setPosition(mTargetPosition + mNodeComponent->getOrientation() * (Vector3(-dist, 0, 0) + mTargetOffset));
 }
+
+} // namespace skybolt::sim

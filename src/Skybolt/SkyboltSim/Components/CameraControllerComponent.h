@@ -14,16 +14,17 @@
 #pragma once
 
 #include "SkyboltSim/Component.h"
-#include "SkyboltSim/CameraController/CameraControllerSelector.h"
 #include "SkyboltSim/SkyboltSimFwd.h"
+#include "SkyboltSim/CameraController/CameraControllerSelector.h"
+#include "SkyboltSim/Serialization/Serialization.h"
+
 #include <map>
 
 namespace skybolt {
 namespace sim {
 
-class CameraControllerComponent : public CameraControllerSelector, public Component
+class CameraControllerComponent : public CameraControllerSelector, public Component, public ExplicitSerialization
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(Component)
 public:
 	CameraControllerComponent(const ControllersMap& controllers);
 
@@ -36,6 +37,10 @@ public:
 	void advanceWallTime(SecondsD newTime, SecondsD dt) override;
 	void postDynamicsSubStep();
 	void updateAttachments();
+
+public: // ExplicitSerialization interface
+	nlohmann::json toJson(refl::TypeRegistry& typeRegistry) const override;
+	void fromJson(refl::TypeRegistry& typeRegistry, const nlohmann::json& j) override;
 
 private:
 	SecondsD mSimDt = 0;

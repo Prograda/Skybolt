@@ -20,7 +20,7 @@ PropertyModelFactoryMap getPropertyModelFactories(const std::vector<EditorPlugin
 	PropertyModelFactoryMap factories = {
 		{ typeid(EntityObject), [engineRoot] (const ScenarioObject& entityItem) {
 			sim::EntityId entityId = dynamic_cast<const EntityObject*>(&entityItem)->data;
-			return std::make_shared<EntityPropertiesModel>(engineRoot->scenario->world.getEntityById(entityId).get());
+			return std::make_shared<EntityPropertiesModel>(engineRoot->typeRegistry.get(), engineRoot->scenario->world.getEntityById(entityId).get());
 		}},
 		{ typeid(ScenarioDescObject), [engineRoot] (const ScenarioObject& entityItem) {
 			return std::make_shared<ScenarioPropertiesModel>(engineRoot->scenario.get());

@@ -6,17 +6,16 @@
 
 #pragma once
 
-#include "SkyboltSim/Component.h"
-#include "SkyboltSim/SkyboltSimFwd.h"
+#include <memory>
 
-namespace skybolt::sim {
+namespace skybolt::refl {
 
-struct OceanComponent : public Component
-{
-public:
-	double waveHeight = 1;
-};
+class Instance;
+class Property;
+class Type;
+class TypeRegistry;
 
-SKYBOLT_REFLECT_EXTERN(OceanComponent)
+using TypePtr = std::shared_ptr<Type>;
+using PropertyPtr = std::shared_ptr<Property>;
 
-} // namespace skybolt::sim
+} // namespace skybolt::refl

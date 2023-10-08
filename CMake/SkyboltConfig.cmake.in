@@ -32,7 +32,7 @@ endif()
 # Define targets
 include("${CMAKE_CURRENT_LIST_DIR}/SkyboltTargets.cmake")
 
-# Add a conveniant top-level target that depends on all the otehr targets
+# Add a conveniant top-level target that depends on all the other targets
 if(NOT TARGET Skybolt::Skybolt)
 	add_library(Skybolt::Skybolt INTERFACE IMPORTED)
 	add_dependencies(Skybolt::Skybolt
@@ -40,6 +40,7 @@ if(NOT TARGET Skybolt::Skybolt)
 		Skybolt::MapAttributesConverter
 		Skybolt::SkyboltCommon
 		Skybolt::SkyboltEngine
+		Skybolt::SkyboltReflection
 		Skybolt::SkyboltSim
 		Skybolt::SkyboltVis
 	)

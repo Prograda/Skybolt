@@ -17,20 +17,16 @@ namespace sim {
 
 class Node : public Positionable, public Component
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(Component)
 public:
 	Node(const Vector3 &localPosition = math::dvec3Zero(), const Quaternion &localOrientation = math::dquatIdentity());
 
-	~Node();
+	~Node() override;
 
 	void setPosition(const Vector3 &position);
 	void setOrientation(const Quaternion &orientation);
 
 	Vector3 getPosition() const override {return mPosition;}
 	Quaternion getOrientation() const override {return mOrientation;}
-
-	const Vector3& _getPositionConstRef() const {return mPosition;}
-	const Quaternion& _getOrientationConstRef() const {return mOrientation;}
 
 private:
 	Vector3 mPosition;

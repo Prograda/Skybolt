@@ -18,7 +18,6 @@ namespace sim {
 
 class PlanetCameraController : public CameraController, public LatLonSettable, public Pitchable, public Targetable, public Zoomable
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(CameraController, LatLonSettable, Pitchable, Targetable, Zoomable);
 public:
 	struct Params
 	{
@@ -42,6 +41,8 @@ private:
 	static const float msPitchRate;
 	static const float msZoomRate;
 };
+
+SKYBOLT_REFLECT_EXTERN(PlanetCameraController)
 
 } // namespace sim
 } // namespace skybolt

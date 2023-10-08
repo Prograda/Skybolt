@@ -14,10 +14,16 @@ namespace sim {
 
 class NullCameraController : public CameraController
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(CameraController);
 public:
 	NullCameraController(Entity* camera) : CameraController(camera) {}
 };
+
+SKYBOLT_REFLECT_BEGIN(NullCameraController)
+{
+	registry.type<NullCameraController>("NullCameraController")
+		.superType<NullCameraController>();
+}
+SKYBOLT_REFLECT_END
 
 } // namespace sim
 } // namespace skybolt

@@ -10,6 +10,7 @@
 #include "EntityFactory.h"
 #include "Scenario/Scenario.h"
 #include "Plugin/Plugin.h"
+#include <SkyboltReflection/SkyboltReflectionFwd.h>
 #include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 #include <SkyboltCommon/File/FileUtility.h>
@@ -50,6 +51,7 @@ public:
 	EngineStats stats;
 	std::unique_ptr<Scenario> scenario;
 	sim::SystemRegistryPtr systemRegistry;
+	std::unique_ptr<refl::TypeRegistry> typeRegistry;
 	nlohmann::json engineSettings;
 };
 

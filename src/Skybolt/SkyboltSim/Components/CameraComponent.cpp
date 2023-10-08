@@ -6,17 +6,17 @@
 
 
 #include "CameraComponent.h"
+#include "SkyboltSim/PropertyMetadata.h"
 #include <SkyboltCommon/Units.h>
 
 namespace skybolt::sim {
 
-SKYBOLT_REFLECT(CameraComponent)
+SKYBOLT_REFLECT_BEGIN(CameraComponent)
 {
-	rttr::registration::class_<CameraComponent>("CameraComponent")
-		.property("fovY", &CameraComponent::getFovY, &CameraComponent::setFovY)
-		(    
-			rttr::metadata(PropertyMetadataType::Units, Units::Radians)
-		);
+	registry.type<CameraComponent>("CameraComponent")
+		.superType<Component>()
+		.property("fovY", &CameraComponent::getFovY, &CameraComponent::setFovY, {{PropertyMetadataNames::units, Units::Radians}});
 }
+SKYBOLT_REFLECT_END
 
 } // namespace skybolt::sim

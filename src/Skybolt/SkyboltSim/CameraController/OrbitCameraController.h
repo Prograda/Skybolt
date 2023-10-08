@@ -20,7 +20,6 @@ namespace sim {
 
 class OrbitCameraController : public CameraController, public Pitchable, public Targetable, public Yawable, public Zoomable
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(CameraController, Pitchable, Targetable, Yawable, Zoomable);
 public:
 	struct Params
 	{
@@ -63,6 +62,8 @@ private:
 	static const float msZoomRate;
 	static const float msPlanetAlignTransitionRate;
 };
+
+SKYBOLT_REFLECT_EXTERN(OrbitCameraController)
 
 } // namespace sim
 } // namespace skybolt

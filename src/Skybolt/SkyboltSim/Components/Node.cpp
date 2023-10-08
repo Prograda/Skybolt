@@ -6,22 +6,19 @@
 
 
 #include "Node.h"
+#include "PropertyMetadata.h"
 #include "SkyboltSim/Entity.h"
 
 namespace skybolt::sim {
 
-SKYBOLT_REFLECT(Node)
+SKYBOLT_REFLECT_BEGIN(Node)
 {
-	rttr::registration::class_<Node>("Node")
-		.property("position", &Node::_getPositionConstRef, &Node::setPosition)
-		(    
-			rttr::metadata(PropertyMetadataType::AttributeType, AttributeType::PositionInWorld)
-		)
-		.property("orientation", &Node::_getOrientationConstRef, &Node::setOrientation)
-		(    
-			rttr::metadata(PropertyMetadataType::AttributeType, AttributeType::Orientation)
-		);
+	registry.type<Node>("Node")
+		.superType<Component>()
+		.property("position", &Node::getPosition, &Node::setPosition, {{PropertyMetadataNames::attributeType, AttributeType::PositionInWorld}})
+		.property("orientation", &Node::getOrientation, &Node::setOrientation, {{PropertyMetadataNames::attributeType, AttributeType::Orientation}});
 }
+SKYBOLT_REFLECT_END
 
 Node::Node(const Vector3 &localPosition, const Quaternion &localOrientation) :
 	mPosition(localPosition),

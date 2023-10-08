@@ -6,14 +6,13 @@
 
 #pragma once
 
-#include <SkyboltSim/Reflection.h>
+#include <SkyboltReflection/Reflection.h>
 
 namespace skybolt {
 namespace sim {
 
 class Zoomable
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION();
 public:
 	virtual ~Zoomable() = default;
 	virtual double getZoom() const { return mZoom; }
@@ -23,11 +22,12 @@ protected:
 	double mZoom = 0;
 };
 
-SKYBOLT_REFLECT_INLINE(Zoomable)
+SKYBOLT_REFLECT_BEGIN(Zoomable)
 {
-	rttr::registration::class_<Zoomable>("Zoomable")
+	registry.type<Zoomable>("Zoomable")
 		.property("zoom", &Zoomable::getZoom, &Zoomable::setZoom);
 }
+SKYBOLT_REFLECT_END
 
 } // namespace sim
 } // namespace skybolt

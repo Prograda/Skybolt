@@ -13,6 +13,13 @@
 namespace skybolt {
 namespace sim {
 
+SKYBOLT_REFLECT_BEGIN(SimpleDynamicBodyComponent)
+{
+	registry.type<SimpleDynamicBodyComponent>("SimpleDynamicBodyComponent")
+		.superType<DynamicBodyComponent>();
+}
+SKYBOLT_REFLECT_END
+
 SimpleDynamicBodyComponent::SimpleDynamicBodyComponent(Node* node, Motion* motion, double mass, const Vector3& momentofInertia) :
 	mNode(node),
 	mMotion(motion),

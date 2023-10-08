@@ -6,11 +6,12 @@
 
 #include "DefaultEditorWidgets.h"
 #include "PropertyEditor.h"
-#include "PropertyMetadata.h"
+#include "QtPropertyMetadata.h"
 #include "SprocketMetaTypes.h"
 #include "Sprocket/Widgets/PositionEditor.h"
 
-#include <SkyboltSim/Reflection.h>
+#include <SkyboltReflection/Reflection.h>
+#include <SkyboltSim/PropertyMetadata.h>
 #include <SkyboltSim/Spatial/Position.h>
 
 #include <QCheckBox>
@@ -217,7 +218,7 @@ static QWidget* createMultiLineStringEditor(QtProperty* property, QWidget* paren
 
 static QWidget* createStringEditor(QtProperty* property, QWidget* parent)
 {
-	if (auto value = property->property(PropertyMetadataNames::multiLine); value.isValid() && value.toBool())
+	if (auto value = property->property(QtPropertyMetadataNames::multiLine); value.isValid() && value.toBool())
 	{
 		return createMultiLineStringEditor(property, parent);
 	}
@@ -248,7 +249,7 @@ static QWidget* createIntEditor(QtProperty* property, QWidget* parent)
 
 static QWidget* createEnumEditor(QtProperty* property, QWidget* parent)
 {
-	QStringList displayNames = property->property(PropertyMetadataNames::enumValueDisplayNames).toStringList();
+	QStringList displayNames = property->property(QtPropertyMetadataNames::enumValueDisplayNames).toStringList();
 	auto widget = new QComboBox(parent);
 	widget->addItems(displayNames);
 	widget->setCurrentIndex(property->value.toInt());
@@ -268,7 +269,7 @@ static QWidget* createEnumEditor(QtProperty* property, QWidget* parent)
 
 static QWidget* createIntOrEnumEditor(QtProperty* property, QWidget* parent)
 {
-	if (property->property(PropertyMetadataNames::enumValueDisplayNames).isValid())
+	if (property->property(QtPropertyMetadataNames::enumValueDisplayNames).isValid())
 	{
 		return createEnumEditor(property, parent);
 	}
@@ -338,7 +339,7 @@ static QWidget* createDateTimeEditor(QtProperty* property, QWidget* parent)
 
 static QWidget* createVector3DEditor(QtProperty* property, QWidget* parent)
 {
-	if (auto value = property->property(PropertyMetadataNames::attributeType); value.isValid() && value.toInt() == int(sim::AttributeType::PositionInWorld))
+	if (auto value = property->property(QtPropertyMetadataNames::attributeType); value.isValid() && value.toInt() == int(sim::AttributeType::PositionInWorld))
 	{
 		return createWorldPositionEditor(property, parent);
 	}

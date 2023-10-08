@@ -76,7 +76,7 @@ void Entity::advanceSimTime(SecondsD newTime, SecondsD dt)
 
 void Entity::update(UpdateStage stage)
 {
-	assert(mDynamicsEnabled || state != UpdateStage::DynamicsSubStep);
+	assert(mDynamicsEnabled || stage != UpdateStage::DynamicsSubStep);
 
 	for (const ComponentPtr& c : mComponents.getAllItems())
 	{

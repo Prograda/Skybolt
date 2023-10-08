@@ -13,17 +13,24 @@
 #include "CameraControllerComponent.h"
 #include "SkyboltSim/CameraController/CameraController.h"
 #include "SkyboltSim/CameraController/CameraControllerSelector.h"
+
+#include <SkyboltCommon/Json/JsonHelpers.h>
+
 #include <assert.h>
 
 namespace skybolt {
 namespace sim {
 
-SKYBOLT_REFLECT(CameraControllerComponent)
+SKYBOLT_REFLECT_BEGIN(CameraControllerComponent)
 {
-	rttr::registration::class_<CameraControllerComponent>("CameraControllerComponent")
+	registry.type<CameraControllerComponent>("CameraControllerComponent")
+		.superType<CameraControllerSelector>()
+		.superType<Component>()
+		.superType<ExplicitSerialization>()
 		.property("selectedController", &CameraControllerComponent::getSelectedControllerName, &CameraControllerComponent::selectController)
-		.property_readonly("controllers", &CameraControllerComponent::getControllers);
+		.propertyReadOnly("controllers", &CameraControllerComponent::getControllers);
 }
+SKYBOLT_REFLECT_END
 
 CameraControllerComponent::CameraControllerComponent(const ControllersMap& controllers) :
 	CameraControllerSelector(controllers)
@@ -56,6 +63,34 @@ void CameraControllerComponent::updateAttachments()
 		getSelectedController()->update(mWallDt);
 	}
 	mWallDt = 0;
+}
+
+nlohmann::json CameraControllerComponent::toJson(refl::TypeRegistry& typeRegistry) const
+{
+	nlohmann::json json;
+	json["selectedController"] = getSelectedControllerName();
+
+	nlohmann::json controllersJson;
+	for (const auto& [name, controller] : getControllers())
+	{
+		controllersJson[name] = writeReflectedObject(typeRegistry, refl::createNonOwningInstance(&typeRegistry, controller.get()));
+	}
+	json["controllers"] = controllersJson;
+	return json;
+}
+
+void CameraControllerComponent::fromJson(refl::TypeRegistry& typeRegistry, const nlohmann::json& j)
+{
+	selectController(j.at("selectedController"));
+
+	ifChildExists(j, "controllers", [&] (const nlohmann::json& controllersJson) {
+		for (const auto& i : getControllers())
+		{
+			ifChildExists(controllersJson, i.first, [&, controller = i.second] (const nlohmann::json& controllerJson) {
+				readReflectedObject(typeRegistry, refl::createNonOwningInstance(&typeRegistry, controller.get()), controllerJson);
+			});
+		}
+	});
 }
 
 } // namespace sim

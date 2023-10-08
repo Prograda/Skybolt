@@ -11,12 +11,10 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 
-find_package(rttr REQUIRED)
-
 set(LIBRARIES
 	${Boost_LIBRARIES}
-	RTTR::Core_Lib
 	SkyboltCommon
+	SkyboltReflection
 )
 
 target_link_libraries(${LIB_NAME} ${LIBRARIES})

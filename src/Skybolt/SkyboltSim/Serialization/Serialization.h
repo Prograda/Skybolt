@@ -6,28 +6,27 @@
 
 #pragma once
 
-#include "SkyboltSim/Reflection.h"
+#include "SkyboltReflection/Reflection.h"
 
 #include <nlohmann/json.hpp>
 
 namespace skybolt::sim {
 
-void readReflectedObject(rttr::instance& object, const nlohmann::json& json);
+void readReflectedObject(refl::TypeRegistry& registry, refl::Instance& object, const nlohmann::json& json);
 
-nlohmann::json writeReflectedObject(const rttr::instance& object);
+nlohmann::json writeReflectedObject(refl::TypeRegistry& registry, const refl::Instance& object);
 
 
-//! If the rttr::instance object implements this class, the toJson/fromJson methods will be
-//! used to serialize the object, instead of relying on rttr reflection for automatic serialization.
-//! This is useful for implementing complex serialization logic that can't be handled by rttr reflection.
+//! If an object implements this class, the toJson/fromJson methods will be used to serialize the object,
+//! instead of relying on reflection for automatic serialization. This is useful for implementing complex
+//! serialization logic that can't be handled by rttr reflection.
 struct ExplicitSerialization
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION();
 public:
 	virtual ~ExplicitSerialization() = default;
 
-	virtual nlohmann::json toJson() const = 0;
-	virtual void fromJson(const nlohmann::json& j) = 0;
+	virtual nlohmann::json toJson(refl::TypeRegistry& typeRegistry) const = 0;
+	virtual void fromJson(refl::TypeRegistry& typeRegistry, const nlohmann::json& j) = 0;
 };
 
 } // namespace skybolt::sim

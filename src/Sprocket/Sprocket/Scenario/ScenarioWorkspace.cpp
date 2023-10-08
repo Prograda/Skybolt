@@ -128,12 +128,12 @@ void ScenarioWorkspace::unloadScenario()
 void ScenarioWorkspace::loadScenario(const nlohmann::json& json)
 {
 	ifChildExists(json, "scenario", [this] (const nlohmann::json& child) {
-		readScenario(*mEngineRoot->scenario, *mEngineRoot->entityFactory, child);
+		readScenario(*mEngineRoot->typeRegistry, *mEngineRoot->scenario, *mEngineRoot->entityFactory, child);
 	});
 
 	// @deprecated because entities are serialized within scenario
 	ifChildExists(json, "entities", [this] (const nlohmann::json& child) {
-		readEntities(mEngineRoot->scenario->world, *mEngineRoot->entityFactory, child);
+		readEntities(*mEngineRoot->typeRegistry, mEngineRoot->scenario->world, *mEngineRoot->entityFactory, child);
 	});
 
 	emit scenarioLoaded(json);
@@ -141,7 +141,7 @@ void ScenarioWorkspace::loadScenario(const nlohmann::json& json)
 
 void ScenarioWorkspace::saveScenario(nlohmann::json& json) const
 {
-	json["scenario"] = writeScenario(*mEngineRoot->scenario);
+	json["scenario"] = writeScenario(*mEngineRoot->typeRegistry, *mEngineRoot->scenario);
 	emit scenarioSaved(json);
 }
 

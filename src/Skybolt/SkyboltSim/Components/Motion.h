@@ -14,7 +14,6 @@ namespace sim {
 
 class Motion : public Component
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION(Component)
 public:
 	Vector3 linearVelocity = math::dvec3Zero();
 	Vector3 angularVelocity = math::dvec3Zero(); //!< angular velocity in world axes, not body axes

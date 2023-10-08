@@ -6,16 +6,15 @@
 
 #pragma once
 
-#include "SkyboltSim/Reflection.h"
 #include "SkyboltSim/SimUpdatable.h"
 #include <SkyboltCommon/TypedItemContainer.h>
+#include <SkyboltReflection/Reflection.h>
 
 namespace skybolt {
 namespace sim {
 
 class Component : public SimUpdatable
 {
-	SKYBOLT_ENABLE_POLYMORPHIC_REFLECTION()
 public:
 	virtual ~Component() {}
 

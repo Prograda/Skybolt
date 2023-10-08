@@ -14,6 +14,7 @@ namespace sim {
 class Positionable
 {
 public:
+	virtual ~Positionable() = default;
 	virtual Vector3 getPosition() const = 0;
 	virtual Quaternion getOrientation() const = 0;
 };
