@@ -179,6 +179,27 @@ static PositionEditor* createWorldPositionEditor(QtProperty* property, QWidget* 
 	return widget;
 }
 
+static QWidget* createComboStringEditor(QtProperty* property, QWidget* parent)
+{
+	QStringList optionNames = property->property(QtPropertyMetadataNames::optionNames).toStringList();
+	auto widget = new QComboBox(parent);
+	widget->addItems(optionNames);
+	widget->setCurrentText(property->value.toString());
+	widget->setEditable(property->property(QtPropertyMetadataNames::allowCustomOptions).toBool());
+
+	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property]() {
+		widget->blockSignals(true);
+		widget->setCurrentText(property->value.toString());
+		widget->blockSignals(false);
+	});
+
+	QObject::connect(widget, &QComboBox::currentTextChanged, property, [=](const QString& newValue) {
+		property->setValue(newValue);
+	});
+
+	return widget;
+}
+
 static QWidget* createSingleLineStringEditor(QtProperty* property, QWidget* parent)
 {
 	QLineEdit* widget = new QLineEdit(parent);
@@ -218,6 +239,11 @@ static QWidget* createMultiLineStringEditor(QtProperty* property, QWidget* paren
 
 static QWidget* createStringEditor(QtProperty* property, QWidget* parent)
 {
+	if (auto value = property->property(QtPropertyMetadataNames::optionNames); value.isValid())
+	{
+		return createComboStringEditor(property, parent);
+	}
+
 	if (auto value = property->property(QtPropertyMetadataNames::multiLine); value.isValid() && value.toBool())
 	{
 		return createMultiLineStringEditor(property, parent);
@@ -249,9 +275,9 @@ static QWidget* createIntEditor(QtProperty* property, QWidget* parent)
 
 static QWidget* createEnumEditor(QtProperty* property, QWidget* parent)
 {
-	QStringList displayNames = property->property(QtPropertyMetadataNames::enumValueDisplayNames).toStringList();
+	QStringList optionNames = property->property(QtPropertyMetadataNames::optionNames).toStringList();
 	auto widget = new QComboBox(parent);
-	widget->addItems(displayNames);
+	widget->addItems(optionNames);
 	widget->setCurrentIndex(property->value.toInt());
 
 	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property]() {
@@ -267,9 +293,26 @@ static QWidget* createEnumEditor(QtProperty* property, QWidget* parent)
 	return widget;
 }
 
+static bool shouldUseEnumEditor(const QtProperty& property)
+{
+	if (property.property(QtPropertyMetadataNames::optionNames).isValid())
+	{
+		if (auto allowCustomOptions = property.property(QtPropertyMetadataNames::allowCustomOptions); allowCustomOptions.isValid())
+		{
+			if (allowCustomOptions.toBool())
+			{
+				// Can't use enum editor if custom options are allowed.
+				return false;
+			}
+		}
+		return true;
+	}
+	return false;
+}
+
 static QWidget* createIntOrEnumEditor(QtProperty* property, QWidget* parent)
 {
-	if (property->property(QtPropertyMetadataNames::enumValueDisplayNames).isValid())
+	if (shouldUseEnumEditor(*property))
 	{
 		return createEnumEditor(property, parent);
 	}

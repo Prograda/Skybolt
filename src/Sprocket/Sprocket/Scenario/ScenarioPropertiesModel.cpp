@@ -39,7 +39,7 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 	}
 	{
 		mTimelineMode = createQtProperty("timelineMode", 0);
-		mTimelineMode->setProperty(QtPropertyMetadataNames::enumValueDisplayNames, QStringList({"Live", "Free"}));
+		mTimelineMode->setProperty(QtPropertyMetadataNames::optionNames, QStringList({"Live", "Free"}));
 		mProperties.push_back(mTimelineMode);
 
 		connect(mTimelineMode.get(), &QtProperty::valueChanged, [this]() {

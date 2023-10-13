@@ -144,7 +144,7 @@ sim::LatLon qtValueToSim(const refl::Property& property, const QVariant& value)
 
 static void addMetadata(QtProperty& qtProperty, const refl::Property& reflProperty)
 {
-	// TODO: copy metadata from refl to QT property automatically, without needing to explicitly all types here?
+	// TODO: Can we translate these types automatically?
 	if (auto value = reflProperty.getMetadata(sim::PropertyMetadataNames::attributeType); value.has_value())
 	{
 		qtProperty.setProperty(QtPropertyMetadataNames::attributeType, int(std::any_cast<sim::AttributeType>(value)));
@@ -152,6 +152,14 @@ static void addMetadata(QtProperty& qtProperty, const refl::Property& reflProper
 	if (auto value = reflProperty.getMetadata(sim::PropertyMetadataNames::multiLine); value.has_value())
 	{
 		qtProperty.setProperty(QtPropertyMetadataNames::multiLine, std::any_cast<bool>(value));
+	}
+	if (auto value = reflProperty.getMetadata(sim::PropertyMetadataNames::optionNames); value.has_value())
+	{
+		qtProperty.setProperty(QtPropertyMetadataNames::optionNames, toQStringList(std::any_cast<std::vector<std::string>>(value)));
+	}
+	if (auto value = reflProperty.getMetadata(sim::PropertyMetadataNames::allowCustomOptions); value.has_value())
+	{
+		qtProperty.setProperty(QtPropertyMetadataNames::allowCustomOptions, std::any_cast<bool>(value));
 	}
 }
 

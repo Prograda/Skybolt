@@ -9,6 +9,7 @@
 struct QtPropertyMetadataNames
 {
     static constexpr char* attributeType = "AttributeType"; //!< Property value is Datum enum stored as an int
-	static constexpr char* enumValueDisplayNames = "EnumValueDisplayNames"; //!< Property value is a QStringList containing the display names of the enum values of a property
 	static constexpr char* multiLine = "MultiLine"; //!< Property value is a bool indicating whether text should be rendered as multiple lines
+	static constexpr char* optionNames = "OptionNames"; //!< Property value is a QStringList containing the names of the possible values the property can hold. Useful for representing enum types.
+	static constexpr char* allowCustomOptions = "AllowCustomOptions"; //!< Value is a bool indicating whether the "OptionNames" are exhaustive, or whether the user can set a custom value not contained in "OptionNames". False by default.
 };
