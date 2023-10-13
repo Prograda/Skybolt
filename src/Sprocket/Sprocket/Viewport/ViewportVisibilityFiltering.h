@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Sprocket/SprocketFwd.h"
+#include <SkyboltCommon/ObservableValue.h>
 #include <SkyboltEngine/SimVisBinding/EntityVisibilityFilterable.h>
 #include <memory>
 
@@ -14,18 +15,20 @@ class QMenu;
 class QString;
 class QWidget;
 
-enum class SelectedObjectVisibilityFilter
+enum class ObjectVisibilityFilterState
 {
 	Off, //!< No objects included in visibility set
 	Selected, //!< Selected object included in visibility set
 	On //!< All objects included in visibility set
 };
 
-using SelectedObjectVisibilityFilterPtr = std::shared_ptr<SelectedObjectVisibilityFilter>;
+using ObjectVisibilityFilter = skybolt::ObservableValue<ObjectVisibilityFilterState>;
+using ObjectVisibilityFilterPtr = std::shared_ptr<ObjectVisibilityFilter>;
 
-QMenu* createVisibilityFilterMenu(const QString& name, const SelectedObjectVisibilityFilterPtr& filter, QWidget* parent = nullptr);
+QMenu* createVisibilityFilterMenu(const QString& name, const ObjectVisibilityFilterPtr& filter, QWidget* parent = nullptr);
+QMenu* createVisibilityFilterSubMenu(QMenu& parent, const QString& name, const ObjectVisibilityFilterPtr& filter);
 
-skybolt::EntityVisibilityPredicate createSelectedEntityVisibilityPredicate(const SelectedObjectVisibilityFilterPtr& filter, const ScenarioSelectionModel* selectionModel);
+skybolt::EntityVisibilityPredicate createSelectedEntityVisibilityPredicate(const ObjectVisibilityFilterPtr& filter, const ScenarioSelectionModel* selectionModel);
 
 skybolt::EntityVisibilityPredicate createLineOfSightVisibilityPredicate(ViewportWidget* viewportWidget, skybolt::sim::World* world);
 
@@ -33,6 +36,7 @@ skybolt::EntityVisibilityPredicate predicateAnd(const skybolt::EntityVisibilityP
 
 skybolt::EntityVisibilityPredicate predicateOr(const skybolt::EntityVisibilityPredicate& a, const skybolt::EntityVisibilityPredicate& b);
 
-skybolt::EntityVisibilityPredicate createSelectedEntityVisibilityPredicateAndAddSubMenu(QMenu& parent, const QString& name, const ScenarioSelectionModel* selectionModel);
+skybolt::EntityVisibilityPredicate createSelectedEntityVisibilityPredicateAndAddSubMenu(QMenu& parent, const std::string& name, const ScenarioSelectionModel* selectionModel);
 
+ObjectVisibilityFilterPtr addVisibilityLayerSubMenu(QMenu& parent, const skybolt::EntityVisibilityPredicate& basePredicate, const std::string& name, const skybolt::EntityVisibilityPredicateSetter& predicateSetter, const ScenarioSelectionModel* selectionModel);
 void addVisibilityLayerSubMenus(QMenu& parent, const skybolt::EntityVisibilityPredicate& basePredicate, const std::map<std::string, skybolt::EntityVisibilityPredicateSetter>& layerMap, const ScenarioSelectionModel* selectionModel);

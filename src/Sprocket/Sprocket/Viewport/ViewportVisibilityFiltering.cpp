@@ -24,51 +24,63 @@ static QAction* addCheckedAction(QMenu& menu, const QString& text, std::function
 	return action;
 }
 
-QMenu* createVisibilityFilterMenu(const QString& name, const SelectedObjectVisibilityFilterPtr& filter, QWidget* parent)
+QMenu* createVisibilityFilterMenu(const QString& name, const ObjectVisibilityFilterPtr& filter, QWidget* parent)
 {
 	auto menu = new QMenu(name, parent);
 	QActionGroup* alignmentGroup = new QActionGroup(menu);
 
 	QAction* offAction = addCheckedAction(*menu, "Hide All", [=](bool checked) {
-		(*filter) = SelectedObjectVisibilityFilter::Off;
+		filter->set(ObjectVisibilityFilterState::Off);
 	});
 
 	QAction* selectedAction = addCheckedAction(*menu, "Show Selected", [=](bool checked) {
-		(*filter) = SelectedObjectVisibilityFilter::Selected;
+		filter->set(ObjectVisibilityFilterState::Selected);
 	});
 
 	QAction* onAction = addCheckedAction(*menu, "Show All", [=](bool checked) {
-		(*filter) = SelectedObjectVisibilityFilter::On;
+		filter->set(ObjectVisibilityFilterState::On);
 	});
 
 	alignmentGroup->addAction(offAction);
 	alignmentGroup->addAction(selectedAction);
 	alignmentGroup->addAction(onAction);
 
-	switch(*filter)
-	{
-		case SelectedObjectVisibilityFilter::Off:
-			offAction->setChecked(true);
-			break;
-		case SelectedObjectVisibilityFilter::Selected:
-			selectedAction->setChecked(true);
-			break;
-		case SelectedObjectVisibilityFilter::On:
-			onAction->setChecked(true);
-			break;
+	auto applyState = [=] (const ObjectVisibilityFilterState& oldValue, const ObjectVisibilityFilterState& newValue) {
+		switch(newValue)
+		{
+			case ObjectVisibilityFilterState::Off:
+				offAction->setChecked(true);
+				break;
+			case ObjectVisibilityFilterState::Selected:
+				selectedAction->setChecked(true);
+				break;
+			case ObjectVisibilityFilterState::On:
+				onAction->setChecked(true);
+				break;
+		};
 	};
+
+	filter->valueChanged.connect(applyState);
+	applyState(filter->get(), filter->get());
 
 	return menu;
 }
 
-EntityVisibilityPredicate createSelectedEntityVisibilityPredicate(const SelectedObjectVisibilityFilterPtr& filter, const ScenarioSelectionModel* selectionModel)
+QMenu* createVisibilityFilterSubMenu(QMenu& parent, const QString& name, const std::shared_ptr<ObjectVisibilityFilter>& filter)
+{
+	QMenu* menu = createVisibilityFilterMenu(name, filter);
+	parent.addMenu(menu);
+	return menu;
+}
+
+EntityVisibilityPredicate createSelectedEntityVisibilityPredicate(const ObjectVisibilityFilterPtr& filter, const ScenarioSelectionModel* selectionModel)
 {
 	return [filter, selectionModel] (const sim::Entity& entity) {
-		switch(*filter)
+		switch(filter->get())
 		{
-			case SelectedObjectVisibilityFilter::Off:
+			case ObjectVisibilityFilterState::Off:
 				return false;
-			case SelectedObjectVisibilityFilter::Selected:
+			case ObjectVisibilityFilterState::Selected:
 				for (const auto& object : selectionModel->getSelectedItems())
 				{
 					if (auto entityObject = dynamic_cast<EntityObject*>(object.get()); entityObject)
@@ -77,7 +89,7 @@ EntityVisibilityPredicate createSelectedEntityVisibilityPredicate(const Selected
 					}
 				}
 				return false;
-			case SelectedObjectVisibilityFilter::On:
+			case ObjectVisibilityFilterState::On:
 				return true;
 		};
 		assert(!"Should not get here");
@@ -125,22 +137,28 @@ skybolt::EntityVisibilityPredicate predicateOr(const skybolt::EntityVisibilityPr
 	};
 }
 
-EntityVisibilityPredicate createSelectedEntityVisibilityPredicateAndAddSubMenu(QMenu& parent, const QString& name, const ScenarioSelectionModel* selectionModel)
+EntityVisibilityPredicate createSelectedEntityVisibilityPredicateAndAddSubMenu(QMenu& parent, const std::string& name, const ScenarioSelectionModel* selectionModel)
 {
-	auto visibilityFilter = std::make_shared<SelectedObjectVisibilityFilter>();
-	(*visibilityFilter) = SelectedObjectVisibilityFilter::On;
-	EntityVisibilityPredicate predicate = createSelectedEntityVisibilityPredicate(visibilityFilter, selectionModel);
-	QMenu* menu = createVisibilityFilterMenu(name, visibilityFilter);
-	parent.addMenu(menu);
-	return predicate;
+	auto filter = std::make_shared<ObjectVisibilityFilter>(ObjectVisibilityFilterState::On);
+	createVisibilityFilterSubMenu(parent, QString::fromStdString(name), filter);
+	return createSelectedEntityVisibilityPredicate(filter, selectionModel);
+}
+
+ObjectVisibilityFilterPtr addVisibilityLayerSubMenu(QMenu& parent, const skybolt::EntityVisibilityPredicate& basePredicate, const std::string& name, const skybolt::EntityVisibilityPredicateSetter& predicateSetter, const ScenarioSelectionModel* selectionModel)
+{
+	auto filter = std::make_shared<ObjectVisibilityFilter>(ObjectVisibilityFilterState::On);
+	QMenu* menu = createVisibilityFilterSubMenu(parent, QString::fromStdString(name), filter);
+
+	EntityVisibilityPredicate predicate = createSelectedEntityVisibilityPredicate(filter, selectionModel);
+	predicateSetter(predicateAnd(predicate, basePredicate));
+	
+	return filter;
 }
 
 void addVisibilityLayerSubMenus(QMenu& parent, const EntityVisibilityPredicate& basePredicate, const std::map<std::string, EntityVisibilityPredicateSetter>& layerMap, const ScenarioSelectionModel* selectionModel)
 {
 	for (const auto& layer : layerMap)
 	{
-		QString name = QString::fromStdString(layer.first);
-		EntityVisibilityPredicate predicate = createSelectedEntityVisibilityPredicateAndAddSubMenu(parent, name, selectionModel);
-		layer.second(predicateAnd(predicate, basePredicate));
+		addVisibilityLayerSubMenu(parent, basePredicate, layer.first, layer.second, selectionModel);
 	}
 }
