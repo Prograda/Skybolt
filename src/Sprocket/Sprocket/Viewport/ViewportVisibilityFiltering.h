@@ -9,6 +9,8 @@
 #include "Sprocket/SprocketFwd.h"
 #include <SkyboltCommon/ObservableValue.h>
 #include <SkyboltEngine/SimVisBinding/EntityVisibilityFilterable.h>
+
+#include <QPointer>
 #include <memory>
 
 class QMenu;
@@ -30,7 +32,7 @@ QMenu* createVisibilityFilterSubMenu(QMenu& parent, const QString& name, const O
 
 skybolt::EntityVisibilityPredicate createSelectedEntityVisibilityPredicate(const ObjectVisibilityFilterPtr& filter, const ScenarioSelectionModel* selectionModel);
 
-skybolt::EntityVisibilityPredicate createLineOfSightVisibilityPredicate(ViewportWidget* viewportWidget, skybolt::sim::World* world);
+skybolt::EntityVisibilityPredicate createLineOfSightVisibilityPredicate(QPointer<ViewportWidget> viewportWidget, skybolt::sim::World* world);
 
 skybolt::EntityVisibilityPredicate predicateAnd(const skybolt::EntityVisibilityPredicate& a, const skybolt::EntityVisibilityPredicate& b);
 

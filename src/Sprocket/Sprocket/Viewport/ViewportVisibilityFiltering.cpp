@@ -97,9 +97,14 @@ EntityVisibilityPredicate createSelectedEntityVisibilityPredicate(const ObjectVi
 	};
 }
 
-EntityVisibilityPredicate createLineOfSightVisibilityPredicate(ViewportWidget* viewportWidget, sim::World* world)
+EntityVisibilityPredicate createLineOfSightVisibilityPredicate(QPointer<ViewportWidget> viewportWidget, sim::World* world)
 {
 	return [viewportWidget, world] (const sim::Entity& entity) {
+		if (!viewportWidget)
+		{
+			return false;
+		}
+
 		if (const auto& entityPosition = getPosition(entity); entityPosition)
 		{
 			if (sim::Entity* camera = viewportWidget->getCamera(); camera)
