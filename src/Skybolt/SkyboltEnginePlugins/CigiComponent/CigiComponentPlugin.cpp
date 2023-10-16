@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+#include "CigiComponentPlugin.h"
 #include "CigiClient.h"
 
 #include <SkyboltEngine/EngineRoot.h>
@@ -213,62 +214,55 @@ private:
 
 const std::string cigiComponentName = "cigi";
 
-class CigiComponentPlugin : public Plugin
+CigiComponentPlugin::CigiComponentPlugin(const PluginConfig& config) :
+	mComponentFactoryRegistry(config.simComponentFactoryRegistry)
 {
-public:
-	CigiComponentPlugin(const PluginConfig& config) :
-		mComponentFactoryRegistry(config.simComponentFactoryRegistry)
-	{
-		EngineRoot* engineRoot = config.engineRoot;
+	EngineRoot* engineRoot = config.engineRoot;
 
-		auto factory = std::make_shared<ComponentFactoryFunctionAdapter>([=](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) {
+	auto factory = std::make_shared<ComponentFactoryFunctionAdapter>([=](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) {
 
-			TemplatesMap templatesMap;
+		TemplatesMap templatesMap;
 
-			CigiClientConfig clientConfig;
-			clientConfig.cigiMajorVersion = json.at("cigiMajorVersion").get<int>();
-			clientConfig.host = json.at("hostAddress").get<std::string>();
-			clientConfig.hostPort = json.at("hostPort").get<int>();
-			clientConfig.igPort = json.at("igPort").get<int>();
+		CigiClientConfig clientConfig;
+		clientConfig.cigiMajorVersion = json.at("cigiMajorVersion").get<int>();
+		clientConfig.host = json.at("hostAddress").get<std::string>();
+		clientConfig.hostPort = json.at("hostPort").get<int>();
+		clientConfig.igPort = json.at("igPort").get<int>();
 			 
-			auto it = json.find("entityTypes");
-			if (it != json.end())
+		auto it = json.find("entityTypes");
+		if (it != json.end())
+		{
+			for (const auto& type : it.value().items())
 			{
-				for (const auto& type : it.value().items())
-				{
-					int id = std::stoi(type.key());
-					templatesMap[id] = type.value().get<std::string>();
-				}
+				int id = std::stoi(type.key());
+				templatesMap[id] = type.value().get<std::string>();
 			}
+		}
 
-			clientConfig.world = std::make_shared<CigiSkyboltWorld>(engineRoot, templatesMap, entity);
+		clientConfig.world = std::make_shared<CigiSkyboltWorld>(engineRoot, templatesMap, entity);
 
-			auto communicator = std::make_shared<CigiClient>(clientConfig);
+		auto communicator = std::make_shared<CigiClient>(clientConfig);
 
-			return std::make_shared<CigiComponent>(communicator);
-		});
+		return std::make_shared<CigiComponent>(communicator);
+	});
 
-		mComponentFactoryRegistry->insert(std::make_pair(cigiComponentName, factory));
-	}
+	mComponentFactoryRegistry->insert(std::make_pair(cigiComponentName, factory));
+}
 
-	~CigiComponentPlugin()
-	{
-		mComponentFactoryRegistry->erase(cigiComponentName);
-	}
-
-private:
-	ComponentFactoryRegistryPtr mComponentFactoryRegistry;
-};
+CigiComponentPlugin::~CigiComponentPlugin()
+{
+	mComponentFactoryRegistry->erase(cigiComponentName);
+}
 
 namespace plugins {
 
-	std::shared_ptr<Plugin> createEnginePlugin(const PluginConfig& config)
+	std::shared_ptr<Plugin> createCigiComponentPlugin(const PluginConfig& config)
 	{
 		return std::make_shared<CigiComponentPlugin>(config);
 	}
 
 	BOOST_DLL_ALIAS(
-		plugins::createEnginePlugin,
+		plugins::createCigiComponentPlugin,
 		createEnginePlugin
 	)
 }
