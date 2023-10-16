@@ -13,6 +13,8 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include <stdexcept>
+#include <string>
 #include <typeindex>
 
 namespace skybolt::refl {

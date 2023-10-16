@@ -15,6 +15,29 @@
 
 namespace skybolt {
 
+namespace detail {
+
+template <typename BaseT, typename OtherT>
+std::shared_ptr<OtherT> static_or_dynamic_pointer_cast(const std::shared_ptr<BaseT>& type, std::true_type)
+{
+    return std::static_pointer_cast<OtherT>(type);
+}
+
+template <typename BaseT, typename OtherT>
+std::shared_ptr<OtherT> static_or_dynamic_pointer_cast(const std::shared_ptr<BaseT>& type, std::false_type)
+{
+    return std::dynamic_pointer_cast<OtherT>(type);
+}
+
+//! static_or_dynamic_pointer_cast uses a static_pointer_cast if the types are known to be related at compile time, otherwse falls back to dyanmic_pointer_cast
+template <typename BaseT, typename OtherT>
+std::shared_ptr<OtherT> static_or_dynamic_pointer_cast(const std::shared_ptr<BaseT>& type)
+{
+	return static_or_dynamic_pointer_cast<BaseT, OtherT>(type, std::disjunction<std::is_base_of<BaseT, OtherT>, std::is_same<BaseT, OtherT>>());
+}
+
+} // namespace detail
+
 template <class T>
 inline std::vector<std::type_index> getExposedTypes(const T& type)
 {
@@ -82,7 +105,10 @@ public:
 
 		while (it != it2)
 		{
-			result.push_back(std::static_pointer_cast<DerivedT>(it->second));
+			if (const auto& p = detail::static_or_dynamic_pointer_cast<BaseT, DerivedT>(it->second); p)
+			{
+				result.push_back(p);
+			}
 			++it;
 		}
 
@@ -100,7 +126,9 @@ public:
 	{
 		typename ComponentMap::const_iterator i = mComponentMap.find(typeid(DerivedT));
 		if (i != mComponentMap.end())
-			return std::static_pointer_cast<DerivedT>(i->second);
+		{
+			return detail::static_or_dynamic_pointer_cast<BaseT, DerivedT>(i->second);
+		}
 
 		return nullptr;
 	}

@@ -23,14 +23,16 @@ struct MultiTypeBase
 	virtual ~MultiTypeBase() {}
 };
 
-struct MultiTypeDerived : MultiTypeBase {};
+struct SomeOtherType {};
+
+struct MultiTypeDerived : MultiTypeBase, SomeOtherType {};
 
 namespace skybolt {
 
 template<>
 std::vector<std::type_index> getExposedTypes<MultiTypeBase>(const MultiTypeBase& type)
 {
-	return { typeid(MultiTypeDerived), typeid(MultiTypeBase) };
+	return { typeid(MultiTypeDerived), typeid(MultiTypeBase), typeid(SomeOtherType) };
 }
 
 }
@@ -102,6 +104,7 @@ TEST_CASE("TypedItemContainer add and remove item with multiple exposed types")
 	CHECK(c.getAllItems().size() == 1);
 	CHECK(c.getFirstItemOfType<MultiTypeDerived>() == item);
 	CHECK(c.getFirstItemOfType<MultiTypeBase>() == item);
+	CHECK(c.getFirstItemOfType<SomeOtherType>() == item);
 
 	c.removeItem(item);
 	CHECK(c.getFirstItemOfType<MultiTypeDerived>() == nullptr);
