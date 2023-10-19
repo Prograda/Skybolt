@@ -48,7 +48,7 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	assert(mWorkspace);
 	assert(mEngineRoot);
 
-	connectJsonScenarioSerializable(*mWorkspace, *this);
+	connectJsonScenarioSerializable(*mWorkspace, this);
 	connect(mWorkspace.get(), &ScenarioWorkspace::scenarioFilenameChanged, this, &MainWindow::scenarioFilenameChanged);
 	scenarioFilenameChanged(mWorkspace->getScenarioFilename());
 
@@ -247,8 +247,7 @@ bool MainWindow::saveScenario()
 	}
 	else
 	{
-		QFile file(mWorkspace->getScenarioFilename());
-		if (auto errorMessage = mWorkspace->saveScenario(file); errorMessage)
+		if (auto errorMessage = mWorkspace->saveScenario(mWorkspace->getScenarioFilename()); errorMessage)
 		{
 			QMessageBox::critical(this, "", *errorMessage);
 		}
@@ -266,8 +265,7 @@ bool MainWindow::saveScenarioAs()
 		if (!fileName.endsWith(scenarioFileExtension, Qt::CaseInsensitive))
 			fileName += scenarioFileExtension;
 
-		QFile file(fileName);
-		if (auto errorMessage = mWorkspace->saveScenario(file); errorMessage)
+		if (auto errorMessage = mWorkspace->saveScenario(fileName); errorMessage)
 		{
 			QMessageBox::critical(this, "", *errorMessage);
 		}

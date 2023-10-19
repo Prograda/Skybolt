@@ -5,7 +5,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "ScenarioWorkspace.h"
-#include "JsonScenarioSerializable.h"
 
 #include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltCommon/Json/WriteJsonFile.h>
@@ -18,6 +17,7 @@
 
 #include <QFile>
 #include <QFileInfo>
+#include <QSaveFile>
 #include <osgDB/Registry>
 
 using namespace skybolt;
@@ -78,12 +78,10 @@ std::optional<ScenarioWorkspace::ErrorMessage> ScenarioWorkspace::loadScenario(Q
 	return std::nullopt;
 }
 
-std::optional<ScenarioWorkspace::ErrorMessage> ScenarioWorkspace::saveScenario(QFile& file)
+std::optional<ScenarioWorkspace::ErrorMessage> ScenarioWorkspace::saveScenario(const QString& filename)
 {
-	if (!file.open(QIODevice::WriteOnly))
-	{
-		return file.errorString();
-	}
+	QSaveFile file(filename);
+	file.open(QIODevice::WriteOnly);
 
 	setScenarioFilename(file.fileName());
 
@@ -92,6 +90,8 @@ std::optional<ScenarioWorkspace::ErrorMessage> ScenarioWorkspace::saveScenario(Q
 
 	int indent = 4;
 	file.write(json.dump(indent).c_str());
+	file.commit();
+
 	return std::nullopt;
 }
 

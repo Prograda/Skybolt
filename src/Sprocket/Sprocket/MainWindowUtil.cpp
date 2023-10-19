@@ -9,7 +9,7 @@
 #include "EditorPlugin.h"
 #include "Scenario/ScenarioWorkspace.h"
 
-void addToolWindows(MainWindow& mainWindow, ScenarioWorkspace& workspace, const std::vector<EditorPluginPtr>& plugins)
+void addToolWindows(MainWindow& mainWindow, const std::vector<EditorPluginPtr>& plugins)
 {
 	for (const EditorPluginPtr& plugin : plugins)
 	{
@@ -17,7 +17,6 @@ void addToolWindows(MainWindow& mainWindow, ScenarioWorkspace& workspace, const 
 		for (const auto& window : windows)
 		{
 			mainWindow.addToolWindow(window.name, window.widget);
-			connectJsonScenarioSerializable(workspace, *plugin);
 		}
 	}
 }

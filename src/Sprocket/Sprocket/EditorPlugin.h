@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Sprocket/JsonScenarioSerializable.h"
 #include "Sprocket/SprocketFwd.h"
 #include "Sprocket/Scenario/ScenarioObject.h"
 #include "Sprocket/Scenario/ScenarioObjectTypeMap.h"
@@ -41,11 +40,12 @@ struct EditorPluginConfig
 	ScenarioObjectTypeMapPtr scenarioObjectTypes;
 	skybolt::vis::VisRoot* visRoot;
 	QMainWindow* mainWindow;
+	ScenarioWorkspacePtr scenarioWorkspace;
 };
 
 using EntityVisibilityLayerMap = std::map<std::string, skybolt::EntityVisibilityPredicateSetter>;
 
-class BOOST_SYMBOL_VISIBLE EditorPlugin : public JsonScenarioSerializable
+class BOOST_SYMBOL_VISIBLE EditorPlugin
 {
 public:
 	static std::string factorySymbolName() { return "createEditorPlugin"; }

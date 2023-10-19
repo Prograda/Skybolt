@@ -13,6 +13,7 @@
 #include <Sprocket/Entity/EntityChooserDialogFactory.h>
 #include <Sprocket/Scenario/ScenarioObject.h>
 #include <Sprocket/Scenario/ScenarioSelectionModel.h>
+#include <Sprocket/Scenario/ScenarioWorkspace.h>
 #include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Sequence/SequenceController.h>
@@ -166,27 +167,24 @@ public:
 		QObject::connect(config.selectionModel, &ScenarioSelectionModel::selectionChanged, [this] (const SelectedScenarioObjects& selected, const SelectedScenarioObjects& deselected) {
 			selectionChanged(selected);
 		});
+
+		QObject::connect(config.scenarioWorkspace.get(), &ScenarioWorkspace::scenarioNewed, [this] {
+			mSequenceObjectRegistry->clear();
+			mRecordingControllers.clear();
+			});
+
+		QObject::connect(config.scenarioWorkspace.get(), &ScenarioWorkspace::scenarioLoaded, [this](const nlohmann::json& json) {
+			ifChildExists(json, "sequences", [&](const nlohmann::json& child) {
+				readSequences(*mSequenceObjectRegistry, child, mEngineRoot->scenario.get());
+				});
+			});
+
+		QObject::connect(config.scenarioWorkspace.get(), &ScenarioWorkspace::scenarioSaved, [this](nlohmann::json& json) {
+			json["sequences"] = writeSequences(*mSequenceObjectRegistry);
+			});
 	}
 
 	~SequenceEditorPlugin() override = default;
-
-	void resetScenario() override
-	{
-		mSequenceObjectRegistry->clear();
-		mRecordingControllers.clear();
-	}
-
-	void readScenario(const nlohmann::json& json) override
-	{
-		ifChildExists(json, "sequences", [&] (const nlohmann::json& child) {
-			readSequences(*mSequenceObjectRegistry, child, mEngineRoot->scenario.get());
-		});
-	}
-
-	void writeScenario(nlohmann::json& json)
-	{
-		json["sequences"] = writeSequences(*mSequenceObjectRegistry);
-	}
 
 	void setTime(double time)
 	{

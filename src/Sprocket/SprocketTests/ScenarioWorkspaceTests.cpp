@@ -8,7 +8,7 @@
 #include <Sprocket/Scenario/ScenarioWorkspace.h>
 #include <SkyboltEngine/EngineRootFactory.h>
 
-#include <QTemporaryFile>
+#include <QTemporaryDir>
 
 using namespace skybolt;
 
@@ -53,20 +53,20 @@ TEST_CASE("Workspace saves and loads scenario")
 	auto engineRoot = createEngineRoot();
 
 	// Save workspace
-	QTemporaryFile file;
+	QTemporaryDir dir;
+	QString filename = dir.filePath("temp.scn");
 	{
 		ScenarioWorkspace workspace(engineRoot, &createTestNewScenarioEntities);
 		engineRoot->scenario->world.addEntity(engineRoot->entityFactory->createEntity("Camera", "TestCamera123"));
 
-		CHECK(workspace.saveScenario(file) == std::nullopt);
-		CHECK(workspace.getScenarioFilename() == file.fileName());
+		CHECK(workspace.saveScenario(filename) == std::nullopt);
+		CHECK(workspace.getScenarioFilename() == filename);
 	}
-	file.close();
 
 	// Load to a different workspace
 	ScenarioWorkspace workspace(engineRoot, &createTestNewScenarioEntities);
-	CHECK(workspace.loadScenario(file) == std::nullopt);
+	CHECK(workspace.loadScenario(filename) == std::nullopt);
 
-	CHECK(workspace.getScenarioFilename() == file.fileName());
+	CHECK(workspace.getScenarioFilename() == filename);
 	CHECK(engineRoot->scenario->world.findObjectByName("TestCamera123") != nullptr);
 }

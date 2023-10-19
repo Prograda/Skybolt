@@ -112,9 +112,10 @@ public:
 			config.visRoot = mVisRoot.get();
 			config.scenarioObjectTypes = scenarioObjectTypes;
 			config.mainWindow = mMainWindow.get();
+			config.scenarioWorkspace = scenarioWorkspace;
 
 			mEditorPlugins = loadEditorPlugins(editorPluginFactories, config);
-			addToolWindows(*mMainWindow, *scenarioWorkspace, mEditorPlugins);
+			addToolWindows(*mMainWindow, mEditorPlugins);
 		}
 
 		{
@@ -171,7 +172,7 @@ public:
 			addVisibilityLayerSubMenus(*viewportWidget->getVisibilityFilterMenu(), basePredicate, getEntityVisibilityLayers(mEditorPlugins), selectionModel);
 
 			mMainWindow->addToolWindow("Viewport", viewportWidget);
-			connectJsonScenarioSerializable(*scenarioWorkspace, *viewportWidget);
+			connectJsonScenarioSerializable(*scenarioWorkspace, viewportWidget);
 		}
 		TimelineControlWidget* timeControlWidget;
 		{

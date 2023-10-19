@@ -7,12 +7,14 @@
 #pragma once
 
 #include "Sprocket/SprocketFwd.h"
+#include "Sprocket/JsonScenarioSerializable.h"
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltSim/Chrono.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
 
 #include <nlohmann/json.hpp>
 #include <optional>
+#include <type_traits>
 #include <QObject>
 #include <QString>
 
@@ -32,7 +34,7 @@ public:
 
 	std::optional<ErrorMessage> loadScenario(const QString& filename);
 	std::optional<ErrorMessage> loadScenario(QFile& file);
-	std::optional<ErrorMessage> saveScenario(QFile& file);
+	std::optional<ErrorMessage> saveScenario(const QString& filename);
 
 	QString getScenarioFilename() const { return mScenarioFilename; }
 
@@ -58,4 +60,13 @@ private:
 	QString mScenarioFilename;
 };
 
-void connectJsonScenarioSerializable(ScenarioWorkspace& workspace, JsonScenarioSerializable& serializable);
+template <class SerializableT>
+void connectJsonScenarioSerializable(ScenarioWorkspace& workspace, SerializableT* serializable)
+{
+	static_assert(std::is_base_of<JsonScenarioSerializable, SerializableT>::value, "Type must be a JsonScenarioSerializable");
+	static_assert(std::is_base_of<QObject, SerializableT>::value, "Type must be a QObject");
+
+	QObject::connect(&workspace, &ScenarioWorkspace::scenarioNewed, serializable, [serializable] { serializable->resetScenario(); });
+	QObject::connect(&workspace, &ScenarioWorkspace::scenarioLoaded, serializable, [serializable] (const nlohmann::json& json) { serializable->readScenario(json); });
+	QObject::connect(&workspace, &ScenarioWorkspace::scenarioSaved, serializable, [serializable] (nlohmann::json& json) { serializable->writeScenario(json); });
+}
