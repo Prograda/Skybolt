@@ -80,9 +80,12 @@ osg::ref_ptr<osg::Image> readTexture3dFromSeparateFiles(const std::string& filen
 
 osg::ref_ptr<osg::Texture2D> createSrgbTexture(const osg::ref_ptr<osg::Image>& image)
 {
-	// Set the SRGB format for the image before creating the texture, so that the image format matches the texture.
-	// DDS textures do not display correctly if the image format does not match the texture format.
-	image->setInternalTextureFormat(toSrgbInternalFormat(image->getInternalTextureFormat()));
+	if (image) // since it is valid to create osg::Texture2D with a null image, we handle this case here
+	{
+		// Set the SRGB format for the image before creating the texture, so that the image format matches the texture.
+		// DDS textures do not display correctly if the image format does not match the texture format.
+		image->setInternalTextureFormat(toSrgbInternalFormat(image->getInternalTextureFormat()));
+	}
 
 	osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
 	texture->setFilter(osg::Texture::FilterParameter::MIN_FILTER, osg::Texture::FilterMode::LINEAR_MIPMAP_LINEAR);

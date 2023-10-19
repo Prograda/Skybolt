@@ -8,6 +8,7 @@
 #pragma once
 
 #include "btBulletDynamicsCommon.h"
+#include <memory>
 
 namespace skybolt {
 namespace sim {

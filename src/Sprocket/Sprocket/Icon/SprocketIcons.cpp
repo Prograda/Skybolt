@@ -7,6 +7,8 @@
 #include "SprocketIcons.h"
 #include "IconFactory.h"
 
+#include <stdexcept>
+
 static std::map<SprocketIcon, QIcon> createSprocketIcons()
 {
 	std::map<SprocketIcon, std::string> filenames {
@@ -32,10 +34,7 @@ static std::map<SprocketIcon, QIcon> createSprocketIcons()
 	std::map<SprocketIcon, QIcon> icons;
 	for (const auto& [icon, filename] : filenames)
 	{
-		if (auto i = createIcon(filename); i)
-		{
-			icons[icon] = *i;
-		}
+		icons[icon] = createIcon(filename).value_or(QIcon());
 	}
 	return icons;
 }
