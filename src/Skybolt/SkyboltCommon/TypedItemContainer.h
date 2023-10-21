@@ -50,7 +50,7 @@ class TypedItemContainer
 	typedef std::shared_ptr<BaseT> BaseTPtr;
 
 public:
-	~TypedItemContainer()
+	virtual ~TypedItemContainer()
 	{
 		mComponentMap.clear();
 		// Delete components in reverse order

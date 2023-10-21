@@ -197,8 +197,8 @@ class Property
 {
 public:
 	Property(const std::string& name, const TypePtr& type) :
-		mName(name),
-		mType(type)
+		mType(type),
+		mName(name)
 	{}
 
 	virtual ~Property() = default;
