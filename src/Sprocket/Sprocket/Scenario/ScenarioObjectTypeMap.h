@@ -8,6 +8,9 @@
 
 #include "Sprocket/SprocketFwd.h"
 #include <map>
+#include <memory>
 #include <typeindex>
 
 using ScenarioObjectTypeMap = std::map<std::type_index, ScenarioObjectTypePtr>; //!< Type index is of the class derived from ScenarioObject which this type creates
+
+using ScenarioObjectTypeMapPtr = std::shared_ptr<ScenarioObjectTypeMap>;

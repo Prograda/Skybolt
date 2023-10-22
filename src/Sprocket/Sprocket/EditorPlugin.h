@@ -9,6 +9,7 @@
 #include "Sprocket/JsonScenarioSerializable.h"
 #include "Sprocket/SprocketFwd.h"
 #include "Sprocket/Scenario/ScenarioObject.h"
+#include "Sprocket/Scenario/ScenarioObjectTypeMap.h"
 #include "Sprocket/Property/PropertyEditor.h"
 #include "Sprocket/Property/PropertyModelFactoryMap.h"
 #include "Sprocket/Widgets/ScenarioTreeWidget.h"
@@ -37,6 +38,7 @@ struct EditorPluginConfig
 	skybolt::EngineRoot* engineRoot;
 	skybolt::InputPlatformPtr inputPlatform;
 	ScenarioSelectionModel* selectionModel;
+	ScenarioObjectTypeMapPtr scenarioObjectTypes;
 	skybolt::vis::VisRoot* visRoot;
 	QMainWindow* mainWindow;
 };
@@ -54,8 +56,6 @@ public:
 
 	virtual PropertyEditorWidgetFactoryMap getPropertyEditorWidgetFactories() const { return {}; }
 
-	virtual ScenarioObjectTypeMap getSceneObjectTypes() const { return {}; }
-
 	virtual EntityVisibilityLayerMap getEntityVisibilityLayers() const { return {}; }
 
 	struct ToolWindow
@@ -69,5 +69,4 @@ public:
 
 PropertyModelFactoryMap getPropertyModelFactories(const std::vector<EditorPluginPtr>& plugins, skybolt::EngineRoot* engineRoot);
 PropertyEditorWidgetFactoryMap getPropertyEditorWidgetFactories(const std::vector<EditorPluginPtr>& plugins);
-ScenarioObjectTypeMap getSceneObjectTypes(const std::vector<EditorPluginPtr>& plugins, skybolt::EngineRoot* engineRoot);
 EntityVisibilityLayerMap getEntityVisibilityLayers(const std::vector<EditorPluginPtr>& plugins);

@@ -22,6 +22,7 @@ class DynamicBodyComponent;
 class Entity;
 struct EntityId;
 struct LatLon;
+struct LatLonAlt;
 class MainRotorComponent;
 class Motion;
 class NameComponent;

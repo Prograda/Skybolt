@@ -96,6 +96,10 @@ public:
 
 		mVisRoot = createVisRoot(*engineRoot);
 
+		auto scenarioObjectTypes = std::make_shared<ScenarioObjectTypeMap>();
+		(*scenarioObjectTypes)[typeid(EntityObject)] = createEntityObjectType(&engineRoot->scenario->world, engineRoot->entityFactory.get());
+		(*scenarioObjectTypes)[typeid(ScenarioDescObject)] = createScenarioDescObjectType(engineRoot->scenario.get());
+
 		{
 			EditorPluginConfig config;
 			config.uiController = std::make_shared<UiController>();
@@ -106,15 +110,12 @@ public:
 			config.selectionModel = selectionModel;
 			config.inputPlatform = inputPlatform;
 			config.visRoot = mVisRoot.get();
+			config.scenarioObjectTypes = scenarioObjectTypes;
 			config.mainWindow = mMainWindow.get();
 
 			mEditorPlugins = loadEditorPlugins(editorPluginFactories, config);
 			addToolWindows(*mMainWindow, *scenarioWorkspace, mEditorPlugins);
 		}
-
-		ScenarioObjectTypeMap scenarioObjectTypes = getSceneObjectTypes(mEditorPlugins, engineRoot.get());
-		scenarioObjectTypes[typeid(EntityObject)] = createEntityObjectType(&engineRoot->scenario->world, engineRoot->entityFactory.get());
-		scenarioObjectTypes[typeid(ScenarioDescObject)] = createScenarioDescObjectType(engineRoot->scenario.get());
 
 		{
 			auto widget = new ScenarioPropertyEditorWidget([&] {
@@ -133,7 +134,7 @@ public:
 				ScenarioObjectsEditorWidgetConfig c;
 				c.engineRoot = engineRoot.get();
 				c.selectionModel = selectionModel;
-				c.scenarioObjectTypes = scenarioObjectTypes;
+				c.scenarioObjectTypes = *scenarioObjectTypes;
 				c.contextActions = createContextActions(*engineRoot);
 				c.parent = mMainWindow.get();
 				return c;
@@ -157,7 +158,7 @@ public:
 				c.engineRoot = engineRoot.get();
 				c.visRoot = mVisRoot;
 				c.selectionModel = selectionModel;
-				c.scenarioObjectPicker = createScenarioObjectPicker(scenarioObjectTypes);
+				c.scenarioObjectPicker = createScenarioObjectPicker(*scenarioObjectTypes);
 				c.contextActions = createContextActions(*engineRoot);
 				c.scenarioFilenameGetter = [scenarioWorkspace] { return scenarioWorkspace->getScenarioFilename().toStdString(); };
 				c.parent = mMainWindow.get();

@@ -46,17 +46,6 @@ PropertyEditorWidgetFactoryMap getPropertyEditorWidgetFactories(const std::vecto
 	return factories;
 }
 
-ScenarioObjectTypeMap getSceneObjectTypes(const std::vector<EditorPluginPtr>& plugins, EngineRoot* engineRoot)
-{
-	ScenarioObjectTypeMap objectTypes;
-	for (const EditorPluginPtr& plugin : plugins)
-	{
-		auto types = plugin->getSceneObjectTypes();
-		objectTypes.insert(types.begin(), types.end());
-	}
-	return objectTypes;
-}
-
 EntityVisibilityLayerMap getEntityVisibilityLayers(const std::vector<EditorPluginPtr>& plugins)
 {
 	EntityVisibilityLayerMap r;

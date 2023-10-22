@@ -129,7 +129,7 @@ public:
 			};
 			type->objectRegistry = mSequenceObjectRegistry;
 
-			mScenarioObjectTypes[std::type_index(typeid(SequenceObject))] = type;
+			(*config.scenarioObjectTypes)[std::type_index(typeid(SequenceObject))] = type;
 		}
 
 
@@ -220,11 +220,6 @@ public:
 		return mFactoryMap;
 	}
 
-	ScenarioObjectTypeMap getSceneObjectTypes() const override
-	{
-		return mScenarioObjectTypes;
-	}
-
 	void selectionChanged(const SelectedScenarioObjects& selection)
 	{
 		if (auto sequenceItem = getFirstSelectedScenarioObjectOfType<SequenceObject>(selection))
@@ -241,7 +236,6 @@ public:
 private:
 	UiControllerPtr mUiController;
 	ScenarioObjectRegistryPtr mSequenceObjectRegistry = std::make_shared<ScenarioObjectRegistry>();
-	ScenarioObjectTypeMap mScenarioObjectTypes;
 	ToolWindow mToolWindow;
 	EngineRoot* mEngineRoot;
 	std::vector<boost::signals2::scoped_connection> mConnections;
