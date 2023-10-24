@@ -36,6 +36,7 @@ namespace skybolt {
 namespace vis {
 
 VisRoot::VisRoot(const DisplaySettings& settings) :
+	mDisplaySettings(settings),
 	mViewer(std::make_unique<osgViewer::CompositeViewer>()),
 	mLoadTimingPolicy(LoadTimingPolicy::LoadAcrossMultipleFrames)
 {

@@ -69,6 +69,6 @@ nlohmann::json readOrCreateEngineSettingsFile(QSettings& settings, QWidget* pare
 	}
 
 	// Load file
-	result.update(readJsonFile(settingsFilename.toStdString()));
+	result.update(readJsonFile(settingsFilename.toStdString()), /* merge_objects */ true);
 	return result;
 }

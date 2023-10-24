@@ -31,6 +31,8 @@ StandaloneWindow::StandaloneWindow(const RectI& rect) :
 
 static osg::ref_ptr<osgViewer::View> createStandaloneView(const RectI& rect)
 {
+	// TODO Use the vsync value in skybolt::DisplaySettings to enable/disable vsync by setting the value in graphics traits before creating the context.
+
 	osg::ref_ptr<osgViewer::View> view = new osgViewer::View;
 	view->setUpViewInWindow(rect.x, rect.y, rect.width, rect.height);
 

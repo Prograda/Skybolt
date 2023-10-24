@@ -230,6 +230,11 @@ private:
 template <typename T>
 std::optional<T> getOptionalValue(const std::any& v)
 {
+	if (!v.has_value())
+	{
+		return std::nullopt;
+	}
+
     try
     {
         return std::any_cast<T>(v);

@@ -20,7 +20,8 @@ nlohmann::json createDefaultEngineSettings()
 	},
 	"display": {
 		"multiSampleCount": 4,
-		"texturePoolSizeMB": 512
+		"texturePoolSizeMB": 512,
+		"vsync": true
 	},
 	"mouse": {
 		"sensitivity": 1.0
@@ -56,6 +57,7 @@ vis::DisplaySettings getDisplaySettingsFromEngineSettings(const nlohmann::json& 
 		{
 			s.texturePoolSizeBytes *= 1024 * 1024;
 		}
+		readOptionalToVar(j, "vsync", s.vsync);
 	}
 	return s;
 }

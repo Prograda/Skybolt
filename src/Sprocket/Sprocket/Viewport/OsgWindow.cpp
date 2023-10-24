@@ -15,7 +15,7 @@
 using namespace skybolt;
 using namespace skybolt::vis;
 
-static osg::ref_ptr<osg::GraphicsContext> createGlContextInExistingWindow(int width, int height, HWND hwnd)
+static osg::ref_ptr<osgViewer::View> createView(int width, int height, HWND hwnd, bool vsync)
 {
 	osg::ref_ptr<osg::GraphicsContext::Traits> traits(new osg::GraphicsContext::Traits);
 	traits->x = 0;
@@ -31,18 +31,16 @@ static osg::ref_ptr<osg::GraphicsContext> createGlContextInExistingWindow(int wi
 	traits->doubleBuffer = true;
 	traits->sharedContext = 0x0;
 	traits->inheritedWindowData = new osgViewer::GraphicsWindowWin32::WindowData(hwnd);
+	// FIXME: There's a bug in OSG where vsync is left at OS default when vsync=false, not actually set to false.
+	// See https://github.com/openscenegraph/OpenSceneGraph/blob/master/src/osgViewer/GraphicsWindowWin32.cpp#L1978
+	traits->vsync = vsync;
 
-	return osg::GraphicsContext::createGraphicsContext(traits.get());
-}
+	osg::ref_ptr<osg::GraphicsContext> context = osg::GraphicsContext::createGraphicsContext(traits.get());
+	configureGraphicsState(*context);
 
-static osg::ref_ptr<osgViewer::View> createView(int width, int height, HWND hwnd)
-{
-	auto context = createGlContextInExistingWindow(width, height, hwnd);
 	osg::ref_ptr<osgViewer::View> view = new osgViewer::View;
 	view->getCamera()->setViewport(new osg::Viewport(0, 0, width, height));
 	view->getCamera()->setGraphicsContext(context);
-
-	configureGraphicsState(*context);
 	return view;
 }
 
@@ -83,7 +81,7 @@ OsgWindow::OsgWindow(const VisRootPtr& visRoot) :
 
 	// TODO: we should take the devicePixelRatio() into account
 
-	mWindow = std::make_shared<OsgViewWindow>(createView(width(), height(), HWND(winId())));
+	mWindow = std::make_shared<OsgViewWindow>(createView(width(), height(), HWND(winId()), visRoot->getDisplaySettings().vsync));
 	mVisRoot->addWindow(mWindow);
 
 	mWindow->getGraphicsWindow().useCursor(true);

@@ -38,10 +38,13 @@ public:
 	//! Default is LoadTimingPolicy::LoadAcrossMultipleFrames
 	void setLoadTimingPolicy(LoadTimingPolicy loadTimingPolicy) { mLoadTimingPolicy = loadTimingPolicy; }
 
+	const DisplaySettings& getDisplaySettings() const { return mDisplaySettings; }
+
 protected:
 	std::shared_ptr<osgViewer::CompositeViewer> mViewer;
 
 private:
+	const DisplaySettings mDisplaySettings;
 	std::vector<WindowPtr> mWindows;
 	LoadTimingPolicy mLoadTimingPolicy;
 };
