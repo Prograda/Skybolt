@@ -315,7 +315,7 @@ PYBIND11_MODULE(skybolt, m) {
 
 	py::class_<EntityFactory>(m, "EntityFactory")
 		.def("createEntity", &EntityFactory::createEntity, py::return_value_policy::reference,
-			py::arg("templateName"), py::arg("name") = "", py::arg("position") = math::dvec3Zero(), py::arg("orientation") = math::dquatIdentity());
+			py::arg("templateName"), py::arg("name") = "", py::arg("position") = math::dvec3Zero(), py::arg("orientation") = math::dquatIdentity(), py::arg("id") = sim::nullEntityId());
 
 	py::class_<Scenario>(m, "Scenario")
 		.def_readwrite("startJulianDate", &Scenario::startJulianDate)
