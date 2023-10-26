@@ -135,6 +135,20 @@ skybolt::EntityVisibilityPredicate predicateAnd(const skybolt::EntityVisibilityP
 	};
 }
 
+skybolt::EntityVisibilityPredicate predicateAnd(const std::vector<skybolt::EntityVisibilityPredicate>& v)
+{
+	return [=] (const sim::Entity& entity) {
+		for (const auto& i : v)
+		{
+			if (!i(entity))
+			{
+				return false;
+			}
+		}
+		return true;
+	};
+}
+
 skybolt::EntityVisibilityPredicate predicateOr(const skybolt::EntityVisibilityPredicate& a, const skybolt::EntityVisibilityPredicate& b)
 {
 	return [=] (const sim::Entity& entity) {

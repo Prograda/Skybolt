@@ -35,6 +35,7 @@ skybolt::EntityVisibilityPredicate createSelectedEntityVisibilityPredicate(const
 skybolt::EntityVisibilityPredicate createLineOfSightVisibilityPredicate(QPointer<ViewportWidget> viewportWidget, skybolt::sim::World* world);
 
 skybolt::EntityVisibilityPredicate predicateAnd(const skybolt::EntityVisibilityPredicate& a, const skybolt::EntityVisibilityPredicate& b);
+skybolt::EntityVisibilityPredicate predicateAnd(const std::vector<skybolt::EntityVisibilityPredicate>& v);
 
 skybolt::EntityVisibilityPredicate predicateOr(const skybolt::EntityVisibilityPredicate& a, const skybolt::EntityVisibilityPredicate& b);
 
