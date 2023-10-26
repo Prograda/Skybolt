@@ -29,6 +29,7 @@
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/Node.h>
+#include <SkyboltSim/Components/CloudComponent.h>
 #include <SkyboltSim/Components/OceanComponent.h>
 #include <SkyboltSim/Components/ParticleSystemComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
@@ -439,6 +440,8 @@ static void loadPlanet(Entity* entity, const EntityFactory::Context& context, co
 			const nlohmann::json& clouds = it.value();
 			config.cloudsTexture = context.textureCache->getOrCreateTexture(clouds.at("map"), &createCloudTexture);
 			config.cloudRenderingParams = getCloudRenderingParams(context.engineSettings);
+
+			entity->addComponent(std::make_shared<CloudComponent>());
 		}
 	}
 

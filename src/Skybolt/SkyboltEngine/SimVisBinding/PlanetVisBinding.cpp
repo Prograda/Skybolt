@@ -6,6 +6,7 @@
 
 #include "PlanetVisBinding.h"
 #include <SkyboltSim/Entity.h>
+#include <SkyboltSim/Components/CloudComponent.h>
 #include <SkyboltSim/Components/OceanComponent.h>
 #include <SkyboltVis/Renderable/Planet/Planet.h>
 #include <SkyboltVis/Renderable/Water/WaterMaterial.h>
@@ -30,6 +31,12 @@ void PlanetVisBinding::syncVis(const GeocentricToNedConverter& converter)
 		{
 			material->setWaveHeight(ocean->waveHeight);
 		}
+	}
+
+	if (auto cloud = mEntity->getFirstComponent<sim::CloudComponent>(); cloud)
+	{
+		visPlanet->setCloudsVisible(cloud->cloudsVisible);
+		visPlanet->setCloudCoverageFraction(cloud->cloudCoverageFraction);
 	}
 }
 
