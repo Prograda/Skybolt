@@ -119,12 +119,12 @@ protected:
 		{
 			case QEvent::KeyPress:
 			{
+				auto keyEvent = static_cast<QKeyEvent*>(event);
+				KeyCode code = qtToSkyboltKeyCode(Qt::Key(keyEvent->key()), keyEvent->modifiers());
+				mKeyboard->pressedKeys.insert(code);
+
 				if (mKeyboard->enabled)
 				{
-					auto keyEvent = static_cast<QKeyEvent*>(event);
-					KeyCode code = qtToSkyboltKeyCode(Qt::Key(keyEvent->key()), keyEvent->modifiers());
-					mKeyboard->pressedKeys.insert(code);
-
 					KeyEvent event(KeyEvent::Type::Pressed, code);
 					mEmitter->emitEvent(event);
 					return true;
@@ -133,12 +133,12 @@ protected:
 			}
 			case QEvent::KeyRelease:
 			{
+				auto keyEvent = static_cast<QKeyEvent*>(event);
+				KeyCode code = qtToSkyboltKeyCode(Qt::Key(keyEvent->key()), keyEvent->modifiers());
+				mKeyboard->pressedKeys.erase(code);
+
 				if (mKeyboard->enabled)
 				{
-					auto keyEvent = static_cast<QKeyEvent*>(event);
-					KeyCode code = qtToSkyboltKeyCode(Qt::Key(keyEvent->key()), keyEvent->modifiers());
-					mKeyboard->pressedKeys.erase(code);
-
 					KeyEvent event(KeyEvent::Type::Released, code);
 					mEmitter->emitEvent(event);
 					return true;
@@ -147,11 +147,11 @@ protected:
 			}
 			case QEvent::MouseButtonPress:
 			{
+				auto mouseEvent = static_cast<QMouseEvent*>(event);
+				mMouse->pressedButtons.insert((MouseEvent::ButtonId)mouseEvent->button());
+
 				if (mMouse->enabled)
 				{
-					auto mouseEvent = static_cast<QMouseEvent*>(event);
-					mMouse->pressedButtons.insert((MouseEvent::ButtonId)mouseEvent->button());
-
 					mMouse->prevMousePosX = mouseEvent->pos().x();
 					mMouse->prevMousePosY = mouseEvent->pos().y();
 
@@ -171,11 +171,11 @@ protected:
 			}
 			case QEvent::MouseButtonRelease:
 			{
+				auto mouseEvent = static_cast<QMouseEvent*>(event);
+				mMouse->pressedButtons.erase((MouseEvent::ButtonId)mouseEvent->button());
+
 				if (mMouse->enabled)
 				{
-					auto mouseEvent = static_cast<QMouseEvent*>(event);
-					mMouse->pressedButtons.erase((MouseEvent::ButtonId)mouseEvent->button());
-
 					MouseEvent event;
 					event.type = MouseEvent::Type::Released;
 					event.buttonId = (MouseEvent::ButtonId)mouseEvent->button();
