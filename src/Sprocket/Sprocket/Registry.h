@@ -39,7 +39,7 @@ public:
 			
 		assert(it != mItems.end());
 
-		std::string name = item->getName();
+		std::string name = item->getUniqueName();
 
 		CALL_LISTENERS(itemAboutToBeRemoved(*it));
 		mItems.erase(it);
@@ -52,7 +52,7 @@ public:
 		std::vector<std::string> names;
 		for (const ItemPtr& item : mItems)
 		{
-			names.push_back(item->getName());
+			names.push_back(item->getUniqueName());
 			CALL_LISTENERS(itemAboutToBeRemoved(item));
 		}
 		mItems.clear();
@@ -67,7 +67,7 @@ public:
 	{
 		for (const ItemPtr& item : mItems)
 		{
-			if (item->getName() == name)
+			if (item->getUniqueName() == name)
 			{
 				return item;
 			}

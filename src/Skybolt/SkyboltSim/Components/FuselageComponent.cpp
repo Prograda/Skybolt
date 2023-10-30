@@ -86,12 +86,13 @@ void FuselageComponent::updatePreDynamicsSubstep()
 	mBody->applyCentralForce(orientation * lift);
 
 	// apply moments
-	const float maxEffVelSqForMoments = 100.0f * 100.0f; // TODO: unhack
-	float velSqLengthEff = (speed*speed < maxEffVelSqForMoments) ? speed : maxEffVelSqForMoments;
+	const float maxEffectiveSpeedForMoments = 100.0f;
+	float speedForMoments = std::min(float(speed), maxEffectiveSpeedForMoments);
+	float speedForMomentsSq = speedForMoments * speedForMoments;
 
 	const Vector3 localAngularVelocity = glm::inverse(orientation) * mMotion->angularVelocity;
 
-	const Vector3 moment = calcMoment(localAngularVelocity, sin(mAngleOfAttack), sin(mSideSlipAngle), velSqLengthEff, airDensity);
+	const Vector3 moment = calcMoment(localAngularVelocity, sin(mAngleOfAttack), sin(mSideSlipAngle), speedForMomentsSq, airDensity);
 
 	mBody->applyTorque(orientation * moment * (double)mParams.momentMultiplier);
 }
@@ -123,8 +124,8 @@ Vector3 FuselageComponent::calcMoment(const Vector3 &angularVelocity, float angl
 	// Control inputs
 	if (mStickInput)
 	{
-		moment.x += mParams.rollDueToAileron * mStickInput->value.y * velSqLength;
-		moment.y += mParams.pitchDueToElevator * mStickInput->value.x * velSqLength;
+		moment.x += mParams.rollDueToAileron * mStickInput->value.x * velSqLength;
+		moment.y += mParams.pitchDueToElevator * mStickInput->value.y * velSqLength;
 	}
 
 	if (mRudderInput)
