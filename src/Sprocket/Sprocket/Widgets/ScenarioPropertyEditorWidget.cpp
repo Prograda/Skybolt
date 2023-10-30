@@ -7,7 +7,7 @@
 #include "ScenarioPropertyEditorWidget.h"
 #include "Sprocket/QtUtil/QtScrollAreaUtil.h"
 #include "Sprocket/QtUtil/QtTimerUtil.h"
-#include "Sprocket/Widgets/TreeItems.h"
+#include "Sprocket/Widgets/TreeItemModel.h"
 
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltSim/World.h>

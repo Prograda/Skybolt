@@ -6,7 +6,7 @@
 
 #include "ScenarioTreeWidget.h"
 #include "Registry.h"
-#include "TreeItems.h"
+#include "TreeItemModel.h"
 #include "Icon/SprocketIcons.h"
 #include "QtUtil/QtTimerUtil.h"
 #include "Scenario/EntityObjectType.h"
@@ -51,7 +51,7 @@ private:
 struct ScenarioObjectTreeItem : public SimpleTreeItem
 {
 	ScenarioObjectTreeItem(const ScenarioObjectPtr& object) :
-		SimpleTreeItem(QString::fromStdString(object->getName()), object->getIcon()),
+		SimpleTreeItem(QString::fromStdString(object->getDisplayName()), object->getIcon()),
 		object(object)
 	{}
 
@@ -125,6 +125,7 @@ ScenarioTreeWidget::ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config) :
 
 	createAndStartIntervalTimer(100, this, [this] {
 		updateTreeItemParents();
+		updateItemDisplayNames();
 	});
 }
 
@@ -213,7 +214,7 @@ TreeItemPtr ScenarioTreeWidget::getParent(const ScenarioObject& object)
 	TreeItemPtr parent = mRootItem;
 	for (const std::string& folder : directory)
 	{
-		TreeItemPtr child = mModel->findChildByName(*parent, folder);
+		TreeItemPtr child = mModel->findChildByLabel(*parent, QString::fromStdString(folder));
 
 		if (!child)
 		{
@@ -243,6 +244,18 @@ void ScenarioTreeWidget::updateTreeItemParents()
 	}
 
 	setCurrentSelection(selection); // Selection can change after removing item, so we need to restore it here.
+}
+
+void ScenarioTreeWidget::updateItemDisplayNames()
+{
+	for (const auto& [object, item] : mItemsMap)
+	{
+		const QString& displayName = QString::fromStdString(object->getDisplayName());
+		if (item->getLabel() != displayName)
+		{
+			item->setLabel(displayName);
+		}
+	}
 }
 
 ScenarioObjectPtr ScenarioTreeWidget::findScenarioObject(const TreeItem& item) const

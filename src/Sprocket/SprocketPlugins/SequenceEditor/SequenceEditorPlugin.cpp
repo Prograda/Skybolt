@@ -59,7 +59,7 @@ static nlohmann::json writeSequences(const Registry<ScenarioObject>& registry)
 	nlohmann::json json;
 	for (const auto& item : registry.getItems())
 	{
-		json[item->getName()] = writeSequenceController(*toSequenceController(*dynamic_cast<SequenceObject*>(item.get())));
+		json[item->getUniqueName()] = writeSequenceController(*toSequenceController(*dynamic_cast<SequenceObject*>(item.get())));
 	}
 	return json;
 }

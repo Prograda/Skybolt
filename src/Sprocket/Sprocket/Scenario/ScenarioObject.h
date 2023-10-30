@@ -25,7 +25,8 @@ class ScenarioObject
 public:
 	virtual ~ScenarioObject() = default;
 
-	virtual std::string getName() const = 0;
+	virtual std::string getUniqueName() const = 0;
+	virtual std::string getDisplayName() const = 0;
 	virtual const QIcon& getIcon() const = 0;
 
 	virtual const skybolt::ScenarioObjectPath& getDirectory() const
@@ -51,7 +52,8 @@ public:
 
 	~ScenarioObjectT() override = default;
 
-	std::string getName() const override { return name; }
+	std::string getUniqueName() const override { return name; }
+	std::string getDisplayName() const override { return name; }
 	const QIcon& getIcon() const override { return icon; }
 
 	const skybolt::ScenarioObjectPath& getDirectory() const override { return mDirectory; }

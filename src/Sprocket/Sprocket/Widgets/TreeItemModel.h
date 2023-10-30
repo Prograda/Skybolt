@@ -13,23 +13,39 @@
 #include <QAbstractItemModel>
 #include <QIcon>
 
-class TreeItem
+class TreeItem : public QObject
 {
+	Q_OBJECT
 	friend class TreeItemModel;
 public:
 	TreeItem(const QIcon& icon) : mIcon(icon) {}
 	virtual ~TreeItem() {}
 
 	virtual const QString& getLabel() const = 0;
+	virtual void setLabel(const QString& label) = 0;
+
 	virtual const QIcon& getIcon() const { return mIcon; }
 
-	//! Registry item interface
-	std::string getName() { return getLabel().toStdString(); }
+public:
+	Q_SIGNAL void labelChanged(const QString& newLabel);
 
 private:
 	std::vector<TreeItemPtr> mChildren;
 	TreeItem* mParent = nullptr;
 	QIcon mIcon;
+};
+
+class SimpleTreeItem : public TreeItem
+{
+public:
+	SimpleTreeItem(const QString& label, const QIcon& icon) : TreeItem(icon), mLabel(label) {}
+	~SimpleTreeItem() override = default;
+
+	const QString& getLabel() const override { return mLabel; }
+	void setLabel(const QString& label) override;
+
+private:
+	QString mLabel;
 };
 
 class TreeItemModel : public QAbstractItemModel
@@ -48,7 +64,7 @@ public:
 	void removeChild(TreeItem& item, const TreeItem& child);
 	void clearChildren(TreeItem& item);
 	const std::vector<TreeItemPtr>& getChildren(TreeItem& item) const;
-	TreeItemPtr findChildByName(const TreeItem& item, const std::string& name) const; //!< @returns nullptr if not found
+	TreeItemPtr findChildByLabel(const TreeItem& item, const QString& label) const; //!< @returns nullptr if not found
 
 	void removeItem(TreeItem& item);
 

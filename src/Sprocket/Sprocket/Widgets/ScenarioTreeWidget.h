@@ -52,6 +52,7 @@ private:
 
 	TreeItemPtr getParent(const ScenarioObject& object); //!< Never returns null
 	void updateTreeItemParents();
+	void updateItemDisplayNames();
 
 	std::vector<TreeItem*> getCurrentSelection() const;
 	void setCurrentSelection(const std::vector<TreeItem*>& items);

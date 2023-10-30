@@ -9,6 +9,12 @@
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <QAbstractItemModel>
 
+void SimpleTreeItem::setLabel(const QString& label)
+{
+	mLabel = label;
+	Q_EMIT labelChanged(label);
+}
+
 TreeItemModel::TreeItemModel(const TreeItemPtr& root, QObject *parent)
 	: QAbstractItemModel(parent),
 	mRootItem(root)
@@ -39,6 +45,10 @@ void TreeItemModel::insertChildren(TreeItem& item, int position, const std::vect
 	for (const TreeItemPtr& child : children)
 	{
 		mItems.insert(child);
+		connect(child.get(), &TreeItem::labelChanged, this, [this, child] {
+			QModelIndex childIndex = index(child.get());
+			dataChanged(childIndex, childIndex, { Qt::DisplayRole });
+		});
 	}
 
 	beginInsertRows(index(&item), position, position + (int)children.size() - 1);
@@ -64,6 +74,8 @@ void TreeItemModel::removeChildren(TreeItem& item, int position, int count)
 		TreeItemPtr child = item.mChildren[i];
 		child->mParent = nullptr;
 		mItems.erase(child);
+
+		disconnect(child.get(), nullptr, nullptr, nullptr);
 	}
 
 	item.mChildren.erase(item.mChildren.begin() + position, item.mChildren.begin() + position + count);
@@ -88,12 +100,12 @@ const std::vector<TreeItemPtr>& TreeItemModel::getChildren(TreeItem& item) const
 	return item.mChildren;
 }
 
-TreeItemPtr TreeItemModel::findChildByName(const TreeItem& item, const std::string& name) const
+TreeItemPtr TreeItemModel::findChildByLabel(const TreeItem& item, const QString& label) const
 {
 	const std::vector<TreeItemPtr>& children = item.mChildren;
 	for (const auto& child : children)
 	{
-		if (child->getName() == name)
+		if (child->getLabel() == label)
 		{
 			return child;
 		}
