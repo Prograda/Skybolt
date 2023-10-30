@@ -258,6 +258,131 @@ protected:
 				}
 				break;
 			}
+			case QEvent::TouchBegin: {
+				if (mMouse->enabled)
+				{
+					auto touchEvent = dynamic_cast<QTouchEvent*>(event);
+					QList<QTouchEvent::TouchPoint> points = touchEvent->touchPoints();
+
+					if (points.empty())
+						break;
+					QTouchEvent::TouchPoint point = points[0];
+
+					mMouse->pressedButtons.insert((MouseEvent::ButtonId)Qt::LeftButton);
+
+					mMouse->prevMousePosX = point.pos().x();
+					mMouse->prevMousePosY = point.pos().y();
+
+					MouseEvent event;
+					event.type = MouseEvent::Type::Pressed;
+					event.buttonId = (MouseEvent::ButtonId)Qt::LeftButton;
+					event.absState.x = point.pos().x();
+					event.absState.y = point.pos().y();
+					event.absState.z = 0;
+					event.relState.x = 0;
+					event.relState.y = 0;
+					event.relState.z = 0;
+					mEmitter->emitEvent(event);
+					return true;
+				}
+				break;
+			}
+			case QEvent::TouchEnd: {
+				if (mMouse->enabled)
+				{
+					auto touchEvent = dynamic_cast<QTouchEvent*>(event);
+					QList<QTouchEvent::TouchPoint> points = touchEvent->touchPoints();
+					if (points.empty())
+						break;
+					QTouchEvent::TouchPoint point = points[0];
+
+					mMouse->pressedButtons.insert((MouseEvent::ButtonId)Qt::LeftButton);
+
+					mMouse->prevMousePosX = point.pos().x();
+					mMouse->prevMousePosY = point.pos().y();
+
+					MouseEvent event;
+					event.type = MouseEvent::Type::Released;
+					event.buttonId = (MouseEvent::ButtonId)Qt::LeftButton;
+					event.absState.x = point.pos().x();
+					event.absState.y = point.pos().y();
+					event.absState.z = 0;
+					event.relState.x = 0;
+					event.relState.y = 0;
+					event.relState.z = 0;
+					mEmitter->emitEvent(event);
+					return true;
+				}
+				break;
+			}
+
+			case QEvent::TouchUpdate: {
+				if (mMouse->enabled)
+				{
+					auto touchEvent = dynamic_cast<QTouchEvent*>(event);
+					QList<QTouchEvent::TouchPoint> points = touchEvent->touchPoints();
+					if (points.empty())
+						break;
+
+					if (points.size() == 1)
+					{
+						QTouchEvent::TouchPoint point = points[0];
+
+						// Calculate relative mouse movement
+						if (!mMouse->prevMousePosX)
+						{
+							mMouse->prevMousePosX = point.pos().x();
+							mMouse->prevMousePosY = point.pos().y();
+						}
+
+						QSize wrapDimensionsSize = QApplication::desktop()->size();
+						QPoint wrapDimensions = QPoint(wrapDimensionsSize.width() - wrapMargin * 2, wrapDimensionsSize.height() - wrapMargin * 2);
+
+						int relX = calcWrappedDifference(*mMouse->prevMousePosX, point.pos().x(), wrapDimensions.x());
+						int relY = calcWrappedDifference(*mMouse->prevMousePosY, point.pos().y(), wrapDimensions.y());
+
+						mMouse->prevMousePosX = point.pos().x();
+						mMouse->prevMousePosY = point.pos().y();
+
+						MouseEvent event;
+						event.type = MouseEvent::Type::Moved;
+						event.buttonId = (MouseEvent::ButtonId)Qt::LeftButton;
+						event.absState.x = point.pos().x();
+						event.absState.y = point.pos().y();
+						event.absState.z = 0;
+						event.relState.x = relX;
+						event.relState.y = relY;
+						event.relState.z = 0;
+						mEmitter->emitEvent(event);
+						return true;
+					}
+					else // multi touch zoom
+					{
+						double prevLength = (points[1].lastPos() - points[0].lastPos()).manhattanLength();
+						double newLength = (points[1].pos() - points[0].pos()).manhattanLength();
+
+						double wheelAngle = (newLength - prevLength);
+
+						if (mMouse->enabled)
+						{
+							auto wheelEvent = static_cast<QWheelEvent*>(event);
+
+							MouseEvent event;
+							event.type = MouseEvent::Type::Moved;
+							event.buttonId = MouseEvent::ButtonId::Left;
+							event.absState.x = 0;
+							event.absState.y = 0;
+							event.absState.z = 0;
+							event.relState.x = 0;
+							event.relState.y = 0;
+							event.relState.z = wheelAngle;
+							mEmitter->emitEvent(event);
+							return true;
+						}
+					}
+				}
+				break;
+			}
 		}
 		return false;
 	}

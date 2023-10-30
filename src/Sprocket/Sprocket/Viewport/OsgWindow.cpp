@@ -132,6 +132,40 @@ bool OsgWindow::event(QEvent* event)
         }
         break;
     }
+	case QEvent::TouchBegin: {
+		auto touchEvent = dynamic_cast<QTouchEvent*>(event);
+		QList<QTouchEvent::TouchPoint> points = touchEvent->touchPoints();
+		if (!points.empty())
+		{
+			QTouchEvent::TouchPoint point = points[0];
+			emit mousePressed(point.pos(), Qt::LeftButton, Qt::KeyboardModifiers());
+		}
+		event->accept();
+		break;
+	}
+	case QEvent::TouchEnd: {
+		auto touchEvent = dynamic_cast<QTouchEvent*>(event);
+		QList<QTouchEvent::TouchPoint> points = touchEvent->touchPoints();
+		if (!points.empty())
+		{
+			QTouchEvent::TouchPoint point = points[0];
+			emit mouseReleased(point.pos(), Qt::LeftButton);
+		}
+		event->accept();
+		break;
+	}
+
+	case QEvent::TouchUpdate: {
+		auto touchEvent = dynamic_cast<QTouchEvent*>(event);
+		QList<QTouchEvent::TouchPoint> points = touchEvent->touchPoints();
+		if (!points.empty())
+		{
+			QTouchEvent::TouchPoint point = points[0];
+			emit mouseMoved(point.pos(), Qt::LeftButton);
+		}
+		event->accept();
+		break;
+	}
 
     default:
         break;
