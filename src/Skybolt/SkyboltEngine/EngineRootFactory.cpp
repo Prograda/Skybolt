@@ -39,21 +39,23 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const boost::program_optio
 
 const std::string skyboltCacheDirEnvironmentVariable = "SKYBOLT_CACHE_DIR";
 
+static file::Path getDefaultCacheDir()
+{
+	return file::getAppUserDataDirectory("Skybolt") / "Cache";
+}
+
 static file::Path getCacheDir()
 {
 	if (const char* dir = std::getenv(skyboltCacheDirEnvironmentVariable.c_str()); dir)
 	{
 		file::Path path(dir);
-		if (!std::filesystem::exists(path))
+		if (std::filesystem::exists(path))
 		{
-			BOOST_LOG_TRIVIAL(error) << "Environment variable '" << skyboltCacheDirEnvironmentVariable << "' not set to a valid path. Falling back to default.";
+			return dir;
 		}
-		return dir;
+		BOOST_LOG_TRIVIAL(error) << "Environment variable '" << skyboltCacheDirEnvironmentVariable << "' not set to a valid path. Using default location: " << getDefaultCacheDir().string();
 	}
-	else
-	{
-		return (file::getAppUserDataDirectory("Skybolt") / "Cache");
-	}
+	return getDefaultCacheDir();
 }
 
 std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFactory>& pluginFactories, const json& settings)
