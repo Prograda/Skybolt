@@ -41,8 +41,9 @@ protected:
 	virtual bool shouldDisplayItem(const ScenarioObject& object) const;
 
 private:
-	void addObjects(const std::type_index& sceneObjectType, const std::set<ScenarioObjectPtr>& objects);
-	void removeObjects(const std::type_index& sceneObjectType, const std::set<ScenarioObjectPtr>& objects);
+	void addOrRemoveObjects();
+	void addObjects(const std::set<ScenarioObjectPtr>& objects);
+	void removeObjects(const std::set<ScenarioObjectPtr>& objects);
 
 	ScenarioObjectPtr findScenarioObject(const TreeItem& item) const; //!< Returns nullptr if item has no scenario object
 	ActionContext toActionContext(const skybolt::sim::World& world, const TreeItem& item) const;
@@ -65,7 +66,6 @@ private:
 	ScenarioObjectTypeMap mScenarioObjectTypes;
 	TreeItemModel* mModel;
 	QTreeView* mView;
-	std::map<ScenarioObjectRegistryPtr, std::unique_ptr<struct ScenarioObjectRegistryListener>> mRegistryListeners;
 
 	TreeItemPtr mRootItem;
 	std::map<ScenarioObjectPtr, std::shared_ptr<ScenarioObjectTreeItem>> mItemsMap;

@@ -23,31 +23,6 @@
 using namespace skybolt;
 using namespace skybolt::sim;
 
-struct ScenarioObjectRegistryListener : public RegistryListener<ScenarioObject>
-{
-	ScenarioObjectRegistryListener(ScenarioTreeWidget* scenarioTreeWidget, const std::type_index& sceneObjectType, const ScenarioObjectRegistryPtr& registry) :
-		mScenarioTreeWidget(scenarioTreeWidget),
-		mSceneObjectType(sceneObjectType),
-		mRegistry(registry)
-	{
-	}
-
-	void itemAdded(const ScenarioObjectPtr& object) override
-	{
-		mScenarioTreeWidget->addObjects(mSceneObjectType, {object});
-	}
-
-	void itemAboutToBeRemoved(const ScenarioObjectPtr& object) override
-	{
-		mScenarioTreeWidget->removeObjects(mSceneObjectType, {object});
-	}
-
-private:
-	ScenarioTreeWidget* mScenarioTreeWidget;
-	std::type_index mSceneObjectType;
-	ScenarioObjectRegistryPtr mRegistry;
-};
-
 struct ScenarioObjectTreeItem : public SimpleTreeItem
 {
 	ScenarioObjectTreeItem(const ScenarioObjectPtr& object) :
@@ -112,53 +87,74 @@ ScenarioTreeWidget::ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config) :
 		selectionModel->setSelectedItems(objects);
 	});
 
-	for (const auto& [id, type] : config.scenarioObjectTypes)
-	{
-		addObjects(id, type->objectRegistry->getItems());
-
-		auto listener = std::make_unique<ScenarioObjectRegistryListener>(this, id, type->objectRegistry);
-		type->objectRegistry->addListener(listener.get());
-		mRegistryListeners[type->objectRegistry] = std::move(listener);
-	}
+	addOrRemoveObjects();
+	updateTreeItemParents();
 
 	mView->expandAll();
 
 	createAndStartIntervalTimer(100, this, [this] {
+		addOrRemoveObjects();
 		updateTreeItemParents();
 		updateItemDisplayNames();
 	});
 }
 
-ScenarioTreeWidget::~ScenarioTreeWidget()
-{
-	for (const auto& [registry, listener] : mRegistryListeners)
-	{
-		registry->removeListener(listener.get());
-	}
-}
+ScenarioTreeWidget::~ScenarioTreeWidget() = default;
 
 bool ScenarioTreeWidget::shouldDisplayItem(const ScenarioObject& object) const
 {
 	return true;
 }
 
-void ScenarioTreeWidget::addObjects(const std::type_index& sceneObjectType, const std::set<ScenarioObjectPtr>& objects)
+void ScenarioTreeWidget::addOrRemoveObjects()
+{
+	std::set<ScenarioObjectPtr> objectsToAdd;
+	std::set<ScenarioObjectPtr> objectsToRemove;
+	{
+		// Make a set of all the items to display in the widget, and add any new items to objectsToAdd
+		std::set<ScenarioObjectPtr> includeObjects;
+		for (const auto& [id, type] : mScenarioObjectTypes)
+		{
+			for (const ScenarioObjectPtr& object : type->objectRegistry->getItems())
+			{
+				if (shouldDisplayItem(*object))
+				{
+					includeObjects.insert(object);
+					if (mItemsMap.find(object) == mItemsMap.end())
+					{
+						objectsToAdd.insert(object);
+					}
+				}
+			}
+		}
+
+		// Make a set of objects to remove from the widget
+		for (const auto& [object, treeitem] : mItemsMap)
+		{
+			if (includeObjects.find(object) == includeObjects.end())
+			{
+				objectsToRemove.insert(object);
+			}
+		}
+	}
+
+	removeObjects(objectsToRemove);
+	addObjects(objectsToAdd);
+}
+
+void ScenarioTreeWidget::addObjects(const std::set<ScenarioObjectPtr>& objects)
 {
 	std::vector<TreeItemPtr> children;
 	for (const auto& object : objects)
 	{
-		if (shouldDisplayItem(*object))
-		{
-			auto item = std::make_shared<ScenarioObjectTreeItem>(object);
-			mItemsMap[object] = item;
-			children.push_back(item);
-		}
+		auto item = std::make_shared<ScenarioObjectTreeItem>(object);
+		mItemsMap[object] = item;
+		children.push_back(item);
 	}
 	mModel->addChildren(*mRootItem, children);
-	updateTreeItemParents();
 }
 
-void ScenarioTreeWidget::removeObjects(const std::type_index& sceneObjectType, const std::set<ScenarioObjectPtr>& objects)
+void ScenarioTreeWidget::removeObjects(const std::set<ScenarioObjectPtr>& objects)
 {
 	for (const auto& object : objects)
 	{
@@ -168,7 +164,6 @@ void ScenarioTreeWidget::removeObjects(const std::type_index& sceneObjectType, c
 			mItemsMap.erase(i);
 		}
 	}
-	updateTreeItemParents();
 }
 
 std::vector<TreeItem*> ScenarioTreeWidget::getCurrentSelection() const

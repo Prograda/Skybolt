@@ -45,7 +45,10 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 		QtPropertyPtr nameProperty = createQtProperty(QLatin1String("name"), QString());
 		nameProperty->setEnabled(false);
 		addProperty(nameProperty, [this](QtProperty& property) {
-			property.setValue(QString::fromStdString(getName(*mEntity)));
+			if (mEntity)
+			{
+				property.setValue(QString::fromStdString(getName(*mEntity)));
+			}
 		});
 
 		for (const sim::ComponentPtr& component : mEntity->getComponents())
@@ -60,11 +63,17 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 		addProperty(createQtProperty("dynamicsEnabled", false),
 			// Updater
 			[this](QtProperty& property) {
-				property.setValue(mEntity->isDynamicsEnabled());
+				if (mEntity)
+				{
+					property.setValue(mEntity->isDynamicsEnabled());
+				}
 			},
 			// Applier
 			[this](const QtProperty& property) {
-				mEntity->setDynamicsEnabled(property.value.toBool());
+				if (mEntity)
+				{
+					mEntity->setDynamicsEnabled(property.value.toBool());
+				}
 			}
 		);
 	}
