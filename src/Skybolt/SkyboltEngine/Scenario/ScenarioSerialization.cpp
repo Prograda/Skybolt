@@ -19,6 +19,7 @@ void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, EntityFa
 {
 	scenario.startJulianDate = json.at("julianDate");
 	scenario.timeSource.setRange(TimeRange(0, json.at("duration")));
+	scenario.timeSource.setTime(0);
 
 	ifChildExists(json, "entities", [&] (const nlohmann::json& child) {
 		readEntities(typeRegistry, scenario.world, entityFactory, child);
