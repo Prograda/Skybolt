@@ -45,7 +45,7 @@ public:
 		float angle = startAngle;
 		float angleDelta = angleRange / (float)segmentCount;
 		glm::vec2 p = center + radius * glm::vec2(cos(angle), sin(angle));
-		for (int i = 1; i < segmentCount; ++i)
+		for (int i = 1; i <= segmentCount; ++i)
 		{
 			angle += angleDelta;
 			glm::vec2 p2 = center + radius * glm::vec2(cos(angle), sin(angle));
