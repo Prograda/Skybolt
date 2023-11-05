@@ -75,12 +75,12 @@ std::optional<std::ptrdiff_t> Type::getOffsetFromThisToSuper(const std::type_ind
 
 std::vector<RegistrationHandler> globalHandlers;
 
-void addDeferredRegistrationHandler(RegistrationHandler handler)
+void addStaticRegistrationHandler(RegistrationHandler handler)
 {
 	globalHandlers.emplace_back(std::move(handler));
 }
 
-void registerDeferredTypes(TypeRegistry& registry)
+void addStaticallyRegisteredTypes(TypeRegistry& registry)
 {
 	std::vector<TypeDefinitionRegistrationHandler> typeDefinitionRegistrationHandlers;
 	TypeRegistryBuilder builder(registry, [&] (TypeDefinitionRegistrationHandler registry) {
@@ -103,7 +103,7 @@ void registerDeferredTypes(TypeRegistry& registry)
 
 TypeRegistry::TypeRegistry()
 {
-	registerDeferredTypes(*this);
+	addStaticallyRegisteredTypes(*this);
 }
 
 void TypeRegistry::addType(const TypePtr& type)

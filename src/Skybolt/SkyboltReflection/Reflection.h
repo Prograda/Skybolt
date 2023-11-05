@@ -452,11 +452,12 @@ private:
 
 using RegistrationHandler = std::function<void(TypeRegistryBuilder&)>;
 
-void addDeferredRegistrationHandler(RegistrationHandler handler);
+void addStaticRegistrationHandler(RegistrationHandler handler);
+void addStaticallyRegisteredTypes(TypeRegistry& registry);
 
 #define SKYBOLT_REFLECT_BEGIN(cls)                                     \
 	const int auto_register__##cls = []() {                            \
-		skybolt::refl::addDeferredRegistrationHandler([] (skybolt::refl::TypeRegistryBuilder& registry)
+		skybolt::refl::addStaticRegistrationHandler([] (skybolt::refl::TypeRegistryBuilder& registry)
 
 #define SKYBOLT_REFLECT_END    \
 		);                     \
