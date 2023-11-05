@@ -46,7 +46,7 @@ public:
 
 	Q_SLOT void update();
 
-	std::optional<PickedScenarioObject> pickSceneObjectAtPointInWindow(const QPointF& position, const ScenarioObjectPredicate& predicate = &ScenarioObjectPredicateAlways) const;
+	std::vector<PickedScenarioObject> pickSceneObjectsAtPointInWindow(const QPointF& position, const ScenarioObjectPredicate& predicate = &ScenarioObjectPredicateAlways) const;
 	std::optional<skybolt::sim::Vector3> pickPointOnPlanetAtPointInWindow(const QPointF& position) const;
 
 	//! handlers with lower priority numbers will be executed first

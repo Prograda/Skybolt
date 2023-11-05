@@ -70,8 +70,8 @@ bool DefaultViewportMouseEventHandler::mouseReleased(ViewportWidget& widget, con
 	{
 		sim::EntityId selectedEntityId = sim::nullEntityId();
 			
-		std::optional<PickedScenarioObject> pickedObject = widget.pickSceneObjectAtPointInWindow(position, mSelectionPredicate);
-		selectItems(pickedObject ? SelectedScenarioObjects({pickedObject->object}) : SelectedScenarioObjects());
+		std::vector<PickedScenarioObject> pickedObjects = widget.pickSceneObjectsAtPointInWindow(position, mSelectionPredicate);
+		selectItems(!pickedObjects.empty() ? SelectedScenarioObjects({pickedObjects.front().object}) : SelectedScenarioObjects());
 		return true;
 	}
 	return false;

@@ -185,7 +185,7 @@ void ViewportWidget::captureImage(const std::filesystem::path& baseFilename)
 	mOsgWidget->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
 }
 
-std::optional<PickedScenarioObject> ViewportWidget::pickSceneObjectAtPointInWindow(const QPointF& position, const ScenarioObjectPredicate& predicate) const
+std::vector<PickedScenarioObject> ViewportWidget::pickSceneObjectsAtPointInWindow(const QPointF& position, const ScenarioObjectPredicate& predicate) const
 {
 	if (mCurrentSimCamera)
 	{
@@ -194,7 +194,7 @@ std::optional<PickedScenarioObject> ViewportWidget::pickSceneObjectAtPointInWind
 		glm::dmat4 transform = calcCurrentViewProjTransform();
 		return mScenarioObjectPicker(camPosition, transform, pointNdc, predicate);
 	}
-	return std::nullopt;
+	return {};
 }
 
 std::optional<sim::Vector3> ViewportWidget::pickPointOnPlanetAtPointInWindow(const QPointF& position) const
@@ -228,7 +228,9 @@ void ViewportWidget::removeMouseEventHandler(const ViewportMouseEventHandler& ha
 
 void ViewportWidget::showContextMenu(const QPoint& point)
 {
-	QMenu contextMenu(tr("Context menu"), this);
+	auto menu = new QMenu(tr("Context menu"), this);
+	menu->setAttribute(Qt::WA_DeleteOnClose);
+
 	if (auto intersection = pickPointOnPlanetAtPointInWindow(point); intersection)
 	{
 		sim::Entity* selectedEntity = nullptr;
@@ -247,13 +249,17 @@ void ViewportWidget::showContextMenu(const QPoint& point)
 			if (contextAction->handles(context))
 			{
 				auto action = new QAction(QString::fromStdString(contextAction->getName()), this);
-				connect(action, &QAction::triggered, this, [&] { contextAction->execute(context); });
-				contextMenu.addAction(action);
+				connect(action, &QAction::triggered, this, [contextAction, context] () mutable { contextAction->execute(context); });
+				menu->addAction(action);
 			}
 		}
-		if (!contextMenu.actions().empty())
+		if (!menu->actions().empty())
 		{
-			contextMenu.exec(mOsgWidget->mapToGlobal(point));
+			menu->popup(mOsgWidget->mapToGlobal(point));
+		}
+		else
+		{
+			menu->deleteLater();
 		}
 	}
 }
