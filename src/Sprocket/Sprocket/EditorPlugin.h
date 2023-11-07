@@ -33,6 +33,9 @@ using UiControllerPtr = std::shared_ptr<UiController>;
 
 struct EditorPluginConfig
 {
+	// Polymorphic type allowing client to pass a derived config with user defined data into plugin
+	virtual ~EditorPluginConfig() = default;
+
 	UiControllerPtr uiController;
 	skybolt::EngineRoot* engineRoot;
 	skybolt::InputPlatformPtr inputPlatform;

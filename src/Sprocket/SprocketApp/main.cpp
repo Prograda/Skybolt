@@ -48,9 +48,17 @@ using namespace skybolt;
 static std::vector<EditorPluginPtr> loadEditorPlugins(const std::vector<EditorPluginFactory>& editorPluginFactories, const EditorPluginConfig& config)
 {
 	std::vector<EditorPluginPtr> plugins;
-	transform(editorPluginFactories, plugins, [config](const EditorPluginFactory& factory) {
-		return factory(config);
-	});
+	for (const auto& factory : editorPluginFactories)
+	{
+		try
+		{
+			plugins.push_back(factory(config));
+		}
+		catch (const std::exception& e)
+		{
+			BOOST_LOG_TRIVIAL(error) << "Error loading plugin: '" << e.what() << "'. Plugin will be ignored.";
+		}
+	};
 	return plugins;
 }
 
