@@ -19,6 +19,11 @@ SimStepper::SimStepper(const SystemRegistryPtr& systems) :
 
 SimStepper::~SimStepper() = default;
 
+void SimStepper::setTime(SecondsD t)
+{
+	mCurrentTime = t;
+}
+
 void SimStepper::step(SecondsD dt)
 {
 	auto systems = *mSystems; // Take copy in case a system adds/removes another system during step

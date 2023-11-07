@@ -22,6 +22,9 @@ public:
 	SimStepper(const SystemRegistryPtr& systems);
 	~SimStepper();
 
+	void setTime(SecondsD t);
+	SecondsD getTime() const { return mCurrentTime; }
+
 	void step(SecondsD dt);
 
 	void setDynamicsEnabled(bool enabled) { mDynamicsEnabled = enabled; }

@@ -56,7 +56,9 @@ void SimUpdater::simulate(TimeSource& timeSource, float dt)
 {
 	SecondsD prevSimTime = timeSource.getTime();
 	timeSource.advanceTime(dt);
-	double dtSim = std::max(0.0, timeSource.getTime() - prevSimTime);
+	
 	mSimStepper->setDynamicsEnabled(mEngineRoot->scenario->timelineMode.get() == TimelineMode::Live);
+	mSimStepper->setTime(prevSimTime);
+	double dtSim = std::max(0.0, timeSource.getTime() - prevSimTime);
 	mSimStepper->step(dtSim);
 }
