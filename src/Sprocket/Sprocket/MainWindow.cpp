@@ -11,6 +11,7 @@
 #include "EngineSettingsSerialization.h"
 #include "RecentFilesMenuPopulator.h"
 #include "QtUtil/QtDialogUtil.h"
+#include "QtUtil/QtTimerUtil.h"
 #include "Property/PropertyEditor.h"
 #include "Scenario/ScenarioWorkspace.h"
 #include "Widgets/SettingsEditor.h"
@@ -76,6 +77,8 @@ MainWindow::MainWindow(const MainWindowConfig& windowConfig) :
 	setCentralWidget(mToolWindowManager);
 
 	setStatusBar(new QStatusBar(this));
+
+	createAndStartIntervalTimer(100, this, [this] { update(); });
 }
 
 MainWindow::~MainWindow() = default;
