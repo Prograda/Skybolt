@@ -42,9 +42,6 @@ class SkyboltConan(ConanFile):
         "earcut/2.2.3@_/_",
         "glm/0.9.9.8@_/_",
         "nlohmann_json/3.10.5@_/_",
-        "zlib/1.2.13@_/_", # Indirect dependency. Specified to resolve version clash between qt and openscenegraph.
-        "libjpeg/9e@_/_", # Indirect dependency. Specified to resolve version clash between qt and openscenegraph.
-        "zstd/1.5.4" # Indirect dependency. Specified to resolve version clash between libtiff and libmysqlclient.
 	]
 
     def include_package(self, name, version, subfolder=None):
@@ -84,10 +81,8 @@ class SkyboltConan(ConanFile):
             self.requires("pybind11/2.9.1@_/_")
             
         if self.options.enable_sprocket:
-            self.requires("expat/2.4.8@_/_") # Indirect dependency. Specified to resolve version clash between wayland (used by Qt) and fontconfig (used by OSG)
-            self.requires("openssl/1.1.1s@_/_") # Indirect dependency. Specified to resolve version clash between qt/5.15.3 and libcurl/7.83.1
             self.requires("ois/1.5@_/_")
-            self.requires("qt/5.15.3@_/_")
+            self.requires("qt/5.15.11@_/_")
             self.requires("qwt/6.1.6@_/_")
             self.include_package("toolwindowmanager", "1.0.0")
 
