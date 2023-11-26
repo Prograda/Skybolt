@@ -24,8 +24,8 @@ typedef std::function<PluginPtr(const PluginConfig&)> PluginFactory;
 struct EngineRootConfig
 {
 	std::vector<PluginFactory> pluginFactories;
-	vis::JsonTileSourceFactoryRegistryConfig tileSourceFactoryRegistryConfig;
 	nlohmann::json engineSettings;
+	bool enableVis = true; //!< True if the visual subsystem is enabled
 };
 
 class EngineRoot

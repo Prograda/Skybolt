@@ -26,22 +26,27 @@ namespace skybolt {
 class EntityFactory
 {
 public:
+	struct VisContext
+	{
+		vis::Scene* scene;
+		vis::VisFactoryRegistryPtr visFactoryRegistry;
+		const vis::ShaderPrograms* programs;
+		vis::ModelFactoryPtr modelFactory;
+		vis::TextureCachePtr textureCache;
+	};
+
 	struct Context
 	{
 		px_sched::Scheduler* scheduler;
 		sim::World* simWorld;
-		vis::Scene* scene;
-		vis::VisFactoryRegistryPtr visFactoryRegistry;
-		const vis::ShaderPrograms* programs;
 		JulianDateProvider julianDateProvider;
 		ComponentFactoryRegistryPtr componentFactoryRegistry;
 		vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
-		vis::ModelFactoryPtr modelFactory;
 		EngineStats* stats;
 		file::FileLocator fileLocator;
 		std::vector<std::string> assetPackagePaths;
-		vis::TextureCachePtr textureCache;
 		nlohmann::json engineSettings;
+		std::optional<VisContext> visContext; // !< If empty, visual objects will not be created
 	};
 
 	EntityFactory(const Context& context, const std::vector<std::filesystem::path>& entityFilenames);
@@ -57,10 +62,9 @@ public:
 	sim::EntityId generateNextEntityId() const;
 
 private:
-	sim::EntityPtr createSun() const;
-	sim::EntityPtr createMoon() const;
-	sim::EntityPtr createStars() const;
-	sim::EntityPtr createPolyline() const;
+	sim::EntityPtr createSun(const EntityFactory::VisContext& visContext) const;
+	sim::EntityPtr createMoon(const EntityFactory::VisContext& visContext) const;
+	sim::EntityPtr createStars(const EntityFactory::VisContext& visContext) const;
 
 private:
 	Strings mTemplateNames;

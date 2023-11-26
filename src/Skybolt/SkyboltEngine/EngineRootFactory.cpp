@@ -8,8 +8,6 @@
 #include "EngineSettings.h"
 #include "GetExecutablePath.h"
 #include "Plugin/PluginHelpers.h"
-#include <SkyboltCommon/File/OsDirectories.h>
-#include <SkyboltCommon/Json/JsonHelpers.h>
 
 #include <boost/log/trivial.hpp>
 
@@ -37,36 +35,10 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const boost::program_optio
 	return create(enginePluginFactories, settings);
 }
 
-const std::string skyboltCacheDirEnvironmentVariable = "SKYBOLT_CACHE_DIR";
-
-static file::Path getDefaultCacheDir()
-{
-	return file::getAppUserDataDirectory("Skybolt") / "Cache";
-}
-
-static file::Path getCacheDir()
-{
-	if (const char* dir = std::getenv(skyboltCacheDirEnvironmentVariable.c_str()); dir)
-	{
-		file::Path path(dir);
-		if (std::filesystem::exists(path))
-		{
-			return dir;
-		}
-		BOOST_LOG_TRIVIAL(error) << "Environment variable '" << skyboltCacheDirEnvironmentVariable << "' not set to a valid path. Using default location: " << getDefaultCacheDir().string();
-	}
-	return getDefaultCacheDir();
-}
-
 std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFactory>& pluginFactories, const json& settings)
 {
-	file::Path cacheDir = getCacheDir();
-	BOOST_LOG_TRIVIAL(info) << "Using cache directory '" << cacheDir.string() << "'.";
-
 	EngineRootConfig config;
 	config.pluginFactories = pluginFactories;
-	config.tileSourceFactoryRegistryConfig.apiKeys = readNameMap<std::string>(settings, "tileApiKeys");
-	config.tileSourceFactoryRegistryConfig.cacheDirectory = cacheDir.string();
 	config.engineSettings = settings;
 	return std::make_unique<EngineRoot>(config);
 }
