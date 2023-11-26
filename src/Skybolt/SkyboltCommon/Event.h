@@ -42,7 +42,7 @@ private:
 	friend class EventEmitter;
 };
 
-//! Class for emitting events to received by listeners
+//! Class for emitting events which can be received by EventListener
 class EventEmitter
 {
 public:
@@ -60,9 +60,9 @@ public:
 	void removeEventListener(EventListener*);
 
 	template <class EventT>
-	void emitEvent(const EventT& event)
+	void emitEvent(const EventT& event) const
 	{
-		auto it = mListenerMap.find(typeid(EventT));
+		auto it = mListenerMap.find(typeid(event));
 		if (it != mListenerMap.end())
 		{
 			// Take copy of listeners before calling onEvent(),

@@ -52,3 +52,16 @@ TEST_CASE("EventListener does not receive non-registered event type")
 
 	CHECK(listener.receivedEvent == nullptr);
 }
+
+TEST_CASE("EventListener receives derived event when emitted as base type")
+{
+	DummyEventListener listener;
+
+	EventEmitter emitter;
+	emitter.addEventListener<EventTypeA>(&listener);
+
+	EventTypeA event;
+	emitter.emitEvent(static_cast<const Event&>(event));
+
+	CHECK(listener.receivedEvent == &event);
+}
