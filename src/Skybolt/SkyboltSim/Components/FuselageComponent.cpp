@@ -58,6 +58,7 @@ void FuselageComponent::updatePreDynamicsSubstep()
 
 	// calculate lift
 	Vector3 lift;
+	const float airDensity = calcAirDensity(calcAltitude(mNode->getPosition()));
 
 	float alphaDelta = mAngleOfAttack - mParams.zeroLiftAlpha;
 
@@ -71,10 +72,10 @@ void FuselageComponent::updatePreDynamicsSubstep()
 		liftCoeff = mParams.liftSlope * alphaDelta;
 	}
 
-	const float airDensity = calcAirDensity(calcAltitude(mNode->getPosition()));
 	lift = Vector3(0.0f, 0.0f, -liftCoeff * mParams.liftArea * 0.5f * airDensity * glm::dot(velocityLocal, velocityLocal));
 
 	double speed = glm::length(mMotion->linearVelocity);
+	
 	//apply forces
 	if (speed > 0.0f)
 	{
@@ -92,7 +93,10 @@ void FuselageComponent::updatePreDynamicsSubstep()
 
 	const Vector3 localAngularVelocity = glm::inverse(orientation) * mMotion->angularVelocity;
 
-	const Vector3 moment = calcMoment(localAngularVelocity, sin(mAngleOfAttack), sin(mSideSlipAngle), speedForMomentsSq, airDensity);
+	double speedSquared = speed * speed;
+	float trimmedAngleOfAttack = calcTrimmedAngleOfAttack(mAngleOfAttack, airDensity, speedSquared);
+
+	const Vector3 moment = calcMoment(localAngularVelocity, sin(trimmedAngleOfAttack), sin(mSideSlipAngle), speedForMomentsSq, airDensity);
 
 	mBody->applyTorque(orientation * moment * (double)mParams.momentMultiplier);
 }
@@ -134,6 +138,19 @@ Vector3 FuselageComponent::calcMoment(const Vector3 &angularVelocity, float angl
 	}
 
 	return moment * (double)airDensity;
+}
+
+float FuselageComponent::calcTrimmedAngleOfAttack(float angleOfAttack, float airDensity, float speedSquared) const
+{
+	if (mParams.maxAutoTrimAngleOfAttack)
+	{
+		float cruiseTrimAlpha = mBody->getMass() * 9.81f / (mParams.liftSlope * mParams.liftArea * 0.5f * airDensity * speedSquared);
+		return mAngleOfAttack - std::clamp(cruiseTrimAlpha, -*mParams.maxAutoTrimAngleOfAttack, *mParams.maxAutoTrimAngleOfAttack);
+	}
+	else
+	{
+		return angleOfAttack;
+	}
 }
 
 } // namespace sim

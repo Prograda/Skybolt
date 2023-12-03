@@ -66,6 +66,8 @@ static sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryCont
 	params.yawDueToYawRate = readOptionalOrDefault(json, "yawDueToYawRate", -10.0);
 	params.yawDueToRudder = readOptionalOrDefault(json, "yawDueToRudder", 0.0);
 
+	params.maxAutoTrimAngleOfAttack = readOptionalOrDefault(json, "maxAutoTrimAngleOfAttack", 0.5);
+
 	FuselageComponentConfig config;
 	config.params = params;
 	config.node = entity->getFirstComponentRequired<Node>().get();

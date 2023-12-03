@@ -41,6 +41,8 @@ struct FuselageParams
 	float yawDueToRollRate;
 	float yawDueToYawRate;
 	float yawDueToRudder;
+
+	std::optional<float> maxAutoTrimAngleOfAttack; //!< pitch auto trim disabled if empty
 };
 
 struct FuselageComponentConfig
@@ -74,6 +76,8 @@ private:
 	Vector3 calcDragForce(const Vector3 &velocityLocal, const Vector3 &dragDirection, float density) const;
 	Vector3 calcMoment(const Vector3 &angularVelocity, float angleOfAttackFactor, float sideSlipFactor,
 				   float velSqLength, float airDensity) const;
+
+	float calcTrimmedAngleOfAttack(float angleOfAttack, float airDensity, float speedSquared) const;
 
 private:
 	const FuselageParams mParams;
