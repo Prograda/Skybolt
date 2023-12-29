@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include "SkyboltBulletFwd.h"
 #include <SkyboltSim/Component.h>
+#include <SkyboltSim/EntityId.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
 
 class btCollisionShape;
@@ -20,7 +22,7 @@ class RigidBody;
 class KinematicBody : public Component
 {
 public:
-	KinematicBody(BulletWorld* world, Node* node, btCollisionShape* shape, int collisionGroupMask,
+	KinematicBody(BulletWorld* world, EntityId ownerEntityId, Node* node, const btCollisionShapePtr& shape, int collisionGroupMask,
 		 const Vector3 &localPosition = Vector3(0,0,0), const Quaternion &localOrientation = Quaternion(0,0,0,1));
 
 	~KinematicBody();
@@ -31,8 +33,11 @@ public:
 
 	void updatePreDynamics();
 
+	EntityId getOwnerEntityId() const { return mOwnerEntityId; }
+
 private:
 	BulletWorld* mWorld;
+	EntityId mOwnerEntityId;
 	Node* mNode;
 	RigidBody* mBody;
 };

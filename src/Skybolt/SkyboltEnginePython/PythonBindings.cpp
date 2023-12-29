@@ -8,10 +8,10 @@
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EntityFactory.h>
 #include <SkyboltEngine/WindowUtil.h>
+#include <SkyboltEngine/Components/VisObjectsComponent.h>
 #include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
 #include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
-#include <SkyboltEngine/VisObjectsComponent.h>
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/CameraController/CameraController.h>

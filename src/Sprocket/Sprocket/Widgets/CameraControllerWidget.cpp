@@ -7,7 +7,7 @@
 #include "CameraControllerWidget.h"
 #include "Sprocket/Entity/EntityListModel.h"
 
-#include <SkyboltEngine/TemplateNameComponent.h>
+#include <SkyboltEngine/Components/TemplateNameComponent.h>
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/CameraController/CameraControllerSelector.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>

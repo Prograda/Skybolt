@@ -23,44 +23,48 @@ TerrainCollisionShape::TerrainCollisionShape(const std::shared_ptr<AltitudeProvi
 {
 	assert(mAltitudeProvider);
 
-	m_shapeType = CUSTOM_CONCAVE_SHAPE_TYPE;
+	// m_shapeType = CUSTOM_CONCAVE_SHAPE_TYPE;
+	// Work around for Bullet bug where CUSTOM_CONCAVE_SHAPE_TYPE is treated as SDF_SHAPE_PROXYTYPE
+	// which causes terrain collisions to fail for some shape types (e.g. Box).
+	// See https://github.com/bulletphysics/bullet3/discussions/3744
+	m_shapeType = MULTIMATERIAL_TRIANGLE_MESH_PROXYTYPE;
 }
 
 void TerrainCollisionShape::processAllTriangles(btTriangleCallback *callback, const btVector3 &aabbMin, const btVector3 &aabbMax) const
 {
-	Vector3 center = toGlmDvec3((aabbMin + aabbMax) * 0.5);
-	if (glm::dot(center, center) <= 1e-8)
+	Vector3 aabbCenter = toGlmDvec3((aabbMin + aabbMax) * 0.5);
+	if (glm::dot(aabbCenter, aabbCenter) <= 1e-8)
 	{
 		return;
 	}
 
 	double radius = (aabbMax - aabbMin).length();
 
-	sim::LatLon latLon = geocentricToLatLon(center);
-
-	double altitude = mAltitudeProvider->get(latLon);
-
-	Vector3 normal = glm::normalize(center);
+	Vector3 normal = glm::normalize(aabbCenter);
 	Vector3 tangent, bitangent;
 	getOrthonormalBasis(normal, tangent, bitangent);
 
-	Vector3 planeCenter = normal * (mPlanetRadius + altitude);
+	Vector3 planetCenter = normal * earthRadius();
 
-	Vector3 corner[4];
-	corner[0] = planeCenter + (tangent + bitangent) * radius;
-	corner[1] = planeCenter + (tangent - bitangent) * radius;
-	corner[2] = planeCenter + (-tangent - bitangent) * radius;
-	corner[3] = planeCenter + (-tangent + bitangent) * radius;
+	Vector3 p00 = planetCenter + (-tangent - bitangent) * radius;
+	Vector3 p10 = planetCenter + (tangent - bitangent) * radius;
+	Vector3 p01 = planetCenter + (-tangent + bitangent) * radius;
+	Vector3 p11 = planetCenter + (tangent + bitangent) * radius;
+
+	p00 += getAltitude(p00) * normal;
+	p10 += getAltitude(p10) * normal;
+	p01 += getAltitude(p01) * normal;
+	p11 += getAltitude(p11) * normal;
 
 	btVector3 t0[3];
-	t0[0] = toBtVector3(corner[0]);
-	t0[1] = toBtVector3(corner[1]);
-	t0[2] = toBtVector3(corner[2]);
+	t0[0] = toBtVector3(p00);
+	t0[1] = toBtVector3(p10);
+	t0[2] = toBtVector3(p01);
 
 	btVector3 t1[3];
-	t1[0] = toBtVector3(corner[0]);
-	t1[1] = toBtVector3(corner[2]);
-	t1[2] = toBtVector3(corner[3]);
+	t1[0] = toBtVector3(p10);
+	t1[1] = toBtVector3(p11);
+	t1[2] = toBtVector3(p01);
 
 	int part = 0;
 	int index = 0;
@@ -77,6 +81,12 @@ void TerrainCollisionShape::getAabb(const btTransform &transform, btVector3 &aab
 void TerrainCollisionShape::calculateLocalInertia(btScalar mass, btVector3 &inertia) const
 {
 	inertia.setValue(btScalar(0.), btScalar(0.), btScalar(0.));
+}
+
+double TerrainCollisionShape::getAltitude(const Vector3& position) const
+{
+	sim::LatLon latLon = geocentricToLatLon(position);
+	return mAltitudeProvider->get(latLon);
 }
 
 } // namespace sim

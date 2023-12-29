@@ -7,6 +7,7 @@
 #pragma once
 
 #include "SkyboltSim/SkyboltSimFwd.h"
+#include "SkyboltSim/SimMath.h"
 #include "SkyboltSim/Spatial/LatLon.h"
 #include <BulletCollision/CollisionShapes/btConcaveShape.h>
 #include <memory>
@@ -32,6 +33,9 @@ public:
 	void btCollisionShape::calculateLocalInertia(btScalar mass, btVector3 &inertia) const override;
 
 	const char *btCollisionShape::getName() const override { return "TerrainCollisionShape"; }
+
+private:
+	double getAltitude(const Vector3& position) const;
 
 private:
 	std::shared_ptr<AltitudeProvider> mAltitudeProvider;

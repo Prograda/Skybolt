@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 		std::string tileSourceCacheDirectory = tileCacheDirectory  + "/" + calcSha1(config.urlTemplate);
 		auto tileSource = std::make_shared<CachedTileSource>(uncachedTileSource, tileSourceCacheDirectory);
 #endif
-		TilePlanetAltitudeProvider altitudeProvider(tileSource, maxHeightmapTileLod);
+		BlockingTilePlanetAltitudeProvider altitudeProvider(tileSource, maxHeightmapTileLod);
 		ReadPbfResult result = mapfeatures::readPbf("washington-latest.osm.pbf", altitudeProvider);
 		{
 			printf("Feature Conversion Stats:\n%s\n", mapfeatures::statsToString(result.features).c_str());

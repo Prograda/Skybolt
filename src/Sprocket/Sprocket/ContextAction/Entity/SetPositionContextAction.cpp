@@ -7,7 +7,7 @@
 #include "SetPositionContextAction.h"
 #include "Sprocket/QtUtil/QtDialogUtil.h"
 #include "Widgets/PositionEditor.h"
-#include <SkyboltEngine/TemplateNameComponent.h>
+#include <SkyboltEngine/Components/TemplateNameComponent.h>
 #include <SkyboltSim/Spatial/LatLon.h>
 #include <SkyboltSim/Spatial/Position.h>
 #include <SkyboltCommon/Math/MathUtility.h>

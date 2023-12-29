@@ -6,7 +6,7 @@
 
 #include "MoveToAirportContextAction.h"
 #include "Sprocket/QtUtil/QtDialogUtil.h"
-#include <SkyboltEngine/TemplateNameComponent.h>
+#include <SkyboltEngine/Components/TemplateNameComponent.h>
 #include <SkyboltSim/Components/Motion.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Spatial/LatLon.h>

@@ -8,6 +8,7 @@
 
 #include <SkyboltSim/Spatial/LatLon.h>
 #include <optional>
+#include <tuple>
 
 namespace skybolt {
 namespace sim {
@@ -15,17 +16,37 @@ namespace sim {
 class PlanetAltitudeProvider
 {
 public:
-	//! Get altitude above sea level, positive is up.
-	virtual double getAltitude(const sim::LatLon& position) const = 0;
-};
+	struct AltitudeResult
+	{
+		double altitude; //!< Altitude above sea level, positive is up.
 
-class AsyncPlanetAltitudeProvider
-{
-public:
-	//! Get altitude above sea level, positive is up.
-	//! If tile is not immediately available, requests to load tile on a background thread
-	//! and immediately returns empty optional.
-	virtual std::optional<double> getAltitudeOrRequestLoad(const sim::LatLon& position) const = 0;
+		//! True if altitude value is provisional, meaning that a more accurate value may be provided in the future.
+		//! This is intended to accomodate asynchronous elevation data sources which can return a provisional estimated value
+		//! until the most accurate data is available.
+		bool provisional;
+
+		static AltitudeResult provisionalValue(double altitude)
+		{
+			AltitudeResult r;
+			r.altitude = altitude;
+			r.provisional = true;
+			return r;
+		}
+
+		static AltitudeResult finalValue(double altitude)
+		{
+			AltitudeResult r;
+			r.altitude = altitude;
+			r.provisional = false;
+			return r;
+		}
+
+		bool operator == (const AltitudeResult& other) const {
+			return std::tie(altitude, provisional) == std::tie(other.altitude, other.provisional);
+		};
+	};
+
+	virtual AltitudeResult getAltitude(const sim::LatLon& position) const = 0;
 };
 
 } // namespace sim

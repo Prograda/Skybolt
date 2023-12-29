@@ -2,7 +2,7 @@
 #include "Scenario.h"
 #include <SkyboltEngine/EntityFactory.h>
 #include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
-#include <SkyboltEngine/TemplateNameComponent.h>
+#include <SkyboltEngine/Components/TemplateNameComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/JsonHelpers.h>
 #include <SkyboltSim/Serialization/Serialization.h>

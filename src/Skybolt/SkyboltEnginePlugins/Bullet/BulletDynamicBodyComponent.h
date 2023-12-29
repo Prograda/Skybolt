@@ -24,11 +24,12 @@ class BulletWorld;
 struct BulletDynamicBodyComponentConfig
 {
 	BulletWorld* world;
+	EntityId ownerEntityId;
 	Node* node;
 	Motion* motion;
 	double mass;
 	btVector3 momentOfInertia;
-	btCollisionShape* shape;
+	btCollisionShapePtr shape;
 	btVector3 velocity;
 	int collisionGroupMask;
 	int collisionFilterMask;
@@ -75,6 +76,8 @@ public: // SimUpdatable interface
 	void updatePreDynamics();
 	void updatePostDynamics();
 
+	EntityId getOwnerEntityId() const { return mOwnerEntityId; }
+
 protected:
 	void setPosition(const Vector3& position);
 	void setOrientation(const Quaternion& orientation);
@@ -85,6 +88,7 @@ protected:
 private:
 	const double mMinSpeedForCcdSquared;
 	BulletWorld* mWorld;
+	EntityId mOwnerEntityId;
 	Node* mNode;
 	Motion* mMotion;
 	btVector3 mMomentOfInertia;

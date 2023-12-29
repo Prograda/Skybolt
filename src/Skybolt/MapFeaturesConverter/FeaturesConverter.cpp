@@ -39,7 +39,7 @@ static LatLonAltPoints toLatLonAlt(const LatLonPoints& points, const sim::Planet
 	int i = 0;
 	for (const LatLon& point : points)
 	{
-		result[i] = toLatLonAlt(point, provider.getAltitude(point));
+		result[i] = toLatLonAlt(point, provider.getAltitude(point).altitude);
 		++i;
 	}
 	return result;
@@ -51,7 +51,7 @@ static LatLonAltPoints toLatLonWithMinAlt(const LatLonPoints& points, const sim:
 	double alt = math::posInfinity();
 	for (const LatLon& point : points)
 	{
-		alt = std::min(alt, provider.getAltitude(point));
+		alt = std::min(alt, provider.getAltitude(point).altitude);
 	}
 
 	int i = 0;
@@ -637,7 +637,7 @@ std::map<std::string, AirportPtr> createAirports(const ParserData& data, const s
 	{
 		auto airport = std::make_shared<Airport>();
 		airport->areaPolygons = v.areaPolygons;
-		airport->altitude = provider.getAltitude(v.bounds.center());
+		airport->altitude = provider.getAltitude(v.bounds.center()).altitude;
 		airports[&v] = airport;
 	}
 

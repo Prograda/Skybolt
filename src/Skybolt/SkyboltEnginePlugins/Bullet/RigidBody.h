@@ -7,8 +7,10 @@
 
 #pragma once
 
-#include "SkyboltSim/SkyboltSimFwd.h"
-#include "SkyboltSim/SimMath.h"
+#include "SkyboltBulletFwd.h"
+#include <SkyboltSim/SkyboltSimFwd.h>
+#include <SkyboltSim/EntityId.h>
+#include <SkyboltSim/SimMath.h>
 #include <btBulletDynamicsCommon.h>
 
 namespace skybolt {
@@ -17,7 +19,7 @@ namespace sim {
 class RigidBody : public btRigidBody
 {
 public:
-	RigidBody(btDiscreteDynamicsWorld* world, btCollisionShape*, int collisionGroupMask, int collisionFilterMask,
+	RigidBody(btDiscreteDynamicsWorld* world, const btCollisionShapePtr& shape, int collisionGroupMask, int collisionFilterMask,
 			  double mass, const btVector3 &inertia, const btVector3 &position, const btQuaternion &orientation, const btVector3 &velocity);
 	~RigidBody();
 
@@ -33,7 +35,9 @@ public:
 	int getCollisionGroupMask() const {return mCollisionGroupMask;}
 
 private:
+	EntityId mOwnerEntityId;
 	btDiscreteDynamicsWorld* mWorld;
+	btCollisionShapePtr mShape;
 	int mCollisionFilterMask;
 	int mCollisionGroupMask;
 	bool mInWorld;

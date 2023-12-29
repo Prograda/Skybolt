@@ -7,7 +7,7 @@
 #include "SetOrientationContextAction.h"
 #include "Sprocket/QtUtil/QtDialogUtil.h"
 #include "Widgets/OrientationEditor.h"
-#include <SkyboltEngine/TemplateNameComponent.h>
+#include <SkyboltEngine/Components/TemplateNameComponent.h>
 #include <SkyboltSim/Spatial/LatLon.h>
 #include <SkyboltSim/Spatial/Orientation.h>
 #include <SkyboltSim/Spatial/Position.h>

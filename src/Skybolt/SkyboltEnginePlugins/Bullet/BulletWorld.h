@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include "SkyboltBulletFwd.h"
 #include <btBulletDynamicsCommon.h>
 #include <SkyboltSim/SimMath.h>
+#include <SkyboltSim/System/CollisionSystem.h>
 #include <memory>
 
 namespace skybolt {
@@ -17,20 +19,13 @@ class RigidBody;
 
 typedef std::shared_ptr<btDiscreteDynamicsWorld> btDiscreteDynamicsWorldPtr;
 
-struct RayTestResult
-{
-	Vector3 position;
-	Vector3 normal;
-	double distance;
-	bool hit;
-};
 
 class BulletWorld
 {
 public:
 	BulletWorld();
 
-	RigidBody* createRigidBody(btCollisionShape* shape, double mass, const btVector3 &inertia, const btVector3 &position,
+	RigidBody* createRigidBody(const btCollisionShapePtr& shape, double mass, const btVector3 &inertia, const btVector3 &position,
 		const btQuaternion &orientation = btQuaternion::getIdentity(), const btVector3 &velocity = btVector3(0, 0, 0),
 		int collisionGroupMask = ~0, int collisionFilterMask = ~0);
 
@@ -38,8 +33,7 @@ public:
 
 	inline btDiscreteDynamicsWorld* getDynamicsWorld() { return mDynamicsWorld.get(); }
 
-	RayTestResult testRay(const Vector3 &position, const Vector3 &direction, double length, int collisionFilterMask);
-	RayTestResult testRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask);
+	virtual std::optional<RayIntersectionResult> intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask);
 
 private:
 	btDiscreteDynamicsWorldPtr mDynamicsWorld;

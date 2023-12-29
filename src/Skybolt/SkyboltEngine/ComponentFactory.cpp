@@ -8,8 +8,10 @@
 
 #include <SkyboltCommon/StringVector.h>
 #include <SkyboltCommon/Json/JsonHelpers.h>
+#include <SkyboltEngine/Components/PlanetElevationComponent.h>
 #include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
 #include <SkyboltSim/CollisionGroupMasks.h>
+#include <SkyboltSim/JsonHelpers.h>
 #include <SkyboltSim/CameraController/AttachedCameraController.h>
 #include <SkyboltSim/CameraController/FreeCameraController.h>
 #include <SkyboltSim/CameraController/OrbitCameraController.h>
@@ -28,11 +30,14 @@
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/Motion.h>
 #include <SkyboltSim/Components/Node.h>
+#include <SkyboltSim/Components/OceanComponent.h>
+#include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/Components/PropellerComponent.h>
 #include <SkyboltSim/Components/ReactionControlSystemComponent.h>
 #include <SkyboltSim/Components/RocketMotorComponent.h>
 #include <SkyboltSim/Components/ShipWakeComponent.h>
-#include <SkyboltSim/JsonHelpers.h>
+#include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
+#include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 
 namespace skybolt {
 
@@ -318,24 +323,61 @@ static sim::ComponentPtr loadScenarioMetadata(Entity* entity, const ComponentFac
 	return component;
 }
 
+static sim::ComponentPtr loadPlanet(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	double planetRadius = json.at("radius").get<double>();
+	bool hasOcean = readOptionalOrDefault(json, "ocean", true);
+	auto planetComponent = std::make_shared<PlanetComponent>(planetRadius);
+
+	if (json.contains("atmosphere"))
+	{
+		planetComponent->atmosphere = createEarthAtmosphere(); // TODO: use planet specific atmospheric parameters
+	}
+
+	// FIXME: This should be split out into a separate component loader, instead of added here as a side effect
+	if (hasOcean)
+	{
+		entity->addComponent(std::make_shared<OceanComponent>());
+	}
+
+	return planetComponent;
+}
+
+static sim::ComponentPtr loadPlanetElevationTileSource(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	auto elevationComponent = std::make_shared<PlanetElevationComponent>();
+
+	nlohmann::json elevation = json.at("tileSource");
+	elevationComponent->tileSource = context.tileSourceFactoryRegistry->getFactory(elevation.at("format"))(elevation);
+	elevationComponent->elevationMaxLodLevel = elevation.at("maxLevel");
+	elevationComponent->heightMapTexelsOnTileEdge = readOptionalOrDefault(elevation, "heightMapTexelsOnTileEdge", false);
+
+	auto planetComponent = entity->getFirstComponentRequired<PlanetComponent>();
+	planetComponent->altitudeProvider = std::make_shared<vis::NonBlockingTilePlanetAltitudeProvider>(context.scheduler, elevationComponent->tileSource, elevationComponent->elevationMaxLodLevel);
+
+	return elevationComponent;
+}
+
 void addDefaultFactories(ComponentFactoryRegistry& registry)
 {
-	registry["camera"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadCamera);
-	registry["cameraController"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadCameraController);
-	registry["controlInputs"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadControlInputs);
-	registry["node"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadNode);
-	registry["motion"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadMotion);
-	registry["dynamicBody"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadDynamicBody);
-	registry["fuselage"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadFuselage);
-	registry["reactionControlSystem"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadReactonControlSystem);
-	registry["rocketMotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadRocketMotor);
-	registry["mainRotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadMainRotor);
-	registry["tailRotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadTailRotor);
 	registry["shipWake"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadShipWake);
 	registry["attachment"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAttachment);
 	registry["attachmentPoint"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAttachmentPoint);
 	registry["assetDescription"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAssetDescription);
+	registry["camera"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadCamera);
+	registry["cameraController"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadCameraController);
+	registry["controlInputs"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadControlInputs);
+	registry["dynamicBody"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadDynamicBody);
+	registry["fuselage"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadFuselage);
+	registry["mainRotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadMainRotor);
+	registry["motion"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadMotion);
+	registry["node"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadNode);
+	registry["planet"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadPlanet);
+	registry["planetElevationTileSource"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadPlanetElevationTileSource);
+	registry["reactionControlSystem"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadReactonControlSystem);
+	registry["rocketMotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadRocketMotor);
 	registry["scenarioMetadata"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadScenarioMetadata);
+	registry["tailRotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadTailRotor);
 }
 
 } // namespace skybolt

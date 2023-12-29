@@ -6,6 +6,7 @@
 
 #include "AltitudeProvider.h"
 #include "BulletDynamicBodyComponent.h"
+#include "BulletSystem.h"
 #include "BulletTypeConversion.h"
 #include "BulletWheelsComponent.h"
 #include "BulletWorld.h"
@@ -20,7 +21,6 @@
 #include <SkyboltSim/Components/OceanComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/JsonHelpers.h>
-#include <SkyboltSim/System/System.h>
 #include <SkyboltEngine/ComponentFactory.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Plugin/Plugin.h>
@@ -37,7 +37,7 @@ using namespace sim;
 class AltitudeProviderAdapter : public sim::AltitudeProvider
 {
 public:
-	AltitudeProviderAdapter(const std::shared_ptr<AsyncPlanetAltitudeProvider>& provider) :
+	AltitudeProviderAdapter(const std::shared_ptr<PlanetAltitudeProvider>& provider) :
 		mProvider(provider)
 	{
 		assert(mProvider);
@@ -45,24 +45,19 @@ public:
 
 	double get(const sim::LatLon& position) const override
 	{
-		auto altitude = mProvider->getAltitudeOrRequestLoad(position);
-		if (!altitude)
-		{
-			return 0.0; // TODO: what fallback to use here?
-		}
-		return *altitude;
+		return mProvider->getAltitude(position).altitude;
 	}
 
-	std::shared_ptr<AsyncPlanetAltitudeProvider> mProvider;
+	std::shared_ptr<PlanetAltitudeProvider> mProvider;
 };
 
-static btCollisionShape* loadPlanetCollisionShape(const PlanetComponent& planet, const OceanComponent* ocean = nullptr)
+static btCollisionShapePtr loadPlanetCollisionShape(const PlanetComponent& planet, const OceanComponent* ocean = nullptr)
 {
-	// TODO: dispose of the shapes
-	btCompoundShape* compoundShape = new btCompoundShape();
+	auto compoundShape = std::make_shared<btCompoundShape>();
 	if (planet.altitudeProvider)
 	{
 		double maxEarthRadius = planet.radius + 9000; // TODO: work out a safe maximum terrain altitude bound
+		// TODO: delete shape after use
 		btCollisionShape* shape = new sim::TerrainCollisionShape(std::make_shared<AltitudeProviderAdapter>(planet.altitudeProvider), planet.radius, maxEarthRadius);
 		compoundShape->addChildShape(btTransform::getIdentity(), shape);
 	}
@@ -70,6 +65,7 @@ static btCollisionShape* loadPlanetCollisionShape(const PlanetComponent& planet,
 	if (ocean)
 	{
 		// Add sphere to provide collision detection against ocean
+		// TODO: delete shape after use
 		compoundShape->addChildShape(btTransform::getIdentity(), new btSphereShape(planet.radius));
 		return compoundShape;
 	}
@@ -85,7 +81,7 @@ static sim::ComponentPtr loadBulletDynamicBody(BulletWorld& world, Entity* entit
 	int collisionFilterMask = ~0;
 
 	// TODO: dispose of shape
-	btCollisionShape* shape = new btBoxShape(toBtVector3(readVector3(json.at("size")) * 0.5));
+	auto shape = std::make_shared<btBoxShape>(toBtVector3(readVector3(json.at("size")) * 0.5));
 
 	btVector3 momentOfInertia = toBtVector3(readOptionalVector3(json, "momentOfInertia"));
 	if (momentOfInertia == btVector3(0, 0, 0))
@@ -97,6 +93,7 @@ static sim::ComponentPtr loadBulletDynamicBody(BulletWorld& world, Entity* entit
 
 	auto body = std::make_shared<BulletDynamicBodyComponent>([&] {
 		BulletDynamicBodyComponentConfig c;
+		c.ownerEntityId = entity->getId();
 		c.world = &world;
 		c.node = entity->getFirstComponentRequired<sim::Node>().get();
 		c.motion = entity->getFirstComponentRequired<sim::Motion>().get();
@@ -114,36 +111,8 @@ static sim::ComponentPtr loadBulletDynamicBody(BulletWorld& world, Entity* entit
 	return body;
 }
 
-class BulletSystem : public System
-{
-public:
-	BulletSystem(BulletWorld* world) :
-		mWorld(world)
-	{
-		assert(mWorld);
-	}
-
-	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
-		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::DynamicsSubStep, performSubStep)
-	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
-
-	void advanceSimTime(SecondsD newTime, SecondsD dt) override
-	{
-		mDt += dt;
-	}
-
-	void performSubStep()
-	{
-		mWorld->getDynamicsWorld()->stepSimulation(mDt, 0, mDt);
-		mDt = 0;
-	};
-
-private:
-	BulletWorld* mWorld;
-	double mDt = 0;
-};
-
 const std::string dynamicBodyComponentName = "dynamicBody";
+const std::string kinematicBodyComponentName = "kinematicBody";
 const std::string planetKinematicBodyComponentName = "planetKinematicBody";
 const std::string wheelsComponentName = "wheels";
 const std::string drivetrainComponentName = "drivetrain";
@@ -160,12 +129,18 @@ public:
 			return loadBulletDynamicBody(*mBulletWorld, entity, context, json);
 		});
 
+		(*mComponentFactoryRegistry)[kinematicBodyComponentName] = std::make_shared<ComponentFactoryFunctionAdapter>([this](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) {
+			auto node = entity->getFirstComponentRequired<Node>().get();
+			auto shape = std::make_shared<btBoxShape>(toBtVector3(readVector3(json.at("size")) * 0.5));
+			return std::make_shared<KinematicBody>(mBulletWorld.get(), entity->getId(), node, shape, CollisionGroupMasks::simBody);
+		});
+
 		(*mComponentFactoryRegistry)[planetKinematicBodyComponentName] = std::make_shared<ComponentFactoryFunctionAdapter>([this](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) {
 			auto node = entity->getFirstComponentRequired<Node>().get();
 			auto planet = entity->getFirstComponentRequired<PlanetComponent>().get();
 			auto ocean = entity->getFirstComponent<OceanComponent>().get();
-			btCollisionShape* shape = loadPlanetCollisionShape(*planet, ocean);
-			return std::make_shared<KinematicBody>(mBulletWorld.get(), node, shape, CollisionGroupMasks::terrain);
+			btCollisionShapePtr shape = loadPlanetCollisionShape(*planet, ocean);
+			return std::make_shared<KinematicBody>(mBulletWorld.get(), entity->getId(), node, shape, CollisionGroupMasks::terrain);
 		});
 
 		(*mComponentFactoryRegistry)[wheelsComponentName] = std::make_shared<ComponentFactoryFunctionAdapter>([this](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) {
@@ -235,15 +210,15 @@ private:
 
 namespace plugins {
 
-	std::shared_ptr<Plugin> createEnginePlugin(const PluginConfig& config)
+	std::shared_ptr<Plugin> createBulletPlugin(const PluginConfig& config)
 	{
 		return std::make_shared<BulletPlugin>(config);
 	}
 
 	BOOST_DLL_ALIAS(
-		plugins::createEnginePlugin,
+		plugins::createBulletPlugin,
 		createEnginePlugin
 	)
 }
 
-} // namespace skybolt {
+} // namespace skybolt

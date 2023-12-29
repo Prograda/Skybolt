@@ -73,56 +73,53 @@ struct LatLonVec2Adapter : public sim::LatLon
 	}
 };
 
-class TilePlanetAltitudeProvider : public sim::PlanetAltitudeProvider
+//! Blocks until tile at maxLod is is loaded, then returns result
+class BlockingTilePlanetAltitudeProvider : public sim::PlanetAltitudeProvider
 {
 public:
-	TilePlanetAltitudeProvider(const TileSourcePtr& tileSource, int maxLod);
+	BlockingTilePlanetAltitudeProvider(const TileSourcePtr& tileSource, int maxLod);
 
-	//! Get altitude above sea level, positive is up.
 	//! @ThreadSafe
-	double getAltitude(const sim::LatLon& position) const override;
-
-	//! Get altitude above sea level, positive is up.
-	//! If tile is not loaded, returns immedatly with empty.
-	//! @ThreadSafe
-	std::optional<double> tryGetAltitude(const sim::LatLon& position) const;
+	AltitudeResult getAltitude(const sim::LatLon& position) const override;
 
 	typedef skybolt::Box2T<LatLonVec2Adapter> LatLonBounds;
 
-private:
+protected:
 	struct TileImage
 	{
 		QuadTreeTileKey key;
 		osg::ref_ptr<osg::Image> image;
 	};
 
-	std::optional<TileImage> findHighestLodTile(const QuadTreeTileKey& highestLodKey) const;
+	std::optional<TileImage> findTile(const QuadTreeTileKey& key) const;
 
-private:
+	std::optional<TileImage> loadTile(const QuadTreeTileKey& key) const;
+
+	void addTileToCache(const TileImage& image, const QuadTreeTileKey& key) const;
+
+protected:
 	const TileSourcePtr mTileSource;
 	const int mMaxLod;
 
-	// Note: By design, the TileImage key does not necessarily equal the cache key,
-	// because lower lods will be used (and put in the cache) if the requested lod (the cache key)
-	// is unavailable.
 	mutable LruCacheMap<QuadTreeTileKey, TileImage> mTileImageCache;
 	mutable std::mutex mTileImageCacheMutex;
 };
 
-class TileAsyncPlanetAltitudeProvider : public sim::AsyncPlanetAltitudeProvider
+//! Immediately returns result from an already loaded tile at the highest available LOD, and schedules a background task to load higher LOD levels if requred
+class NonBlockingTilePlanetAltitudeProvider : public BlockingTilePlanetAltitudeProvider
 {
 public:
-	TileAsyncPlanetAltitudeProvider(px_sched::Scheduler* scheduler, const TileSourcePtr& tileSource, int maxLod);
+	NonBlockingTilePlanetAltitudeProvider(px_sched::Scheduler* scheduler, const TileSourcePtr& tileSource, int maxLod);
 
-	//! Get altitude above sea level, positive is up.
-	//! If tile is not immediately available, requests to load tile on a background thread
-	//! and immediately returns empty optional.
-	std::optional<double> getAltitudeOrRequestLoad(const sim::LatLon& position) const override;
+	//! @ThreadSafe
+	AltitudeResult getAltitude(const sim::LatLon& position) const override;
 
-private:
-	px_sched::Scheduler* mScheduler;
+protected:
+	void requestLoadTileAndAddToCache(const QuadTreeTileKey& key) const;
+
+protected:
 	mutable px_sched::Sync mLoadingTaskSync;
-	std::unique_ptr<TilePlanetAltitudeProvider> mProvider;
+	px_sched::Scheduler* mScheduler;
 };
 
 } // namespace vis

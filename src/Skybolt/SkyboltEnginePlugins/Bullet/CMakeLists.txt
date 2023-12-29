@@ -1,4 +1,4 @@
-set(TARGET_NAME Bullet)
+set(TARGET_NAME SkyboltBullet)
 add_source_group_tree(. SrcFiles)
 
 include_directories("./")

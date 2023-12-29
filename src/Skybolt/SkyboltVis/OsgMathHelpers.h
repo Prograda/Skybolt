@@ -19,7 +19,7 @@ constexpr size_t componentCount(const T& v)
 	return T::num_components;
 }
 
-void getOrthonormalBasis(const osg::Vec3f &normal, osg::Vec3f &tangent, osg::Vec3f &binormal);
+void getOrthonormalBasis(const osg::Vec3f &normal, osg::Vec3f &tangent, osg::Vec3f &bitangent);
 
 } // namespace math
 } // namespace skybolt

@@ -14,12 +14,12 @@
 namespace skybolt {
 namespace vis {
 
-static vis::Box2f toBox2f(const TilePlanetAltitudeProvider::LatLonBounds& b)
+static vis::Box2f toBox2f(const BlockingTilePlanetAltitudeProvider::LatLonBounds& b)
 {
 	return vis::Box2f(osg::Vec2f(b.minimum.x(), b.minimum.y()), osg::Vec2f(b.maximum.x(), b.maximum.y()));
 }
 
-TilePlanetAltitudeProvider::TilePlanetAltitudeProvider(const TileSourcePtr& tileSource, int maxLod) :
+BlockingTilePlanetAltitudeProvider::BlockingTilePlanetAltitudeProvider(const TileSourcePtr& tileSource, int maxLod) :
 	mTileSource(tileSource),
 	mMaxLod(maxLod),
 	mTileImageCache(1024)
@@ -27,116 +27,122 @@ TilePlanetAltitudeProvider::TilePlanetAltitudeProvider(const TileSourcePtr& tile
 	assert(mTileSource);
 }
 
-double TilePlanetAltitudeProvider::getAltitude(const sim::LatLon& position) const
+BlockingTilePlanetAltitudeProvider::AltitudeResult BlockingTilePlanetAltitudeProvider::getAltitude(const sim::LatLon& position) const
 {
-	QuadTreeTileKey highestLodKey = getKeyAtLevelIntersectingLonLatPoint(mMaxLod, LatLonVec2Adapter(position));
-	std::optional<TilePlanetAltitudeProvider::TileImage> result = findHighestLodTile(highestLodKey);
-	if (!result)
-	{
-		return 0.0;
-	}
-
-	std::optional<HeightMapElevationRerange> rerange = getHeightMapElevationRerange(*result->image);
-	if (!rerange)
-	{
-		return 0.0;
-	}
-
-	vis::HeightMapElevationProvider provider(result->image, *rerange, toBox2f(getKeyLatLonBounds<LatLonVec2Adapter>(result->key)));
-	return provider.get(position.lat, position.lon);
-}
-
-std::optional<double> TilePlanetAltitudeProvider::tryGetAltitude(const sim::LatLon& position) const
-{
+	std::optional<TileImage> tile;
 	QuadTreeTileKey highestLodKey = getKeyAtLevelIntersectingLonLatPoint(mMaxLod, LatLonVec2Adapter(position));
 
-	TileImage result;
-	bool success;
+	tile = findTile(highestLodKey);
+	if (!tile)
 	{
-		std::scoped_lock<std::mutex> lock(mTileImageCacheMutex);
-		success = mTileImageCache.get(highestLodKey, result);
-	}
-	if (success)
-	{
-		std::optional<HeightMapElevationRerange> rerange = getHeightMapElevationRerange(*result.image);
-		if (!rerange)
+		// Load tile at highest available LOD level
+		for (int lod = mMaxLod; lod >= 0; lod--)
 		{
-			return {};
-		}
-
-		vis::HeightMapElevationProvider provider(result.image, *rerange,  toBox2f(getKeyLatLonBounds<LatLonVec2Adapter>(result.key)));
-		return provider.get(position.lat, position.lon);
-	}
-
-	return {};
-}
-
-std::optional<TilePlanetAltitudeProvider::TileImage> TilePlanetAltitudeProvider::findHighestLodTile(const QuadTreeTileKey& highestLodKey) const
-{
-	// If tile image exists in the cache, use it
-	TileImage result;
-	{
-		std::scoped_lock<std::mutex> lock(mTileImageCacheMutex);
-		if (mTileImageCache.get(highestLodKey, result))
-		{
-			return result;
-		}
-	}
-
-	int level = highestLodKey.level;
-	QuadTreeTileKey key = highestLodKey;
-	while (level >= 0)
-	{
-		osg::ref_ptr<osg::Image> image = mTileSource->createImage(key, [] {return false;});
-		if (image)
-		{
-			// Found image
-			TileImage result;
-			result.image = image;
-			result.key = key;
-
-			// Add to cache at highest LOD level
+			QuadTreeTileKey key = key = createAncestorKey(highestLodKey, lod);
+			tile = loadTile(key);
+			if (tile)
 			{
-				std::scoped_lock<std::mutex> lock(mTileImageCacheMutex);
-				mTileImageCache.putSafe(highestLodKey, result);
-
-				// Add to cache at lower LOD level so if the highest level has a cache miss
-				// we can still potentially avoid reloading the image
-				if (level != highestLodKey.level)
-				{
-					mTileImageCache.putSafe(key, result);
-				}
+				// Add tile at highest LOD key so we can find it quickly next time from highestLodKey
+				addTileToCache(*tile, highestLodKey);
+				break;
 			}
-
-			return result;
 		}
-		--level;
-		key = createAncestorKey(highestLodKey, level);
 	}
 
+	if (!tile)
+	{
+		return AltitudeResult::provisionalValue(0.0);
+	}
+
+	HeightMapElevationRerange rerange = getRequiredHeightMapElevationRerange(*tile->image);
+	vis::HeightMapElevationProvider provider(tile->image, rerange, toBox2f(getKeyLatLonBounds<LatLonVec2Adapter>(tile->key)));
+	return AltitudeResult::finalValue(provider.get(position.lat, position.lon));
+}
+
+std::optional<BlockingTilePlanetAltitudeProvider::TileImage> BlockingTilePlanetAltitudeProvider::findTile(const QuadTreeTileKey& key) const
+{
+	TileImage result;
+	std::scoped_lock<std::mutex> lock(mTileImageCacheMutex);
+	if (mTileImageCache.get(key, result))
+	{
+		return result;
+	}
 	return std::nullopt;
 }
 
-TileAsyncPlanetAltitudeProvider::TileAsyncPlanetAltitudeProvider(px_sched::Scheduler* scheduler, const TileSourcePtr& tileSource, int maxLod) :
-	mScheduler(scheduler),
-	mProvider(std::make_unique<TilePlanetAltitudeProvider>(tileSource, maxLod))
+std::optional<BlockingTilePlanetAltitudeProvider::TileImage> BlockingTilePlanetAltitudeProvider::loadTile(const QuadTreeTileKey& key) const
 {
-	assert(mScheduler);
+	int level = key.level;
+	osg::ref_ptr<osg::Image> image = mTileSource->createImage(key, [] {return false;});
+	if (image)
+	{
+		// Found image
+		TileImage result;
+		result.image = image;
+		result.key = key;
+		return result;
+	}
+	return std::nullopt;
 }
 
-std::optional<double> TileAsyncPlanetAltitudeProvider::getAltitudeOrRequestLoad(const sim::LatLon& position) const
+
+void BlockingTilePlanetAltitudeProvider::addTileToCache(const TileImage& image, const QuadTreeTileKey& key) const
 {
-	auto result = mProvider->tryGetAltitude(position);
-	if (!result)
+	std::scoped_lock<std::mutex> lock(mTileImageCacheMutex);
+	mTileImageCache.putSafe(key, image);
+}
+
+NonBlockingTilePlanetAltitudeProvider::NonBlockingTilePlanetAltitudeProvider(px_sched::Scheduler* scheduler, const TileSourcePtr& tileSource, int maxLod) :
+	BlockingTilePlanetAltitudeProvider(tileSource, maxLod),
+	mScheduler(scheduler)
+{
+	assert(mScheduler);
+	assert(mTileSource);
+}
+
+BlockingTilePlanetAltitudeProvider::AltitudeResult NonBlockingTilePlanetAltitudeProvider::getAltitude(const sim::LatLon& position) const
+{
+	std::optional<TileImage> highestLodTile;
+	for (int lod = 0; lod <= mMaxLod; lod++)
 	{
-		if (mScheduler->hasFinished(mLoadingTaskSync))
+		QuadTreeTileKey key = getKeyAtLevelIntersectingLonLatPoint(lod, LatLonVec2Adapter(position));
+		std::optional<TileImage> tile = findTile(key);
+		if (tile)
 		{
-			mScheduler->run([=]() {
-				mProvider->getAltitude(position);
-			}, &mLoadingTaskSync);
+			highestLodTile = tile;
+		}
+		else
+		{
+			requestLoadTileAndAddToCache(key);
+			break;
 		}
 	}
+
+	if (!highestLodTile)
+	{
+		return AltitudeResult::provisionalValue(0.0);
+	}
+
+	HeightMapElevationRerange rerange = getRequiredHeightMapElevationRerange(*highestLodTile->image);
+	vis::HeightMapElevationProvider provider(highestLodTile->image, rerange, toBox2f(getKeyLatLonBounds<LatLonVec2Adapter>(highestLodTile->key)));
+
+	AltitudeResult result;
+	result.altitude = provider.get(position.lat, position.lon);
+	result.provisional = (highestLodTile->key.level < mMaxLod);
 	return result;
+}
+
+void NonBlockingTilePlanetAltitudeProvider::requestLoadTileAndAddToCache(const QuadTreeTileKey& key) const
+{
+	if (mScheduler->hasFinished(mLoadingTaskSync))
+	{
+		mScheduler->run([=]() {
+			if (std::optional<TileImage> image = loadTile(key); image)
+			{
+				addTileToCache(*image, key);
+			}
+		}, &mLoadingTaskSync);
+	}
 }
 
 } // namespace vis

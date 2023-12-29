@@ -26,6 +26,7 @@ class DummyTileSource : public TileSource
 public:
 	osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override
 	{
+		std::scoped_lock<std::mutex> lock(requestsMutex);
 		requests.push_back(key);
 		auto result = skybolt::findOptional(images, key);
 		if (result)
@@ -48,6 +49,7 @@ public:
 
 	std::map<skybolt::QuadTreeTileKey, osg::ref_ptr<osg::Image>> images;
 	mutable std::vector<skybolt::QuadTreeTileKey> requests;
+	mutable std::mutex requestsMutex;
 };
 
 constexpr double altitude = 234;
@@ -66,62 +68,63 @@ static osg::ref_ptr<osg::Image> createDummyImage()
 	return image;
 }
 
-TEST_CASE("Test SynchronousPlanetAltitudeProvider returns zero elevation when no images found")
+TEST_CASE("Test BlockingTilePlanetAltitudeProvider returns zero elevation when no images found")
 {
 	auto source = std::make_shared<DummyTileSource>();
-	TilePlanetAltitudeProvider provider(source, 5);
-	CHECK(provider.getAltitude(sim::LatLon(1, 2)) == 0.0);
+	BlockingTilePlanetAltitudeProvider provider(source, 5);
+	CHECK(provider.getAltitude(sim::LatLon(1, 2)).altitude == 0.0);
 }
 
-TEST_CASE("Test SynchronousPlanetAltitudeProvider returns best available lod image if highest lod is not available")
+TEST_CASE("Test BlockingTilePlanetAltitudeProvider returns best available lod image if highest lod is not available")
 {
 	auto source = std::make_shared<DummyTileSource>();
 	source->images[QuadTreeTileKey(1, 0, 0)] = createDummyImage();
 
-	TilePlanetAltitudeProvider provider(source, 3);
-	CHECK(provider.getAltitude(sim::LatLon(1.4, -3.0)) == altitude);
+	BlockingTilePlanetAltitudeProvider provider(source, 3);
+	CHECK(provider.getAltitude(sim::LatLon(1.4, -3.0)).altitude == altitude);
 	CHECK(source->requests.size() == 3);
 	CHECK(source->requests[0].level == 3);
 	CHECK(source->requests[1].level == 2);
 	CHECK(source->requests[2].level == 1);
 }
 
-TEST_CASE("Test SynchronousPlanetAltitudeProvider uses cached images when highest lod is available")
+TEST_CASE("Test BlockingTilePlanetAltitudeProvider uses cached images when highest lod is available")
 {
 	auto source = std::make_shared<DummyTileSource>();
 	source->images[QuadTreeTileKey(1, 0, 0)] = createDummyImage();
 
-	TilePlanetAltitudeProvider provider(source, 1);
-	CHECK(provider.getAltitude(sim::LatLon(1.4, -3.0)) == altitude);
+	BlockingTilePlanetAltitudeProvider provider(source, 1);
+	CHECK(provider.getAltitude(sim::LatLon(1.4, -3.0)).altitude == altitude);
 	CHECK(source->requests.size() == 1);
-	CHECK(provider.getAltitude(sim::LatLon(1.4,- 3.0)) == altitude);
+	CHECK(provider.getAltitude(sim::LatLon(1.4,- 3.0)).altitude == altitude);
 	CHECK(source->requests.size() == 1); // requests is still 1, indicating that a cached image was used instead of querying the source.
 }
 
-TEST_CASE("Test SynchronousPlanetAltitudeProvider uses cached images when highest lod is unavailable")
+TEST_CASE("Test BlockingTilePlanetAltitudeProvider uses cached images when highest lod is unavailable")
 {
 	auto source = std::make_shared<DummyTileSource>();
 	source->images[QuadTreeTileKey(1, 0, 0)] = createDummyImage();
 
-	TilePlanetAltitudeProvider provider(source, 4);
-	CHECK(provider.getAltitude(sim::LatLon(1.4, -3.0)) == altitude);
+	BlockingTilePlanetAltitudeProvider provider(source, 4);
+	CHECK(provider.getAltitude(sim::LatLon(1.4, -3.0)).altitude == altitude);
 	CHECK(source->requests.size() == 4);
-	CHECK(provider.getAltitude(sim::LatLon(1.4, -3.0)) == altitude);
+	CHECK(provider.getAltitude(sim::LatLon(1.4, -3.0)).altitude == altitude);
 	CHECK(source->requests.size() == 4); // requests is still 1, indicating that a cached image was used instead of querying the source.
 }
 
-TEST_CASE("Test AsyncPlanetAltitudeProvider background loads tile")
+TEST_CASE("Test NonBlockingPlanetAltitudeProvider background loads tile")
 {
 	auto source = std::make_shared<DummyTileSource>();
+	source->images[QuadTreeTileKey(0, 0, 0)] = createDummyImage();
 	source->images[QuadTreeTileKey(1, 0, 0)] = createDummyImage();
 
 	px_sched::Scheduler scheduler;
 	scheduler.init();
 
-	TileAsyncPlanetAltitudeProvider provider(&scheduler, source, 3);
-	CHECK(provider.getAltitudeOrRequestLoad(sim::LatLon(1.4, -3.0)) == std::nullopt);
+	NonBlockingTilePlanetAltitudeProvider provider(&scheduler, source, 3);
+	CHECK(provider.getAltitude(sim::LatLon(1.4, -3.0)) == NonBlockingTilePlanetAltitudeProvider::AltitudeResult::provisionalValue(0.0));
 
 	CHECK(eventually([&]{
-		return provider.getAltitudeOrRequestLoad(sim::LatLon(1.4, -3.0)) == altitude;
+		return provider.getAltitude(sim::LatLon(1.4, -3.0)) == NonBlockingTilePlanetAltitudeProvider::AltitudeResult::finalValue(altitude);
 	}));
 }

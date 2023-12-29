@@ -9,15 +9,15 @@
 namespace skybolt {
 namespace math {
 
-void getOrthonormalBasis(const osg::Vec3f &normal, osg::Vec3f &tangent, osg::Vec3f &binormal)
+void getOrthonormalBasis(const osg::Vec3f &normal, osg::Vec3f &tangent, osg::Vec3f &bitangent)
 {
 	float d = normal * osg::Vec3f(0, 1, 0);
 	if (d > -0.95f && d < 0.95f)
-		binormal = normal ^ osg::Vec3f(0, 1, 0);
+		bitangent = normal ^ osg::Vec3f(0, 1, 0);
 	else
-		binormal = normal ^ osg::Vec3f(0, 0, 1);
-	binormal.normalize();
-	tangent = binormal ^ normal;
+		bitangent = normal ^ osg::Vec3f(0, 0, 1);
+	bitangent.normalize();
+	tangent = bitangent ^ normal;
 }
 
 } // namespace math

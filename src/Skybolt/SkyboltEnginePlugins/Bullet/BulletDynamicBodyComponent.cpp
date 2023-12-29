@@ -25,6 +25,7 @@ SKYBOLT_REFLECT_END
 BulletDynamicBodyComponent::BulletDynamicBodyComponent(const BulletDynamicBodyComponentConfig& config) :
 	mMinSpeedForCcdSquared(5.0 * 5.0),
 	mWorld(config.world),
+	mOwnerEntityId(config.ownerEntityId),
 	mNode(config.node),
 	mMotion(config.motion),
 	mMomentOfInertia(config.momentOfInertia),
@@ -84,8 +85,7 @@ void BulletDynamicBodyComponent::updatePostDynamics()
 		{
 			// cheap and simple CCD
 			// Note - we're using this instead of Bullet CCD because Bullet doesn't generate impulse for CCD
-			const RayTestResult &res = mWorld->testRay(mNodePosition, newNodePosition, CollisionGroupMasks::terrain);
-			if (res.hit)
+			if (auto result = mWorld->intersectRay(mNodePosition, newNodePosition, CollisionGroupMasks::terrain); result)
 			{
 				// Correct body's position
 				btTransform t = mBody->getCenterOfMassTransform();
@@ -93,19 +93,24 @@ void BulletDynamicBodyComponent::updatePostDynamics()
 				mBody->getCollisionShape()->getAabb(t, aabbMin, aabbMax);
 				double radius = aabbMax.distance(aabbMin) * 0.5;
 
-				newNodePosition = res.position;
-				t.setOrigin(toBtVector3(res.position) + worldSpaceCenterOfMass + toBtVector3(res.normal) * radius);
+				newNodePosition = result->position;
+				t.setOrigin(toBtVector3(result->position) + worldSpaceCenterOfMass + toBtVector3(result->normal) * radius);
 				mBody->setWorldTransform(t);
 				mBody->proceedToTransform(t);
 
-				// Correct body's velocity
-				mBody->setLinearVelocity(btVector3(0, 0, 0));
+				// Zero the body's velocity component in direction of penetration
+				btVector3 velocity = mBody->getLinearVelocity();
+				velocity += velocity.normalized() * velocity.dot(toBtVector3(result->normal));
+				mBody->setLinearVelocity(velocity);
 			}
 		}
 
 		// Update node position and orientation
-		mNode->setPosition(newNodePosition);
-		mNode->setOrientation(toGlmDquat(mBody->getOrientation()));
+		mNodePosition = newNodePosition;
+		mNodeOrientation = toGlmDquat(mBody->getOrientation());
+
+		mNode->setPosition(mNodePosition);
+		mNode->setOrientation(mNodeOrientation);
 		mMotion->linearVelocity = toGlmDvec3(mBody->getLinearVelocity());
 		mMotion->angularVelocity = toGlmDvec3(mBody->getAngularVelocity());
 	}

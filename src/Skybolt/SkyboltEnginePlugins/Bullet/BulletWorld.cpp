@@ -6,8 +6,10 @@
 
 #include "BulletWorld.h"
 #include "RigidBody.h"
+#include "BulletSystem.h"
+#include "BulletTypeConversion.h"
+
 #include <SkyboltSim/CollisionGroupMasks.h>
-#include "Bullet/BulletTypeConversion.h"
 
 namespace skybolt {
 namespace sim {
@@ -21,6 +23,7 @@ static btDiscreteDynamicsWorldPtr createDiscreteDynamicsWorld()
 
 	btDiscreteDynamicsWorld* btWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 	btWorld->setGravity(btVector3(0, 0, 0));
+	btWorld->getSolverInfo().m_splitImpulse = false; // Disable because it allows objects to penetrate to far into the ground
 
 	return btDiscreteDynamicsWorldPtr(btWorld, [=](btDiscreteDynamicsWorld* world) {
 		delete world;
@@ -34,15 +37,16 @@ static btDiscreteDynamicsWorldPtr createDiscreteDynamicsWorld()
 BulletWorld::BulletWorld() :
 	mDynamicsWorld(createDiscreteDynamicsWorld())
 {
-
 }
 
-RigidBody* BulletWorld::createRigidBody(btCollisionShape* shape, double mass,  const btVector3 &inertia, const btVector3 &position,
+RigidBody* BulletWorld::createRigidBody(const btCollisionShapePtr& shape, double mass,  const btVector3 &inertia, const btVector3 &position,
 										const btQuaternion &orientation, const btVector3 &velocity, int collisionGroupMask, int collisionFilterMask)
 {
 	RigidBody* body = new RigidBody(mDynamicsWorld.get(), shape, collisionGroupMask, collisionFilterMask, mass, inertia, position, orientation, velocity);
 	if (mass == 0.0)
+	{
 		body->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
+	}
 	return body;
 }
 
@@ -51,13 +55,7 @@ void BulletWorld::destroyRigidBody(RigidBody* body)
 	delete body; 
 }
 
-RayTestResult BulletWorld::testRay(const Vector3 &position, const Vector3 &direction, double length, int collisionFilterMask)
-{
-	Vector3 end = position + length * direction;
-	return testRay(position, end, collisionFilterMask);
-}
-
-RayTestResult BulletWorld::testRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask)
+std::optional<RayIntersectionResult> BulletWorld::intersectRay(const Vector3 &start, const Vector3 &end, int collisionFilterMask)
 {
 	btVector3 startBullet = toBtVector3(start);
 	btVector3 endBullet = toBtVector3(end);
@@ -70,15 +68,16 @@ RayTestResult BulletWorld::testRay(const Vector3 &start, const Vector3 &end, int
 		mDynamicsWorld->rayTest(startBullet, endBullet, rayCallback);
 	}
 
-	RayTestResult result;
-	result.hit = rayCallback.hasHit();
-	if(result.hit)
+	if(rayCallback.hasHit())
 	{
+		RayIntersectionResult result;
 		result.position = toGlmDvec3(rayCallback.m_hitPointWorld);
 		result.normal = toGlmDvec3(rayCallback.m_hitNormalWorld);
 		result.distance = startBullet.distance(rayCallback.m_hitPointWorld);
+		result.entity = rayCallback.m_collisionObject ? getEntity(*rayCallback.m_collisionObject) : nullEntityId();
+		return result;
 	}
-	return result;
+	return std::nullopt;
 }
 
 } // namespace sim

@@ -11,7 +11,7 @@
 #include "Sprocket/QtTypeConversions.h"
 #include <SkyboltCommon/Units.h>
 #include <SkyboltCommon/Math/MathUtility.h>
-#include <SkyboltEngine/VisObjectsComponent.h>
+#include <SkyboltEngine/Components/VisObjectsComponent.h>
 #include <SkyboltReflection/Reflection.h>
 #include <SkyboltSim/PropertyMetadata.h>
 #include <SkyboltSim/Spatial/LatLon.h>

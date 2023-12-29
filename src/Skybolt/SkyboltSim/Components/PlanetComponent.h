@@ -19,15 +19,14 @@ namespace sim {
 struct PlanetComponent : public Component
 {
 public:
-	PlanetComponent(double radius, const std::shared_ptr<AsyncPlanetAltitudeProvider>& altitudeProvider) :
-		radius(radius),
-		altitudeProvider(altitudeProvider)
+	explicit PlanetComponent(double radius) :
+		radius(radius)
 	{
 	}
 
 	const double radius;
-	const std::shared_ptr<AsyncPlanetAltitudeProvider> altitudeProvider; //!< Null if the planet has no terrain
-	
+
+	std::shared_ptr<PlanetAltitudeProvider> altitudeProvider; //!< Null if the planet has no terrain
 	std::optional<Atmosphere> atmosphere;
 };
 

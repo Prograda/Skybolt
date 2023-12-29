@@ -8,14 +8,16 @@
 #include "BulletTypeConversion.h"
 #include "BulletWorld.h"
 #include "RigidBody.h"
+#include <SkyboltSim/EntityId.h>
 #include <SkyboltSim/CollisionGroupMasks.h>
 #include <SkyboltSim/Components/Node.h>
 
 using namespace skybolt::sim;
 
-KinematicBody::KinematicBody(BulletWorld* world, Node* node, btCollisionShape* shape, int collisionGroupMask,
+KinematicBody::KinematicBody(BulletWorld* world, EntityId ownerEntityId, Node* node, const btCollisionShapePtr& shape, int collisionGroupMask,
 					   const Vector3 &localPosition, const Quaternion &localOrientation) :
 	mWorld(world),
+	mOwnerEntityId(ownerEntityId),
 	mNode(node)
 {
 	// TODO: un-hardcode collision filter mask

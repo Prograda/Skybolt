@@ -8,6 +8,7 @@
 
 #include "SkyboltEngine/SkyboltEngineFwd.h"
 #include <SkyboltSim/SkyboltSimFwd.h>
+#include <SkyboltVis/SkyboltVisFwd.h>
 #include <nlohmann/json.hpp>
 #include <px_sched/px_sched.h>
 
@@ -20,6 +21,7 @@ struct ComponentFactoryContext
 	EntityFactory const* entityFactory;
 	JulianDateProvider julianDateProvider;
 	EngineStats* stats;
+	vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
 };
 
 class ComponentFactory
