@@ -29,7 +29,8 @@ void PitchLadderModel::drawHalfRung(float relY, float rungPitch, float roll, flo
 	glm::vec2 p1 = math::vec2Rotate( glm::vec2(halfSignedWidth, relY), roll);
 	glm::vec2 p2 = math::vec2Rotate( glm::vec2(halfSignedWidth * 0.5, relY), roll);
 
-	mDrawer->drawLine(p0, p1); // winglet
+	// Draw winglet
+	mDrawer->drawLine(p0, p1);
 
 	// horizontal line
 	if (params)
@@ -48,8 +49,19 @@ void PitchLadderModel::drawRung(float rungPitch, float pitch, float roll, float 
 {
 	float relY = (rungPitch - pitch) * mParam.pitchGapHeight / mParam.pitchAngleIncrement;
 
-	drawHalfRung(relY, rungPitch, roll, -width, params);
-	drawHalfRung(relY, rungPitch, roll, width, params);
+	if (isRungInDisplayArea(relY, roll))
+	{
+		drawHalfRung(relY, rungPitch, roll, -width, params);
+		drawHalfRung(relY, rungPitch, roll, width, params);
+	}
+}
+
+bool PitchLadderModel::isRungInDisplayArea(float relY, float roll) const
+{
+	glm::vec2 p = math::vec2Rotate( glm::vec2(0, relY), roll);
+	glm::vec2 halfDisplayAreaSize = mParam.displayAreaSize * 0.5f;
+	return p.x > -halfDisplayAreaSize.x && p.x < halfDisplayAreaSize.x
+		&& p.y > -halfDisplayAreaSize.y && p.y < halfDisplayAreaSize.y;
 }
 
 void PitchLadderModel::draw(float pitch, float roll)

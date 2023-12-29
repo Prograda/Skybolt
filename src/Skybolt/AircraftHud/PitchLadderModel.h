@@ -24,6 +24,7 @@ public:
 			wingletHeight = 0.01f;
 			textOffset = 0.03f;
 			maxPitchAngle = math::halfPiF();
+			displayAreaSize = glm::vec2(2);
 		}
 
 		float pitchAngleIncrement;
@@ -32,6 +33,7 @@ public:
 		float wingletHeight;
 		float textOffset;
 		float maxPitchAngle;
+		glm::vec2 displayAreaSize; //!< Ladder will be culled outside the display area
 	};
 
 	PitchLadderModel(HudDrawer* drawer, const Parameters& param);
@@ -42,6 +44,7 @@ public:
 protected:
 	void drawRung(float rungPitch, float pitch, float roll, float width, const HudDrawer::DashedLineParams* params = 0);
 	void drawHalfRung(float relY, float rungPitch, float roll, float signedWidth, const HudDrawer::DashedLineParams* params = 0);
+	bool isRungInDisplayArea(float relY, float roll) const;
 
 private:
 
