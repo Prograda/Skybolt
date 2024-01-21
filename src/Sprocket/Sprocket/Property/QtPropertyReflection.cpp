@@ -179,8 +179,9 @@ PropertyFactory createPropertyFactory(const QtValueT& defaultValue)
 		r.updater = [instanceGetter, property] (QtProperty& qtProperty) {
 			if (const auto& instance = instanceGetter(); instance)
 			{
-				auto value = property->getValue(*instance).getObject<SimValueT>();
-				qtProperty.setValue(simValueToQt(*property, *value));
+				refl::Instance valueInstance = property->getValue(*instance);
+				SimValueT value = *valueInstance.getObject<SimValueT>();
+				qtProperty.setValue(simValueToQt(*property, value));
 			}
 		};
 		r.updater(*r.property);
@@ -219,7 +220,8 @@ PropertyFactory createOptionalPropertyFactory(const QtValueT& defaultValue)
 		r.updater = [instanceGetter, property, defaultValue] (QtProperty& qtProperty) {
 			if (const auto& instance = instanceGetter(); instance)
 			{
-				std::optional<SimValueT> value = *property->getValue(*instance).getObject<std::optional<SimValueT>>();
+				refl::Instance valueInstance = property->getValue(*instance);
+				std::optional<SimValueT> value = *valueInstance.getObject<std::optional<SimValueT>>();
 
 				OptionalProperty optionalProperty = qtProperty.value.value<OptionalProperty>();
 				optionalProperty.property->setValue(simValueToQt(*property, value.value_or(defaultValue)));
