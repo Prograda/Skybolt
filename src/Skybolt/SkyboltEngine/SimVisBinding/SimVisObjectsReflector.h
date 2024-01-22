@@ -84,8 +84,6 @@ private:
 
 protected:
 	osg::Switch* mGroup;
-
-private:
 	sim::World* mWorld;
 	std::map<sim::Entity*, T> mEntities;
 	EntityVisibilityPredicate mEntityVisibilityPredicate;

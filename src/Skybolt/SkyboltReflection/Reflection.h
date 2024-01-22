@@ -373,7 +373,7 @@ public:
 	TypeBuilder<TypeT>& propertyReadOnly(const std::string& name, MemberT TypeT::*member, Property::MetadataMap metadata = {})
 	{
 		mRegisterLater([name = std::move(name), member = std::move(member), metadata = std::move(metadata), type = mType] (TypeRegistry& registry) {
-			auto p = std::make_shared<MemberProperty<TypeT, MemberT>>(&registry, name, mRegistry.getOrCreateType<MemberT>(), member);
+			auto p = std::make_shared<MemberProperty<TypeT, MemberT>>(&registry, name, registry.getOrCreateType<MemberT>(), member);
 			p->addMetadata(std::move(metadata));
 			p->setReadOnly(true);
 			type->addProperty(p);

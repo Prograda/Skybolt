@@ -49,7 +49,7 @@ void Polyline::setPoints(const osg::ref_ptr<osg::Vec3Array>& points)
 		mGeometry->setColorArray(colorArray);
 		mGeometry->setColorBinding(osg::Geometry::BIND_OVERALL);
 
-		mGeometry->addPrimitiveSet(new osg::DrawArrays(GL_LINE_STRIP, 0, points->size()));
+		mGeometry->addPrimitiveSet(new osg::DrawArrays((mLineMode == LineMode::Strip ? GL_LINE_STRIP : GL_LINES), 0, points->size()));
 	}
 }
 

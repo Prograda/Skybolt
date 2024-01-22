@@ -404,7 +404,7 @@ static QWidget* createOptionalVariantEditor(const PropertyEditorWidgetFactoryMap
 		layout->setMargin(0);
 		widget->setLayout(layout);
 
-		auto activateCheckbox = new QCheckBox("Enabled", widget);
+		auto activateCheckbox = new QCheckBox("Valid", widget);
 		activateCheckbox->setChecked(optionalProperty.present);
 		QWidget* valueEditorWidget = i->second(optionalProperty.property.get(), parent);
 		valueEditorWidget->setEnabled(optionalProperty.present);

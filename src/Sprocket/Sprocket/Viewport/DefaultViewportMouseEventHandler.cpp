@@ -19,12 +19,12 @@ DefaultViewportMouseEventHandler::DefaultViewportMouseEventHandler(DefaultViewpo
 	mEngineRoot(config.engineRoot),
 	mViewportInput(config.viewportInput),
 	mSelectionModel(config.scenarioSelectionModel),
-	mSelectionPredicate(config.selectionPredicate)
+	mViewportSelectionPredicate(config.viewportSelectionPredicate)
 {
 	assert(mEngineRoot);
 	assert(mViewportInput);
 	assert(mSelectionModel);
-	assert(mSelectionPredicate);
+	assert(mViewportSelectionPredicate);
 }
 
 bool DefaultViewportMouseEventHandler::mousePressed(ViewportWidget& widget, const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers)
@@ -70,7 +70,7 @@ bool DefaultViewportMouseEventHandler::mouseReleased(ViewportWidget& widget, con
 	{
 		sim::EntityId selectedEntityId = sim::nullEntityId();
 			
-		std::vector<PickedScenarioObject> pickedObjects = widget.pickSceneObjectsAtPointInWindow(position, mSelectionPredicate);
+		std::vector<PickedScenarioObject> pickedObjects = widget.pickSceneObjectsAtPointInWindow(position, mViewportSelectionPredicate(widget));
 		selectItems(!pickedObjects.empty() ? SelectedScenarioObjects({pickedObjects.front().object}) : SelectedScenarioObjects());
 		return true;
 	}

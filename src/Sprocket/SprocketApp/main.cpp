@@ -156,7 +156,7 @@ public:
 				c.engineRoot = engineRoot.get();
 				c.viewportInput = viewportInputSystem;
 				c.scenarioSelectionModel = selectionModel;
-				c.selectionPredicate = ScenarioObjectPredicateAlways;
+				c.viewportSelectionPredicate = [] (const ViewportWidget&) { return ScenarioObjectPredicateAlways; };
 				return c;
 			}());
 

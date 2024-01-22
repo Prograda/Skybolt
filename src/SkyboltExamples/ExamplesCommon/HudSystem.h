@@ -1,3 +1,5 @@
+#pragma once
+
 #include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/System/System.h>

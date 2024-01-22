@@ -19,7 +19,7 @@ struct DefaultViewportMouseEventHandlerConfig
 	skybolt::EngineRoot* engineRoot;
 	ViewportInputSystemPtr viewportInput;
 	ScenarioSelectionModel* scenarioSelectionModel;
-	ScenarioObjectPredicate selectionPredicate;
+	std::function<ScenarioObjectPredicate(const ViewportWidget&)> viewportSelectionPredicate;
 };
 
 class DefaultViewportMouseEventHandler : public ViewportMouseEventHandler
@@ -39,7 +39,7 @@ protected:
 	skybolt::EngineRoot* mEngineRoot;
 	ViewportInputSystemPtr mViewportInput;
 	ScenarioSelectionModel* mSelectionModel;
-	ScenarioObjectPredicate mSelectionPredicate;
+	std::function<ScenarioObjectPredicate(const ViewportWidget&)> mViewportSelectionPredicate;
 
 	boost::signals2::scoped_connection mViewportCameraConnection;
 };

@@ -63,6 +63,8 @@ public:
 
 	skybolt::sim::Entity* getCamera() const { return mCurrentSimCamera; }
 
+	osg::ref_ptr<skybolt::vis::RenderCameraViewport> getRenderCameraViewport() const { return mViewport; }
+
 	QToolBar* getToolBar() const { return mToolBar; }
 
 
