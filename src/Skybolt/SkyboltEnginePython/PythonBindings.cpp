@@ -8,6 +8,7 @@
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EntityFactory.h>
 #include <SkyboltEngine/WindowUtil.h>
+#include <SkyboltEngine/Components/TemplateNameComponent.h>
 #include <SkyboltEngine/Components/VisObjectsComponent.h>
 #include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
 #include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
@@ -267,6 +268,9 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_readwrite("serializable", &ScenarioMetadataComponent::serializable)
 		.def_readwrite("deletable", &ScenarioMetadataComponent::deletable)
 		.def_readwrite("directory", &ScenarioMetadataComponent::directory);
+
+	py::class_<TemplateNameComponent, std::shared_ptr<TemplateNameComponent>, Component>(m, "TemplateNameComponent")
+		.def_readonly("name", &TemplateNameComponent::name);
 
 	py::class_<CameraComponent, std::shared_ptr<CameraComponent>, Component>(m, "CameraComponent")
 		.def_property("state",
