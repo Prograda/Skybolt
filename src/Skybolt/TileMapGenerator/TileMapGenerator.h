@@ -23,4 +23,4 @@ enum class Filtering
 };
 
 //! Generates herichical tile map in XYZ format
-void generateTileMap(const std::string& outputDirectory, const osg::Vec2i& tileDimensions, const std::vector<TileMapGeneratorLayer>& layers, Filtering filtering);
+void generateTileMap(const std::string& outputDirectory, const osg::Vec2i& tileDimensions, const std::vector<TileMapGeneratorLayer>& layers, Filtering filtering, const std::string& extension = "png");

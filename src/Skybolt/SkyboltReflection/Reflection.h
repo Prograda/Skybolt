@@ -437,7 +437,7 @@ public:
 	template <typename T>
 	TypeBuilder<T> type(const std::string& name)
 	{
-		assert(mRegistry.getType(typeid(T)) == nullptr);
+		assert(mRegistry.getType<T>() == nullptr);
 		std::type_index typeIndex = typeid(T);
 		auto newType = std::make_shared<Type>(name, typeIndex);
 		mRegistry.addType(newType);

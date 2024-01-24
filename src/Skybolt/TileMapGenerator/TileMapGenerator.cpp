@@ -18,8 +18,8 @@ using namespace vis;
 
 struct TileGenerator
 {
-	TileGenerator(const std::string& outputDirectory, const osg::Vec2i& tileDimensions, const std::vector<TileMapGeneratorLayer>& layers, Filtering filtering = Filtering::Bilinear) :
-		outputDirectory(outputDirectory), tileDimensions(tileDimensions), layers(layers), filtering(filtering)
+	TileGenerator(const std::string& outputDirectory, const osg::Vec2i& tileDimensions, const std::vector<TileMapGeneratorLayer>& layers, Filtering filtering, const std::string& extension) :
+		outputDirectory(outputDirectory), tileDimensions(tileDimensions), layers(layers), filtering(filtering), extension(extension)
 	{
 		for (const TileMapGeneratorLayer& layer : layers)
 		{
@@ -86,10 +86,23 @@ struct TileGenerator
 		path += +"/" + std::to_string(tile.key.x);
 		std::filesystem::create_directory(path);
 
-		path += "/" + std::to_string(tile.key.y) + ".png";
+		path += "/" + std::to_string(tile.key.y) + "." + extension;
 
-		printf("Writing %s\n", path.c_str());
+		bool verboseOutput = false;
+		if (verboseOutput)
+		{
+			printf("Writing %s\n", path.c_str());
+		}
+
 		osgDB::writeImageFile(*image, path);
+
+		{
+			mFilesWrittenCount++;
+			if ((mFilesWrittenCount % 1000) == 0)
+			{
+				printf("%llu files written so far. Most recent file written: '%s'\n", mFilesWrittenCount, path.c_str());
+			}
+		}
 
 		float outputResolution = std::max(tileDimensions.x() / tile.bounds.size().x(), tileDimensions.y() / tile.bounds.size().y());
 		return (maxSrcResolution > outputResolution);
@@ -100,18 +113,25 @@ struct TileGenerator
 	const std::vector<TileMapGeneratorLayer>& layers;
 	std::vector<float> layerResolutions;
 	Filtering filtering;
+	std::string extension;
+
+private:
+	mutable std::size_t mFilesWrittenCount = 0;
 };
 
-void generateTileMap(const std::string& outputDirectory, const osg::Vec2i& tileDimensions, const std::vector<TileMapGeneratorLayer>& layers, Filtering filtering)
+void generateTileMap(const std::string& outputDirectory, const osg::Vec2i& tileDimensions, const std::vector<TileMapGeneratorLayer>& layers, Filtering filtering, const std::string& extension)
 {
 	if (layers.empty())
 	{
 		throw skybolt::Exception("No tile map generator input layers layers");
 	}
 
-	if (!std::filesystem::is_directory(outputDirectory))
+	if (!std::filesystem::exists(outputDirectory))
 	{
-		throw skybolt::Exception("Output directory '" + outputDirectory + "' does not exist");
+		if (!std::filesystem::create_directories(outputDirectory))
+		{
+			throw skybolt::Exception("Could not create output directory '" + outputDirectory + "'");
+		}
 	}
 
 	Box2d bounds(osg::Vec2d(-math::piD(), -math::halfPiD()), osg::Vec2d(0, math::halfPiD()));
@@ -120,7 +140,7 @@ void generateTileMap(const std::string& outputDirectory, const osg::Vec2i& tileD
 	bounds = Box2d(osg::Vec2d(0, -math::halfPiD()), osg::Vec2d(math::piD(), math::halfPiD()));
 	QuadTree<DefaultTile<osg::Vec2d>> treeRight(createDefaultTile<osg::Vec2d>, QuadTreeTileKey(0, 1, 0), bounds);
 
-	TileGenerator tileGenerator(outputDirectory, tileDimensions, layers, filtering);
+	TileGenerator tileGenerator(outputDirectory, tileDimensions, layers, filtering, extension);
 
 	treeLeft.subdivideRecursively(treeLeft.getRoot(), tileGenerator);
 	treeRight.subdivideRecursively(treeRight.getRoot(), tileGenerator);

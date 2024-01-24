@@ -93,11 +93,11 @@ static IntRangeInclusive readLevelRange(const nlohmann::json& json)
 
 static HeightMapElevationRerange readElevationRerange(const nlohmann::json& json)
 {
-	if (json.array().size() != 2)
+	if (!json.is_array() || json.size() != 2)
 	{
 		throw std::runtime_error("Elevation range was not in form [min, max]");
 	}
-	return rerangeElevationFromUInt16WithElevationBounds(json.array().front(), json.array().back());
+	return rerangeElevationFromUInt16WithElevationBounds(json[0], json[1]);
 }
 
 void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)

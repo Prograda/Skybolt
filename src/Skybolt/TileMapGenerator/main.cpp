@@ -13,7 +13,7 @@
 using namespace skybolt::vis;
 using namespace skybolt;
 
-Box2d getTileBounds(int x, int y, int numTilesX, int numTilesY)
+static Box2d getTileBounds(int x, int y, int numTilesX, int numTilesY)
 {
 	static Box2d planetLonLatBounds(osg::Vec2d(-math::piD(), -math::halfPiD()), osg::Vec2d(math::piD(), math::halfPiD()));
 
@@ -61,7 +61,7 @@ static osg::ref_ptr<osg::Image> loadRawImage16bit(const std::string& filename, i
 	return image;
 }
 
-void postProcessStrm(osg::Image& image)
+static void postProcessStrm(osg::Image& image)
 {
 	size_t elementCount = image.s() * image.t();
 	for (size_t i = 0; i < elementCount; ++i)
@@ -76,7 +76,45 @@ void postProcessStrm(osg::Image& image)
 	}
 }
 
-int main_nlcd()
+static int main_blueMarble()
+{
+	std::string outputDirectory = "BlueMarble/TMS";
+	osg::Vec2i tileDimensions(256, 256);
+
+	std::vector<TileMapGeneratorLayer> layers;
+
+	// Add tiles
+	for (int y = 0; y < 2; ++y)
+	{
+		for (int x = 0; x < 4; ++x)
+		{
+			double minBoundX = osg::DegreesToRadians(-180.0 + double(x) * 90.0);
+			double minBoundY = - osg::DegreesToRadians(double(y) * 90.0);
+
+			char letter = 'A' + x;
+
+			TileMapGeneratorLayer layer;
+			layer.image = osgDB::readImageFile("BlueMarble/world.200411.3x21600x21600." + std::string{letter} + std::to_string(y+1) + ".png");
+			layer.bounds = Box2d(osg::Vec2d(minBoundX, minBoundY), osg::Vec2d(minBoundX + math::halfPiD(), minBoundY + math::halfPiD()));
+			layers.push_back(layer);
+		}
+	}
+
+	std::cout << "Inputs loaded" << std::endl;
+
+	try
+	{
+		generateTileMap(outputDirectory, tileDimensions, layers, Filtering::Bilinear, "jpg");
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
+}
+
+static int main_nlcd()
 {
 	std::string outputDirectory = "nlcd_2011_landcover_2011_edition_2014_10_10/TMS";
 	osg::Vec2i tileDimensions(256, 256);
@@ -93,7 +131,8 @@ int main_nlcd()
 
 	try
 	{
-		generateTileMap(outputDirectory, tileDimensions, layers, Filtering::NearestNeighbor);
+		Filtering filtering = Filtering::NearestNeighbor; // use NearestNeighbor because NLCD is interger data which should not be interpolated
+		generateTileMap(outputDirectory, tileDimensions, layers, filtering);
 	}
 	catch (const std::exception& e)
 	{
@@ -103,7 +142,7 @@ int main_nlcd()
 	return EXIT_SUCCESS;
 }
 
-int main_dem()
+static int main_dem()
 {
 	std::string outputDirectory = "DEM/CombinedElevation";
 	osg::Vec2i tileDimensions(256, 256);
@@ -177,5 +216,5 @@ int main_dem()
 
 int main()
 {
-	return main_dem();
+	return main_blueMarble();
 }

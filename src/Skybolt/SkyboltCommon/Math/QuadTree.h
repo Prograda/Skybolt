@@ -214,7 +214,8 @@ struct QuadTree
 		tile.children[3] = mTileCreator(QuadTreeTileKey(level, x + 1, y + 1), Box2T<typename TileT::VectorType>(centerS, centerE)); // south east
 	}
 
-	void subdivideRecursively(TileT& tile, std::function<bool(const TileT& tile)> subdivisionRequired)
+	using SubdivisionPredicate = std::function<bool(const TileT& tile)>;
+	void subdivideRecursively(TileT& tile, const SubdivisionPredicate& subdivisionRequired)
 	{
 		if (subdivisionRequired(tile))
 		{
@@ -254,7 +255,7 @@ struct DiQuadTree
 	{
 	}
 
-	const TileT* intersect(const typename TileT::VectorType& p, typename skybolt::QuadTree<TileT>::IntersectionPredicate predicate) const
+	const TileT* intersect(const typename TileT::VectorType& p, const typename skybolt::QuadTree<TileT>::IntersectionPredicate& predicate) const
 	{
 		const TileT* result = leftTree.intersect(p, predicate);
 		if (!result)
@@ -280,7 +281,7 @@ class LruCachedLeafIntersector
 {
 public:
 	LruCachedLeafIntersector(const std::shared_ptr<TreeT>& tree, typename QuadTree<typename TreeT::TileType>::IntersectionPredicate predicate) :
-		tree(tree), predicate(predicate) {}
+		tree(tree), predicate(std::move(predicate)) {}
 
 	//! @ThreadSafe
 	const typename TreeT::TileType* intersect(const typename TreeT::TileType::VectorType& p)
