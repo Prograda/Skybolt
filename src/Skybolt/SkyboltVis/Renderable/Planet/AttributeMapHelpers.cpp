@@ -16,6 +16,7 @@ namespace vis {
 const AttributeColors& getNlcdAttributeColors()
 {
 	static AttributeColors c = {
+		AttributeColor(0, osg::Vec4f(0.f, 0.f, 0.f, 1)), // none
 		AttributeColor(0, osg::Vec4f(0.27843137255f, 0.41960784314f, 0.62745098039f, 1)), // water
 		AttributeColor(0, osg::Vec4f(0.69803921569f, 0.67843137255f, 0.63921568628f, 1)), // barren
 		// developed

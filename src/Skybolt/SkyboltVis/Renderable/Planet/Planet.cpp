@@ -125,8 +125,11 @@ static GpuForestTileTextures createGpuForestTileTextures(TileTextureCache& cache
 	GpuForestTileTextures textures;
 	textures.height.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Height, images.heightMapImage.image, createNonSrgbTextureWithoutMipmaps);
 	textures.height.key = images.heightMapImage.key;
-	textures.attribute.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Attribute, images.attributeMapImage->image, createNonSrgbTextureWithoutMipmaps);
-	textures.attribute.key = images.attributeMapImage->key;
+	if (images.attributeMapImage)
+	{
+		textures.attribute.texture = cache.getOrCreateTexture(TileTextureCache::TextureType::Attribute, images.attributeMapImage->image, createNonSrgbTextureWithoutMipmaps);
+		textures.attribute.key = images.attributeMapImage->key;
+	}
 	return textures;
 }
 
