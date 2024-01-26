@@ -87,7 +87,7 @@ osg::ref_ptr<osg::Image> XyzTileSource::createImage(const QuadTreeTileKey& key, 
 			int elementCount = image->s() * image->t();
 			for (int i = 0; i < elementCount; ++i)
 			{
-				expand(bounds, getElevationForColorValue(*mElevationRerange, *p));
+				expand(bounds, getElevationForColorValue(*mElevationRerange, p[i]));
 			}
 			setHeightMapElevationBounds(*image, bounds);
 		}
