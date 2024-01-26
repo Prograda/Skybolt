@@ -22,7 +22,6 @@ out float logZ;
 out vec3 positionRelCamera;
 out AtmosphericScattering scattering;
 
-uniform sampler2D cloudSampler;
 uniform mat4 viewProjectionMatrix;
 uniform mat4 modelMatrix;
 uniform vec3 cameraPosition;
@@ -47,7 +46,7 @@ void main()
 	// Calculate lighting
 #ifdef ENABLE_ATMOSPHERE
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
-	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
+	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection);
 #else
 	scattering.skyRadianceToPoint = vec3(0);
 	scattering.transmittance = vec3(1);

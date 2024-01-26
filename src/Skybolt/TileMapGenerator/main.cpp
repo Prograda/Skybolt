@@ -70,7 +70,7 @@ static void postProcessStrm(osg::Image& image)
 
 		if (value == 32768) // ocean mask
 		{
-			value = -500; // set to match mask in GLOBE data
+			value = 32768 - 500; // set to match mask in GLOBE data
 		}
 		value += defaultHeightmapSeaLevelValue;
 	}

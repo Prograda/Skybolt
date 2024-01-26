@@ -20,11 +20,10 @@ out vec3 position_worldSpace;
 out vec3 wrappedNoiseCoord;
 out float cameraDistance;
 out float elevation;
-out AtmosphericScattering scattering;
+out AtmosphericScattering scatteringPerVertex;
 out float logZ;
 
 uniform sampler2D heightSampler;
-uniform sampler2D cloudSampler;
 
 uniform mat4 viewMatrix;
 uniform mat4 viewProjectionMatrix;
@@ -127,12 +126,12 @@ void main()
 	vec3 positionRelPlanet = position_worldSpace - planetCenter;
 	vec3 cameraPositionRelPlanet = cameraPosition - planetCenter;
 
-	scattering = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection, cloudSampler);
+	scatteringPerVertex = calcAtmosphericScattering(cameraPositionRelPlanet, positionRelPlanet, lightDirection);
 #else
-	scattering.sunIrradiance = GetSunIrradianceInSpace();
-	scattering.skyIrradiance = vec3(0);
-	scattering.transmittance = vec3(1);
-	scattering.skyRadianceToPoint = vec3(0);
+	scatteringPerVertex.sunIrradiance = GetSunIrradianceInSpace();
+	scatteringPerVertex.skyIrradiance = vec3(0);
+	scatteringPerVertex.transmittance = vec3(1);
+	scatteringPerVertex.skyRadianceToPoint = vec3(0);
 #endif
 	
 }
