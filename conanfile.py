@@ -24,7 +24,6 @@ class SkyboltConan(ConanFile):
         "enable_python": False,
         "enable_sprocket": False,
         "qt:shared": True, # Use shared Qt to avoid Qt's LGPL viral static linking
-        "qt:qtsvg":True, # Build the Qt SVG plugin to display Sprocket icons
         "qwt:shared": True,
         "shared": False,
         "shared_plugins": True,
@@ -83,7 +82,7 @@ class SkyboltConan(ConanFile):
         if self.options.enable_sprocket:
             self.requires("ois/1.5@_/_")
             self.requires("qt/5.15.11@_/_")
-            self.requires("qwt/6.1.6@_/_")
+            self.requires("qwt/6.2.0@_/_")
             self.include_package("toolwindowmanager", "1.0.0")
 
     def build(self):

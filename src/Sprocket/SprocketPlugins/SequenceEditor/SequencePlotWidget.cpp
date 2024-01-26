@@ -93,40 +93,40 @@ public:
 		if (dirtyBounds)
 		{
 			dirtyBounds = false;
-			d_boundingRect = qwtBoundingRect(*this);
+			cachedBoundingRect = qwtBoundingRect(*this);
 		}
 
-		return d_boundingRect;
+		return cachedBoundingRect;
 	}
 
 	inline void append(const QPointF &point)
 	{
-		d_samples += point;
+		m_samples += point;
 		dirtyBounds = true;
 	}
 
 	inline void remove(int i)
 	{
-		d_samples.erase(d_samples.begin() + i);
+		m_samples.erase(m_samples.begin() + i);
 		dirtyBounds = true;
 	}
 
 	inline void replace(int i, const QPointF &point)
 	{
-		d_samples[i] = point;
+		m_samples[i] = point;
 		dirtyBounds = true;
 	}
 
 	inline void insert(int i, const QPointF &point)
 	{
-		d_samples.insert(i, point);
+		m_samples.insert(i, point);
 		dirtyBounds = true;
 	}
 
 	void clear()
 	{
-		d_samples.clear();
-		d_samples.squeeze();
+		m_samples.clear();
+		m_samples.squeeze();
 		dirtyBounds = true;
 	}
 private:

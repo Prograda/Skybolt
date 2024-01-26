@@ -119,10 +119,14 @@ QToolBar* createScenarioObjectCreationToolbar(ScenarioSelectionModel* selectionM
 	QToolBar* toolbar = new QToolBar(parent);
 
 	QToolButton* createButton = new QToolButton(parent);
+	createButton->setToolTip("Add item");
+	createButton->setText("+");
 	createButton->setIcon(getSprocketIcon(SprocketIcon::Add));
 	toolbar->addWidget(createButton);
 
 	QToolButton* deleteButton = new QToolButton(parent);
+	deleteButton->setToolTip("Remove item");
+	deleteButton->setText("-");
 	deleteButton->setIcon(getSprocketIcon(SprocketIcon::Remove));
 	deleteButton->setEnabled(false);
 	toolbar->addWidget(deleteButton);
