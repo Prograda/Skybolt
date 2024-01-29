@@ -100,6 +100,15 @@ static int main_blueMarble()
 		}
 	}
 
+	{
+		TileMapGeneratorLayer layer;
+		layer.image = osgDB::readImageFile("D:/dev/tiles/combined_geodesic.jpg");
+		layer.bounds = Box2d(
+			osg::Vec2d(-122.80517578125 * math::degToRadD(), 47.08508535995384 * math::degToRadD()),
+			osg::Vec2d(-121.28906250000001 * math::degToRadD(), 47.90161354142076 * math::degToRadD()));
+		layers.push_back(layer);
+	}
+
 	std::cout << "Inputs loaded" << std::endl;
 
 	try

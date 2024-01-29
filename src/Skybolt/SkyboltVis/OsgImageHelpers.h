@@ -31,20 +31,23 @@ inline osg::Vec4f linearToSrgb(const osg::Vec4f& c)
 
 inline void setPixelColor(osg::Image& image, int x, int y, const osg::Vec4f& color)
 {
+	// We convert from float color in range [0,1] to integer in range [0, 255] using rounding method because
+	// it most accuratly represents original color.
+	// See https://stackoverflow.com/questions/1914115/converting-color-value-from-float-0-1-to-byte-0-255/66862750#66862750
 	if (image.getPixelFormat() == GL_RGBA && image.getDataType() == GL_UNSIGNED_BYTE)
 	{
 		unsigned char* p = &image.data()[4 * (x + image.s() * y)];
-		*p++ = color.r() * 255.0f;
-		*p++ = color.g() * 255.0f;
-		*p++ = color.b() * 255.0f;
-		*p = color.a() * 255.0f;
+		*p++ = std::round(color.r() * 255.0f);
+		*p++ = std::round(color.g() * 255.0f);
+		*p++ = std::round(color.b() * 255.0f);
+		*p = std::round(color.a() * 255.0f);
 	}
 	else if (image.getPixelFormat() == GL_RGB && image.getDataType() == GL_UNSIGNED_BYTE)
 	{
 		unsigned char* p = &image.data()[3 * (x + image.s() * y)];
-		*p++ = color.r() * 255.0f;
-		*p++ = color.g() * 255.0f;
-		*p = color.b() * 255.0f;
+		*p++ = std::round(color.r() * 255.0f);
+		*p++ = std::round(color.g() * 255.0f);
+		*p = std::round(color.b() * 255.0f);
 	}
 	else
 	{

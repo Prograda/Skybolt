@@ -37,7 +37,7 @@ static int calcMapSize(int levelOfDetail)
 }
 
 //! Converts a point from latitude/longitude WGS-84 coordinates (in degrees)  
-//! into pixel XY coordinates at a specified level of detail.  
+//! into pixel XY in spherical mercator coordinates at a specified level of detail.  
 static osg::Vec2f latLongToPixelXY(double latitude, double longitude, int levelOfDetail)
 {
 	static const double MinLatitude = -85.05112878 * math::degToRadD();
