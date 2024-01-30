@@ -32,7 +32,7 @@ using namespace vis;
 
 int maxFeatureTileLod = 10;
 int maxHeightmapTileLod = 12;
-std::string outputDirectory = "SkyboltAssetsExtra/SeattleOut/Tiles/Earth/Features";
+std::string outputDirectory = "Output";
 std::string tileCacheDirectory = "cache";
 std::string heightmapSourceDirectory = "DEM/CombinedElevation";
 std::string heightmapDestinationDirectory = "SkyboltAssets/Assets/SeattleElevation/Tiles/Earth/Elevation";
@@ -45,10 +45,12 @@ int main(int argc, char *argv[])
 		nlohmann::json settings = readEngineSettings(params);
 		auto tileApiKeys = readNameMap<std::string>(settings, "tileApiKeys");
 
-//#define USE_DEM
+#define USE_DEM
 #ifdef USE_DEM
 		XyzTileSourceConfig config;
-		config.urlTemplate = "DEM/CombinedElevation/{z}/{x}/{y}.png";
+		config.urlTemplate = "DEM/{z}/{x}/{y}.png";
+		config.elevationRerange = rerangeElevationFromUInt16WithElevationBounds(-32768, 32767);
+		config.levelRange = {0, 10};
 
 		auto tileSource = std::make_shared<XyzTileSource>(config);
 #else // use mapbox
@@ -91,7 +93,7 @@ int main(int argc, char *argv[])
 			}
 #endif
 			mapfeatures::save(worldFeatures.tree, outputDirectory);
-			mapfeatures::saveAirports(result.airports, "SkyboltAssets/Assets/Globe/Airports/airports.apt");
+			mapfeatures::saveAirports(result.airports, outputDirectory + "/airports.apt");
 		}
 	}
 	catch (const std::exception& e)
