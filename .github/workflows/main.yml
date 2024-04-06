@@ -33,10 +33,9 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         pip3 install "conan>=1.55,<2"
-    - name: Add conan remotes
+    - name: Configure conan
       run: |
         conan config set general.revisions_enabled=1
-        conan remote add prograda-conan https://prograda.jfrog.io/artifactory/api/conan/prograda-conan
     - name: Enable C++11
       run: |
         conan profile new default --detect
