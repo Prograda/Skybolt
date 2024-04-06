@@ -7,6 +7,7 @@
 #pragma once
 
 #include <osg/Image>
+#include <osgDB/Registry>
 #include <SkyboltCommon/Exception.h>
 #include <string>
 
@@ -58,7 +59,7 @@ GLuint toSrgbInternalFormat(GLuint format);
 
 osg::Image* readImageWithCorrectOrientation(const std::string& filename);
 
-osg::ref_ptr<osg::Image> readImageWithoutWarnings(const std::string& filename);
+osg::ref_ptr<osg::Image> readImageWithoutWarnings(const std::string& filename, const osgDB::Options* options = osgDB::Registry::instance()->getOptions());
 
 //! Reads an image from stream including the image's user data stored in osg::UserDataContainer
 osg::ref_ptr<osg::Image> readImageWithUserData(std::istream& s, const std::string& extension);

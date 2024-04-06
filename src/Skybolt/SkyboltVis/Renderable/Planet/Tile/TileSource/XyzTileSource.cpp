@@ -26,14 +26,18 @@ XyzTileSource::XyzTileSource(const XyzTileSourceConfig& config) :
 	mYOrigin(config.yOrigin),
 	mApiKey(config.apiKey),
 	mCacheSha(skybolt::calcSha1(config.urlTemplate)),
-	mElevationRerange(config.elevationRerange)
+	mElevationRerange(config.elevationRerange),
+	mImageReadOptions(new osgDB::Options())
 {
+	// Disable SSL verification CURL requests, so that we can read images from http:// tile servers.
+	// FIXME: Ideally we would allow the user keep verification on and provide a certificate.
+	mImageReadOptions->setOptionString("OSG_CURL_SSL_VERIFYPEER=0");
 }
 
 bool XyzTileSource::validate() const
 {
 	// Validate the loader by loading level 0 image
-	osg::ref_ptr<osg::Image> image = osgDB::readImageFile(toUrl(QuadTreeTileKey()));
+	osg::ref_ptr<osg::Image> image = osgDB::readImageFile(toUrl(QuadTreeTileKey()), mImageReadOptions);
 	if (!image)
 	{
 		BOOST_LOG_TRIVIAL(error) << "Could not load image from XyzTileSource with URL template '" << mUrlTemplate << ".";
@@ -65,7 +69,7 @@ static int flipY(int y, int level)
 
 osg::ref_ptr<osg::Image> XyzTileSource::createImage(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
 {
-	osg::ref_ptr<osg::Image> image = readImageWithoutWarnings(toUrl(key));
+	osg::ref_ptr<osg::Image> image = readImageWithoutWarnings(toUrl(key), mImageReadOptions);
 	if (image)
 	{
 		if (mElevationRerange)

@@ -112,9 +112,9 @@ osg::Image* readImageWithCorrectOrientation(const std::string& filename)
 	return image;
 }
 
-osg::ref_ptr<osg::Image> readImageWithoutWarnings(const std::string& filename)
+osg::ref_ptr<osg::Image> readImageWithoutWarnings(const std::string& filename, const osgDB::Options* options)
 {
-	osgDB::ReaderWriter::ReadResult rr = osgDB::Registry::instance()->readImage(filename, osgDB::Registry::instance()->getOptions());
+	osgDB::ReaderWriter::ReadResult rr = osgDB::Registry::instance()->readImage(filename, options ? options : osgDB::Registry::instance()->getOptions());
 	if (rr.validImage()) return osg::ref_ptr<osg::Image>(rr.getImage());
 	return nullptr;
 }

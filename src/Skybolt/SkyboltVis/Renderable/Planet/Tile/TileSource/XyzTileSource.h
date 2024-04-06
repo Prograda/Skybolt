@@ -7,6 +7,7 @@
 #pragma once
 #include "TileSourceWithMinMaxLevel.h"
 #include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h"
+#include <osgDB/Options>
 
 namespace skybolt {
 namespace vis {
@@ -59,6 +60,8 @@ private:
 	const std::string mApiKey;
 	const std::string mCacheSha;
 	std::optional<HeightMapElevationRerange> mElevationRerange;
+
+	osg::ref_ptr<osgDB::Options> mImageReadOptions;
 };
 
 } // namespace vis
