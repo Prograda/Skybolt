@@ -36,15 +36,14 @@ class SkyboltConan(ConanFile):
     no_copy_source = True
 
     requires = [
-        "boost/1.75.0@_/_",
-        "catch2/2.13.8@_/_",
-        "cpp-httplib/0.10.1@_/_",
-        "earcut/2.2.3@_/_",
-        "glm/0.9.9.8@_/_",
-        "nlohmann_json/3.10.5@_/_",
-        "zlib/1.2.13@_/_", # Indirect dependency. Specified to resolve version clash between qt and openscenegraph.
-        "libjpeg/9e@_/_", # Indirect dependency. Specified to resolve version clash between qt and openscenegraph.
-        "zstd/1.5.4" # Indirect dependency. Specified to resolve version clash between libtiff and libmysqlclient.
+        "boost/1.75.0@_/_#989077de56cb85b727be210b5827d52f",
+        "catch2/2.13.8@_/_#ac821c6881627aece6c7063bd5aa73ea",
+        "cpp-httplib/0.10.1@_/_#5078af8ecb0001ebdc8c799d38ac9b16",
+        "earcut/2.2.3@_/_#7c612e8a3119c4cbf446b7096ecf2831",
+		"expat/2.5.0@_/_#91e43e4544923e4c934bfad1fa4306f9", # Indirect dependency to resolve version conflict between readosm and fontconfig
+        "glm/0.9.9.8@_/_#550ca1927ce2617e53b4514cff326923",
+        "nlohmann_json/3.10.5@_/_#1ebcf334c3f52d96e057d5aba398c491",
+        "zlib/1.2.13@_/_#97d5730b529b4224045fe7090592d4c1" # Indirect dependency to resolve version conflict between libpng and boost
 	]
 
     def include_package(self, name, version, subfolder=None):
@@ -68,7 +67,7 @@ class SkyboltConan(ConanFile):
         self.include_package("openscenegraph-mr", "3.7.0", "all")
 
         if self.options.enable_bullet:
-            self.requires("bullet3/3.22a@_/_")
+            self.requires("bullet3/3.22a@_/_#29b44d5d03e941af7f47285c379fef16")
 
         if self.options.enable_cigi:
             self.include_package("cigicl", "4.0.6a")
@@ -78,17 +77,15 @@ class SkyboltConan(ConanFile):
             self.include_package("xsimd", "7.4.10")
 
         if self.options.enable_map_features_converter:
-            self.requires("readosm/1.1.0a@_/_")
+            self.requires("readosm/1.1.0a@_/_#23e27a65a8846ce66e7f151d95c9229f")
 
         if self.options.enable_python:
-            self.requires("pybind11/2.9.1@_/_")
+            self.requires("pybind11/2.9.1@_/_#017b6606f856caa02c085b034720791e")
             
         if self.options.enable_sprocket:
-            self.requires("expat/2.4.8@_/_") # Indirect dependency. Specified to resolve version clash between wayland (used by Qt) and fontconfig (used by OSG)
-            self.requires("openssl/1.1.1s@_/_") # Indirect dependency. Specified to resolve version clash between qt/5.15.3 and libcurl/7.83.1
-            self.requires("ois/1.5@_/_")
-            self.requires("qt/5.15.3@_/_")
-            self.requires("qwt/6.1.6@_/_")
+            self.requires("ois/1.5@_/_#9b0cf516bb04e6393b37e088d6f6d83e")
+            self.requires("qt/5.15.11@_/_#64fc18b0c5ab189f347993a9853144ad")
+            self.requires("qwt/6.2.0@_/_#8534a295b1e8c7ca6915f52601fb56b7")
             self.include_package("toolwindowmanager", "1.0.0")
 
     def build(self):

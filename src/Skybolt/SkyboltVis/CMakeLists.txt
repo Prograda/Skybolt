@@ -29,7 +29,7 @@ include_directories(${OSG_INCLUDE_DIR})
 find_package(OpenThreads)
 
 find_package(cxxtimer REQUIRED)
-find_package(earcut REQUIRED)
+find_package(earcut_hpp REQUIRED)
 find_package(httplib REQUIRED)
 find_package(px_sched REQUIRED)
 
@@ -47,7 +47,7 @@ set(LIBRARIES
 	${OPENTHREADS_LIBRARIES}
 	${muFFT_LIBRARIES}
 	cxxtimer::cxxtimer
-	earcut::earcut
+	earcut_hpp::earcut_hpp
 	httplib::httplib
 	px_sched::px_sched
 )

@@ -9,7 +9,7 @@ namespace skybolt {
 HelpDisplayToggleEventListener::HelpDisplayToggleEventListener(const osg::ref_ptr<HelpDisplayRenderOperation>& helpDisplay) :
 	mHelpDisplay(helpDisplay)
 {
-	assert(mHelpDisplaySystem);
+	assert(mHelpDisplay);
 }
 
 void HelpDisplayToggleEventListener::onEvent(const Event& event)

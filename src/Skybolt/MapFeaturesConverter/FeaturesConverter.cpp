@@ -9,13 +9,15 @@
 #include <SkyboltVis/Renderable/Planet/Features/PlanetFeaturesHelpers.h>
 #include <SkyboltCommon/Exception.h>
 #include <SkyboltCommon/Math/MathUtility.h>
+
 #include <readosm.h>
-#include <sstream>
+
+#include <cmath>
+#include <iostream>
 #include <map>
 #include <set>
-#include <iostream>
-#include <boost/algorithm/string.hpp>  
-#include <boost/lexical_cast.hpp>
+#include <sstream>
+#include <boost/algorithm/string.hpp>
 
 using namespace skybolt::math;
 using skybolt::sim::LatLon;
@@ -602,7 +604,7 @@ int parseRelation(const void* user_data, const readosm_relation* relation)
 // TODO: handle longitude wrap at dateline
 double approxDistanceInRadians(const sim::LatLon& a, const sim::LatLon& b)
 {
-	return std::max(std::fabsf(a.lat - b.lat), std::fabsf(a.lon - b.lon));
+	return std::max(std::fabs(a.lat - b.lat), std::fabs(a.lon - b.lon));
 }
 
 // TODO: handle longitude wrap at dateline
