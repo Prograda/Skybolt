@@ -11,6 +11,7 @@
 #include <boost/log/trivial.hpp>
 #include <filesystem>
 #include <functional>
+#include <set>
 
 namespace skybolt {
 

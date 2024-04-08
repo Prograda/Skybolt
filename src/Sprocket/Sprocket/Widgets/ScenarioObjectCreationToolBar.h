@@ -12,4 +12,4 @@
 class QToolBar;
 class QWidget;
 
-QToolBar* createScenarioObjectCreationToolbar(ScenarioSelectionModel* selectionModel, const ScenarioObjectTypeMap& scenarioObjectTypes, QWidget* parent = nullptr);
+QToolBar* createScenarioObjectCreationToolBar(ScenarioSelectionModel* selectionModel, const ScenarioObjectTypeMap& scenarioObjectTypes, QWidget* parent = nullptr);

@@ -22,7 +22,7 @@ ScenarioObjectsEditorWidget::ScenarioObjectsEditorWidget(const ScenarioObjectsEd
 	layout->setSpacing(0);
 	setLayout(layout);
 
-	QToolBar* toolBar = createScenarioObjectCreationToolbar(config.selectionModel, config.scenarioObjectTypes, config.parent);
+	QToolBar* toolBar = createScenarioObjectCreationToolBar(config.selectionModel, config.scenarioObjectTypes, config.parent);
 	layout->addWidget(toolBar);
 
 	auto scenarioTreeWidget = new ScenarioTreeWidget([&] {

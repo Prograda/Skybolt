@@ -55,7 +55,7 @@ static std::shared_ptr<DoubleStateSequence> readDoubleSequence(const nlohmann::j
 	auto sequence = std::make_shared<DoubleStateSequence>();
 	for (const auto& i : json.items())
 	{
-		DoubleSequenceState value = i.value();
+		DoubleSequenceState value(double(i.value()));
 		sequence->addItemAtTime(value, stod(i.key()));
 	}
 	return sequence;

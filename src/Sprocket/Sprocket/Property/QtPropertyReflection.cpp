@@ -189,7 +189,7 @@ PropertyFactory createPropertyFactory(const QtValueT& defaultValue)
 		if (!property->isReadOnly())
 		{
 			r.applier = [typeRegistry = &typeRegistry, instanceGetter, property] (const QtProperty& qtProperty) {
-				if (auto& instance = instanceGetter(); instance)
+				if (auto instance = instanceGetter(); instance)
 				{
 					auto value = qtValueToSim<SimValueT>(*property, static_cast<const QtProperty&>(qtProperty).value);
 					property->setValue(*instance, refl::createOwningInstance(typeRegistry, value));
@@ -234,7 +234,7 @@ PropertyFactory createOptionalPropertyFactory(const QtValueT& defaultValue)
 		if (!property->isReadOnly())
 		{
 			r.applier = [typeRegistry = &typeRegistry, instanceGetter, property] (const QtProperty& qtProperty) {
-				if (auto& instance = instanceGetter(); instance)
+				if (auto instance = instanceGetter(); instance)
 				{
 					std::optional<SimValueT> value;
 

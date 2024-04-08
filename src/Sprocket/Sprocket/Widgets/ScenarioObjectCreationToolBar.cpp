@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#include "ScenarioObjectCreationToolbar.h"
+#include "ScenarioObjectCreationToolBar.h"
 #include "Sprocket/Scenario/ScenarioObject.h"
 #include "Sprocket/Icon/SprocketIcons.h"
 #include "Sprocket/Scenario/ScenarioSelectionModel.h"
@@ -114,7 +114,7 @@ static ScenarioObjectTypePtr findScenarioObjectType(const ScenarioObjectTypeMap&
 	return skybolt::findOptional(scenarioObjectTypes, type).value_or(nullptr);
 }
 
-QToolBar* createScenarioObjectCreationToolbar(ScenarioSelectionModel* selectionModel, const ScenarioObjectTypeMap& scenarioObjectTypes, QWidget* parent)
+QToolBar* createScenarioObjectCreationToolBar(ScenarioSelectionModel* selectionModel, const ScenarioObjectTypeMap& scenarioObjectTypes, QWidget* parent)
 {
 	QToolBar* toolbar = new QToolBar(parent);
 

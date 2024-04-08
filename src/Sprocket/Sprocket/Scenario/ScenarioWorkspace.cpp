@@ -47,7 +47,8 @@ std::optional<ScenarioWorkspace::ErrorMessage> ScenarioWorkspace::loadScenario(c
 		return "Could not open file '" + filename + "' because it does not exist";
 	}
 
-	return loadScenario(QFile(filename));
+	QFile file(filename);
+	return loadScenario(file);
 }
 
 std::optional<ScenarioWorkspace::ErrorMessage> ScenarioWorkspace::loadScenario(QFile& file)

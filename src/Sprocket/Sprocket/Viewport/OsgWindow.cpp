@@ -9,13 +9,17 @@
 #include <SkyboltVis/Window/EmbeddedWindow.h>
 
 #include <osgViewer/ViewerBase>
+
+#ifdef WIN32
 #include <osgViewer/api/win32/GraphicsWindowWin32>
+#endif
+
 #include <QKeyEvent>
 
 using namespace skybolt;
 using namespace skybolt::vis;
 
-static osg::ref_ptr<osgViewer::View> createView(int width, int height, HWND hwnd, bool vsync)
+static osg::ref_ptr<osgViewer::View> createView(int width, int height, std::size_t hwnd, bool vsync)
 {
 	osg::ref_ptr<osg::GraphicsContext::Traits> traits(new osg::GraphicsContext::Traits);
 	traits->x = 0;
@@ -30,7 +34,9 @@ static osg::ref_ptr<osgViewer::View> createView(int width, int height, HWND hwnd
 	traits->windowDecoration = false;
 	traits->doubleBuffer = true;
 	traits->sharedContext = 0x0;
-	traits->inheritedWindowData = new osgViewer::GraphicsWindowWin32::WindowData(hwnd);
+#ifdef WIN32
+	traits->inheritedWindowData = new osgViewer::GraphicsWindowWin32::WindowData(HWND(hwnd));
+#endif
 	// FIXME: There's a bug in OSG where vsync is left at OS default when vsync=false, not actually set to false.
 	// See https://github.com/openscenegraph/OpenSceneGraph/blob/master/src/osgViewer/GraphicsWindowWin32.cpp#L1978
 	traits->vsync = vsync;
@@ -81,7 +87,7 @@ OsgWindow::OsgWindow(const VisRootPtr& visRoot) :
 
 	// TODO: we should take the devicePixelRatio() into account
 
-	mWindow = std::make_shared<OsgViewWindow>(createView(width(), height(), HWND(winId()), visRoot->getDisplaySettings().vsync));
+	mWindow = std::make_shared<OsgViewWindow>(createView(width(), height(), std::size_t(winId()), visRoot->getDisplaySettings().vsync));
 	mVisRoot->addWindow(mWindow);
 
 	mWindow->getGraphicsWindow().useCursor(true);

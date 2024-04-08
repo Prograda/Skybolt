@@ -63,5 +63,7 @@ private:
 	CameraControllerPtr mSelectedController;
 };
 
+SKYBOLT_REFLECT_EXTERN(CameraControllerSelector)
+
 } // namespace sim
 } // namespace skybolt

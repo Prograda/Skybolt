@@ -31,7 +31,7 @@ private:
 	EventEmitterPtr mEmitter;
 	std::shared_ptr<struct KeyboardInputDevice> mKeyboard;
 	std::shared_ptr<struct MouseInputDevice> mMouse;
-	std::unique_ptr<InputPlatformQtEventFilter> mEventFilter;
+	std::unique_ptr<class InputPlatformQtEventFilter> mEventFilter;
 };
 
 } // namespace skybolt

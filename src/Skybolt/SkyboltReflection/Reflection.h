@@ -419,8 +419,6 @@ public:
 		return *this;
 	}
 
-	void setEnabled(bool enabled) { mEnabled = enabled; }
-
 private:
 	TypePtr mType;
 	TypeDefinitionRegisterLater mRegisterLater;

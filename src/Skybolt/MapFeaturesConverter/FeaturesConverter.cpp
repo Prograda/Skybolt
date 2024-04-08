@@ -602,7 +602,7 @@ int parseRelation(const void* user_data, const readosm_relation* relation)
 // TODO: handle longitude wrap at dateline
 double approxDistanceInRadians(const sim::LatLon& a, const sim::LatLon& b)
 {
-	return std::max(std::fabsf(a.lat - b.lat), std::fabsf(a.lon - b.lon));
+	return std::max(std::fabs(a.lat - b.lat), std::fabs(a.lon - b.lon));
 }
 
 // TODO: handle longitude wrap at dateline

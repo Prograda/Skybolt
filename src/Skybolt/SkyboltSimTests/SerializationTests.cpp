@@ -62,7 +62,8 @@ TEST_CASE("Read and write to JSON")
 
 	// Read
 	TestObject readObject;
-	readReflectedObject(registry, refl::createNonOwningInstance(&registry, &readObject), json);
+	auto instance = refl::createNonOwningInstance(&registry, &readObject);
+	readReflectedObject(registry, instance, json);
 
 	CHECK(readObject.intProperty == originalObject.intProperty);
 	CHECK(readObject.nestedObjectProperty.intProperty == originalObject.nestedObjectProperty.intProperty);
@@ -108,7 +109,8 @@ TEST_CASE("Read and write polymorphic type to JSON")
 
 	// Read
 	TestDerivedObject readObject;
-	readReflectedObject(registry, refl::createNonOwningInstance(&registry, &readObject), json);
+	auto instance = refl::createNonOwningInstance(&registry, &readObject);
+	readReflectedObject(registry, instance, json);
 
 	CHECK(readObject.floatProperty == derivedObject.floatProperty);
 }
@@ -147,6 +149,7 @@ TEST_CASE("Use explicit to/from json methods if an object provides them")
 
 	// Read
 	TestObjectWithSerializationMethods readObject;
-	readReflectedObject(registry, refl::createNonOwningInstance(&registry, &readObject), json);
+	auto instance = refl::createNonOwningInstance(&registry, &readObject);
+	readReflectedObject(registry, instance, json);
 	CHECK(readObject.data == 123);
 }

@@ -26,9 +26,7 @@ SKYBOLT_REFLECT_BEGIN(CameraControllerComponent)
 	registry.type<CameraControllerComponent>("CameraControllerComponent")
 		.superType<CameraControllerSelector>()
 		.superType<Component>()
-		.superType<ExplicitSerialization>()
-		.property("selectedController", &CameraControllerComponent::getSelectedControllerName, &CameraControllerComponent::selectController)
-		.propertyReadOnly("controllers", &CameraControllerComponent::getControllers);
+		.superType<ExplicitSerialization>();
 }
 SKYBOLT_REFLECT_END
 
@@ -87,7 +85,8 @@ void CameraControllerComponent::fromJson(refl::TypeRegistry& typeRegistry, const
 		for (const auto& i : getControllers())
 		{
 			ifChildExists(controllersJson, i.first, [&, controller = i.second] (const nlohmann::json& controllerJson) {
-				readReflectedObject(typeRegistry, refl::createNonOwningInstance(&typeRegistry, controller.get()), controllerJson);
+				refl::Instance instance = refl::createNonOwningInstance(&typeRegistry, controller.get());
+				readReflectedObject(typeRegistry, instance, controllerJson);
 			});
 		}
 	});

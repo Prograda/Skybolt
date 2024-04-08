@@ -10,8 +10,16 @@
 
 #include <assert.h>
 
-using namespace skybolt;
-using namespace skybolt::sim;
+namespace skybolt {
+namespace sim {
+
+SKYBOLT_REFLECT_BEGIN(CameraControllerSelector)
+{
+	registry.type<CameraControllerSelector>("CameraControllerSelector")
+		.property("selectedController", &CameraControllerSelector::getSelectedControllerName, &CameraControllerSelector::selectController)
+		.propertyReadOnly("controllers", &CameraControllerSelector::getControllers);
+}
+SKYBOLT_REFLECT_END
 
 CameraControllerSelector::CameraControllerSelector(const ControllersMap& controllers) :
 	mControllers(controllers)
@@ -76,3 +84,6 @@ EntityId CameraControllerSelector::getTargetId() const
 	}
 	return sim::nullEntityId();
 }
+
+} // namespace sim
+} // namespace skybolt

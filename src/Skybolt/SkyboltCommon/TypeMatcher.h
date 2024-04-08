@@ -40,6 +40,25 @@ template<typename R, typename... A>
 struct get_signature_impl<R(*)(A...)> { using type = R(A...); };
 template<typename T> using get_signature = typename get_signature_impl<T>::type;
 
+template<typename Base, typename T>
+bool TypeMatcherHelper(const Base& base, std::function<void(T&)> func)
+{
+	if (T* first = dynamic_cast<T*>(&base); first)
+	{
+		func(*first);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+template<typename Base>
+void TypeMatcher(const Base&)
+{
+}
+
 template<typename Base, typename FirstSubclass, typename... RestOfSubclasses>
 void TypeMatcher(const Base& base, FirstSubclass &&first, RestOfSubclasses &&... rest)
 {
@@ -53,24 +72,6 @@ void TypeMatcher(const Base& base, FirstSubclass &&first, RestOfSubclasses &&...
 	else
 	{
 		TypeMatcher(base, rest...);
-	}
-}
-template<typename Base>
-void TypeMatcher(const Base&)
-{
-	assert(false);
-}
-template<typename Base, typename T>
-bool TypeMatcherHelper(const Base& base, std::function<void(T&)> func)
-{
-	if (T* first = dynamic_cast<T*>(&base); first)
-	{
-		func(*first);
-		return true;
-	}
-	else
-	{
-		return false;
 	}
 }
 
