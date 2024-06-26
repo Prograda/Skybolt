@@ -3,7 +3,7 @@ import os
 
 class SkyboltConan(ConanFile):
     name = "skybolt"
-    version = "1.4.0"
+    version = "1.4.1"
     settings = "os", "compiler", "arch", "build_type"
     options = {
 		"shared": [True, False],
