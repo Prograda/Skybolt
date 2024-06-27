@@ -32,4 +32,6 @@ private:
 	EntityVisibilityPredicate mEntityVisibilityPredicate;
 };
 
+std::shared_ptr<ForcesVisBinding> createForcesVisBinding(sim::World* world, const vis::ScenePtr& scene, const vis::ShaderPrograms& programs);
+
 } // namespace skybolt

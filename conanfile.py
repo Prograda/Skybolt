@@ -11,7 +11,7 @@ class SkyboltConan(ConanFile):
         "enable_fft_ocean": [True, False],
         "enable_map_features_converter": [True, False],
         "enable_python": [True, False],
-        "enable_sprocket": [True, False],
+        "enable_qt": [True, False],
         "shared": [True, False],
         "shared_plugins": [True, False], # Build plugins as shared libraries
         "fPIC": [True, False]
@@ -22,7 +22,7 @@ class SkyboltConan(ConanFile):
         "enable_fft_ocean": True,
         "enable_map_features_converter": True,
         "enable_python": False,
-        "enable_sprocket": False,
+        "enable_qt": False,
         "qt:shared": True, # Use shared Qt to avoid Qt's LGPL viral static linking
         "shared": False,
         "shared_plugins": True,
@@ -80,7 +80,7 @@ class SkyboltConan(ConanFile):
         if self.options.enable_python:
             self.requires("pybind11/2.9.1@_/_#017b6606f856caa02c085b034720791e")
             
-        if self.options.enable_sprocket:
+        if self.options.enable_qt:
             self.requires("qt/5.15.11@_/_#64fc18b0c5ab189f347993a9853144ad")
             self.include_package("toolwindowmanager", "1.0.0")
 
@@ -108,9 +108,8 @@ class SkyboltConan(ConanFile):
         if self.options.enable_python:
             cmake.definitions["BUILD_PYTHON_BINDINGS"] = "true"
 
-        if self.options.enable_sprocket:
-            cmake.definitions["BUILD_SEQUENCE_EDITOR_PLUGIN"] = "true"
-            cmake.definitions["BUILD_SPROCKET"] = "true"
+        if self.options.enable_qt:
+            cmake.definitions["BUILD_SKYBOLT_QT"] = "true"
 
         cmake.definitions["CMAKE_TOOLCHAIN_FILE"] = "conan_paths.cmake"
         cmake.configure()
@@ -127,5 +126,5 @@ class SkyboltConan(ConanFile):
 		
         if self.options.enable_fft_ocean and not self.options.shared_plugins:
             self.cpp_info.libs.append("FftOcean")
-        if self.options.enable_sprocket == True:
-            self.cpp_info.libs.append("Sprocket")
+        if self.options.enable_qt == True:
+            self.cpp_info.libs.append("SkyboltQt")

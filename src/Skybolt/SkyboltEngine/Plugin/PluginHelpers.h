@@ -57,7 +57,7 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 		}
 		catch (const std::exception& e)
 		{
-			throw std::runtime_error("Error loading plugin '" + path.string() + "': " + e.what());
+			BOOST_LOG_TRIVIAL(error) << "Error loading plugin '" << path.string() << "': " << e.what();
 		}
 	}
 

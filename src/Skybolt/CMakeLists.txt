@@ -19,6 +19,13 @@ add_subdirectory (SkyboltEnginePlugins)
 add_subdirectory (SkyboltEngineTests)
 add_subdirectory (SkyboltReflection)
 add_subdirectory (SkyboltReflectionTests)
+
+OPTION(BUILD_SKYBOLT_QT "Build SkyboltQt")
+if (BUILD_SKYBOLT_QT)
+	add_subdirectory (SkyboltQt)
+	add_subdirectory (SkyboltQtTests)
+endif()
+
 add_subdirectory (SkyboltSim)
 add_subdirectory (SkyboltSimTests)
 add_subdirectory (SkyboltVis)

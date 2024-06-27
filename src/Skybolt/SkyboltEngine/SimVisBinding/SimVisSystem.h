@@ -31,6 +31,9 @@ public:
 
 	void updateState();
 
+	void addBinding(const SimVisBindingPtr& simVisBindings);
+	void removeBinding(const SimVisBindingPtr& simVisBindings);
+
 	const GeocentricToNedConverter& getCoordinateConverter() const { return *mCoordinateConverter; }
 
 	void setSceneOriginProvider(SceneOriginProvider sceneOriginProvider) { mSceneOriginProvider = std::move(sceneOriginProvider); }
@@ -44,6 +47,7 @@ private:
 	vis::ScenePtr mScene;
 	SceneOriginProvider mSceneOriginProvider;
 	std::unique_ptr<GeocentricToNedConverter> mCoordinateConverter;
+	std::vector<SimVisBindingPtr> mSimVisBindings;
 };
 
 } // namespace skybolt

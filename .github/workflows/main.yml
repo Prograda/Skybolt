@@ -45,7 +45,7 @@ jobs:
         export CONAN_SYSREQUIRES_MODE=enabled
         mkdir ${{env.buildDir}}
         cd ${{env.buildDir}}
-        conan install ${{github.workspace}} -o openscenegraph-mr:shared=True -o enable_sprocket=True -o enable_python=True -o qt:qtsvg=False --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
+        conan install ${{github.workspace}} -o openscenegraph-mr:shared=True -o enable_qt=True -o enable_python=True --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
     - name: Cmake build
       run: |
         cd ${{env.buildDir}}

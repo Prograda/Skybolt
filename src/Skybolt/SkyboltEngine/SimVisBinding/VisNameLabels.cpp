@@ -20,16 +20,14 @@ namespace skybolt {
 
 using namespace sim;
 
-VisNameLabels::VisNameLabels(World* world, osg::Group* parent, const vis::ShaderPrograms& programs) :
+VisNameLabels::VisNameLabels(World* world, const osg::ref_ptr<osg::Group>& parent, const vis::ShaderPrograms& programs) :
 	SimVisObjectsReflector<osg::MatrixTransform*>(world, parent)
 {
 	mGroup->setNodeMask(~vis::VisibilityCategory::shadowCaster);
 	mGroup->setStateSet(vis::createTransparentTextStateSet(programs.getRequiredProgram("hudText")));
 }
 
-VisNameLabels::~VisNameLabels()
-{
-}
+VisNameLabels::~VisNameLabels() = default;
 
 void VisNameLabels::syncVis(const GeocentricToNedConverter& converter)
 {

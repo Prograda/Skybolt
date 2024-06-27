@@ -18,7 +18,7 @@ namespace skybolt {
 class VisNameLabels : public SimVisObjectsReflector<osg::MatrixTransform*>, public SimVisBinding
 {
 public:
-	VisNameLabels(sim::World* world, osg::Group* parent, const vis::ShaderPrograms& programs);
+	VisNameLabels(sim::World* world, const osg::ref_ptr<osg::Group>& parent, const vis::ShaderPrograms& programs);
 	~VisNameLabels();
 
 	void syncVis(const GeocentricToNedConverter& converter) override;

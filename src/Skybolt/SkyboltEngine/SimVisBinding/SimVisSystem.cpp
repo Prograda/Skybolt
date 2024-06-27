@@ -8,6 +8,7 @@
 #include "EngineRoot.h"
 #include "SimVisBinding/GeocentricToNedConverter.h"
 #include "SimVisBinding/SimVisBinding.h"
+#include <SkyboltCommon/VectorUtility.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
@@ -68,6 +69,21 @@ void SimVisSystem::updateState()
 	mCoordinateConverter->setOrigin(origin, planetPose);
 
 	syncVis(*mWorld, *mCoordinateConverter);
+
+	for (const auto& binding : mSimVisBindings)
+	{
+		binding->syncVis(*mCoordinateConverter);
+	}
+}
+
+void SimVisSystem::addBinding(const SimVisBindingPtr& simVisBindings)
+{
+	mSimVisBindings.push_back(simVisBindings);
+}
+
+void SimVisSystem::removeBinding(const SimVisBindingPtr& simVisBindings)
+{
+	eraseFirst(mSimVisBindings, simVisBindings);
 }
 
 SimVisSystem::SceneOriginProvider SimVisSystem::sceneOriginFromPosition(const sim::Vector3& position)

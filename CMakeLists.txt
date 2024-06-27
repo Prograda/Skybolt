@@ -88,11 +88,6 @@ include(SkyboltInstall)
 add_subdirectory (src/Skybolt)
 add_subdirectory (src/SkyboltExamples)
 
-OPTION(BUILD_SPROCKET "Build Sprocket")
-if (BUILD_SPROCKET)
-	add_subdirectory (src/Sprocket)
-endif()
-
 #-------------------------------------------------------------
 # Installation
 #-------------------------------------------------------------
@@ -105,13 +100,6 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/Conan	DESTINATION .)
 # Install headers
 install(
 	DIRECTORY ${CMAKE_SOURCE_DIR}/src/Skybolt
-	DESTINATION include
-	FILES_MATCHING
-	PATTERN "*.h*"
-)
-
-install(
-	DIRECTORY ${CMAKE_SOURCE_DIR}/src/Sprocket
 	DESTINATION include
 	FILES_MATCHING
 	PATTERN "*.h*"
