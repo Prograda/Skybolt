@@ -7,7 +7,6 @@
 #pragma once
 
 #include "Sprocket/SprocketFwd.h"
-#include "Sprocket/TableRecord.h"
 #include <SkyboltCommon/Updatable.h>
 
 #include <QObject>

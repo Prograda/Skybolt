@@ -6,9 +6,6 @@ FILE(GLOB UiSrc "*.ui")
 include_directories("../")
 include_directories("../../Skybolt")
 
-find_package(OIS REQUIRED)
-include_directories(${OIS_INCLUDE_DIR})
-
 # Qt5
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
@@ -30,7 +27,6 @@ set(LIBS
 	Qt5::Widgets
 	Qt5::OpenGL
 	${ToolWindowManager_LIBRARIES}
-	${OIS_LIBRARIES}
 )
 
 add_library(${TARGET_NAME} STATIC ${SrcFiles})

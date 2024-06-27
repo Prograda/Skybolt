@@ -24,7 +24,6 @@ class SkyboltConan(ConanFile):
         "enable_python": False,
         "enable_sprocket": False,
         "qt:shared": True, # Use shared Qt to avoid Qt's LGPL viral static linking
-        "qwt:shared": True,
         "shared": False,
         "shared_plugins": True,
         "fPIC": True
@@ -82,9 +81,7 @@ class SkyboltConan(ConanFile):
             self.requires("pybind11/2.9.1@_/_#017b6606f856caa02c085b034720791e")
             
         if self.options.enable_sprocket:
-            self.requires("ois/1.5@_/_#9b0cf516bb04e6393b37e088d6f6d83e")
             self.requires("qt/5.15.11@_/_#64fc18b0c5ab189f347993a9853144ad")
-            self.requires("qwt/6.2.0@_/_#8534a295b1e8c7ca6915f52601fb56b7")
             self.include_package("toolwindowmanager", "1.0.0")
 
     def build(self):
