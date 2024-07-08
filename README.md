@@ -1,8 +1,8 @@
 
 # Skybolt Engine
-Skybolt is a real-time planetary environment rendering engine, designed for flight simulators, aerospace R&D, and geospatial applications. Skybolt is written in C++, based on OpenSceneGraph, and supports CIGI for communicating with host applications. Skybolt also features a Python API for easy integration with science and engineering research tools.
+Skybolt is a real-time planetary environment rendering engine, designed for flight simulators and geospatial applications, written in C++ and based on OpenSceneGraph.
 
-The Skybolt repository includes Sprocket, a GUI application providing a sandbox for interactive scenario execution and testing.
+The repository also includes SkyboltQt, a Qt-based GUI library providing useful functionality for developing geospatial applications. Additionally, it features a Python API for easy integration with research tools, and a CIGI interface for communication with host applications.
 
 ![alt text](https://piraxus.com/wp-content/uploads/2020/06/Mountain1-edited-300x162.jpg "Mointain") ![alt text](https://piraxus.com/wp-content/uploads/2020/06/Seattle2-edit-300x162.jpg "Airport")
 ![alt text](https://piraxus.com/wp-content/uploads/2020/06/Shuttle3-flipped-300x170.jpg "Shuttle in space") ![alt text](https://piraxus.com/wp-content/uploads/2020/11/ShipHeloShot1-300x169.jpg "Ship on ocean")
@@ -17,15 +17,14 @@ The Skybolt repository includes Sprocket, a GUI application providing a sandbox 
 * FFT-based ocean wave simulation and rendering
 * Extensible entity component framework
 * [CIGI](https://en.wikipedia.org/wiki/Common_Image_Generator_Interface) support
-* [JSBSim](https://github.com/JSBSim-Team/jsbsim) flight dynamics model integration
 * [Bullet](https://github.com/bulletphysics/bullet3) physics integration
 * Python API
-* Sprocket GUI application, a sandbox for interactive scenario execution and testing
+* Qt widget library for creating GUIs for geospatial applications
 
 ## Contact
 Skybolt created and maintained by Matthew Reid.
 To submit a bug report, please [raise an issue on the GitHub repository](https://github.com/Prograda/Skybolt/issues).
-For other queries, please our [contact form](https://prograda.com/contact).
+For other queries, please use our [contact form](https://prograda.com/contact).
 
 ## License
 This project is licensed under the Mozilla Public License Version 2.0 - see the [License.txt](License.txt) file for details.
@@ -42,7 +41,7 @@ A list of skybolt dependencies can be found in [conanfile.py](conanfile.py).
 
 ### Building With Conan
 #### Install Conan
-Conan can be installed with [pip](https://pypi.org/project/pip): ```pip3 install conan```.
+Currently Skybolt only supports conan version 1.x rather than the newer 2.x version. Installed with [pip](https://pypi.org/project/pip): ```pip3 install conan==1.64.1```.
 
 #### Installing Skybolt's Dependencies
 To install dependencies with default Skybolt configuraion:
@@ -51,7 +50,7 @@ conan install %SKYBOLT_SOURCE% --install-folder=%SKYBOLT_BUILD%
 ```
 To use a custom configuration instead, configuration options may be supplied with the -o argument, for example:
 ```
-conan install %SKYBOLT_SOURCE% --install-folder=%SKYBOLT_BUILD% -o openscenegraph-mr:shared=True -o enable_python=True -o enable_sprocket=True -o enable_bullet=True -o enable_cigi=True
+conan install %SKYBOLT_SOURCE% --install-folder=%SKYBOLT_BUILD% -o openscenegraph-mr:shared=True -o enable_python=True -o enable_qt=True -o enable_bullet=True -o enable_cigi=True
 ```
 Please refer to [conanfile.py](conanfile.py) for a full list of available configuration options.
 #### Building Skybolt
@@ -88,7 +87,7 @@ Map features (buildings, roads, lakes etc) for the city of Seattle. These featur
 
 ## Running
 ### Settings
-Engine settings are stored in a json file, which may be manually edited with a text editor, or edited in Sprocket with the Tools->Settings dialog.
+Engine settings are stored in a json file, which may be manually edited with a text editor, or edited in the SkyboltQtApp with the Tools->Settings dialog.
 An example settings file template is available in this repository under src/SkyboltExamples/ExamplesCommon/ExampleSettings.json.
 
 The settings file can be loaded by example applications with the --settingsFile commandline option. If the option is not specified, a default Settings.json in the Operating System user's home directory will be used. On windows, this is located at C:/Users/%USERNAME%/AppData/Local/Skybolt/Settings.json.
