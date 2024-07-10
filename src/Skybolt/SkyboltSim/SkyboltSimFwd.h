@@ -13,12 +13,14 @@ namespace sim {
 
 class AttachmentComponent;
 struct AttachmentPoint;
+class AttachmentPointsComponent;
 class CameraController;
 class CameraControllerComponent;
 class CameraComponent;
 struct CameraState;
 class CollisionSystem;
 class Component;
+class ControlInputsComponent;
 class DynamicBodyComponent;
 class Entity;
 struct EntityId;
@@ -38,11 +40,11 @@ class Positionable;
 class PropellerComponent;
 class SimStepper;
 class System;
-class TriangleMeshShapeData;
 class World;
 
 typedef std::shared_ptr<AttachmentComponent> AttachmentComponentPtr;
 typedef std::shared_ptr<AttachmentPoint> AttachmentPointPtr;
+typedef std::shared_ptr<AttachmentPointsComponent> AttachmentPointsComponentPtr;
 typedef std::shared_ptr<CameraController> CameraControllerPtr;
 typedef std::shared_ptr<CameraControllerComponent> CameraControllerComponentPtr;
 typedef std::shared_ptr<CollisionSystem> CollisionSystemPtr;
@@ -59,7 +61,6 @@ typedef std::shared_ptr<Position> PositionPtr;
 typedef std::shared_ptr<Positionable> PositionablePtr;
 typedef std::shared_ptr<PropellerComponent> PropellerComponentPtr;
 typedef std::shared_ptr<System> SystemPtr;
-typedef std::shared_ptr<TriangleMeshShapeData> TriangleMeshShapeDataPtr;
 
 } // namespace sim
 } // namespace skybolt

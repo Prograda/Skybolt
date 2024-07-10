@@ -78,11 +78,11 @@ TEST_CASE("normalizeAngleTwoPi")
 
 TEST_CASE("calcSmallestAngleFromTo")
 {
-	CHECK(calcSmallestAngleFromTo(1, 2) == Approx(1).epsilon(1e-8f));
-	CHECK(calcSmallestAngleFromTo(2, 1) == Approx(-1).epsilon(1e-8f));
-	CHECK(calcSmallestAngleFromTo(2, -1) == Approx(-3).epsilon(1e-8f));
-	CHECK(calcSmallestAngleFromTo(-1, 2) == Approx(3).epsilon(1e-8f));
-	CHECK(calcSmallestAngleFromTo(3, 5) == Approx(2).epsilon(1e-8f));
-	CHECK(calcSmallestAngleFromTo(-piD(), piD()) == Approx(0).epsilon(1e-8f));
-	CHECK(calcSmallestAngleFromTo(5 * piD(), piD()) == Approx(0).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(1, 2) == Approx(1).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(2, 1) == Approx(-1).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(2, -1) == Approx(-3).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(-1, 2) == Approx(3).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(3, 5) == Approx(2).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(-piD(), piD()) == Approx(0).epsilon(1e-8f));
+	CHECK(calcSmallestAngleFromTo<double>(5 * piD(), piD()) == Approx(0).epsilon(1e-8f));
 }

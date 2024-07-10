@@ -25,7 +25,7 @@ std::shared_ptr<InterpolatorD> createPositionComponentInterpolator(const std::sh
 	else
 	{
 		return std::make_shared<CubicBSplineInterpolatorD>(
-			[sequence, componentIndex] { return sequence->values.size(); },
+			[sequence, componentIndex] { return int(sequence->values.size()); },
 			[sequence, componentIndex](int i) { return sequence->values[i].position[componentIndex]; },
 			[sequence, componentIndex](int i) { return sequence->times[i]; });
 	}
@@ -41,7 +41,7 @@ std::shared_ptr<InterpolatorD> createOrientationComponentInterpolator(const std:
 	else
 	{
 		return std::make_shared<CubicBSplineInterpolatorD>(
-			[sequence, componentIndex] { return sequence->values.size(); },
+			[sequence, componentIndex] { return int(sequence->values.size()); },
 			[sequence, componentIndex](int i) { return sequence->values[i].orientation[componentIndex]; },
 			[sequence, componentIndex](int i) { return sequence->times[i]; });
 	}

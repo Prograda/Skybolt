@@ -14,6 +14,7 @@ class EntityObject;
 class JsonScenarioSerializable;
 class OsgWindow;
 class OsgWindow;
+struct PickedScenarioObject;
 class PropertyEditor;
 class PropertiesModel;
 struct QtProperty;
