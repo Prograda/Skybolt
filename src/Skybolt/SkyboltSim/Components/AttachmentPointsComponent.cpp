@@ -6,6 +6,7 @@
 
 #include "AttachmentPointsComponent.h"
 #include "SkyboltSim/Entity.h"
+#include <SkyboltCommon/MapUtility.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
 #include <assert.h>
@@ -24,6 +25,16 @@ void addAttachmentPoint(Entity& entity, const std::string& name, const Attachmen
 		entity.addComponent(points);
 	}
 	points->attachmentPoints[name] = point;
+}
+
+AttachmentPointPtr findAttachmentPoint(const Entity& entity, const std::string& name)
+{
+	auto points = entity.getFirstComponent<AttachmentPointsComponent>();
+	if (points)
+	{
+		return findOptional(points->attachmentPoints, name).value_or(nullptr);
+	}
+	return nullptr;
 }
 
 Vector3 calcAttachmentPointPosition(const Entity& entity, const AttachmentPoint& point)

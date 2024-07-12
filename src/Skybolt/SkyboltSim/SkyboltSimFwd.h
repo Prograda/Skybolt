@@ -11,7 +11,7 @@
 namespace skybolt {
 namespace sim {
 
-class AttachmentComponent;
+class AttacherComponent;
 struct AttachmentPoint;
 class AttachmentPointsComponent;
 class CameraController;
@@ -42,7 +42,7 @@ class SimStepper;
 class System;
 class World;
 
-typedef std::shared_ptr<AttachmentComponent> AttachmentComponentPtr;
+typedef std::shared_ptr<AttacherComponent> AttacherComponentPtr;
 typedef std::shared_ptr<AttachmentPoint> AttachmentPointPtr;
 typedef std::shared_ptr<AttachmentPointsComponent> AttachmentPointsComponentPtr;
 typedef std::shared_ptr<CameraController> CameraControllerPtr;

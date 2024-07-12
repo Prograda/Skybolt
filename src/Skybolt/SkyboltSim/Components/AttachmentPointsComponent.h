@@ -26,6 +26,10 @@ public:
 };
 
 void addAttachmentPoint(Entity& entity, const std::string& name, const AttachmentPointPtr& point);
+
+//@return nullptr if not found
+AttachmentPointPtr findAttachmentPoint(const Entity& entity, const std::string& name);
+
 Vector3 calcAttachmentPointPosition(const Entity& entity, const AttachmentPoint& point);
 Quaternion calcAttachmentPointOrientation(const Entity& entity, const AttachmentPoint& point);
 

@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include <SkyboltReflection/Reflection.h>
+#include <stdint.h>
+#include <tuple>
 
 namespace skybolt {
 namespace sim {
@@ -21,14 +22,6 @@ struct EntityId
 		return applicationId != 0 || entityId != 0;
 	}
 };
-
-SKYBOLT_REFLECT_BEGIN(EntityId)
-{
-	registry.type<EntityId>("EntityId")
-		.property("applicationId", &EntityId::applicationId)
-		.property("entityId", &EntityId::entityId);
-}
-SKYBOLT_REFLECT_END
 
 // TODO: replace these operators with <=> after upgrading to c++20
 inline bool operator < (const EntityId& a, const EntityId& b)

@@ -6,55 +6,108 @@
 
 #include "AttachToParentContextAction.h"
 #include "SkyboltQt/QtUtil/QtDialogUtil.h"
+#include "SkyboltQt/QtUtil/QtLayoutUtil.h"
 #include <SkyboltSim/World.h>
-#include <SkyboltSim/Components/AttachmentComponent.h>
+#include <SkyboltSim/Components/AttacherComponent.h>
+#include <SkyboltSim/Components/AttachmentPointsComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 
+#include <QBoxLayout>
 #include <QComboBox>
+#include <QGridLayout>
 
 using namespace skybolt;
 using namespace skybolt::sim;
 
 bool AttachToParentContextAction::handles(const Entity& entity) const
 {
-	return true;
+	return entity.getFirstComponent<AttacherComponent>() != nullptr;
+}
+
+static std::map<QString, EntityId> createEntityNameToIdMap(const sim::World& world, const std::string& ignoreEntity = "")
+{
+	std::map<QString, EntityId> candidateParentIds;
+	for (const sim::EntityPtr& candidateParent : world.getEntities())
+	{
+		std::string name = sim::getName(*candidateParent);
+		if (!name.empty() && name != ignoreEntity)
+		{
+			QString qtName = QString::fromStdString(name);
+			candidateParentIds[qtName] = candidateParent->getId();
+		}
+	}
+	return candidateParentIds;
+}
+
+static QComboBox* createEntityChooserComboBox(const std::map<QString, EntityId>& entities, QWidget* parent = nullptr)
+{
+	QComboBox* comboBox = new QComboBox(parent);
+	for (const auto [name, id] : entities)
+	{
+		comboBox->addItem(name);
+	}
+	return comboBox;
+}
+
+static QStringList getEntityAttachmentPointAsQStringList(const sim::Entity& entity)
+{
+	QStringList items;
+	if (auto points = entity.getFirstComponent<AttachmentPointsComponent>(); points)
+	{
+		for (const auto& [name, point] : points->attachmentPoints)
+		{
+			items.push_back(QString::fromStdString(name));
+		}
+	}
+	return items;
 }
 
 void AttachToParentContextAction::execute(Entity& entity) const
 {
-	QComboBox* comboBox = new QComboBox();
-	std::map<QString, EntityId> candidateParentIds;
-	for (const sim::EntityPtr& candidateParent : mWorld->getEntities())
-	{
-		std::string name = sim::getName(*candidateParent);
-		if (!name.empty() && name != sim::getName(entity))
-		{
-			QString qtName = QString::fromStdString(name);
-			candidateParentIds[qtName] = candidateParent->getId();
-			comboBox->addItem(qtName);
-		}
-	}
+	auto widget = new QWidget();
+	auto layout = new QGridLayout(widget);
+	
+	std::map<QString, EntityId> entityNameToIdMap = createEntityNameToIdMap(*mWorld, sim::getName(entity));
+	auto entityChooserComboBox = createEntityChooserComboBox(entityNameToIdMap, widget);
+	addWidgetWithLabel(*layout, entityChooserComboBox, "Parent entity");
 
-	auto dialog = createDialogModal(comboBox, "Choose Entity");
+	auto parentAttachmentPointChooserComboBox = new QComboBox(widget);
+	addWidgetWithLabel(*layout, parentAttachmentPointChooserComboBox, "Parent attachment point");
+
+	auto ownAttachmentPointChooserComboBox = new QComboBox(widget);
+	ownAttachmentPointChooserComboBox->addItem("");
+	ownAttachmentPointChooserComboBox->addItems(getEntityAttachmentPointAsQStringList(entity));
+	addWidgetWithLabel(*layout, ownAttachmentPointChooserComboBox, "Own attachment point");
+
+	QObject::connect(entityChooserComboBox, &QComboBox::currentTextChanged, [this, entityNameToIdMap, parentAttachmentPointChooserComboBox] (const QString& entityName) {
+		auto i = entityNameToIdMap.find(entityName);
+		if (i != entityNameToIdMap.end())
+		{
+			if (auto parentEntity = mWorld->getEntityById(i->second); parentEntity)
+			{
+				parentAttachmentPointChooserComboBox->clear();
+				parentAttachmentPointChooserComboBox->addItem("");
+				parentAttachmentPointChooserComboBox->addItems(getEntityAttachmentPointAsQStringList(*parentEntity));
+			}
+		}
+		});
+
+	auto dialog = createDialogModal(widget, "Choose Entity");
 
 	if (dialog->exec() == QDialog::Accepted)
 	{
-		auto i = candidateParentIds.find(comboBox->currentText());
-		if (i != candidateParentIds.end())
+		auto i = entityNameToIdMap.find(entityChooserComboBox->currentText());
+		if (i != entityNameToIdMap.end())
 		{
 			auto parentEntityId = i->second;
-			sim::AttachmentComponentPtr attachment = entity.getFirstComponent<AttachmentComponent>();
-			if (!attachment)
+			if (const sim::AttacherComponentPtr& attachment = entity.getFirstComponent<AttacherComponent>(); attachment)
 			{
-				AttachmentParams params;
-				params.positionRelBody = math::vec3Zero();
-				params.orientationRelBody = math::quatIdentity();
-				attachment = std::make_shared<AttachmentComponent>(params, mWorld, &entity);
-				entity.addComponent(attachment);
+				attachment->state = AttachmentState();
+				attachment->state->parentEntityId = parentEntityId;
+				attachment->state->parentEntityAttachmentPoint = parentAttachmentPointChooserComboBox->currentText().toStdString();
+				attachment->state->ownEntityAttachmentPoint = ownAttachmentPointChooserComboBox->currentText().toStdString();
 			}
-
-			attachment->setParentEntityId(parentEntityId);
 		}
 	}
 }

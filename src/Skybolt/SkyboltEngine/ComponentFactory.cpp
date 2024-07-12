@@ -19,7 +19,7 @@
 #include <SkyboltSim/CameraController/PlanetCameraController.h>
 #include <SkyboltSim/CameraController/CameraControllerSelector.h>
 #include <SkyboltSim/Components/AssetDescriptionComponent.h>
-#include <SkyboltSim/Components/AttachmentComponent.h>
+#include <SkyboltSim/Components/AttacherComponent.h>
 #include <SkyboltSim/Components/AttachmentPointsComponent.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
@@ -223,13 +223,9 @@ static sim::ComponentPtr loadDynamicBody(Entity* entity, const ComponentFactoryC
 	return component;
 }
 
-static sim::ComponentPtr loadAttachment(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadAttacher(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
-	sim::AttachmentParams params;
-	params.positionRelBody = readVector3(json.at("positionRelBody"));
-	params.orientationRelBody = readOptionalQuaternion(json, "orientationRelBody");
-
-	return std::make_shared<AttachmentComponent>(params, context.simWorld, entity);
+	return std::make_shared<AttacherComponent>(context.simWorld, entity);
 }
 
 static sim::ComponentPtr loadCamera(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
@@ -361,7 +357,7 @@ static sim::ComponentPtr loadPlanetElevationTileSource(Entity* entity, const Com
 void addDefaultFactories(ComponentFactoryRegistry& registry)
 {
 	registry["shipWake"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadShipWake);
-	registry["attachment"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAttachment);
+	registry["attacher"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAttacher);
 	registry["attachmentPoint"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAttachmentPoint);
 	registry["assetDescription"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadAssetDescription);
 	registry["camera"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadCamera);

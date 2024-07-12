@@ -10,3 +10,5 @@
 
 //! Deletes all items in a QLayout
 void clearLayout(QLayout& layout);
+
+void addWidgetWithLabel(QGridLayout& layout, QWidget* widget, const QString& label);

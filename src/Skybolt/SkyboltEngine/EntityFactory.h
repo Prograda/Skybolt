@@ -19,6 +19,7 @@
 
 #include <functional>
 #include <map>
+#include <optional>
 #include <vector>
 
 namespace skybolt {

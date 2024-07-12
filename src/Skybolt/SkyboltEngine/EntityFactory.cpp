@@ -25,8 +25,6 @@
 #include <SkyboltSim/JsonHelpers.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/WorldUtil.h>
-#include <SkyboltSim/Components/DynamicBodyComponent.h>
-#include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CloudComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>

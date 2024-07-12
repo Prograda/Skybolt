@@ -11,6 +11,8 @@
 #include <SkyboltSim/EntityId.h>
 #include <SkyboltSim/System/System.h>
 
+#include <optional>
+
 namespace skybolt::sim {
 
 struct CollisionEvent : public Event

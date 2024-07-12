@@ -9,6 +9,10 @@
 #include "SkyboltSim/EntityId.h"
 #include "SkyboltSim/SkyboltSimFwd.h"
 
+#include <SkyboltReflection/Reflection.h>
+
+#include <string>
+
 namespace skybolt {
 namespace sim {
 

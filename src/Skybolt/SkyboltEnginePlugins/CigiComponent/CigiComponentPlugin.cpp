@@ -12,7 +12,7 @@
 #include <SkyboltEngine/Plugin/Plugin.h>
 #include <SkyboltSim/SimMath.h>
 #include <SkyboltSim/World.h>
-#include <SkyboltSim/Components/AttachmentComponent.h>
+#include <SkyboltSim/Components/AttacherComponent.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Spatial/Geocentric.h>
@@ -75,22 +75,22 @@ public:
 	{
 		if (mParent != parent)
 		{
-			if (parent)
+			if (parent) // Attach to parent
 			{
 				auto parentEntity = static_cast<MyCigiEntity*>(parent.get())->mEntity;
 
-				AttachmentParams params;
-				params.positionRelBody = math::dvec3Zero();
-				params.orientationRelBody = math::dquatIdentity();
-
-				mAttachmentComponent = std::make_shared<AttachmentComponent>(params, mWorld, mEntity.get());
-				mAttachmentComponent->setParentEntityId(parentEntity->getId());
-				mEntity->addComponent(mAttachmentComponent);
+				mAttacherComponent = mEntity->getFirstComponent<AttacherComponent>();
+				if (!mAttacherComponent)
+				{
+					mAttacherComponent = std::make_shared<AttacherComponent>(mWorld, mEntity.get());
+					mEntity->addComponent(mAttacherComponent);
+				}
+				mAttacherComponent->state = AttachmentState{};
+				mAttacherComponent->state->parentEntityId = parentEntity->getId();
 			}
-			else
+			else if (mAttacherComponent) // Detatch from parent
 			{
-				mEntity->removeComponent(mAttachmentComponent);
-				mAttachmentComponent.reset();
+				mAttacherComponent->state = std::nullopt;
 			}
 		}
 		mParent = parent;
@@ -98,12 +98,18 @@ public:
 
 	void setPositionOffset(const sim::Vector3& position) override
 	{
-		mAttachmentComponent->setPositionRelBody(position);
+		if (mAttacherComponent && mAttacherComponent->state)
+		{
+			mAttacherComponent->state->positionOffset = position;
+		}
 	}
 
 	void setOrientationOffset(const sim::Vector3& rpy) override
 	{
-		mAttachmentComponent->setOrientationRelBody(math::quatFromEuler(rpy));
+		if (mAttacherComponent && mAttacherComponent->state)
+		{
+			mAttacherComponent->state->orientationOffset = math::quatFromEuler(rpy);
+		}
 	}
 
 	void setHorizontalFieldOfView(float fov) override
@@ -119,7 +125,7 @@ public:
 	sim::EntityPtr mEntity;
 	CigiEntityPtr mParent;
 	std::shared_ptr<sim::CameraComponent> mCameraComponent;
-	std::shared_ptr<sim::AttachmentComponent> mAttachmentComponent;
+	std::shared_ptr<sim::AttacherComponent> mAttacherComponent;
 };
 
 typedef std::map<int, std::string> TemplatesMap;

@@ -5,6 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "QtLayoutUtil.h"
+#include <QGridLayout>
+#include <QLabel>
 #include <QWidget>
 
 void clearLayout(QLayout& layout)
@@ -18,4 +20,11 @@ void clearLayout(QLayout& layout)
 		}
 		delete item;
 	}
+}
+
+void addWidgetWithLabel(QGridLayout& layout, QWidget* widget, const QString& label)
+{
+	int row = layout.rowCount();
+	layout.addWidget(new QLabel(label), row, 0);
+	layout.addWidget(widget, row, 1);
 }
