@@ -160,6 +160,15 @@ vec3 blendErosion(vec3 base, vec3 blend, vec3 falloff)
 }
 
 #ifdef DETAIL_SAMPLER_COUNT
+vec4 sampleDetailTexture()
+{
+	vec3 detailTexCoordPerMeter = wrappedNoiseCoord * 10000.0; // repeats [0,1) per meter
+	vec3 texCoord = detailAlbedoUvScale[0] * detailTexCoordPerMeter;
+	return texture(albedoDetailSamplers[0], texCoord.xy);
+}
+#endif // DETAIL_SAMPLER_COUNT
+
+#if DETAIL_SAMPLER_COUNT > 1
 vec4 sampleDetailAlbedo(int i, vec3 normal, vec3 texCoord, vec2 normalUv)
 {
 	return texture(albedoDetailSamplers[i], texCoord.xy);
@@ -173,13 +182,6 @@ vec4 sampleDetailAlbedoMultiScale(int i, vec3 normal, vec3 texCoord, vec2 normal
 	float lod = textureQueryLod(albedoDetailSamplers[i], texCoord.xy).r;
 	
 	return mix(c, d, clamp(1-lod*0.5, 0, 1));
-}
-
-vec4 sampleDetailTexture()
-{
-	vec3 detailTexCoordPerMeter = wrappedNoiseCoord * 10000.0; // repeats [0,1) per meter
-	vec3 texCoord = detailAlbedoUvScale[0] * detailTexCoordPerMeter;
-	return texture(albedoDetailSamplers[0], texCoord.xy);
 }
 
 vec4 sampleAttributeDetailTextures(vec3 normal, vec2 normalUv, vec3 albedo)
@@ -254,12 +256,12 @@ vec4 sampleAttributeDetailTextures(vec3 normal, vec2 normalUv, vec3 albedo)
 		vec3 albedoDetailTexCoord = detailAlbedoUvScale[index] * detailTexCoordPerMeter;
 		attributeColor += sampleDetailAlbedo(index, normal, albedoDetailTexCoord, normalUv) * attrWeights[i];
 	}
-#endif
+#endif //OVERLAY_BLEND
 #endif
 	return attributeColor;
 }
 
-#endif
+#endif // DETAIL_SAMPLER_COUNT > 1
 
 #ifdef EXPERIMENTAL_DETAIL_ALBEDO
 vec4 sampleDetailAlbedoAdvanced(int i, vec3 normal, vec3 texCoord, vec2 normalUv)
