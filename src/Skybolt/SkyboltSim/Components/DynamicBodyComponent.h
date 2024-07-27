@@ -46,14 +46,14 @@ public:
 	//! Apply torque during the next dynamics substep. Torque is in world axes.
 	virtual void applyTorque(const Vector3& torque) = 0;
 
-	//! @returns forces applied during the most recent dynamics substep.
-	//! Used for visualisation purposes.
-	const std::vector<AppliedForce>& getForces() const { return mForces; }
+	//! @returns forces applied in the most recent dynamics substep.
+	//! Used for visualisation purposes only; this should not affect the simulation.
+	const std::vector<AppliedForce>& getForcesAppliedInLastSubstep() const { return mForcesAppliedInLastSubstep; }
 
 	virtual void setCollisionsEnabled(bool enabled) = 0;
 
 protected:
-	std::vector<AppliedForce> mForces;
+	std::vector<AppliedForce> mForcesAppliedInLastSubstep;
 };
 
 SKYBOLT_REFLECT_EXTERN(DynamicBodyComponent)

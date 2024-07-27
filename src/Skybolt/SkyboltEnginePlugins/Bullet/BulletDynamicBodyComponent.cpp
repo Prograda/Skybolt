@@ -22,6 +22,8 @@ SKYBOLT_REFLECT_BEGIN(BulletDynamicBodyComponent)
 }
 SKYBOLT_REFLECT_END
 
+constexpr std::size_t maxQueuedForces = 32;
+
 BulletDynamicBodyComponent::BulletDynamicBodyComponent(const BulletDynamicBodyComponentConfig& config) :
 	mMinSpeedForCcdSquared(5.0 * 5.0),
 	mWorld(config.world),
@@ -50,8 +52,6 @@ BulletDynamicBodyComponent::~BulletDynamicBodyComponent()
 
 void BulletDynamicBodyComponent::updatePreDynamics()
 {
-	mForces.clear();
-
 	if (mDynamicsEnabled)
 	{
 		// Reset position and orientation if the node was moved by an external source since the last timestep
@@ -114,6 +114,9 @@ void BulletDynamicBodyComponent::updatePostDynamics()
 		mMotion->linearVelocity = toGlmDvec3(mBody->getLinearVelocity());
 		mMotion->angularVelocity = toGlmDvec3(mBody->getAngularVelocity());
 	}
+
+	std::swap(mCurrentForces, mForcesAppliedInLastSubstep);
+	mCurrentForces.clear();
 }
 
 void BulletDynamicBodyComponent::setDynamicsEnabled(bool enabled)
@@ -150,7 +153,11 @@ void BulletDynamicBodyComponent::applyCentralForce(const Vector3& force)
 	AppliedForce appliedForce;
 	appliedForce.force = force;
 	appliedForce.positionRelBody = toGlmDvec3(quatRotate(mBody->getOrientation(), mCenterOfMass));
-	mForces.push_back(appliedForce);
+
+	if (mCurrentForces.size() < maxQueuedForces)
+	{
+		mCurrentForces.push_back(appliedForce);
+	}
 }
 
 void BulletDynamicBodyComponent::applyForce(const Vector3& force, const Vector3& relPosition)
@@ -160,7 +167,11 @@ void BulletDynamicBodyComponent::applyForce(const Vector3& force, const Vector3&
 	AppliedForce appliedForce;
 	appliedForce.force = force;
 	appliedForce.positionRelBody = relPosition;
-	mForces.push_back(appliedForce);
+
+	if (mCurrentForces.size() < maxQueuedForces)
+	{
+		mCurrentForces.push_back(appliedForce);
+	}
 }
 
 void BulletDynamicBodyComponent::applyTorque(const Vector3& torque)

@@ -45,7 +45,7 @@ void ForcesVisBinding::syncVis(const GeocentricToNedConverter& converter)
 				const sim::DynamicBodyComponent* body = entity->getFirstComponent<sim::DynamicBodyComponent>().get();
 				if (node && body)
 				{
-					const std::vector<sim::AppliedForce>& forces = body->getForces();
+					const std::vector<sim::AppliedForce>& forces = body->getForcesAppliedInLastSubstep();
 
 					for (const sim::AppliedForce& force : forces)
 					{

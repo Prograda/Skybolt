@@ -28,7 +28,7 @@ public:
 	~KinematicBody();
 
 	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
-		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::BeginStateUpdate, updatePreDynamics)
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::PreDynamicsSubStep, updatePreDynamics)
 	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
 
 	void updatePreDynamics();

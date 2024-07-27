@@ -88,8 +88,9 @@ T componentWiseLerp(const T& a, const T& b, V t)
 //! Output vectors are normalized
 void getOrthonormalBasis(const glm::vec3 &normal, glm::vec3 &tangent, glm::vec3 &bitangent);
 
+//! @returns angle between two normalized vectors
 template <typename T>
-typename T::value_type angleBetween(const T &v0, const T &v1)
+typename T::value_type angleBetweenDirections(const T &v0, const T &v1)
 {
 	using ValT = typename T::value_type;
 	ValT dot = glm::dot(v0, v1);

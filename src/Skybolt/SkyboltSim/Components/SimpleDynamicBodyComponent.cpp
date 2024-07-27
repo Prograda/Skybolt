@@ -20,6 +20,8 @@ SKYBOLT_REFLECT_BEGIN(SimpleDynamicBodyComponent)
 }
 SKYBOLT_REFLECT_END
 
+constexpr std::size_t maxQueuedForces = 32;
+
 SimpleDynamicBodyComponent::SimpleDynamicBodyComponent(Node* node, Motion* motion, double mass, const Vector3& momentofInertia) :
 	mNode(node),
 	mMotion(motion),
@@ -33,13 +35,21 @@ SimpleDynamicBodyComponent::SimpleDynamicBodyComponent(Node* node, Motion* motio
 void SimpleDynamicBodyComponent::applyCentralForce(const Vector3& force)
 {
 	mTotalForce += force;
-	mCurrentForces.push_back(AppliedForce({math::dvec3Zero(), force}));
+
+	if (mCurrentForces.size() < maxQueuedForces)
+	{
+		mCurrentForces.push_back(AppliedForce({math::dvec3Zero(), force}));
+	}
 }
 
 void SimpleDynamicBodyComponent::applyForce(const Vector3& force, const Vector3& relPosition)
 {
 	mTotalForce += force;
-	mCurrentForces.push_back(AppliedForce({relPosition, force}));
+
+	if (mCurrentForces.size() < maxQueuedForces)
+	{
+		mCurrentForces.push_back(AppliedForce({relPosition, force}));
+	}
 
 	Vector3 offset = relPosition - mNode->getOrientation() * mCenterOfMass;
 	mTotalTorque += cross(offset, force);
@@ -96,7 +106,7 @@ void SimpleDynamicBodyComponent::integrateTimeStep()
 	mTotalForce = math::dvec3Zero();
 	mTotalTorque = math::dvec3Zero();
 	
-	std::swap(mCurrentForces, mForces);
+	std::swap(mCurrentForces, mForcesAppliedInLastSubstep);
 	mCurrentForces.clear();
 }
 

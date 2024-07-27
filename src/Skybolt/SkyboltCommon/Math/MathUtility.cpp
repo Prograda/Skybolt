@@ -52,15 +52,15 @@ namespace math {
 		// TODO: fix singularity when forwardXY is zero
 		glm::tvec3<T> fowardXY = glm::normalize(glm::tvec3<T>(forward.x, forward.y, 0));
 
-		euler.y = angleBetween(fowardXY, forward) * glm::sign(glm::cross(fowardXY, glm::cross(fowardXY, forward)).z); // pitch
-		euler.z = angleBetween(glm::tvec3<T>(1, 0, 0), fowardXY); // yaw
+		euler.y = angleBetweenDirections(fowardXY, forward) * glm::sign(glm::cross(fowardXY, glm::cross(fowardXY, forward)).z); // pitch
+		euler.z = angleBetweenDirections(glm::tvec3<T>(1, 0, 0), fowardXY); // yaw
 		if (glm::cross(glm::tvec3<T>(1, 0, 0), fowardXY).z < 0.0f)
 		{
 			euler.z *= -1.0f;
 		}
 
 		glm::tvec3<T> upVertPlane = glm::angleAxis(euler.z, glm::tvec3<T>(0, 0, 1)) * glm::angleAxis(euler.y, glm::tvec3<T>(0, 1, 0)) * glm::tvec3<T>(0, 0, -1);
-		euler.x = angleBetween(upVertPlane, up) * glm::sign(glm::dot(forward, glm::cross(upVertPlane, up))); // roll
+		euler.x = angleBetweenDirections(upVertPlane, up) * glm::sign(glm::dot(forward, glm::cross(upVertPlane, up))); // roll
 
 		return euler;
 	}

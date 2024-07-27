@@ -58,7 +58,7 @@ private:
 	Vector3 mTotalForce = math::dvec3Zero(); //!< World space
 	Vector3 mTotalTorque = math::dvec3Zero(); //!< World space
 
-	std::vector<AppliedForce> mCurrentForces; //!< For visualization purposes. Used to populate mForces in base class.
+	std::vector<AppliedForce> mCurrentForces; //!< For visualization purposes. Used to populate mForcesAppliedInLastSubstep in base class.
 };
 
 SKYBOLT_REFLECT_EXTERN(SimpleDynamicBodyComponent);

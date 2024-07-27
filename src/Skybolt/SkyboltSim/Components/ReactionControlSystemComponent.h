@@ -33,10 +33,10 @@ public:
 	ReactionControlSystemComponent(const ReactionControlSystemComponentConfig& config);
 
 	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
-		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::BeginStateUpdate, updateState)
+		SKYBOLT_REGISTER_UPDATE_HANDLER(UpdateStage::PreDynamicsSubStep, updatePreDynamicsSubstep)
 	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
 
-	void updateState();
+	void updatePreDynamicsSubstep();
 
 private:
 	const ReactionControlSystemParams mParams;

@@ -69,8 +69,8 @@ public: // Component interface
 
 public: // SimUpdatable interface
 	SKYBOLT_BEGIN_REGISTER_UPDATE_HANDLERS
-		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::BeginStateUpdate, updatePreDynamics)
-		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::EndStateUpdate, updatePostDynamics)
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::PreDynamicsSubStep, updatePreDynamics)
+		SKYBOLT_REGISTER_UPDATE_HANDLER(sim::UpdateStage::PostDynamicsSubStep, updatePostDynamics)
 	SKYBOLT_END_REGISTER_UPDATE_HANDLERS
 
 	void updatePreDynamics();
@@ -98,6 +98,7 @@ private:
 	double mMass;
 
 	bool mDynamicsEnabled;
+	std::vector<AppliedForce> mCurrentForces; //!< For visualization purposes. Used to populate mForcesAppliedInLastSubstep in base class.
 };
 
 SKYBOLT_REFLECT_EXTERN(BulletDynamicBodyComponent);
