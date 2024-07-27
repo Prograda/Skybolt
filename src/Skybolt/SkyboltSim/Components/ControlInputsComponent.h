@@ -64,7 +64,14 @@ public:
 		auto i = controls.find(name);
 		if (i != controls.end())
 		{
-			return std::dynamic_pointer_cast<ControlInputT<T>>(i->second);
+			if (auto input = std::dynamic_pointer_cast<ControlInputT<T>>(i->second); input)
+			{
+				return input;
+			}
+			else
+			{
+				throw std::runtime_error("Control Input '" + name + "' had unexpected type");
+			}
 		}
 		return nullptr;
 	}
