@@ -66,10 +66,22 @@ void Type::addSuperType(const TypePtr& super, std::ptrdiff_t offsetFromThisToSup
 
 std::optional<std::ptrdiff_t> Type::getOffsetFromThisToSuper(const std::type_index& super) const
 {
+	// Look for direct super types
 	if (auto i = mSuperTypes.find(super); i != mSuperTypes.end())
 	{
 		return i->second.second;
 	}
+
+	// Walk tree to find indirect super types
+	for (const auto& [typeIndex, typeAndOffset] : mSuperTypes)
+	{
+		if (auto offset = typeAndOffset.first->getOffsetFromThisToSuper(super); offset)
+		{
+			return typeAndOffset.second + *offset;
+		}
+	}
+
+	// No super type found
 	return std::nullopt;
 }
 

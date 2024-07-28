@@ -30,6 +30,13 @@ struct Derived : public BaseA, BaseB
 	int intC = 0;
 };
 
+struct MultiLevelDerived : public Derived
+{
+	~MultiLevelDerived() override = default;
+
+	int intD = 0;
+};
+
 SKYBOLT_REFLECT_BEGIN(BaseA)
 {
 	registry.type<BaseA>("BaseA")
@@ -53,6 +60,14 @@ SKYBOLT_REFLECT_BEGIN(Derived)
 }
 SKYBOLT_REFLECT_END
 
+SKYBOLT_REFLECT_BEGIN(MultiLevelDerived)
+{
+	registry.type<MultiLevelDerived>("MultiLevelDerived")
+		.superType<Derived>()
+		.property("intD", &MultiLevelDerived::intD);
+}
+SKYBOLT_REFLECT_END
+
 TEST_CASE("Derived type has super type properties")
 {
 	TypeRegistry registry;
@@ -64,6 +79,21 @@ TEST_CASE("Derived type has super type properties")
 	CHECK(type->getProperty("intA"));
 	CHECK(type->getProperty("intB"));
 	CHECK(type->getProperty("intC"));
+}
+
+TEST_CASE("Multi-level derived type has super type properties")
+{
+	TypeRegistry registry;
+
+	auto type = registry.getTypeByName("MultiLevelDerived");
+	REQUIRE(type);
+	CHECK(type->isDerivedFrom<Derived>());
+	CHECK(type->isDerivedFrom<BaseA>());
+	CHECK(type->isDerivedFrom<BaseB>());
+	CHECK(type->getProperty("intA"));
+	CHECK(type->getProperty("intB"));
+	CHECK(type->getProperty("intC"));
+	CHECK(type->getProperty("intD"));
 }
 
 TEST_CASE("Access properties of type with multiple super classes")
@@ -125,5 +155,36 @@ TEST_CASE("Access properties of type with multiple super classes")
 		auto instance = createNonOwningInstance(&registry, &derivedObj);
 		secondBaseClassProperty->setValue(instance, createOwningInstance(&registry, 3));
 		CHECK(derivedObj.intB == 3);
+	}
+}
+
+
+TEST_CASE("Access properties of multi-level derived type")
+{
+	TypeRegistry registry;
+
+	auto type = registry.getTypeByName("MultiLevelDerived");
+	REQUIRE(type);
+	auto multiLevelDerivedClassProperty = type->getProperty("intD");
+	REQUIRE(multiLevelDerivedClassProperty);
+	auto derivedClassProperty = type->getProperty("intC");
+	REQUIRE(derivedClassProperty);
+	auto baseClassProperty = type->getProperty("intA");
+	REQUIRE(baseClassProperty);
+	
+	MultiLevelDerived derivedObj;
+
+	SECTION("Set proeprty values on instance created from multi-level derived class")
+	{
+		auto instance = createNonOwningInstance(&registry, &derivedObj);
+		
+		multiLevelDerivedClassProperty->setValue(instance, createOwningInstance(&registry, 1));
+		CHECK(derivedObj.intD == 1);
+
+		derivedClassProperty->setValue(instance, createOwningInstance(&registry, 2));
+		CHECK(derivedObj.intC == 2);
+
+		baseClassProperty->setValue(instance, createOwningInstance(&registry, 3));
+		CHECK(derivedObj.intA == 3);
 	}
 }

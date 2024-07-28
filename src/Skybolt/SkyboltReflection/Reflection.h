@@ -39,7 +39,22 @@ public:
 	template <typename T>
 	bool isDerivedFrom() const
 	{
-		return mSuperTypes.find(typeid(T)) != mSuperTypes.end();
+		// Look for direct super type
+		if (auto i = mSuperTypes.find(typeid(T)); i != mSuperTypes.end())
+		{
+			return true;
+		}
+		
+		// Look for indirect super types
+		for (const auto& [typeIndex, typeAndOffset] : mSuperTypes)
+		{
+			const TypePtr& superType = typeAndOffset.first;
+			if (auto result = superType->isDerivedFrom<T>(); result)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	const std::string& getName() const { return mName; }

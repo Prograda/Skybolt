@@ -21,7 +21,7 @@ public:
 SKYBOLT_REFLECT_BEGIN(NullCameraController)
 {
 	registry.type<NullCameraController>("NullCameraController")
-		.superType<NullCameraController>();
+		.superType<CameraController>();
 }
 SKYBOLT_REFLECT_END
 
