@@ -12,3 +12,5 @@
 void clearLayout(QLayout& layout);
 
 void addWidgetWithLabel(QGridLayout& layout, QWidget* widget, const QString& label);
+
+QBoxLayout* createBoxLayoutWithWidgets(const std::vector<QWidget*>& widgets, QWidget* parent = nullptr, QBoxLayout::Direction direction = QBoxLayout::Direction::LeftToRight);

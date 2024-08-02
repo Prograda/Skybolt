@@ -23,7 +23,6 @@
 
 class QComboBox;
 class QMenu;
-class QToolBar;
 
 struct ViewportWidgetConfig
 {
@@ -33,7 +32,6 @@ struct ViewportWidgetConfig
 	ScenarioSelectionModel* selectionModel;
 	ScenarioObjectPicker scenarioObjectPicker;
 	std::vector<DefaultContextActionPtr> contextActions;
-	std::function<std::string()> scenarioFilenameGetter;
 	QWidget* parent = nullptr;
 };
 
@@ -43,6 +41,10 @@ class ViewportWidget : public QWidget, public JsonScenarioSerializable, public s
 public:
 	ViewportWidget(const ViewportWidgetConfig& config);
 	~ViewportWidget() override;
+
+	void setCamera(skybolt::sim::Entity* simCamera);
+
+	void captureImage(const std::filesystem::path& baseFilename);
 
 	Q_SLOT void update();
 
@@ -54,8 +56,6 @@ public:
 	void addMouseEventHandler(const ViewportMouseEventHandlerPtr& handler, int priority = mouseEventHandlerDefaultPriority);
 	void removeMouseEventHandler(const ViewportMouseEventHandler& handler);
 
-	QMenu* getVisibilityFilterMenu() const { return mFilterMenu; }
-
 	QWidget* getViewportCanvas() const { return mOsgWidget; }
 	int getViewportWidth() const;
 	int getViewportHeight() const;
@@ -64,8 +64,6 @@ public:
 	skybolt::sim::Entity* getCamera() const { return mCurrentSimCamera; }
 
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> getRenderCameraViewport() const { return mViewport; }
-
-	QToolBar* getToolBar() const { return mToolBar; }
 
 public: // JsonScenarioSerializable
 	void resetScenario() override;
@@ -76,12 +74,6 @@ public:
 	void entityRemoved(const skybolt::sim::EntityPtr& entity) override;
 
 private:
-	QToolBar* createViewportToolBar(const std::function<std::string()>& scenarioFilenameGetter);
-
-	void captureImage(const std::filesystem::path& baseFilename);
-
-	void setCamera(skybolt::sim::Entity* simCamera);
-
 	void showContextMenu(const QPoint& point);
 
 private:
@@ -91,15 +83,12 @@ private:
 	ScenarioSelectionModel* mSelectionModel;
 	std::vector<DefaultContextActionPtr> mContextActions;
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> mViewport;
-	QMenu* mFilterMenu;
 	OsgWindow* mOsgWindow;
 	QWidget* mOsgWidget;
-	QToolBar* mToolBar;
 	
 	std::multimap<int, ViewportMouseEventHandlerPtr> mMouseEventHandlers; //!< Key is priority, lower values executed first
 
 	QComboBox* mCameraCombo;
-	class CameraControllerWidget* mCameraControllerWidget;
 	skybolt::sim::Entity* mCurrentSimCamera = nullptr;
 
 	ScenarioObjectPicker mScenarioObjectPicker;

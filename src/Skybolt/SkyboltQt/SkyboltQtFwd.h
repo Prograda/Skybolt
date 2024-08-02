@@ -9,6 +9,7 @@
 #include <functional>
 #include <memory>
 
+class CameraControllerWidget;
 class EntityChooserDialogFactory;
 class EntityObject;
 class JsonScenarioSerializable;

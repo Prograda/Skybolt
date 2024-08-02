@@ -28,3 +28,13 @@ void addWidgetWithLabel(QGridLayout& layout, QWidget* widget, const QString& lab
 	layout.addWidget(new QLabel(label), row, 0);
 	layout.addWidget(widget, row, 1);
 }
+
+QBoxLayout* createBoxLayoutWithWidgets(const std::vector<QWidget*>& widgets, QWidget* parent, QBoxLayout::Direction direction)
+{
+	auto layout = new QBoxLayout(direction, parent);
+	for (QWidget* widget : widgets)
+	{
+		layout->addWidget(widget);
+	}
+	return layout;
+}

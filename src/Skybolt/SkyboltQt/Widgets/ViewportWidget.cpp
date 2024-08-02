@@ -6,17 +6,12 @@
 
 #include "ViewportWidget.h"
 #include "CaptureImageDailog.h"
-#include "SkyboltQt/Entity/EntityListModel.h"
 #include "SkyboltQt/Icon/SkyboltIcons.h"
-#include "SkyboltQt/Property/PropertyEditor.h"
 #include "SkyboltQt/Scenario/EntityObjectType.h"
 #include "SkyboltQt/Scenario/ScenarioSelectionModel.h"
-#include "SkyboltQt/QtUtil/QtDialogUtil.h"
-#include "SkyboltQt/Viewport/ViewportPropertiesModel.h"
 #include "SkyboltQt/Viewport/OsgWindow.h"
 #include "SkyboltQt/Viewport/PlanetPointPicker.h"
 #include "SkyboltQt/Viewport/ScreenTransformUtil.h"
-#include "SkyboltQt/Widgets/CameraControllerWidget.h"
 
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineSettings.h>
@@ -38,18 +33,9 @@
 #include <osg/Texture2D>
 #include <QApplication>
 #include <QBoxLayout>
-#include <QComboBox>
 #include <QMenu>
-#include <QSortFilterProxyModel>
-#include <QToolBar>
-#include <QToolButton>
 
 using namespace skybolt;
-
-static sim::Entity* getSelectedCamera(const sim::World& world, const QComboBox& comboBox)
-{
-	return world.findObjectByName(comboBox.currentText().toStdString()).get();
-}
 
 ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	mEngineRoot(config.engineRoot),
@@ -57,7 +43,6 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	mSelectionModel(config.selectionModel),
 	mScenarioObjectPicker(config.scenarioObjectPicker),
 	mContextActions(config.contextActions),
-	mFilterMenu(new QMenu(this)),
 	QWidget(config.parent)
 {
 	assert(mEngineRoot);
@@ -69,8 +54,6 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 
 	mOsgWindow = new OsgWindow(config.visRoot);
 
-	mToolBar = createViewportToolBar(config.scenarioFilenameGetter);
-
 	mViewport = new vis::DefaultRenderCameraViewport([&]{
 		vis::DefaultRenderCameraViewportConfig c;
 		c.scene = mEngineRoot->scene;
@@ -81,9 +64,6 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 	}());
 	mOsgWindow->getWindow()->getRenderOperationSequence().addOperation(mViewport);
 	mOsgWidget = QWidget::createWindowContainer(mOsgWindow, this);
-
-	sim::World* world = &mEngineRoot->scenario->world;
-	setCamera(getSelectedCamera(*world, *mCameraCombo));
 
 	connect(mOsgWindow, &OsgWindow::mousePressed, this, [this](const QPointF& position, Qt::MouseButton button, const Qt::KeyboardModifiers& modifiers) {
 		for (const auto& [priority, handler] : mMouseEventHandlers)
@@ -121,12 +101,10 @@ ViewportWidget::ViewportWidget(const ViewportWidgetConfig& config) :
 
 	// Create center layout
 	{
-		QBoxLayout* layout = new QVBoxLayout();
+		auto layout = new QVBoxLayout(this);
 		layout->setMargin(0);
 		layout->setSpacing(0);
-		setLayout(layout);
 
-		layout->addWidget(mToolBar);
 		layout->addWidget(mOsgWidget);
 	}
 }
@@ -135,8 +113,6 @@ ViewportWidget::~ViewportWidget() = default;
 
 void ViewportWidget::update()
 {
-	mCameraControllerWidget->update();
-
 	// Apply the OsgWidget cursor to the OsgWindow, as the window doesn't inheret the wrapper widget's cursor automatically
 	Qt::CursorShape cursorShape = QApplication::overrideCursor() ? QApplication::overrideCursor()->shape() : mOsgWidget->cursor().shape();
 	mOsgWindow->setCursor(QCursor(cursorShape));
@@ -298,66 +274,10 @@ void ViewportWidget::setCamera(sim::Entity* simCamera)
 	if (mCurrentSimCamera != simCamera)
 	{
 		mCurrentSimCamera = simCamera;
-		mCameraControllerWidget->setCamera(mCurrentSimCamera);
 
 		vis::CameraPtr visCamera = mCurrentSimCamera ? getFirstVisCamera(*mCurrentSimCamera) : nullptr;
 		mViewport->setCamera(visCamera);
-
-		mCameraCombo->setCurrentText(simCamera ? QString::fromStdString(getName(*simCamera)) : "");
 	}
-}
-
-QToolBar* ViewportWidget::createViewportToolBar(const std::function<std::string()>& scenarioFilenameGetter)
-{
-	QToolBar* toolbar = new QToolBar(this);
-
-	sim::World* world = &mEngineRoot->scenario->world;
-
-	{
-		auto cameraListModel = new EntityListModel(world, [] (const sim::Entity& entity) {
-			return entity.getFirstComponent<sim::CameraComponent>() != nullptr;
-		});
-
-		auto proxyModel = new QSortFilterProxyModel(this);
-		proxyModel->sort(0);
-		proxyModel->setSourceModel(cameraListModel);
-
-		mCameraCombo = new QComboBox();
-		mCameraCombo->setToolTip("Camera");
-		mCameraCombo->setModel(proxyModel);
-		toolbar->addWidget(mCameraCombo);
-
-		mCameraControllerWidget = new CameraControllerWidget(world);
-		toolbar->addWidget(mCameraControllerWidget);
-
-		connect(mCameraCombo, &QComboBox::currentTextChanged, [=](const QString& text) {
-			setCamera(getSelectedCamera(*world, *mCameraCombo));
-		});
-	}
-
-	toolbar->addAction(getSkyboltIcon(SkyboltIcon::Screenshot), "Capture Image", [this, scenarioFilenameGetter] { captureImage(scenarioFilenameGetter()); });
-
-	{
-		QToolButton* toolButton = new QToolButton(this);
-		toolButton->setText("Filter");
-		toolButton->setToolTip("Filter");
-		toolButton->setIcon(getSkyboltIcon(SkyboltIcon::Filter));
-		toolButton->setMenu(mFilterMenu);
-		toolButton->setPopupMode(QToolButton::InstantPopup);
-		toolbar->addWidget(toolButton);
-	}
-
-	toolbar->addAction(getSkyboltIcon(SkyboltIcon::Settings), "Settings", [=] {
-		if (mCurrentSimCamera)
-		{
-			PropertyEditor* editor = new PropertyEditor();
-			editor->setModel(std::make_shared<ViewportPropertiesModel>(mEngineRoot->scene.get(), mCurrentSimCamera->getFirstComponent<sim::CameraComponent>().get()));
-			QDialog* dialog = createDialogNonModal(editor, "Settings", this);
-			dialog->exec();
-		}
-	});
-
-	return toolbar;
 }
 
 void ViewportWidget::resetScenario()

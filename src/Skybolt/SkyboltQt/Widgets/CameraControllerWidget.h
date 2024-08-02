@@ -22,6 +22,7 @@ public:
 	CameraControllerWidget(skybolt::sim::World* world, QWidget* parent = nullptr);
 	~CameraControllerWidget();
 
+	skybolt::sim::Entity* getCamera() const { return mCamera; }
 	void setCamera(skybolt::sim::Entity* camera);
 
 	void update();

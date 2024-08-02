@@ -12,6 +12,7 @@
 #include <SkyboltQt/Input/InputPlatformQt.h>
 #include <SkyboltQt/Property/DefaultPropertyModelFactories.h>
 #include <SkyboltQt/QtUtil/ApplicationUtil.h>
+#include <SkyboltQt/QtUtil/QtLayoutUtil.h>
 #include <SkyboltQt/QtUtil/QtMenuUtil.h>
 #include <SkyboltQt/QtUtil/QtTimerUtil.h>
 #include "SkyboltQt/Scenario/EntityObjectType.h"
@@ -29,6 +30,7 @@
 #include <SkyboltQt/Widgets/ScenarioObjectsEditorWidget.h>
 #include <SkyboltQt/Widgets/TimelineControlWidget.h>
 #include <SkyboltQt/Widgets/TimeControlWidget.h>
+#include <SkyboltQt/Widgets/ViewportToolBar.h>
 #include <SkyboltQt/Widgets/ViewportWidget.h>
 #include <SkyboltCommon/MapUtility.h>
 #include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
@@ -185,13 +187,21 @@ public:
 				c.selectionModel = selectionModel;
 				c.scenarioObjectPicker = createScenarioObjectPicker(*scenarioObjectTypes);
 				c.contextActions = createContextActions(*mEngineRoot);
-				c.scenarioFilenameGetter = [scenarioWorkspace] { return scenarioWorkspace->getScenarioFilename().toStdString(); };
 				c.parent = mMainWindow.get();
 				return c;
 			}());
 			viewportWidget->addMouseEventHandler(viewportMouseEventHandler);
 
-			EntityVisibilityPredicate basePredicate = createSelectedEntityVisibilityPredicateAndAddSubMenu(*viewportWidget->getVisibilityFilterMenu(), "See Through Planet", selectionModel);
+			auto viewportToolBar = new ViewportToolBar([&] {
+				ViewportToolBarConfig c;
+				c.engineRoot = mEngineRoot.get();
+				c.viewport = viewportWidget;
+				c.scenarioFilenameGetter = [scenarioWorkspace] { return scenarioWorkspace->getScenarioFilename().toStdString(); };
+				c.parent = mMainWindow.get();
+				return c;
+				}());
+
+			EntityVisibilityPredicate basePredicate = createSelectedEntityVisibilityPredicateAndAddSubMenu(*viewportToolBar->getVisibilityFilterMenu(), "See Through Planet", selectionModel);
 			basePredicate = predicateOr(basePredicate, createLineOfSightVisibilityPredicate(viewportWidget, &mEngineRoot->scenario->world));
 
 			auto visibilityLayers = std::map<std::string, EntityVisibilityPredicateSetter>({
@@ -199,9 +209,12 @@ public:
 				{"Forces", toEntityVisibilityPredicateSetter(mForcesVisBinding.get())}
 			});
 
-			addVisibilityLayerSubMenus(*viewportWidget->getVisibilityFilterMenu(), basePredicate, visibilityLayers, selectionModel);
+			addVisibilityLayerSubMenus(*viewportToolBar->getVisibilityFilterMenu(), basePredicate, visibilityLayers, selectionModel);
 
-			mMainWindow->addToolWindow("Viewport", viewportWidget);
+			auto viewportToolWidget = new QWidget(mMainWindow.get());
+			createBoxLayoutWithWidgets({ viewportToolBar, viewportWidget }, viewportToolWidget, QBoxLayout::Direction::TopToBottom);
+
+			mMainWindow->addToolWindow("Viewport", viewportToolWidget);
 			connectJsonScenarioSerializable(*scenarioWorkspace, viewportWidget);
 		}
 
