@@ -61,7 +61,7 @@ public:
 	int getViewportHeight() const;
 	glm::dmat4 calcCurrentViewProjTransform() const;
 
-	skybolt::sim::Entity* getCamera() const { return mCurrentSimCamera; }
+	skybolt::sim::Entity* getCamera() const { return mCurrentSimCamera; } //!< May return null
 
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> getRenderCameraViewport() const { return mViewport; }
 
