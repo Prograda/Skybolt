@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "SkyboltCommon/Expected.h"
 #include "FileUtility.h"
 
 #include <functional>
@@ -14,12 +15,9 @@
 namespace skybolt {
 namespace file {
 
-enum FileLocatorMode {
-	Required,
-	Optional
-};
-
-using FileLocator = std::function<Path(const std::string& filename, FileLocatorMode)>;
+//! @param filename is the name of the file to locate
+//! @returns full path to located file
+using FileLocator = std::function<Expected<Path>(const std::string& filename)>;
 
 } // namespace file
 } // namespace skybolt

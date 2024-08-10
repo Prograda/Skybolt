@@ -87,17 +87,16 @@ static std::optional<QPixmap> loadSvgWithNanoSvg(const file::Path& filename)
 
 std::optional<QIcon> createIcon(const std::string& filename)
 {
-	file::Path locatedFile = locateFile(filename, file::FileLocatorMode::Required);
-	if (locatedFile.empty())
+	std::optional<file::Path> locatedFile = valueOrLogError(locateFile(filename));
+	if (!locatedFile)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Could not find file: " << filename;
 		return std::nullopt;
 	}
 
 	QColor color = Qt::lightGray;
 	QColor disabledColor = Qt::darkGray;
 
-	if (std::optional<QPixmap> pixmap = loadSvgWithNanoSvg(locatedFile); pixmap)
+	if (std::optional<QPixmap> pixmap = loadSvgWithNanoSvg(*locatedFile); pixmap)
 	{
 		QImage image = pixmap->toImage();
 		colourizeImage(image, color);

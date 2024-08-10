@@ -318,7 +318,7 @@ void PlanetFeatures::loadTile(VisFeatureTile& tile)
 		if (tile.featureCountInFile > 0)
 		{
 			tile.loaded = true;
-			std::string filename = mFileLocator(mTilesDirectoryRelAssetPackage + "/" + mapfeatures::getTilePathFromKey(tile.key), file::FileLocatorMode::Required).string();
+			std::string filename = skybolt::valueOrThrowException(mFileLocator(mTilesDirectoryRelAssetPackage + "/" + mapfeatures::getTilePathFromKey(tile.key))).string();
 			sim::LatLon origin = tile.bounds.center();
 
 			LoadingItemPtr loadingItem(new LoadingItem);

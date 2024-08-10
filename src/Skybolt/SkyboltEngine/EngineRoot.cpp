@@ -34,16 +34,12 @@ static void registerAssetPackage(const std::string& folderPath)
 	osgDB::Registry::instance()->getDataFilePathList().push_back(folderPath + "/");
 }
 
-file::Path locateFile(const std::string& filename, file::FileLocatorMode mode)
+Expected<file::Path> locateFile(const std::string& filename)
 {
 	auto resolvedFilename = osgDB::Registry::instance()->findDataFile(filename, nullptr, osgDB::CASE_SENSITIVE);
 	if (resolvedFilename.empty())
 	{
-		if (mode == file::FileLocatorMode::Required)
-		{
-			BOOST_LOG_TRIVIAL(error) << "Could not locate file: " << filename;
-		}
-		return file::Path();
+		return UnexpectedMessage{ "Could not locate file: " + filename };
 	}
 	return resolvedFilename;
 };

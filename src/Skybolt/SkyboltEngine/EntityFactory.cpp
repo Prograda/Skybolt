@@ -552,7 +552,7 @@ static void loadVisualPlanet(Entity* entity, const EntityFactory::Context& conte
 			config.featureTilesDirectoryRelAssetPackage = directory;
 
 			std::string buildingTypesFilename = it.value().at("buildingTypesFilename");
-			buildingTypesFilename = context.fileLocator(buildingTypesFilename, file::FileLocatorMode::Required).string();
+			buildingTypesFilename = skybolt::valueOrThrowException(context.fileLocator(buildingTypesFilename)).string();
 			config.buildingTypes = vis::createBuildingTypesFromJson(readJsonFile(buildingTypesFilename));
 		}
 	}
