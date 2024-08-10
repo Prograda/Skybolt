@@ -236,6 +236,7 @@ void main()
 #else
 	const bool hasWater = false;
 	const bool hasLand = true;
+	const float landMask = 1;
 #endif
 
 	vec3 viewDirection = -positionRelCamera / fragmentViewDistance;
@@ -284,7 +285,11 @@ void main()
 		landAlbedo = vec3(0);
 	}
 
+#ifdef ENABLE_OCEAN
 	vec3 albedo = mix(waterAlbedo, landAlbedo, landMask);
+#else
+	vec3 albedo = landAlbedo;
+#endif
 
 	// Calculate lighting
 #ifdef ENABLE_SHADOWS

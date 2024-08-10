@@ -121,9 +121,11 @@ TEST_CASE("Test NonBlockingPlanetAltitudeProvider background loads tile")
 	px_sched::Scheduler scheduler;
 	scheduler.init();
 
-	NonBlockingTilePlanetAltitudeProvider provider(&scheduler, source, 3);
+	// Initial getAltitude() with no tiles loaded. A provisional altitude of 0 will be returned
+	NonBlockingTilePlanetAltitudeProvider provider(&scheduler, source, 1);
 	CHECK(provider.getAltitude(sim::LatLon(1.4, -3.0)) == NonBlockingTilePlanetAltitudeProvider::AltitudeResult::provisionalValue(0.0));
 
+	// Eventually tiles will be loaded and the expected final value will be returned
 	CHECK(eventually([&]{
 		return provider.getAltitude(sim::LatLon(1.4, -3.0)) == NonBlockingTilePlanetAltitudeProvider::AltitudeResult::finalValue(altitude);
 	}));
