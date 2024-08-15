@@ -595,12 +595,13 @@ static std::shared_ptr<ScenarioMetadataComponent> createDefaultEntityScenarioMet
 	return component;
 }
 
-EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const std::string& instanceName, const Vector3& position, const Quaternion& orientation, EntityId id) const
+EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const std::string& templateName, const std::string& instanceName, const Vector3& position, const Quaternion& orientation, EntityId id) const
 {
 	EntityPtr entity = std::make_shared<sim::Entity>((id != nullEntityId()) ? id : generateNextEntityId());
 
 	// Create required components
 	entity->addComponent(std::make_shared<NameComponent>(instanceName));
+	entity->addComponent(std::make_shared<TemplateNameComponent>(templateName));
 
 	VisObjectsComponentPtr visObjectsComponent;
 	SimVisBindingsComponentPtr simVisBindingComponent;
@@ -716,12 +717,10 @@ EntityPtr EntityFactory::createEntity(const std::string& templateName, const std
 		auto i = mTemplateJsonMap.find(templateName);
 		if (i != mTemplateJsonMap.end())
 		{
-			std::string name = nameIn.empty() ? createUniqueObjectName(templateName) : nameIn;
+			std::string instanceName = nameIn.empty() ? createUniqueObjectName(templateName) : nameIn;
 			try
 			{
-				EntityPtr entity = createEntityFromJson(i->second, name, position, orientation, id);
-				entity->addComponent(ComponentPtr(new TemplateNameComponent(templateName)));
-				return entity;
+				return createEntityFromJson(i->second, templateName, instanceName, position, orientation, id);
 			}
 			catch (const std::exception& e)
 			{

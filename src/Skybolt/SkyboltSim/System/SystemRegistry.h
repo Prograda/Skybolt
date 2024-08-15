@@ -7,6 +7,7 @@
 #pragma once
 
 #include "SkyboltSim/SkyboltSimFwd.h"
+#include <SkyboltCommon/Exception.h>
 #include <vector>
 
 namespace skybolt {
@@ -29,6 +30,18 @@ std::shared_ptr<T> findSystem(const SystemRegistry& registry)
 	}
 	return nullptr;
 }
+
+template <typename T>
+std::shared_ptr<T> findRequiredSystem(const SystemRegistry& registry)
+{
+	auto system = sim::findSystem<T>(registry);
+	if (!system)
+	{
+		throw Exception("Could not find system: " + std::string(typeid(T).name()));
+	}
+	return system;
+}
+
 
 } // namespace sim
 } // namespace skybolt

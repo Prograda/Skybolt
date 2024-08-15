@@ -53,10 +53,13 @@ public:
 	EntityFactory(const Context& context, const std::vector<std::filesystem::path>& entityFilenames);
 
 	sim::EntityPtr createEntity(const std::string& templateName, const std::string& instanceName = "", const sim::Vector3& position = math::dvec3Zero(), const sim::Quaternion& orientation = math::dquatIdentity(), sim::EntityId id = sim::nullEntityId()) const;
-	sim::EntityPtr createEntityFromJson(const nlohmann::json& json, const std::string& instanceName, const sim::Vector3& position, const sim::Quaternion& orientation, sim::EntityId id = sim::nullEntityId()) const;
+	sim::EntityPtr createEntityFromJson(const nlohmann::json& json, const std::string& templateName, const std::string& instanceName, const sim::Vector3& position, const sim::Quaternion& orientation, sim::EntityId id = sim::nullEntityId()) const;
 
 	typedef std::vector<std::string> Strings;
-	Strings getTemplateNames() const {return mTemplateNames;}
+	Strings getTemplateNames() const { return mTemplateNames; }
+
+	typedef std::map<std::string, nlohmann::json> TemplateJsonMap;
+	const TemplateJsonMap& getTemplateJsonMap() const { return mTemplateJsonMap; }
 
 	std::string createUniqueObjectName(const std::string& baseName) const;
 
@@ -71,7 +74,6 @@ private:
 	Strings mTemplateNames;
 	std::map<std::string, std::function<sim::EntityPtr()>> mBuiltinTemplates; // TODO: genericize these
 
-	typedef std::map<std::string, nlohmann::json> TemplateJsonMap;
 	TemplateJsonMap mTemplateJsonMap;
 
 	Context mContext;
