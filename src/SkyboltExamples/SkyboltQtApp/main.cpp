@@ -219,9 +219,18 @@ public:
 		}
 
 		// Create timeline widget
-		TimelineControlWidget* timeControlWidget;
+		auto requestedTimeRate = std::make_shared<ObservableValueD>(1.0);
+		auto actualTimeRate = std::make_shared<ObservableValueD>(1.0);
 		{
-			timeControlWidget = new TimelineControlWidget(&mEngineRoot->scenario->timeSource, &mEngineRoot->scenario->timelineMode, mMainWindow.get());
+			auto timeControlWidget = new TimelineControlWidget([&] {
+				TimelineControlWidgetConfig c;
+				c.timeSource = &mEngineRoot->scenario->timeSource;
+				c.timelineMode = &mEngineRoot->scenario->timelineMode;
+				c.requestedTimeRate = requestedTimeRate.get();
+				c.actualTimeRate = actualTimeRate.get();
+				c.parent = mMainWindow.get();
+				return c;
+				}());
 			mMainWindow->addToolWindow("Time Control", timeControlWidget);
 		}
 
@@ -250,11 +259,11 @@ public:
 		// Begin update timer
 		mSimUpdater = std::make_unique<SimUpdater>(mEngineRoot);
 
-		createAndStartIntervalDtTimer(10, mMainWindow.get(), [this, timeControlWidget, viewportWidget] (sim::SecondsD wallDt) {
-			mSimUpdater->setRequestedTimeRate(timeControlWidget->getTimeControlWidget()->getRequestedTimeRate());
+		createAndStartIntervalDtTimer(10, mMainWindow.get(), [this, requestedTimeRate, actualTimeRate, viewportWidget] (sim::SecondsD wallDt) {
+			mSimUpdater->setRequestedTimeRate(requestedTimeRate->get());
 			mSimUpdater->update(wallDt);
 			
-			timeControlWidget->getTimeControlWidget()->setActualTimeRate(mSimUpdater->getActualTimeRate());
+			actualTimeRate->set(mSimUpdater->getActualTimeRate());
 			viewportWidget->update();
 
 			if (mShaderSourceFileChangeMonitor)

@@ -15,8 +15,8 @@
 
 using namespace skybolt;
 
-TimelineControlWidget::TimelineControlWidget(TimeSource* timeSource, ObservableValue<TimelineMode>* timelineMode, QWidget* parent) :
-	QWidget(parent)
+TimelineControlWidget::TimelineControlWidget(const TimelineControlWidgetConfig& config) :
+	QWidget(config.parent)
 {
 	assert(timeSource);
 
@@ -29,19 +29,21 @@ TimelineControlWidget::TimelineControlWidget(TimeSource* timeSource, ObservableV
 	layout->addWidget(mTimeControlWidget);
 	layout->addStretch();
 
-	timeline->setTimeSource(timeSource);
+	timeline->setTimeSource(config.timeSource);
 	
-	timeline->setTimelineMode(timelineMode->get());
-	mTimeControlWidget->setTimelineMode(timelineMode->get());
-	timelineMode->valueChanged.connect([timeline, this] (const TimelineMode& oldValue, const TimelineMode& newValue) {
+	timeline->setTimelineMode(config.timelineMode->get());
+	mTimeControlWidget->setTimelineMode(config.timelineMode->get());
+	config.timelineMode->valueChanged.connect([timeline, this] (const TimelineMode& oldValue, const TimelineMode& newValue) {
 		timeline->setTimelineMode(newValue);
 		mTimeControlWidget->setTimelineMode(newValue);
 	});
 
-	timeSource->timeChanged.connect([=](double time)
+	config.timeSource->timeChanged.connect([=](double time)
 	{
 		timeline->setBufferedRange(TimeRange(0, time));
 	});
 
-	mTimeControlWidget->setTimeSource(timeSource);
+	mTimeControlWidget->setTimeSource(config.timeSource);
+	mTimeControlWidget->setRequestedTimeRateSource(config.requestedTimeRate);
+	mTimeControlWidget->setActualTimeRateSource(config.actualTimeRate);
 }

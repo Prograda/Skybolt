@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <SkyboltCommon/ObservableValue.h>
 #include <SkyboltEngine/TimeSource.h>
 #include <SkyboltEngine/Scenario/Scenario.h>
 #include <QWidget>
@@ -26,18 +27,21 @@ public:
 	skybolt::TimeSource* getTimeSource() const { return mSource; }
 	void setTimeSource(skybolt::TimeSource* source);
 
+	skybolt::ObservableValueD* getRequestedTimeRateSource() const { return mRequestedTimeRateSource; }
+	void setRequestedTimeRateSource(skybolt::ObservableValueD* source);
+
+	skybolt::ObservableValueD* getActualTimeRateSource() const { return mActualTimeRateSource; }
+	void setActualTimeRateSource(skybolt::ObservableValueD* source);
+
 	void setTimelineMode(skybolt::TimelineMode timelineMode);
-
-	double getRequestedTimeRate() const;
-	void setRequestedTimeRate(double rate);
-
-	void setActualTimeRate(double rateTimesRealtime);
 
 private:
 	void updateTimeRateLabel();
 
 private:
-	skybolt::TimeSource* mSource;
+	skybolt::TimeSource* mSource = nullptr;
+	skybolt::ObservableValueD* mRequestedTimeRateSource = nullptr;
+	skybolt::ObservableValueD* mActualTimeRateSource = nullptr;
 	skybolt::TimelineMode mTimelineMode = skybolt::TimelineMode::Free;
 
 	QAction* mPlayAction;
@@ -46,9 +50,9 @@ private:
 	QLabel* mTimeRateLabel;
 
 	std::unique_ptr<class TimeRateDialog> mTimeRateDialog;
-	double mRequestedTimeRate = 1;
-	double mActualTimeRate = 1;
 
-	std::vector<QMetaObject::Connection> mConnections;
-	std::vector<boost::signals2::scoped_connection> mBoostConnections;
+	std::vector<QMetaObject::Connection> mQtTimeSourceConnections;
+	boost::signals2::scoped_connection mBoostTimeSourceConnection;
+	boost::signals2::scoped_connection mBoostRequestedTimeRateSourceConnection;
+	boost::signals2::scoped_connection mBoostActualTimeRateSourceConnection;
 };

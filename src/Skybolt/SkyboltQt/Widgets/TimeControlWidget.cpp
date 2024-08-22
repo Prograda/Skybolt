@@ -15,8 +15,7 @@
 using namespace skybolt;
 
 TimeControlWidget::TimeControlWidget(QWidget* parent) :
-	QWidget(parent),
-	mSource(nullptr)
+	QWidget(parent)
 {
 	mPlayAction = new QAction(getSkyboltIcon(SkyboltIcon::Play), tr("Play"), this);
 	mPlayAction->setShortcut(tr("Ctrl+P"));
@@ -40,13 +39,16 @@ TimeControlWidget::TimeControlWidget(QWidget* parent) :
 
 	QWidget* rateActionWidget = bar->widgetForAction(rateAction);
 	connect(rateAction, &QAction::triggered, this, [this, rateActionWidget] {
-		if (!mTimeRateDialog)
+		if (!mTimeRateDialog && mRequestedTimeRateSource)
 		{
-			mTimeRateDialog = std::make_unique<TimeRateDialog>(mRequestedTimeRate, this);
+			mTimeRateDialog = std::make_unique<TimeRateDialog>(mRequestedTimeRateSource->get(), this);
 			mTimeRateDialog->move(rateActionWidget->mapToGlobal(QPoint(20, -50)));
 
 			connect(mTimeRateDialog.get(), &TimeRateDialog::rateChanged, this, [this] (double newRate) {
-				mRequestedTimeRate = newRate;
+				if (mRequestedTimeRateSource)
+				{
+					mRequestedTimeRateSource->set(newRate);
+				}
 			});
 
 			connect(mTimeRateDialog.get(), &TimeRateDialog::closed, this, [this] {
@@ -63,8 +65,6 @@ TimeControlWidget::TimeControlWidget(QWidget* parent) :
 	layout->addStretch();
 
 	setEnabled(false);
-
-	setActualTimeRate(1);
 }
 
 TimeControlWidget::~TimeControlWidget() = default;
@@ -75,16 +75,16 @@ void TimeControlWidget::setTimeSource(TimeSource* source)
 	setEnabled(source != nullptr);
 
 	// Disconnect from previous source
-	for (const QMetaObject::Connection& connection : mConnections)
+	for (const QMetaObject::Connection& connection : mQtTimeSourceConnections)
 	{
 		QObject::disconnect(connection);
 	}
-	mConnections.clear();
+	mQtTimeSourceConnections.clear();
 
 	if (mSource)
 	{
 		// Connect to new source
-		mConnections.push_back(connect(mPlayAction, &QAction::triggered, [&]()
+		mQtTimeSourceConnections.push_back(connect(mPlayAction, &QAction::triggered, [&]()
 		{
 			if (mSource->getState() == TimeSource::StatePlaying)
 			{
@@ -96,10 +96,10 @@ void TimeControlWidget::setTimeSource(TimeSource* source)
 			}
 		}));
 
-		mConnections.push_back(connect(mForwardAction, &QAction::triggered, [&]() { mSource->setTime(mSource->getRange().end); }));
-		mConnections.push_back(connect(mBackwardAction, &QAction::triggered, [&]() { mSource->setTime(mSource->getRange().start); }));
+		mQtTimeSourceConnections.push_back(connect(mForwardAction, &QAction::triggered, [&]() { mSource->setTime(mSource->getRange().end); }));
+		mQtTimeSourceConnections.push_back(connect(mBackwardAction, &QAction::triggered, [&]() { mSource->setTime(mSource->getRange().start); }));
 
-		mBoostConnections.push_back(mSource->stateChanged.connect([&](const TimeSource::State& state) {
+		mBoostTimeSourceConnection = mSource->stateChanged.connect([&](const TimeSource::State& state) {
 			switch (state)
 			{
 			case TimeSource::StatePlaying:
@@ -113,7 +113,7 @@ void TimeControlWidget::setTimeSource(TimeSource* source)
 			default:
 				break;
 			}
-		}));
+		});
 	}
 }
 
@@ -127,34 +127,38 @@ void TimeControlWidget::setTimelineMode(TimelineMode timelineMode)
 	}
 }
 
-double TimeControlWidget::getRequestedTimeRate() const
+void TimeControlWidget::setRequestedTimeRateSource(ObservableValueD* source)
 {
-	return mRequestedTimeRate;
+	mRequestedTimeRateSource = source;
+	mBoostRequestedTimeRateSourceConnection = connectObservableValue(source, [&](const double& oldValue, const double& newValue) {
+		updateTimeRateLabel();
+		});
 }
 
-void TimeControlWidget::setRequestedTimeRate(double rate)
+void TimeControlWidget::setActualTimeRateSource(skybolt::ObservableValueD* source)
 {
-	mRequestedTimeRate = rate;
-	updateTimeRateLabel();
-}
-
-void TimeControlWidget::setActualTimeRate(double rate)
-{
-	mActualTimeRate = rate;
-	updateTimeRateLabel();
+	mActualTimeRateSource = source;
+	mBoostActualTimeRateSourceConnection = connectObservableValue(source, [&](const double& oldValue, const double& newValue) {
+		updateTimeRateLabel();
+		});
 }
 
 void TimeControlWidget::updateTimeRateLabel()
 {
-	QString text = QString::number(mRequestedTimeRate, 'g', 3) + "x";
-	if (mRequestedTimeRate != mActualTimeRate)
+	QString text;
+	
+	if (mRequestedTimeRateSource && mActualTimeRateSource)
 	{
-		text += " (" + QString::number(mActualTimeRate, 'g', 3) + "x actual)";
-		mTimeRateLabel->setStyleSheet("QLabel { color : yellow; }");
-	}
-	else
-	{
-		mTimeRateLabel->setStyleSheet("");
+		text = QString::number(mRequestedTimeRateSource->get(), 'g', 3) + "x";
+		if (mRequestedTimeRateSource->get() != mActualTimeRateSource->get())
+		{
+			text += " (" + QString::number(mActualTimeRateSource->get(), 'g', 3) + "x actual)";
+			mTimeRateLabel->setStyleSheet("QLabel { color : yellow; }");
+		}
+		else
+		{
+			mTimeRateLabel->setStyleSheet("");
+		}
 	}
 
 	mTimeRateLabel->setText(text);

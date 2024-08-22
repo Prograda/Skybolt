@@ -13,10 +13,19 @@
 
 class TimeControlWidget;
 
+struct TimelineControlWidgetConfig
+{
+	skybolt::TimeSource* timeSource;
+	skybolt::ObservableValue<skybolt::TimelineMode>* timelineMode;
+	skybolt::ObservableValueD* requestedTimeRate;
+	skybolt::ObservableValueD* actualTimeRate;
+	QWidget* parent = nullptr;
+};
+
 class TimelineControlWidget : public QWidget
 {
 public:
-	TimelineControlWidget(skybolt::TimeSource* timeSource, skybolt::ObservableValue<skybolt::TimelineMode>* timelineMode, QWidget* parent = nullptr);
+	TimelineControlWidget(const TimelineControlWidgetConfig& config);
 
 	TimeControlWidget* getTimeControlWidget() const { return mTimeControlWidget; }
 
