@@ -38,9 +38,10 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const boost::program_optio
 std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFactory>& pluginFactories, const json& settings)
 {
 	EngineRootConfig config;
-	config.pluginFactories = pluginFactories;
 	config.engineSettings = settings;
-	return std::make_unique<EngineRoot>(config);
+	auto engineRoot = std::make_unique<EngineRoot>(config);
+	engineRoot->loadPlugins(pluginFactories);
+	return engineRoot;
 }
 
 std::vector<std::string> EngineRootFactory::getDefaultPluginDirs()

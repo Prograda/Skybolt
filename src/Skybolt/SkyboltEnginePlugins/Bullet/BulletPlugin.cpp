@@ -121,10 +121,11 @@ class BulletPlugin : public Plugin
 {
 public:
 	BulletPlugin(const PluginConfig& config) :
-		mComponentFactoryRegistry(config.simComponentFactoryRegistry),
 		mSystemRegistry(config.engineRoot->systemRegistry),
 		mBulletWorld(std::make_unique<BulletWorld>())
 	{
+		mComponentFactoryRegistry = valueOrThrowException(getExpectedRegistry<ComponentFactoryRegistry>(*config.engineRoot->factoryRegistries));
+
 		(*mComponentFactoryRegistry)[dynamicBodyComponentName] = std::make_shared<ComponentFactoryFunctionAdapter>([this](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) {
 			return loadBulletDynamicBody(*mBulletWorld, entity, context, json);
 		});

@@ -26,7 +26,7 @@ static bool isDeletable(const sim::Entity& entity)
 	return false;
 }
 
-class EntityObjectRegistry : public Registry<ScenarioObject>, public sim::WorldListener
+class EntityObjectRegistry : public ObservableRegistry<ScenarioObject>, public sim::WorldListener
 {
 public:
 	EntityObjectRegistry(sim::World* world, EntityObjectFactory entityObjectFactory) :

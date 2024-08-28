@@ -50,4 +50,33 @@ std::vector<std::filesystem::path> getAllPluginFilepathsInDirectories(const std:
 	return result;
 }
 
+bool pluginSupported(const boost::dll::shared_library& lib, const PluginCategoriesSupported& pluginCategoriesSupported)
+{
+	// Check that DLL is a Skybolt plugin type
+	if (!lib.has(Plugin::factorySymbolName()))
+	{
+		return false;
+	}
+
+	// If the caller did not provide a plugin categories predicate, assume the plugin is supported
+	if (!pluginCategoriesSupported)
+	{
+		return true;
+	}
+	
+	// If the plugin has no defined categories, assume it is supported
+	if (!lib.has(Plugin::categoriesSymbolName()))
+	{
+		return true;
+	}
+
+	// Check whether the plugin's categories are supported
+	std::function<Plugin::GetCategoriesFunction> fn = boost::dll::import_alias<Plugin::GetCategoriesFunction>(
+		lib,
+		Plugin::categoriesSymbolName()
+	);
+
+	return pluginCategoriesSupported(fn());
+}
+
 } // namespace skybolt

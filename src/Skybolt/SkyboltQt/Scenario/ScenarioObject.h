@@ -7,7 +7,7 @@
 #pragma once
 
 #include "SkyboltQt/SkyboltQtFwd.h"
-#include "SkyboltQt/Scenario/Registry.h"
+#include "SkyboltQt/Scenario/ObservableRegistry.h"
 
 #include <SkyboltEngine/Scenario/ScenarioObjectPath.h>
 #include <SkyboltSim/SimMath.h>
@@ -69,7 +69,7 @@ protected:
 	skybolt::ScenarioObjectPath mDirectory;
 };
 
-using ScenarioObjectRegistry = Registry<ScenarioObject>;
+using ScenarioObjectRegistry = ObservableRegistry<ScenarioObject>;
 using ScenarioObjectRegistryPtr = std::shared_ptr<ScenarioObjectRegistry>;
 
 struct ScenarioObjectType

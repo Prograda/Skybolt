@@ -7,30 +7,35 @@
 #pragma once
 
 #include "SkyboltEngine/SkyboltEngineFwd.h"
-#include "SkyboltSim/SkyboltSimFwd.h"
-#include "SkyboltSim/System/SystemRegistry.h"
-#include "SkyboltEngine/ComponentFactory.h"
-#include <SkyboltVis/VisFactory.h>
+#include <SkyboltCommon/Registry.h>
+#include <SkyboltCommon/TypedItemContainer.h>
 
 #include <boost/dll/import.hpp>
+#include <set>
 
 namespace skybolt {
 
 struct PluginConfig
 {
-	EngineRoot* engineRoot; //!< EngineRoot lifetime is guaranteed to exceed plugin lifetime
-	vis::VisFactoryRegistryPtr visFactoryRegistry;
-	ComponentFactoryRegistryPtr simComponentFactoryRegistry;
+	EngineRoot* engineRoot; //!< Never null. Lifetime is guaranteed to exceed plugin lifetime.
 };
 
 class BOOST_SYMBOL_VISIBLE Plugin
 {
 public:
+	virtual ~Plugin() = default;
+
+	//! Name of a symbol with `CreatePluginFunctionT` signature.
 	static std::string factorySymbolName() { return "createEnginePlugin"; }
+	template <class PluginT, class PluginConfigT>
+	using CreatePluginFunctionT = std::shared_ptr<PluginT>(const PluginConfigT&);
 
-	virtual ~Plugin() {}
-
-	virtual void update() {}
+	//! Name of a symbol with `GetCategoriesFunction` signature.
+	//! Category names describe what kind of plugin this is.
+	//! Category names are defined in the `skybolt::plugin_category` namespace.
+	static std::string categoriesSymbolName() { return "getCategories"; }
+	using Categories = std::set<std::string>;
+	using GetCategoriesFunction = Categories();
 };
 
 } // namespace skybolt

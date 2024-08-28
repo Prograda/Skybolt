@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "SkyboltCommon/Registry.h"
 #include "SkyboltEngine/SkyboltEngineFwd.h"
 #include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltVis/SkyboltVisFwd.h>
@@ -49,7 +50,7 @@ private:
 	Function mFunction;
 };
 
-typedef std::map<std::string, ComponentFactoryPtr> ComponentFactoryRegistry;
+typedef RegistryT<std::string, ComponentFactoryPtr> ComponentFactoryRegistry;
 typedef std::shared_ptr<ComponentFactoryRegistry> ComponentFactoryRegistryPtr;
 
 void addDefaultFactories(ComponentFactoryRegistry& registry);

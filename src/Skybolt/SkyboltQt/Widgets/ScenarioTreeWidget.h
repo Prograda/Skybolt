@@ -9,7 +9,6 @@
 #include "TreeItemModel.h"
 #include "SkyboltQt/SkyboltQtFwd.h"
 #include "SkyboltQt/ContextAction/ActionContext.h"
-#include "SkyboltQt/Scenario/Registry.h"
 #include "SkyboltQt/Scenario/ScenarioObject.h"
 #include "SkyboltQt/Scenario/ScenarioObjectTypeMap.h"
 

@@ -8,6 +8,7 @@
 #include "FftOceanWaveHeightTextureGenerator.h"
 
 #include <SkyboltCommon/Math/MathUtility.h>
+#include <SkyboltEngine/EngineRoot.h>
 
 #include <boost/config.hpp>
 #include <boost/dll/alias.hpp>
@@ -24,9 +25,10 @@ public:
 	}
 };
 
-FftOceanPlugin::FftOceanPlugin(const PluginConfig& config) :
-	mVisFactoryRegistry(config.visFactoryRegistry)
+FftOceanPlugin::FftOceanPlugin(const PluginConfig& config)
 {
+	mVisFactoryRegistry = valueOrThrowException(getExpectedRegistry<vis::VisFactoryRegistry>(*config.engineRoot->factoryRegistries));
+
 	(*mVisFactoryRegistry)[vis::VisFactoryType::WaveHeightTextureGenerator] = std::make_shared<FftOceanWaveHeightTextureGeneratorFactory>();
 }
 

@@ -9,7 +9,7 @@
 #include "Icon/SkyboltIcons.h"
 #include "QtUtil/QtTimerUtil.h"
 #include "Scenario/EntityObjectType.h"
-#include "Scenario/Registry.h"
+#include "Scenario/ObservableRegistry.h"
 #include "Scenario/ScenarioObject.h"
 #include "Scenario/ScenarioSelectionModel.h"
 

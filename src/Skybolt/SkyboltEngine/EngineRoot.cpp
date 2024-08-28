@@ -123,11 +123,11 @@ static file::Path getCacheDir()
 }
 
 EngineRoot::EngineRoot(const EngineRootConfig& config) :
-	mPluginFactories(config.pluginFactories),
 	scheduler(new px_sched::Scheduler),
 	fileLocator(locateFile),
 	scenario(std::make_unique<Scenario>()),
 	typeRegistry(std::make_unique<refl::TypeRegistry>()),
+	factoryRegistries(std::make_unique<FactoryRegistries>()),
 	engineSettings(config.engineSettings)
 {
 	int threadCount = determineThreadCountFromHardwareAndUserLimits();
@@ -186,9 +186,11 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 
 	auto componentFactoryRegistry = std::make_shared<ComponentFactoryRegistry>();
 	addDefaultFactories(*componentFactoryRegistry);
+	factoryRegistries->addItem(componentFactoryRegistry);
 
 	auto visFactoryRegistry = std::make_shared<vis::VisFactoryRegistry>();
 	vis::addDefaultFactories(*visFactoryRegistry);
+	factoryRegistries->addItem(visFactoryRegistry);
 
 	tileSourceFactoryRegistry = std::make_shared<vis::JsonTileSourceFactoryRegistry>([&] {
 		file::Path cacheDir = getCacheDir();
@@ -233,26 +235,30 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 		std::make_shared<sim::EntitySystem>(&scenario->world),
 		std::make_shared<SimVisSystem>(&scenario->world, scene)
 	}));
-
-	// Create plugins
-	// TODO: move plugin creation out of constructor. It should happen after EngineRoot is gauranteed to be fully created
-	// because plugins may refer to EngineRoot.
-	{
-		PluginConfig config;
-		config.engineRoot = this;
-		config.simComponentFactoryRegistry = componentFactoryRegistry;
-		config.visFactoryRegistry = visFactoryRegistry;
-		for (const auto& factory : mPluginFactories)
-		{
-			mPlugins.push_back(factory(config));
-		}
-	}
 }
 
 EngineRoot::~EngineRoot()
 {
 	// shutdown all systems first
 	systemRegistry->clear();
+}
+
+void EngineRoot::loadPlugins(const std::vector<PluginFactory>& pluginFactories)
+{
+	PluginConfig config;
+	config.engineRoot = this;
+
+	// Create plugins and store them in EngineRoot to ensure plugins exist for lifetime of EngineRoot.
+	for (const auto& factory : pluginFactories)
+	{
+		if (PluginPtr plugin = factory(config); plugin)
+		{
+			mPlugins.push_back(plugin);
+		}
+	}
+
+	// We need to store the factories as well to ensure the plugin symbols do not get unloaded.
+	mPluginFactories = pluginFactories;
 }
 
 file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativePath)

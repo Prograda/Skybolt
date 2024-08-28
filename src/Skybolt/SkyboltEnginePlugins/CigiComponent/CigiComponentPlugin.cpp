@@ -220,10 +220,10 @@ private:
 
 const std::string cigiComponentName = "cigi";
 
-CigiComponentPlugin::CigiComponentPlugin(const PluginConfig& config) :
-	mComponentFactoryRegistry(config.simComponentFactoryRegistry)
+CigiComponentPlugin::CigiComponentPlugin(const PluginConfig& config)
 {
 	EngineRoot* engineRoot = config.engineRoot;
+	mComponentFactoryRegistry = valueOrThrowException(getExpectedRegistry<ComponentFactoryRegistry>(*engineRoot->factoryRegistries));
 
 	auto factory = std::make_shared<ComponentFactoryFunctionAdapter>([=](Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) {
 

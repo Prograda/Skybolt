@@ -7,6 +7,7 @@
 #pragma once
 
 #include <SkyboltEngine/Plugin/Plugin.h>
+#include <SkyboltVis/VisFactory.h>
 
 namespace skybolt {
 

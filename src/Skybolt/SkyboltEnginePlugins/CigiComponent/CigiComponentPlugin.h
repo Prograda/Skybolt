@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <SkyboltEngine/ComponentFactory.h>
 #include <SkyboltEngine/Plugin/Plugin.h>
 
 namespace skybolt {

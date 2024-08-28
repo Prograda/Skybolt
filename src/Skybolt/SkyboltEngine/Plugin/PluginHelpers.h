@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Plugin.h"
 #include "SkyboltEngine/SkyboltEngineFwd.h"
 #include <boost/dll/import.hpp>
 #include <boost/log/trivial.hpp>
@@ -18,8 +19,12 @@ namespace skybolt {
 std::vector<std::filesystem::path> getAllPluginFilepathsInDirectory(const std::string& directory);
 std::vector<std::filesystem::path> getAllPluginFilepathsInDirectories(const std::vector<std::string>& directories);
 
+using PluginCategoriesSupported = std::function<bool(const Plugin::Categories&)>;
+
+bool pluginSupported(const boost::dll::shared_library& lib, const PluginCategoriesSupported& pluginCategoriesSupported = {});
+
 template <class PluginT, class PluginConfigT>
-std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadPluginFactories(const std::vector<std::filesystem::path>& pluginFilepaths)
+std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadPluginFactories(const std::vector<std::filesystem::path>& pluginFilepaths, const PluginCategoriesSupported& pluginCategoriesSupported = {})
 {
 	namespace dll = boost::dll;
 
@@ -28,8 +33,6 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 
 	for (const std::filesystem::path& path : pluginFilepaths)
 	{
-		typedef std::shared_ptr<PluginT>(CreatePluginFunction)(const PluginConfigT&);
-
 		boost::filesystem::path boostPath(path.string());
 		std::string pluginName = boostPath.leaf().string();
 		if (loadedPluginNames.find(pluginName) != loadedPluginNames.end())
@@ -41,12 +44,12 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 		try
 		{
 			dll::shared_library lib(boostPath, dll::load_mode::default_mode);
-			if (lib.has(PluginT::factorySymbolName()))
+			if (pluginSupported(lib, pluginCategoriesSupported))
 			{
-				std::function<CreatePluginFunction> creator = boost::dll::import_alias<CreatePluginFunction>(
-					boostPath,
-					PluginT::factorySymbolName(),
-					dll::load_mode::default_mode
+				using CreatePluginFunction = Plugin::CreatePluginFunctionT<PluginT, PluginConfigT>;
+				auto creator = boost::dll::import_alias<CreatePluginFunction>(
+					lib,
+					PluginT::factorySymbolName()
 				);
 
 				loadedPluginNames.insert(pluginName);

@@ -11,7 +11,10 @@
 * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #pragma once
-#include <SkyboltCommon/TypedItemContainer.h>
+
+#include <SkyboltCommon/Registry.h>
+
+#include <memory>
 
 namespace skybolt {
 namespace vis {
@@ -28,7 +31,7 @@ enum class VisFactoryType
 };
 
 typedef std::shared_ptr<VisFactory> VisFactoryPtr;
-typedef std::map<VisFactoryType, VisFactoryPtr> VisFactoryRegistry;
+typedef RegistryT<VisFactoryType, VisFactoryPtr> VisFactoryRegistry;
 typedef std::shared_ptr<VisFactoryRegistry> VisFactoryRegistryPtr;
 
 void addDefaultFactories(VisFactoryRegistry& registry);

@@ -7,6 +7,8 @@
 #include <SkyboltVis/Renderable/Water/WaveHeightTextureGenerator.h>
 #include "FftOceanGenerator.h"
 
+#include <atomic>
+#include <condition_variable>
 #include <mutex>
 #include <thread>
 
