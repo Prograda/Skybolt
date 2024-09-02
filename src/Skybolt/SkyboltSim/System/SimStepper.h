@@ -25,7 +25,7 @@ public:
 	void setTime(SecondsD t);
 	SecondsD getTime() const { return mCurrentTime; }
 
-	void step(SecondsD dt);
+	void update(SecondsD dt);
 
 	void setDynamicsEnabled(bool enabled) { mDynamicsEnabled = enabled; }
 

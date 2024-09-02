@@ -25,7 +25,7 @@ void runMainLoop(vis::VisRoot& visRoot, EngineRoot& engineRoot, UpdateLoop::Shou
 	UpdateLoop loop(minFrameDuration);
 	loop.exec([&](float dtWallClock) {
 		SecondsD dtSim = paused() ? 0.0 : dtWallClock;
-		simStepper->step(dtSim);
+		simStepper->update(dtSim);
 
 		for (const auto& system : *systemRegistry)
 		{

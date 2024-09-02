@@ -107,6 +107,7 @@ class SkyboltConan(ConanFile):
 
         if self.options.enable_python:
             cmake.definitions["BUILD_PYTHON_BINDINGS"] = "true"
+            cmake.definitions["BUILD_PYTHON_PLUGIN"] = "true"
 
         if self.options.enable_qt:
             cmake.definitions["BUILD_SKYBOLT_QT"] = "true"

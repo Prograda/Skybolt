@@ -15,7 +15,7 @@ class EntityPropertiesModel : public PropertiesModel, public skybolt::sim::Entit
 {
 public:
 	EntityPropertiesModel(skybolt::refl::TypeRegistry* typeRegistry, skybolt::sim::Entity* entity = nullptr);
-	~EntityPropertiesModel();
+	~EntityPropertiesModel() override;
 
 	void setEntity(skybolt::sim::Entity* entity);
 

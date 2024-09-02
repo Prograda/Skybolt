@@ -52,13 +52,4 @@ void VisEntityAttachables::setEntities(std::set<sim::Entity*> entities)
 	}
 }
 
-void VisEntityAttachables::onDestroy(sim::Entity* entity)
-{
-	if (auto i = mEntityTransforms.find(entity); i != mEntityTransforms.end())
-	{
-		removeChild(i->second);
-		mEntityTransforms.erase(i);
-	}
-}
-
 } // namespace skybolt

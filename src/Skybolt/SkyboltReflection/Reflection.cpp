@@ -56,6 +56,7 @@ Type::PropertyMap Type::getProperties() const
 		const auto& superTypeProperties = type.first->getProperties();
 		r.insert(superTypeProperties.begin(), superTypeProperties.end());
 	}
+
 	return r;
 }
 
@@ -83,6 +84,23 @@ std::optional<std::ptrdiff_t> Type::getOffsetFromThisToSuper(const std::type_ind
 
 	// No super type found
 	return std::nullopt;
+}
+
+Type::PropertyMap getProperties(const Instance& obj)
+{
+	const auto& type = obj.getType();
+	Type::PropertyMap r = type->getProperties();
+
+	if (type->isDerivedFrom<DynamicPropertySource>())
+	{
+		if (const DynamicPropertySource* source = obj.getObject<DynamicPropertySource>(); source)
+		{
+			const auto& properties = source->getProperties();
+			r.insert(properties.begin(), properties.end());
+		}
+	}
+
+	return r;
 }
 
 static std::vector<RegistrationHandler>& getGlobalHandlers()

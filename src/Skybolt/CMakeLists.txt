@@ -11,7 +11,7 @@ add_subdirectory (SkyboltEngine)
 
 OPTION(BUILD_PYTHON_BINDINGS "Build Python Bindings")
 if (BUILD_PYTHON_BINDINGS)
-	add_subdirectory (SkyboltEnginePython)
+	add_subdirectory (SkyboltPythonBindings)
 endif()
 
 add_subdirectory (SkyboltEnginePlugins)

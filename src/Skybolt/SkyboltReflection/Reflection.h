@@ -260,11 +260,11 @@ std::optional<T> getOptionalValue(const std::any& v)
 	}
 }
 
-template <typename TypeT, typename MemberT>
+template <typename ObjectT, typename MemberT>
 class MemberProperty : public Property
 {
 public:
-	MemberProperty(TypeRegistry* typeRegistry, const std::string& name, const TypePtr& type, MemberT TypeT::*member) :
+	MemberProperty(TypeRegistry* typeRegistry, const std::string& name, const TypePtr& type, MemberT ObjectT::*member) :
 		Property(name, type),
 		mTypeRegistry(typeRegistry),
 		mMember(member)
@@ -281,26 +281,26 @@ public:
 			return false;
 		}
 
-		obj.getObject<TypeT>()->*mMember = *value.getObject<MemberT>();
+		obj.getObject<ObjectT>()->*mMember = *value.getObject<MemberT>();
 		return true;
 	}
 
 	Instance getValue(const Instance& obj) const override
 	{
-		const TypeT* objT = obj.getObject<TypeT>();
+		const ObjectT* objT = obj.getObject<ObjectT>();
 		return createNonOwningInstance(mTypeRegistry, const_cast<MemberT*>(&(objT->*mMember)));
 	}
 
 private:
 	TypeRegistry* mTypeRegistry;
-	MemberT TypeT::*mMember;
+	MemberT ObjectT::*mMember;
 };
 
-template <typename TypeT, typename GetterMemberT, typename SetterMemberT>
-class GetterSetterMethodsProperty : public Property
+template <typename ObjectT, typename GetterValueT, typename SetterValueT>
+class GetterSetterMethodProperty : public Property
 {
 public:
-	GetterSetterMethodsProperty(TypeRegistry* typeRegistry, const std::string& name, const TypePtr& type, GetterMemberT (TypeT::*getter)() const, void (TypeT::*setter)(SetterMemberT)) :
+	GetterSetterMethodProperty(TypeRegistry* typeRegistry, const std::string& name, const TypePtr& type, GetterValueT (ObjectT::*getter)() const, void (ObjectT::*setter)(SetterValueT)) :
 		Property(name, type),
 		mTypeRegistry(typeRegistry),
 		mGetter(getter),
@@ -309,31 +309,31 @@ public:
 		assert(mTypeRegistry);
 	}
 
-	~GetterSetterMethodsProperty() override = default;
+	~GetterSetterMethodProperty() override = default;
 
 	bool setValue(Instance& obj, const Instance& value) override
 	{
-		using RawMemberT = typename std::remove_cv<typename std::remove_reference<GetterMemberT>::type>::type;
-		(obj.getObject<TypeT>()->*mSetter)(*value.getObject<RawMemberT>());
+		using UnqualifiedValueT = typename std::remove_cv<typename std::remove_reference<SetterValueT>::type>::type;
+		(obj.getObject<ObjectT>()->*mSetter)(*value.getObject<UnqualifiedValueT>());
 		return true;
 	}
 
 	Instance getValue(const Instance& obj) const override
 	{
-		return createOwningInstance(mTypeRegistry, (obj.getObject<TypeT>()->*mGetter)());
+		return createOwningInstance(mTypeRegistry, (obj.getObject<ObjectT>()->*mGetter)());
 	}
 
 private:
 	TypeRegistry* mTypeRegistry;
-	GetterMemberT (TypeT::*mGetter)() const;
-	void (TypeT::*mSetter)(SetterMemberT);
+	GetterValueT (ObjectT::*mGetter)() const;
+	void (ObjectT::*mSetter)(SetterValueT);
 };
 
-template <typename TypeT, typename MemberT>
-class GetterMethodsProperty : public Property
+template <typename ObjectT, typename ValueT>
+class GetterMethodProperty : public Property
 {
 public:
-	GetterMethodsProperty(TypeRegistry* typeRegistry, const std::string& name, const TypePtr& type, MemberT (TypeT::*getter)() const) :
+	GetterMethodProperty(TypeRegistry* typeRegistry, const std::string& name, const TypePtr& type, ValueT (ObjectT::*getter)() const) :
 		Property(name, type),
 		mTypeRegistry(typeRegistry),
 		mGetter(getter)
@@ -341,7 +341,7 @@ public:
 		assert(mTypeRegistry);
 	}
 
-	~GetterMethodsProperty() override = default;
+	~GetterMethodProperty() override = default;
 
 	bool setValue(Instance& obj, const Instance& value) override
 	{
@@ -350,13 +350,60 @@ public:
 
 	Instance getValue(const Instance& obj) const override
 	{
-		return createOwningInstance(mTypeRegistry, (obj.getObject<TypeT>()->*mGetter)());
+		return createOwningInstance(mTypeRegistry, (obj.getObject<ObjectT>()->*mGetter)());
 	}
 
 private:
 	TypeRegistry* mTypeRegistry;
-	MemberT (TypeT::*mGetter)() const;
+	ValueT (ObjectT::*mGetter)() const;
 };
+
+template <typename ObjectT, typename GetterValueT, typename SetterValueT>
+class GetterSetterFunctionProperty : public Property
+{
+public:
+	using GetterFunction = std::function<GetterValueT(const ObjectT&)>;
+	using SetterFunction = std::function<void(ObjectT&, SetterValueT)>;
+	GetterSetterFunctionProperty(TypeRegistry* typeRegistry, const std::string& name, const TypePtr& type, GetterFunction getter, SetterFunction setter) :
+		Property(name, type),
+		mTypeRegistry(typeRegistry),
+		mGetter(std::move(getter)),
+		mSetter(std::move(setter))
+	{
+		assert(mTypeRegistry);
+	}
+
+	~GetterSetterFunctionProperty() override = default;
+
+	bool setValue(Instance& obj, const Instance& value) override
+	{
+		using UnqualifiedValueT = typename std::remove_cv<typename std::remove_reference<SetterValueT>::type>::type;
+		mSetter(*obj.getObject<ObjectT>(), *value.getObject<UnqualifiedValueT>());
+		return true;
+	}
+
+	Instance getValue(const Instance& obj) const override
+	{
+		auto value = mGetter(*obj.getObject<ObjectT>());
+		return createOwningInstance(mTypeRegistry, value);
+	}
+
+private:
+	TypeRegistry* mTypeRegistry;
+	GetterFunction mGetter;
+	SetterFunction mSetter;
+};
+
+//! This class provies extra "dynamic" properties for objects, in addition to the "static" properties registered for their type.
+//! To use, an object should implement this interface.
+class DynamicPropertySource
+{
+public:
+	virtual ~DynamicPropertySource() = default;
+	virtual Type::PropertyMap getProperties() const = 0;
+};
+
+Type::PropertyMap getProperties(const Instance& obj);
 
 using TypeDefinitionRegistrationHandler = std::function<void(TypeRegistry& registry)>;
 using TypeDefinitionRegisterLater = std::function<void(TypeDefinitionRegistrationHandler)>;
@@ -373,6 +420,7 @@ public:
 		mRegisterLater(std::move(registerLater))
 	{}
 
+	//! Read/writable property backed by a member variable
 	template <typename MemberT>
 	TypeBuilder<TypeT>& property(const std::string& name, MemberT TypeT::*member, Property::MetadataMap metadata = {})
 	{
@@ -384,6 +432,7 @@ public:
 		return *this;
 	}
 
+	//! Read only property backed by a member variable
 	template <typename MemberT>
 	TypeBuilder<TypeT>& propertyReadOnly(const std::string& name, MemberT TypeT::*member, Property::MetadataMap metadata = {})
 	{
@@ -396,28 +445,46 @@ public:
 		return *this;
 	}
 
-	template <typename GetterMemberT, typename SetterMemberT>
-	TypeBuilder<TypeT>& property(const std::string& name, GetterMemberT (TypeT::*getter)() const, void (TypeT::*setter)(SetterMemberT), Property::MetadataMap metadata = {})
+	//! Read/writable property backed by getter and setter methods
+	template <typename GetterValueT, typename SetterValueT>
+	TypeBuilder<TypeT>& property(const std::string& name, GetterValueT (TypeT::*getter)() const, void (TypeT::*setter)(SetterValueT), Property::MetadataMap metadata = {})
 	{
 		mRegisterLater([name = std::move(name), getter = std::move(getter), setter = std::move(setter), metadata = std::move(metadata), type = mType] (TypeRegistry& registry) {
-			using RawGetterMemberT = typename std::remove_cv<typename std::remove_reference<GetterMemberT>::type>::type;
-			using RawSetterMemberT = typename std::remove_cv<typename std::remove_reference<SetterMemberT>::type>::type;
-			static_assert(std::is_same<RawGetterMemberT, RawSetterMemberT>::value, "Getter and setter must be of same type, ignoring const ref qualifiers");
+			using UnqualifiedGetterValueT = typename std::remove_cv<typename std::remove_reference<GetterValueT>::type>::type;
+			using UnqualifiedSetterValueT = typename std::remove_cv<typename std::remove_reference<SetterValueT>::type>::type;
+			static_assert(std::is_same<UnqualifiedGetterValueT, UnqualifiedSetterValueT>::value, "Getter and setter must have same value type, ignoring const ref qualifiers");
 
-			auto p = std::make_shared<GetterSetterMethodsProperty<TypeT, GetterMemberT, SetterMemberT>>(&registry, name, registry.getOrCreateType<RawGetterMemberT>(), getter, setter);
+			auto p = std::make_shared<GetterSetterMethodProperty<TypeT, GetterValueT, SetterValueT>>(&registry, name, registry.getOrCreateType<UnqualifiedGetterValueT>(), getter, setter);
 			p->addMetadata(std::move(metadata));
 			type->addProperty(p);
 		});
 		return *this;
 	}
 
-	template <typename MemberT>
-	TypeBuilder<TypeT>& propertyReadOnly(const std::string& name, MemberT (TypeT::*getter)() const, Property::MetadataMap metadata = {})
+	//! Read only property backed by getter and setter methods
+	template <typename MethodT>
+	TypeBuilder<TypeT>& propertyReadOnly(const std::string& name, MethodT (TypeT::*getter)() const, Property::MetadataMap metadata = {})
 	{
 		mRegisterLater([name = std::move(name), getter = std::move(getter), metadata = std::move(metadata), type = mType] (TypeRegistry& registry) {
-			auto p = std::make_shared<GetterMethodsProperty<TypeT, MemberT>>(&registry, name, registry.getOrCreateType<MemberT>(), getter);
+			auto p = std::make_shared<GetterMethodProperty<TypeT, MethodT>>(&registry, name, registry.getOrCreateType<MethodT>(), getter);
 			p->addMetadata(std::move(metadata));
 			p->setReadOnly(true);
+			type->addProperty(p);
+		});
+		return *this;
+	}
+
+	//! Read/writable property backed by getter and setter `std::function`s
+	template <typename GetterValueT, typename SetterValueT>
+	TypeBuilder<TypeT>& propertyFn(const std::string& name, std::function<GetterValueT(const TypeT&)> getter, std::function<void(TypeT&, SetterValueT)> setter, Property::MetadataMap metadata = {})
+	{
+		mRegisterLater([name = std::move(name), getter = std::move(getter), setter = std::move(setter), metadata = std::move(metadata), type = mType] (TypeRegistry& registry) {
+			using UnqualifiedGetterValueT = typename std::remove_cv<typename std::remove_reference<GetterValueT>::type>::type;
+			using UnqualifiedSetterValueT = typename std::remove_cv<typename std::remove_reference<SetterValueT>::type>::type;
+			static_assert(std::is_same<UnqualifiedGetterValueT, UnqualifiedSetterValueT>::value, "Getter and setter must have same value type, ignoring const ref qualifiers");
+
+			auto p = std::make_shared<GetterSetterFunctionProperty<TypeT, GetterValueT, SetterValueT>>(&registry, name, registry.getOrCreateType<UnqualifiedGetterValueT>(), getter, setter);
+			p->addMetadata(std::move(metadata));
 			type->addProperty(p);
 		});
 		return *this;

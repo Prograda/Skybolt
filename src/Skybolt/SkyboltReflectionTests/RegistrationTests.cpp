@@ -15,10 +15,11 @@ struct TestClass
 	virtual ~TestClass() = default;
 
 	int intProperty = 0;
-	int getterSetterProperty = 0;
+	int getterSetterMethodProperty = 0;
+	int getterSetterFunctionProperty = 0;
 
-	void setGetterSetterProperty(int v) { getterSetterProperty = v; }
-	int getGetterSetterProperty() const { return getterSetterProperty; }
+	void setGetterSetterMethodProperty(int v) { getterSetterMethodProperty = v; }
+	int getGetterSetterMethodProperty() const { return getterSetterMethodProperty; }
 };
 
 SKYBOLT_REFLECT_BEGIN(TestClass)
@@ -26,7 +27,8 @@ SKYBOLT_REFLECT_BEGIN(TestClass)
 	registry.type<TestClass>("TestClass")
 		.property("intProperty", &TestClass::intProperty)
 		.property("intPropertyWithMetadata", &TestClass::intProperty, {{ "key1", std::string("value1") }})
-		.property("getterSetterProperty", &TestClass::getGetterSetterProperty, &TestClass::setGetterSetterProperty);
+		.property("getterSetterMethodProperty", &TestClass::getGetterSetterMethodProperty, &TestClass::setGetterSetterMethodProperty)
+		.propertyFn<int, int>("getterSetterFunctionProperty", [] (const TestClass& obj) { return obj.getterSetterFunctionProperty; }, [] (TestClass& obj, int value) { obj.getterSetterFunctionProperty = value; });
 }
 SKYBOLT_REFLECT_END
 
@@ -38,7 +40,7 @@ TEST_CASE("Get registered class by type and name")
 	CHECK(registry.getTypeByName("hello") != nullptr);
 }
 
-TEST_CASE("Class member properties")
+TEST_CASE("Properties backed by class members")
 {
 	TypeRegistry registry;
 
@@ -56,21 +58,40 @@ TEST_CASE("Class member properties")
 	CHECK(*property->getValue(instance).getObject<int>() == 456);
 }
 
-TEST_CASE("Class getter setter method properties")
+TEST_CASE("Properties backed by getter and setter methods")
 {
 	TypeRegistry registry;
 
 	auto type = registry.getTypeByName("TestClass");
 	REQUIRE(type);
-	auto property = type->getProperty("getterSetterProperty");
+	auto property = type->getProperty("getterSetterMethodProperty");
 	REQUIRE(property);
 	
 	TestClass obj;
 	auto instance = createNonOwningInstance(&registry, &obj);
 	property->setValue(instance, createOwningInstance(&registry, 123));
-	CHECK(obj.getterSetterProperty == 123);
+	CHECK(obj.getterSetterMethodProperty == 123);
 	
-	obj.getterSetterProperty = 456;
+	obj.getterSetterMethodProperty = 456;
+	CHECK(*property->getValue(instance).getObject<int>() == 456);
+}
+
+TEST_CASE("Properties backed by getter and setter functions")
+{
+	TypeRegistry registry;
+
+	auto type = registry.getTypeByName("TestClass");
+	REQUIRE(type);
+
+	auto property = type->getProperty("getterSetterFunctionProperty");
+	REQUIRE(property);
+	
+	TestClass obj;
+	auto instance = createNonOwningInstance(&registry, &obj);
+	property->setValue(instance, createOwningInstance(&registry, 123));
+	CHECK(obj.getterSetterFunctionProperty == 123);
+	
+	obj.getterSetterFunctionProperty = 456;
 	CHECK(*property->getValue(instance).getObject<int>() == 456);
 }
 

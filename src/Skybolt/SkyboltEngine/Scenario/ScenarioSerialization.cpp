@@ -21,11 +21,35 @@ using namespace skybolt::sim;
 
 namespace skybolt {
 
+static TimelineMode readTimelineMode(const std::string& str)
+{
+	if (str == "live")
+	{
+		return TimelineMode::Live;
+	}
+	else if (str == "free")
+	{
+		return TimelineMode::Free;
+	}
+	throw std::runtime_error("Invalid timeline mode: " + str);
+}
+
+static std::string toString(TimelineMode mode)
+{
+	switch (mode)
+	{
+	case TimelineMode::Live: return "live";
+	case TimelineMode::Free: return "free";
+	}
+	return "live";
+}
+
 void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, EntityFactory& entityFactory, const nlohmann::json& json)
 {
 	scenario.startJulianDate = json.at("julianDate");
 	scenario.timeSource.setRange(TimeRange(0, json.at("duration")));
 	scenario.timeSource.setTime(0);
+	scenario.timelineMode = readTimelineMode(readOptionalOrDefault<std::string>(json, "timelineMode", "live"));
 
 	ifChildExists(json, "entities", [&] (const nlohmann::json& child) {
 		readEntities(typeRegistry, scenario.world, entityFactory, child);
@@ -37,6 +61,7 @@ nlohmann::json writeScenario(refl::TypeRegistry& typeRegistry, const Scenario& s
 	nlohmann::json json;
 	json["julianDate"] = scenario.startJulianDate;
 	json["duration"] = scenario.timeSource.getRange().end;
+	json["timelineMode"] = toString(scenario.timelineMode.get());
 	json["entities"] = writeEntities(typeRegistry, scenario.world);
 	return json;
 }

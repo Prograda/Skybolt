@@ -20,7 +20,20 @@ EntityPropertiesModel::EntityPropertiesModel(refl::TypeRegistry* typeRegistry, s
 	mEntity(nullptr)
 {
 	assert(mTypeRegistry);
-	setEntity(entity);
+
+	try
+	{
+		setEntity(entity);
+	}
+	// If exception was thrown from constructor, the destructor won't be called.
+	// Remove the listener here to ensure constructor is cleaned up.
+	catch (const std::exception& e)
+	{
+	if (mEntity)
+		mEntity->removeListener(this);
+
+		throw e;
+	}
 }
 
 EntityPropertiesModel::~EntityPropertiesModel()
@@ -56,7 +69,9 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 			if (refl::TypePtr type = mTypeRegistry->getMostDerivedType(*component); type)
 			{
 				ReflInstanceGetter getter = [this, component] { return refl::createNonOwningInstance(mTypeRegistry, component.get()); };
-				addRttrPropertiesToModel(*mTypeRegistry, *this, toValuesVector(type->getProperties()), getter);
+
+				refl::Instance instance = refl::createNonOwningInstance(mTypeRegistry, component.get());
+				addRttrPropertiesToModel(*mTypeRegistry, *this, toValuesVector(refl::getProperties(instance)), getter);
 			}
 		}
 

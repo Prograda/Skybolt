@@ -94,7 +94,7 @@ void readReflectedObject(refl::TypeRegistry& registry, refl::Instance& object, c
 	}
 	else // use reflection based serialization
 	{
-		for (const auto& [name, property] : type->getProperties())
+		for (const auto& [name, property] : getProperties(object))
 		{
 			if (isSerializable(*property))
 			{
@@ -181,7 +181,7 @@ nlohmann::json writeReflectedObject(refl::TypeRegistry& registry, const refl::In
 	}
 	else // use reflection based serialization
 	{
-		for (const auto& [name, property] : type->getProperties())
+		for (const auto& [name, property] : getProperties(object))
 		{
 			if (isSerializable(*property))
 			{

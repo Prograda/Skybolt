@@ -13,7 +13,7 @@
 
 namespace skybolt {
 
-class VisEntityAttachables : public osg::Group, public sim::EntityListener
+class VisEntityAttachables : public osg::Group
 {
 public:
 	~VisEntityAttachables() override = default;
@@ -24,9 +24,6 @@ public:
 
 protected:
 	virtual osg::ref_ptr<osg::Node> createNode(sim::Entity* entity) const = 0;
-
-protected: // EntityListener interface
-	void onDestroy(sim::Entity* entity) override;
 
 private:
 	std::map<sim::Entity*, osg::ref_ptr<osg::MatrixTransform>> mEntityTransforms;

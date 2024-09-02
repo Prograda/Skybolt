@@ -21,10 +21,17 @@ SimStepper::~SimStepper() = default;
 
 void SimStepper::setTime(SecondsD t)
 {
-	mCurrentTime = t;
+	if (mCurrentTime != t)
+	{
+		mCurrentTime = t;
+		for (const SystemPtr& system : *mSystems)
+		{
+			system->setSimTime(mCurrentTime);
+		}
+	}
 }
 
-void SimStepper::step(SecondsD dt)
+void SimStepper::update(SecondsD dt)
 {
 	auto systems = *mSystems; // Take copy in case a system adds/removes another system during step
 
@@ -61,6 +68,8 @@ void SimStepper::updateDynamicsStep(const std::vector<SystemPtr>& systems, Secon
 	// Perform substeps
 	for (int i = 0; i < requiredSteps; i++)
 	{
+		mCurrentTime += mDynamicsStepSize;
+
 		updateSystem(systems, UpdateStage::PreDynamicsSubStep);
 
 		for (const SystemPtr& system : *mSystems)
@@ -69,8 +78,6 @@ void SimStepper::updateDynamicsStep(const std::vector<SystemPtr>& systems, Secon
 		}
 		updateSystem(systems, UpdateStage::DynamicsSubStep);
 		updateSystem(systems, UpdateStage::PostDynamicsSubStep);
-
-		mCurrentTime += mDynamicsStepSize;
 	}
 }
 

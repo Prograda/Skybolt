@@ -79,7 +79,6 @@ public:
 	Application(const std::vector<PluginFactory>& enginePluginFactories, int argc, char* argv[]) :
 		QApplication(argc, argv)
 	{
-		QCoreApplication::addLibraryPath(QCoreApplication::applicationDirPath() + "/qtplugins");
 		setStyle(new DarkStyle);
 
 		// Create Skybolt Engine
@@ -414,20 +413,42 @@ int main(int argc, char *argv[])
 {
 	try
 	{
+		file::Path executableDir = getExecutablePath();
+
 		QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 		QCoreApplication::setApplicationName("SkyboltQt");
+		QCoreApplication::addLibraryPath(QString::fromStdString((executableDir / "qtplugins").string()));
 
-		std::string pluginsDir = (getExecutablePath() / "plugins").string();
+		std::string pluginsDir = (executableDir / "plugins").string();
 		std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(getAllPluginFilepathsInDirectory(pluginsDir));
-		Application application(enginePluginFactories, argc, argv);
 
-		if (!applicationSupportsOpenGl())
+		try
 		{
-			displayApplicationError("This program requires OpenGL to run.");
-			return 1;
-		}
+			Application application(enginePluginFactories, argc, argv);
 
-		return application.exec();
+			if (!applicationSupportsOpenGl())
+			{
+				displayApplicationError("This program requires OpenGL to run.");
+				return 1;
+			}
+
+			try
+			{
+				return application.exec();
+			}
+			catch (const std::exception &e)
+			{
+				// Copy and re-throw exception, as the original exception won't exist anymore if python thew an exception,
+				// since application will be destroyed
+				throw Exception(e.what());
+			}
+		}
+		catch (const std::exception &e)
+		{
+			// Copy and re-throw exception, as the original exception won't exist anymore if plugin thew an exception,
+			// since enginePluginFactories will be destroyed
+			throw Exception(e.what());
+		}
 	}
 	catch (const std::exception &e)
 	{
@@ -438,5 +459,5 @@ int main(int argc, char *argv[])
 		displayApplicationError("Exception caught in main");
 	}
 
-	return 0; 
+	return EXIT_FAILURE; 
 }

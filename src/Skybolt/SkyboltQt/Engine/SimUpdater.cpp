@@ -30,8 +30,17 @@ void SimUpdater::update(SecondsD wallDt)
 		return;
 	}
 
+	mSimStepper->setDynamicsEnabled(mEngineRoot->scenario->timelineMode.get() == TimelineMode::Live);
+	
+	// Set SimStepper to the current time.
+	// This is necessary because the current time may have changed since the last update, for example if we jumped to a different point on the timeline.
+	TimeSource& timeSource = mEngineRoot->scenario->timeSource;
+	SecondsD simTime = timeSource.getTime();
+	mSimStepper->setTime(simTime);
+
 	// Calculate simDt
 	double simDt;
+	if (timeSource.getState() == TimeSource::StatePlaying)
 	{
 		mAverageWallDt->addValue(wallDt);
 		double averageWallDt = mAverageWallDt->getResult();
@@ -41,14 +50,19 @@ void SimUpdater::update(SecondsD wallDt)
 		simDt = std::min(averageWallDt * mActualTimeRate, mMaxSimDt);
 		mActualTimeRate = simDt / averageWallDt;
 	}
+	else
+	{
+		simDt = 0;
+	}
 
 	// Advance time
-	simulate(mEngineRoot->scenario->timeSource, simDt);
+	simulate(timeSource, simDt);
 
 	for (const SystemPtr& system : *mEngineRoot->systemRegistry)
 	{
 		system->advanceWallTime(mWallTime, wallDt);
 	}
+
 	mWallTime += wallDt;
 }
 
@@ -57,8 +71,6 @@ void SimUpdater::simulate(TimeSource& timeSource, float dt)
 	SecondsD prevSimTime = timeSource.getTime();
 	timeSource.advanceTime(dt);
 	
-	mSimStepper->setDynamicsEnabled(mEngineRoot->scenario->timelineMode.get() == TimelineMode::Live);
-	mSimStepper->setTime(prevSimTime);
 	double dtSim = std::max(0.0, timeSource.getTime() - prevSimTime);
-	mSimStepper->step(dtSim);
+	mSimStepper->update(dtSim);
 }

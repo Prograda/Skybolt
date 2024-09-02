@@ -17,7 +17,9 @@ set(LIBS
 )
 
 include(pybind11Tools)
-pybind11_add_module(${TARGET_NAME} ${SrcFiles})
+pybind11_add_module(${TARGET_NAME} ${SrcFiles} SHARED)
 target_link_libraries (${TARGET_NAME} PUBLIC ${LIBS})
 
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER PythonLibs)
+
+skybolt_python_module_install(${TARGET_NAME})
