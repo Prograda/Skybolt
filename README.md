@@ -4,8 +4,8 @@ Skybolt is a real-time planetary environment rendering engine, designed for flig
 
 The repository also includes SkyboltQt, a Qt-based GUI library providing useful functionality for developing geospatial applications. Additionally, it features a Python API for easy integration with research tools, and a CIGI interface for communication with host applications.
 
-![alt text](https://piraxus.com/wp-content/uploads/2020/06/Mountain1-edited-300x162.jpg "Mointain") ![alt text](https://piraxus.com/wp-content/uploads/2020/06/Seattle2-edit-300x162.jpg "Airport")
-![alt text](https://piraxus.com/wp-content/uploads/2020/06/Shuttle3-flipped-300x170.jpg "Shuttle in space") ![alt text](https://piraxus.com/wp-content/uploads/2020/11/ShipHeloShot1-300x169.jpg "Ship on ocean")
+![alt text](https://prograda.com/wp-content/uploads/2020/06/Mountain1-edited-300x162.jpg "Mointain") ![alt text](https://prograda.com/wp-content/uploads/2020/06/Seattle2-edit-300x162.jpg "Airport")
+![alt text](https://prograda.com/wp-content/uploads/2020/06/Shuttle3-flipped-300x170.jpg "Shuttle in space") ![alt text](https://prograda.com/wp-content/uploads/2020/11/ShipHeloShot1-300x169.jpg "Ship on ocean")
 
 
 ## Features
