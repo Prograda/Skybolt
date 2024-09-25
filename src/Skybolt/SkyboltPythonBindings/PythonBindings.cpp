@@ -357,19 +357,11 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_property("time", [](Scenario* scenario) { return scenario->timeSource.getTime(); }, [](Scenario* scenario, double time) { return scenario->timeSource.setTime(time); })
 		.def_property_readonly("currentJulianDate", [](Scenario* scenario) {return getCurrentJulianDate(*scenario); });
 
-	py::bind_map<ComponentFactoryRegistry>(m, "ComponentFactoryRegistry");
-
 	py::class_<EngineRoot>(m, "EngineRoot")
 		.def_property_readonly("world", [](const EngineRoot& r) {return &r.scenario->world; }, py::return_value_policy::reference_internal)
 		.def_property_readonly("entityFactory", [](const EngineRoot& r) {return r.entityFactory.get(); }, py::return_value_policy::reference_internal)
 		.def_property_readonly("scenario", [](const EngineRoot& r) {return r.scenario.get(); }, py::return_value_policy::reference_internal)
 		.def("locateFile", [](const EngineRoot& r, const std::string& filename) { return value(r.fileLocator(filename)).value_or("").string(); });
-
-	py::class_<vis::VisRoot>(m, "VisRoot")
-		.def(py::init())
-		.def("addWindow", &vis::VisRoot::addWindow)
-		.def("removeWindow", &vis::VisRoot::removeWindow)
-		.def("setLoadTimingPolicy", &vis::VisRoot::setLoadTimingPolicy);
 
 	py::class_<vis::Window, std::shared_ptr<vis::Window>>(m, "Window");
 
@@ -383,6 +375,12 @@ PYBIND11_MODULE(skybolt, m) {
     .value("LoadAcrossMultipleFrames", vis::LoadTimingPolicy::LoadAcrossMultipleFrames)
     .value("LoadBeforeRender", vis::LoadTimingPolicy::LoadBeforeRender)
     .export_values();
+
+	py::class_<vis::VisRoot>(m, "VisRoot")
+		.def(py::init())
+		.def("addWindow", &vis::VisRoot::addWindow)
+		.def("removeWindow", &vis::VisRoot::removeWindow)
+		.def("setLoadTimingPolicy", &vis::VisRoot::setLoadTimingPolicy);
 
 	m.def("getGlobalEngineRoot", &getGlobalEngineRoot, "Get global EngineRoot", py::return_value_policy::reference);
 	m.def("setGlobalEngineRoot", &setGlobalEngineRoot, "Set global EngineRoot");

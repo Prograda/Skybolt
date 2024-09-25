@@ -1,0 +1,39 @@
+site_name: Skybolt
+use_directory_urls: false
+
+theme:
+  name: material
+  color_mode: auto
+  user_color_mode_toggle: true
+  features:
+    - navigation.indexes
+
+nav:
+  - Overview: index.md
+  - Getting Started: getting_started.md
+  - Building from Source: building_from_source.md
+  - Asset Packages: asset_packages.md
+  - Configuration: configuration.md
+  - Architecture: architecture.md
+  - Python API:
+    - python_api/index.md
+    - skybolt: python_api/skybolt.md
+    - skybolt_util: python_api/skybolt_util.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_if_no_docstring: true
+            show_source: false
+            show_root_heading: false
+            show_root_toc_entry: false
+            show_symbol_type_heading: true
+            show_category_heading: true
+            heading_level: 3
+            filters:
+              - "!^__.*__$"  # Exclude all magic methods
+              - "!^_pybind11_.*_$"  # Exclude pybind11 internal details

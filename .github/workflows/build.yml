@@ -11,6 +11,10 @@ on:
       python-arch:
         default: "x64"
         type: string
+      build_docs:
+        description: Build the documentation?
+        type: boolean
+        default: true
       upload:
         description: Upload resulting artifact?
         type: boolean
@@ -53,7 +57,11 @@ jobs:
         conan profile detect
     - name: Build
       run: |
-        python3 ${{github.workspace}}/Tools/BuildScripts/build.py ${{github.workspace}} ${{env.packageDir}}
+        python3 ${{github.workspace}}/Tools/BuildScripts/build.py ${{github.workspace}} ${{env.packageDir}} --stage package
+    - name: Build docs
+      if: inputs.build_docs
+      run: |
+        python3 ${{github.workspace}}/Tools/BuildScripts/build.py ${{github.workspace}} ${{env.packageDir}} --stage package_docs --only
     - name: Cmake test
       run: |
         cd ${{env.packageDir}}/Build
