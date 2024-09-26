@@ -24,15 +24,15 @@ public:
 
 	void processAllTriangles(btTriangleCallback *callback, const btVector3 &aabbMin, const btVector3 &aabbMax) const override;
 
-	void btCollisionShape::getAabb(const btTransform &transform, btVector3 & aabbMin, btVector3 &aabbMax) const override;
+	void getAabb(const btTransform &transform, btVector3 & aabbMin, btVector3 &aabbMax) const override;
 
-	void btCollisionShape::setLocalScaling(const btVector3 &scaling) override {}
+	void setLocalScaling(const btVector3 &scaling) override {}
 
-	const btVector3 &btCollisionShape::getLocalScaling() const override { return mLocalScaling; }
+	const btVector3 &getLocalScaling() const override { return mLocalScaling; }
 
-	void btCollisionShape::calculateLocalInertia(btScalar mass, btVector3 &inertia) const override;
+	void calculateLocalInertia(btScalar mass, btVector3 &inertia) const override;
 
-	const char *btCollisionShape::getName() const override { return "TerrainCollisionShape"; }
+	const char *getName() const override { return "TerrainCollisionShape"; }
 
 private:
 	double getAltitude(const Vector3& position) const;

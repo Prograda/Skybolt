@@ -1,0 +1,59 @@
+name: Release
+
+on: 
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        type: string
+        default: 1.7.0
+        description: Release tag
+
+run-name: Release ${{ inputs.version }}
+
+permissions:
+  actions: read
+  contents: write
+
+env:
+  artifact-name: Skybolt-${{ inputs.version }}.zip
+
+jobs:
+  build:
+    name: Build
+    uses: ./.github/workflows/build.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019]
+    with:
+      os: ${{ matrix.os }}
+      upload: true
+
+  package:
+    name: Package
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: Skybolt-windows-2019
+        path: Skybolt-windows-2019
+
+    - run: |
+        find .
+        mv Skybolt-windows-2019/Skybolt.zip Skybolt-windows-2019.zip
+
+    - name: "Create release"
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ inputs.version }}
+        prerelease: false
+        make_latest: true
+        target_commitish: ${{ github.sha }}
+        name: Skybolt ${{ inputs.version }}
+        files: |
+          Skybolt-windows-2019.zip

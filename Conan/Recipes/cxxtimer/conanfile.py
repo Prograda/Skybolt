@@ -1,4 +1,7 @@
-from conans import ConanFile, CMake, tools
+import os
+from conan import ConanFile
+from conan.tools import files
+from conan.tools.scm import Git
 
 class CxxtimerConan(ConanFile):
     name = "cxxtimer"
@@ -7,11 +10,12 @@ class CxxtimerConan(ConanFile):
     no_copy_source = True
 
     def source(self):
-        git = tools.Git(folder=self.name)
-        git.clone('https://github.com/andremaravilha/cxxtimer', branch="v" + self.version)
+        git = Git(self, folder=self.name)
+        git.clone('https://github.com/andremaravilha/cxxtimer', target=".")
+        git.checkout("v" + self.version)
 
     def package(self):
-        self.copy("*.hpp", "include")
+        files.copy(self, pattern="*.hpp", src=self.source_folder, dst=os.path.join(self.package_folder, "include"))
 		
     def package_info(self):
         self.cpp_info.includedirs = ["include"]

@@ -74,3 +74,17 @@ target_include_directories(${LIB_NAME} PUBLIC ${OSG_INCLUDE_DIR})
 target_link_libraries(${LIB_NAME} ${LIBRARIES})
 
 skybolt_install(${LIB_NAME})
+
+
+# Install OSG plugins, which are not tracked by CMake runtime dependency system
+cmake_path(GET OSG_OSG_LIBRARY PARENT_PATH PACKAGE_FOLDER) # Get OSG packgae /lib folder
+cmake_path(GET PACKAGE_FOLDER PARENT_PATH PACKAGE_FOLDER) # Get OSG package folder
+file(GLOB OSG_PLUGINS_DIR "${PACKAGE_FOLDER}/bin/osgPlugins*")
+
+if(OSG_PLUGINS_DIR)
+	install(
+		DIRECTORY ${OSG_PLUGINS_DIR}
+		DESTINATION bin
+		FILES_MATCHING PATTERN "*"
+	)
+endif()

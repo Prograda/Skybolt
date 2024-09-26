@@ -138,18 +138,14 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	scheduler->init(schedulerParams);
 
 	std::vector<std::string> assetSearchPaths = {
-		"Assets/"
+		"Assets/",
+		"../Assets/"
 	};
 
 	if (const char* path = std::getenv("SKYBOLT_ASSETS_PATH"); path)
 	{
 		auto paths = file::splitByPathListSeparator(std::string(path));
 		assetSearchPaths.insert(assetSearchPaths.begin(), paths.begin(), paths.end());
-	}
-	else
-	{
-		BOOST_LOG_TRIVIAL(warning) << "SKYBOLT_ASSETS_PATH environment variable not set. Skybolt may not be able to find assets. "
-			"Please refer to Skybolt documentation for information about setting this variable.";
 	}
 
 	std::set<std::string> requiredPackages = {"Core", "Globe"};

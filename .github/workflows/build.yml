@@ -1,0 +1,72 @@
+name: Build Skybolt
+on:
+  workflow_call:
+    inputs:
+      os:
+        default: ubuntu-22.04
+        type: string
+      python-version:
+        default: "3.11.x"
+        type: string
+      python-arch:
+        default: "x64"
+        type: string
+      upload:
+        description: Upload resulting artifact?
+        type: boolean
+        default: false
+
+run-name: Build for ${{ inputs.os }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    env:
+      packageDir: ${{github.workspace}}/package
+    steps:
+    - uses: actions/checkout@v2.4.0
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ inputs.python-version }}
+        architecture: ${{ inputs.python-arch }}
+    - name: Install C and C++ header files
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib
+    - name: Install required python packages
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install -r ${{github.workspace}}/Tools/BuildScripts/requirements.txt
+    - name: Configure conan (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        conan profile detect
+        echo "compiler.cppstd=17" >> ~/.conan2/profiles/default  # Set cppstd to 17
+        export CONAN_SYSREQUIRES_MODE=enabled
+    - name: Configure conan (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        conan profile detect
+    - name: Build
+      run: |
+        python3 ${{github.workspace}}/Tools/BuildScripts/build.py ${{github.workspace}} ${{env.packageDir}}
+    - name: Cmake test
+      run: |
+        cd ${{env.packageDir}}/Build
+        ctest
+    - name: Zip Build Artifact
+      if: inputs.upload
+      working-directory: ${{env.packageDir}}/Package
+      run: |
+        7z a "${{ github.workspace }}/out/Skybolt.zip" .
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      if: inputs.upload
+      with:
+        name: Skybolt-${{ inputs.os }}
+        path: ${{ github.workspace }}/out/Skybolt.zip # The file to upload
+        retention-days: 1

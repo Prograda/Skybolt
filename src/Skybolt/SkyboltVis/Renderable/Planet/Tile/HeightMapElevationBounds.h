@@ -7,6 +7,7 @@
 #pragma once
 
 #include <osg/Vec2>
+#include <limits>
 #include <optional>
 
 namespace osg {

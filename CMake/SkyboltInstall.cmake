@@ -1,6 +1,8 @@
 macro(skybolt_install target)
+	# Install target
 	install(TARGETS ${target}
 		EXPORT SkyboltTargets
+		RUNTIME_DEPENDENCY_SET SkyboltDependencies # Adds runtime dependencies to SkyboltDependencies target
 		LIBRARY DESTINATION lib
 		ARCHIVE DESTINATION lib
 		RUNTIME DESTINATION bin

@@ -4,15 +4,15 @@ add_source_group_tree(. SrcFiles)
 
 include_directories("../")
 
-find_package(PythonInterp REQUIRED)
-find_package(PythonLibs REQUIRED)
+find_package(Python3 REQUIRED COMPONENTS Development Interpreter)
+include_directories(${Python3_INCLUDE_DIRS})
 
 find_package(pybind11 REQUIRED)
 include_directories(${pybind11_INCLUDE_DIRS})
 
 set(LIBS
 	SkyboltEngine
-	${PYTHON_LIBRARY}
+	${Python3_LIBRARIES}
 	pybind11::headers
 )
 

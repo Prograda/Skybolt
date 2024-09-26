@@ -1,4 +1,7 @@
-from conans import ConanFile, CMake, tools
+import os
+from conan import ConanFile
+from conan.tools import files
+from conan.tools.scm import Git
 
 class XsimdConan(ConanFile):
     name = "xsimd"
@@ -6,14 +9,13 @@ class XsimdConan(ConanFile):
     exports_sources = "*"
     no_copy_source = True
 
-    scm = {
-        "type": "git",
-        "url": "https://github.com/xtensor-stack/xsimd/",
-        "revision": version
-    }
+    def source(self):
+        git = Git(self, folder=self.name)
+        git.clone('https://github.com/xtensor-stack/xsimd/', target=".")
+        git.checkout(self.version)
 
     def package(self):
-        self.copy("include/*")
+        files.copy(self, pattern="*", src=os.path.join(self.source_folder, "xsimd/include"), dst=os.path.join(self.package_folder, "include"))
 		
     def package_info(self):
         self.cpp_info.includedirs = ["include"]

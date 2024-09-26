@@ -1,4 +1,8 @@
-from conans import ConanFile, CMake, tools
+import os
+from conan import ConanFile
+from conan.tools import files
+from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
+from conan.tools.scm import Git
 
 class ToolwindowmanagerConan(ConanFile):
     name = "toolwindowmanager"
@@ -6,26 +10,30 @@ class ToolwindowmanagerConan(ConanFile):
     settings = "os", "compiler", "arch", "build_type"
     exports_sources = "*"
 
-    generators = ["cmake_paths", "cmake_find_package"]
-
     requires = [
-	    "qt/5.15.3@_/_"
+	    "qt/5.15.14"
     ]
 
-    scm = {
-        "type": "git",
-        "url": "https://github.com/Piraxus/toolwindowmanager",
-        "revision": "b0bf1c107a3f7ed3ca7821cbd3f53db13bd1cc0a"
-    }
+    def source(self):
+        git = Git(self, folder=self.name)
+        git.clone('https://github.com/Piraxus/toolwindowmanager', target=".")
+        git.checkout("4e948817e14355d3c6df2fa90a3bf5cd68257eab")
+
+    def generate(self):
+        tc = CMakeToolchain(self)
+        tc.variables["TWM_BUILD_EXAMPLE"] = "OFF"
+        tc.generate()
+
+        deps = CMakeDeps(self)
+        deps.generate()
 
     def build(self):
         cmake = CMake(self)
-        cmake.definitions["TWM_BUILD_EXAMPLE"] = "OFF"
-        cmake.configure()
+        cmake.configure(build_script_folder=self.name)
         cmake.build()
 		
     def package(self):
-        self.copy("*.h", dst="include/ToolWindowManager", src="src")
+        files.copy(self, pattern="*.h", src=os.path.join(self.source_folder, "toolwindowmanager/src"), dst=os.path.join(self.package_folder, "include/ToolWindowManager"))
         cmake = CMake(self)
         cmake.install()
 

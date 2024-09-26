@@ -21,7 +21,7 @@ namespace file {
 
 Path getHomeDirectory()
 {
-#ifdef unix
+#ifdef __unix__
 	return getenv("HOME");
 #elif defined(WIN32)
 	const char* homeDrive = std::getenv("HOMEDRIVE");
@@ -34,7 +34,7 @@ Path getHomeDirectory()
 
 Path getAppUserDataDirectory(const std::string& applicationName)
 {
-#ifdef unix
+#ifdef __unix__
 	return getHomeDirectory()
 		.append(applicationName); // TODO: where should this go on Unix?
 #elif defined(WIN32)

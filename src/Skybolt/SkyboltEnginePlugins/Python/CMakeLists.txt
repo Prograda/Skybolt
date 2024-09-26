@@ -6,15 +6,15 @@ include_directories("../../")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package(PythonLibs REQUIRED)
-include_directories(${PYTHON_INCLUDE_DIR})
+find_package(Python3 REQUIRED COMPONENTS Development Interpreter)
+include_directories(${Python3_INCLUDE_DIRS})
 
 find_package(pybind11 REQUIRED)
 include_directories(${pybind11_INCLUDE_DIRS})
 
 set(LIBS
 	SkyboltEngine
-	${PYTHON_LIBRARY}
+	${Python3_LIBRARIES}
 	pybind11::headers
 )
 

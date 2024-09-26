@@ -18,7 +18,6 @@ SET(SrcFiles ${SrcFiles} ${SrcUiHeaders} ${SrcRccsSrc})
 SOURCE_GROUP("Generated Ui Files" FILES ${SrcUiHeaders} ${SrcRccsSrc})
 
 find_package(ToolWindowManager REQUIRED)
-include_directories(${ToolWindowManager_INCLUDE_DIR})
 
 set(LIBS
 	SkyboltEngine
@@ -26,15 +25,25 @@ set(LIBS
 	Qt5::Gui
 	Qt5::Widgets
 	Qt5::OpenGL
-	${ToolWindowManager_LIBRARIES}
+	toolwindowmanager::toolwindowmanager
 )
 
 add_library(${TARGET_NAME} STATIC ${SrcFiles})
 
 target_link_libraries (${TARGET_NAME} ${LIBS})
 
-target_include_directories(${TARGET_NAME} PUBLIC
-	${ToolWindowManager_INCLUDE_DIR}
-)
-
 skybolt_install(${TARGET_NAME})
+
+# Install Qt plugins, which are not tracked by CMake runtime dependency system
+install(
+	DIRECTORY ${qt_PACKAGE_FOLDER_RELEASE}/plugins/platforms
+    CONFIGURATIONS Release RelWithDebInfo MinSizeRel
+	DESTINATION bin/qtPlugins
+	FILES_MATCHING PATTERN "*"
+)
+install(
+	DIRECTORY ${qt_PACKAGE_FOLDER_DEBUG}/plugins/platforms
+    CONFIGURATIONS Debug
+	DESTINATION bin/qtPlugins
+	FILES_MATCHING PATTERN "*"
+)

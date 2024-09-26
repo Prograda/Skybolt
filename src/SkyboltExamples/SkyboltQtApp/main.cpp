@@ -417,7 +417,7 @@ int main(int argc, char *argv[])
 
 		QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 		QCoreApplication::setApplicationName("SkyboltQt");
-		QCoreApplication::addLibraryPath(QString::fromStdString((executableDir / "qtplugins").string()));
+		QCoreApplication::addLibraryPath(QString::fromStdString((executableDir / "qtPlugins").string()));
 
 		std::string pluginsDir = (executableDir / "plugins").string();
 		std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(getAllPluginFilepathsInDirectory(pluginsDir));
