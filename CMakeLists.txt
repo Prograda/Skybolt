@@ -58,6 +58,10 @@ else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-register") # disable warnings about use of 'register' in glm
 endif()
 
+if(Skybolt_VERSION)
+	add_definitions(-DSKYBOLT_VERSION=${Skybolt_VERSION})
+endif()
+
 #-------------------------------------------------------------
 # Dependency options
 #-------------------------------------------------------------
@@ -79,8 +83,8 @@ include(SetPluginTargetProperties)
 include(Catch)
 include(SkyboltInstall)
 
-add_subdirectory (src/Skybolt)
-add_subdirectory (src/SkyboltExamples)
+add_subdirectory(src/Skybolt)
+add_subdirectory(src/SkyboltExamples)
 
 #-------------------------------------------------------------
 # Installation

@@ -89,6 +89,7 @@ class SkyboltConan(ConanFile):
         tc.variables["Boost_STATIC_LIBS"] = str(not self.dependencies["boost"].options.shared)
         tc.variables["OSG_STATIC_LIBS"] = str(not self.dependencies["openscenegraph-mr"].options.shared)
         tc.variables["SKYBOLT_PLUGINS_STATIC_BUILD"] = str(not self.options.shared_plugins)
+        tc.variables["Skybolt_VERSION"] = self.version
         if "fPIC" in self.options:
             tc.variables["CMAKE_POSITION_INDEPENDENT_CODE"] = self.options.fPIC
 

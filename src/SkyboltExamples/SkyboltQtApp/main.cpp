@@ -33,6 +33,7 @@
 #include <SkyboltQt/Widgets/ViewportToolBar.h>
 #include <SkyboltQt/Widgets/ViewportWidget.h>
 #include <SkyboltCommon/MapUtility.h>
+#include <SkyboltCommon/Stringify.h>
 #include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
 #include <SkyboltEngine/EngineRootFactory.h>
@@ -56,6 +57,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QPushButton>
+#include <QSplashScreen>
 #include <QVBoxLayout>
 
 using namespace skybolt;
@@ -73,6 +75,31 @@ static EntityVisibilityPredicateSetter toEntityVisibilityPredicateSetter(EntityV
 	return [filterable] (EntityVisibilityPredicate p) { filterable->setEntityVisibilityPredicate(std::move(p)); };
 }
 
+static std::unique_ptr<QSplashScreen> createSplashScreen(const EngineRoot& engineRoot)
+{
+	std::optional<file::Path> splashFile = skybolt::valueOrLogError(engineRoot.fileLocator("Ui/Splash.jpg"));
+	QPixmap pixmap = splashFile ? QPixmap(QString::fromStdString(splashFile->string())) : QPixmap();
+	auto splash = std::make_unique<QSplashScreen>(pixmap);
+
+#ifdef SKYBOLT_VERSION
+	QString versionNumber = QString::fromUtf8(STRINGIFY(SKYBOLT_VERSION));
+#else
+	QString versionNumber = "???";
+#endif
+	auto versionLabel = new QLabel("Version " + versionNumber, splash.get());
+	QFont font = versionLabel->font();
+	font.setPointSizeF(15);
+	versionLabel->setFont(font);
+	versionLabel->move(pixmap.width() * (250.f / 1240.f), pixmap.height() * (470.f / 600.f));
+
+	return splash;
+}
+
+static void setSplashScreenMessage(QSplashScreen& screen, const QString& message)
+{
+	screen.showMessage(message, Qt::AlignBottom, Qt::white);
+}
+
 class Application : public QApplication
 {
 public:
@@ -81,13 +108,25 @@ public:
 	{
 		setStyle(new DarkStyle);
 
-		// Create Skybolt Engine
+		// Create engine
 		{
 			QSettings settings(QApplication::applicationName());
 			nlohmann::json engineSettings = readOrCreateEngineSettingsFile(settings);
-			mEngineRoot = EngineRootFactory::create(enginePluginFactories, engineSettings);
-			mVisRoot = createVisRoot(*mEngineRoot);
+			EngineRootConfig config;
+			config.engineSettings = engineSettings;
+			mEngineRoot = std::make_unique<EngineRoot>(config);
 		}
+
+		// Create splash screen
+		mSplashScreen = createSplashScreen(*mEngineRoot);
+		mSplashScreen->show();
+
+		// Load plugins
+		setSplashScreenMessage(*mSplashScreen, "Loading plugins...");
+		mEngineRoot->loadPlugins(enginePluginFactories);
+
+		// Create visualization
+		mVisRoot = createVisRoot(*mEngineRoot);
 
 		// Create user input system
 		std::shared_ptr<ViewportInputSystem> viewportInputSystem;
@@ -137,6 +176,8 @@ public:
 		}()));
 
 		auto selectionModel = new ScenarioSelectionModel(mMainWindow.get());
+
+		setSplashScreenMessage(*mSplashScreen, "Initializing tool windows...");
 
 		// Create property editor
 		{
@@ -282,6 +323,8 @@ public:
 		{
 			if (argc >= 2)
 			{
+				setSplashScreenMessage(*mSplashScreen, "Loading scenario...");
+
 				QString filename(argv[1]);
 				mMainWindow->openScenario(filename, MainWindow::OverwriteMode::OverwriteWithoutPrompt);
 			}
@@ -291,6 +334,8 @@ public:
 			mMainWindow.reset();
 			throw;
 		}
+
+		mSplashScreen->finish(mMainWindow.get());
 
 		mMainWindow->showMaximized();
 	}
@@ -399,6 +444,7 @@ private:
 	std::unique_ptr<SimUpdater> mSimUpdater;
 	std::unique_ptr<MainWindow> mMainWindow;
 	std::shared_ptr<EngineRoot> mEngineRoot;
+	std::unique_ptr<QSplashScreen> mSplashScreen;
 	vis::WindowPtr mWindow;
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> mViewport;
 	std::shared_ptr<skybolt::StatsDisplaySystem> mStatsDisplaySystem;
