@@ -29,7 +29,7 @@ public:
 private:
 	// WorldListener interface
 	void entityAdded(const skybolt::sim::EntityPtr& entity) override;
-	void entityAboutToBeRemoved(const skybolt::sim::EntityPtr& entity) override;
+	void entityRemoved(const skybolt::sim::EntityPtr& entity) override;
 
 private:
 	std::optional<QString> toItem(const skybolt::sim::Entity& entity) const;

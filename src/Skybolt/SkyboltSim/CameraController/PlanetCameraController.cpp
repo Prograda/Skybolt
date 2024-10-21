@@ -30,14 +30,14 @@ SKYBOLT_REFLECT_BEGIN(PlanetCameraController)
 		.superType<CameraController>()
 		.superType<LatLonSettable>()
 		.superType<Pitchable>()
-		.superType<Targetable>()
+		.superType<EntityTargeter>()
 		.superType<Zoomable>();
 }
 SKYBOLT_REFLECT_END
 
 PlanetCameraController::PlanetCameraController(sim::Entity* camera, World* world, const Params& params) :
 	CameraController(camera),
-	Targetable(world),
+	EntityTargeter(world),
 	mParams(params)
 {
 	setPitch(skybolt::math::halfPiF());

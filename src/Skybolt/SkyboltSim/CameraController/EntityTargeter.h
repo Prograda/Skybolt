@@ -12,31 +12,34 @@
 #include <SkyboltReflection/Reflection.h>
 
 #include <string>
+#include <variant>
 
 namespace skybolt {
 namespace sim {
 
-class Targetable
+class EntityTargeter
 {
 public:
-	Targetable(World* world);
-	virtual ~Targetable() = default;
+	EntityTargeter(World* world);
+	virtual ~EntityTargeter() = default;
 
-	virtual const EntityId& getTargetId() const { return mTargetId; }
+	virtual const EntityId& getTargetId() const;
 	virtual void setTargetId(const EntityId& target);
 
 	Entity* getTarget() const;
 
-	// Helper methods used by serialization. FIXME: These should be hidden.
 	const std::string& getTargetName() const;
 	void setTargetName(const std::string& targetName);
 
 protected:
 	World* mWorld;
-	EntityId mTargetId = nullEntityId();
+
+	//! Refer to target entity by name so that we can hold a persistant reference to the entity
+	//! regardless of whether the entity currently exists.
+	std::string mTargetName;
 };
 
-SKYBOLT_REFLECT_EXTERN(Targetable)
+SKYBOLT_REFLECT_EXTERN(EntityTargeter)
 
 } // namespace sim
 } // namespace skybolt

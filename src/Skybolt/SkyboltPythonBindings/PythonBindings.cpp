@@ -21,7 +21,7 @@
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/CameraController/CameraController.h>
 #include <SkyboltSim/CameraController/CameraControllerSelector.h>
-#include <SkyboltSim/CameraController/Targetable.h>
+#include <SkyboltSim/CameraController/EntityTargeter.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
@@ -316,9 +316,11 @@ PYBIND11_MODULE(skybolt, m) {
 
 	py::class_<CameraControllerComponent, std::shared_ptr<CameraControllerComponent>, Component, CameraControllerSelector>(m, "CameraControllerComponent");
 
-	py::class_<Targetable>(m, "Targetable", "Interface for a class which references a target `Entity` by `EntityId`")
-		.def("getTargetId", &Targetable::getTargetId)
-		.def("setTargetId", &Targetable::setTargetId);
+	py::class_<EntityTargeter>(m, "EntityTargeter", "Interface for a class which references a target `Entity` by `EntityId`")
+		.def("getTargetId", &EntityTargeter::getTargetId)
+		.def("setTargetId", &EntityTargeter::setTargetId)
+		.def("getTargetName", &EntityTargeter::getTargetName)
+		.def("setTargetName", &EntityTargeter::setTargetName);
 
 	py::class_<Entity, std::shared_ptr<Entity>>(m, "Entity")
 		.def("getId", &Entity::getId)

@@ -43,7 +43,7 @@ void EntityListModel::entityAdded(const sim::EntityPtr& entity)
 	populateList();
 }
 
-void EntityListModel::entityAboutToBeRemoved(const sim::EntityPtr& entity)
+void EntityListModel::entityRemoved(const sim::EntityPtr& entity)
 {
 	populateList();
 }

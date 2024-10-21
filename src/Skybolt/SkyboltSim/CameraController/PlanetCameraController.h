@@ -10,13 +10,13 @@
 #include "CameraController.h"
 #include "LatLonSettable.h"
 #include "Pitchable.h"
-#include "Targetable.h"
+#include "EntityTargeter.h"
 #include "Zoomable.h"
 
 namespace skybolt {
 namespace sim {
 
-class PlanetCameraController : public CameraController, public LatLonSettable, public Pitchable, public Targetable, public Zoomable
+class PlanetCameraController : public CameraController, public LatLonSettable, public Pitchable, public EntityTargeter, public Zoomable
 {
 public:
 	struct Params

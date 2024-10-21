@@ -27,7 +27,7 @@ SKYBOLT_REFLECT_BEGIN(OrbitCameraController)
 	registry.type<OrbitCameraController>("OrbitCameraController")
 		.superType<CameraController>()
 		.superType<Pitchable>()
-		.superType<Targetable>()
+		.superType<EntityTargeter>()
 		.superType<Yawable>()
 		.superType<Zoomable>();
 }
@@ -35,7 +35,7 @@ SKYBOLT_REFLECT_END
 
 OrbitCameraController::OrbitCameraController(sim::Entity* camera, sim::World* world, const Params& params) :
 	CameraController(camera),
-	Targetable(world),
+	EntityTargeter(world),
 	mParams(params),
 	mTargetOffset(0,0,0),
     mFilteredPlanetUp(0,0,0),
@@ -77,10 +77,11 @@ void OrbitCameraController::updatePostDynamicsSubstep(SecondsD dtSubstep)
 
 void OrbitCameraController::update(SecondsD dt)
 {
-	if (mTargetId != mPrevTargetId)
+	EntityId targetId = getTargetId();
+	if (targetId != mPrevTargetId)
 	{
 		resetFiltering();
-		mPrevTargetId = mTargetId;
+		mPrevTargetId = targetId;
 	}
 
 	mCameraComponent->getState().fovY = mParams.fovY;

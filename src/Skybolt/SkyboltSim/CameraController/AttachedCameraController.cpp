@@ -27,7 +27,7 @@ SKYBOLT_REFLECT_BEGIN(AttachedCameraController)
 	registry.type<AttachedCameraController>("AttachedCameraController")
 		.superType<CameraController>()
 		.superType<Pitchable>()
-		.superType<Targetable>()
+		.superType<EntityTargeter>()
 		.superType<Yawable>()
 		.superType<Zoomable>();
 }
@@ -35,7 +35,7 @@ SKYBOLT_REFLECT_END
 
 AttachedCameraController::AttachedCameraController(Entity* camera, World* world, const Params& params) :
 	CameraController(camera),
-	Targetable(world),
+	EntityTargeter(world),
 	mParams(params)
 {
 	setZoom(0.5f);

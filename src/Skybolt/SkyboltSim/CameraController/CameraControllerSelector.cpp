@@ -6,7 +6,7 @@
 
 
 #include "CameraControllerSelector.h"
-#include "Targetable.h"
+#include "EntityTargeter.h"
 
 #include <assert.h>
 
@@ -56,9 +56,9 @@ void CameraControllerSelector::selectController(const std::string& name)
 void CameraControllerSelector::addController(const std::string& name, const CameraControllerPtr& controller)
 {
 	mControllers[name] = controller;
-	if (auto targetable = dynamic_cast<Targetable*>(controller.get()); targetable)
+	if (auto targeter = dynamic_cast<EntityTargeter*>(controller.get()); targeter)
 	{
-		targetable->setTargetId(getTargetId());
+		targeter->setTargetId(getTargetId());
 	}
 }
 
@@ -66,9 +66,9 @@ void CameraControllerSelector::setTargetId(const EntityId& targetId)
 {
 	for (const auto& item : mControllers)
 	{
-		if (auto targetable = dynamic_cast<Targetable*>(item.second.get()); targetable)
+		if (auto targeter = dynamic_cast<EntityTargeter*>(item.second.get()); targeter)
 		{
-			targetable->setTargetId(targetId);
+			targeter->setTargetId(targetId);
 		}
 	}
 }
@@ -77,9 +77,9 @@ EntityId CameraControllerSelector::getTargetId() const
 {
 	if (mSelectedController)
 	{
-		if (auto targetable = dynamic_cast<Targetable*>(mSelectedController.get()); targetable)
+		if (auto targeter = dynamic_cast<EntityTargeter*>(mSelectedController.get()); targeter)
 		{
-			return targetable->getTargetId();
+			return targeter->getTargetId();
 		}
 	}
 	return sim::nullEntityId();

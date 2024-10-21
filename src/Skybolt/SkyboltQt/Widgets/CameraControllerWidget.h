@@ -40,4 +40,5 @@ private:
 	QComboBox* mCameraTargetCombo;
 	EntityListModel* mTargetListModel;
 	std::vector<boost::signals2::scoped_connection> mControllerConnections;
+	bool mRemovedCurrentItem = false;
 };

@@ -51,6 +51,7 @@ CameraControllerWidget::CameraControllerWidget(sim::World* world, QWidget* paren
 	mCameraTargetCombo->setToolTip("Camera Target");
 	mCameraTargetCombo->setModel(proxyModel);
 	mCameraTargetCombo->setEnabled(false);
+	mCameraTargetCombo->setMinimumContentsLength(10);
 	layout()->addWidget(mCameraTargetCombo);
 }
 
@@ -107,9 +108,9 @@ void CameraControllerWidget::setCamera(sim::Entity* camera)
 	const sim::EntityId& targetId = cameraController->getTargetId();
 	sim::Entity* target = mWorld->getEntityById(targetId).get();
 	mCameraTargetCombo->setCurrentText(QString::fromStdString(target ? sim::getName(*target) : ""));
-		
-	connect(mCameraTargetCombo, &QComboBox::currentTextChanged, [=](const QString& text)
-	{
+	
+	// Set camera controller target if the user changed the QComboBox selection
+	connect(mCameraTargetCombo, QOverload<const QString&>::of(&QComboBox::activated), this, [=](const QString& text) {
 		sim::Entity* entity = mWorld->findObjectByName(text.toStdString()).get();
 		if (entity)
 		{
@@ -161,11 +162,25 @@ void CameraControllerWidget::updateTargetFilterForControllerName(const std::stri
 		mTargetListModel->setEntityFilter([cameraName = getName(*mCamera)] (const sim::Entity& entity) {
 			return getPosition(entity).has_value()
 				&& entity.getFirstComponent<TemplateNameComponent>() != nullptr
+				&& !isPlanet(entity)
 				&& getName(entity) != cameraName;
 		});
 	}
 	else
 	{
 		mTargetListModel->setEntityFilter(&entityPredicateAlwaysFalse);
+	}
+
+	// The current item in the target list may have changed after applying the new filter.
+	// Re-apply the current selected target.
+	{
+		sim::Entity* entity = mWorld->findObjectByName(mCameraTargetCombo->currentText().toStdString()).get();
+		if (entity && mCamera)
+		{
+			if (sim::CameraControllerComponentPtr cameraController = mCamera->getFirstComponent<sim::CameraControllerComponent>(); cameraController)
+			{
+				cameraController->setTargetId(entity->getId());
+			}
+		}
 	}
 }
