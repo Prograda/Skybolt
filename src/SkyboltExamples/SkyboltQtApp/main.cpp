@@ -20,6 +20,7 @@
 #include <SkyboltQt/Scenario/ScenarioSelectionModel.h>
 #include "SkyboltQt/Scenario/ScenarioWorkspace.h"
 #include <SkyboltQt/Style/DarkStyle.h>
+#include <SkyboltQt/ThirdParty/DarkTitleBar.h>
 #include <SkyboltQt/Viewport/DefaultViewportMouseEventHandler.h>
 #include <SkyboltQt/Viewport/ScenarioObjectPicker.h>
 #include <SkyboltQt/Viewport/ViewportVisibilityFiltering.h>
@@ -177,6 +178,7 @@ public:
 			return c;
 		}()));
 		addErrorLogStatusBar(*mMainWindow->statusBar());
+		enableDarkTitleBar(mMainWindow->winId());
 
 		auto selectionModel = new ScenarioSelectionModel(mMainWindow.get());
 
