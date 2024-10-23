@@ -28,17 +28,19 @@
 #include <SkyboltQt/Widgets/EntityControllerWidget.h>
 #include <SkyboltQt/Widgets/ScenarioPropertyEditorWidget.h>
 #include <SkyboltQt/Widgets/ScenarioObjectsEditorWidget.h>
+#include <SkyboltQt/Widgets/StatusBar.h>
 #include <SkyboltQt/Widgets/TimelineControlWidget.h>
 #include <SkyboltQt/Widgets/TimeControlWidget.h>
 #include <SkyboltQt/Widgets/ViewportToolBar.h>
 #include <SkyboltQt/Widgets/ViewportWidget.h>
 #include <SkyboltCommon/MapUtility.h>
 #include <SkyboltCommon/Stringify.h>
-#include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/GetExecutablePath.h>
+#include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
+#include <SkyboltCommon/Logging/ConsoleSink.h>
 #include <SkyboltEngine/Input/InputSystem.h>
 #include <SkyboltEngine/SimVisBinding/ForcesVisBinding.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
@@ -174,6 +176,7 @@ public:
 			c.engineRoot = mEngineRoot;
 			return c;
 		}()));
+		addErrorLogStatusBar(*mMainWindow->statusBar());
 
 		auto selectionModel = new ScenarioSelectionModel(mMainWindow.get());
 
@@ -464,6 +467,8 @@ int main(int argc, char *argv[])
 		QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 		QCoreApplication::setApplicationName("SkyboltQt");
 		QCoreApplication::addLibraryPath(QString::fromStdString((executableDir / "qtPlugins").string()));
+
+		addConsoleLogSink();
 
 		std::string pluginsDir = (executableDir / "plugins").string();
 		std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(getAllPluginFilepathsInDirectory(pluginsDir));
