@@ -95,6 +95,7 @@ void EntityObject::setDirectory(const ScenarioObjectPath& path)
 			component->directory = path;
 		}
 	}
+	mDirectory = path;
 }
 
 std::optional<skybolt::sim::Vector3> EntityObject::getWorldPosition() const
@@ -150,6 +151,9 @@ ScenarioObjectTypePtr createEntityObjectType(sim::World* world, EntityFactory* e
 	auto t = std::make_shared<ScenarioObjectType>();
 	t->name = "Entity";
 	t->templateNames = entityFactory->getTemplateNames();
+	t->getScenarioObjectDirectoryForTemplate = [entityFactory] (const std::string& templateName) {
+		return entityFactory->getScenarioObjectDirectoryForTemplate(templateName);
+	};
 	t->objectCreator = [world, entityFactory] (const std::string& instanceName, const std::string& templateName) {
 		sim::EntityPtr entity = entityFactory->createEntity(templateName);
 		world->addEntity(entity);

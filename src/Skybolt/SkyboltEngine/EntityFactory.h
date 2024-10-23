@@ -8,6 +8,7 @@
 
 #include "ComponentFactory.h"
 #include "SkyboltEngineFwd.h"
+#include "SkyboltEngine/Scenario/ScenarioObjectPath.h"
 #include <SkyboltSim/EntityId.h>
 #include <SkyboltSim/SimMath.h>
 #include <SkyboltVis/VisFactory.h>
@@ -58,6 +59,9 @@ public:
 	typedef std::vector<std::string> Strings;
 	Strings getTemplateNames() const { return mTemplateNames; }
 
+	 //!< Gets the default scenario object directory for objects created from the given template
+	const skybolt::ScenarioObjectPath& getScenarioObjectDirectoryForTemplate(const std::string& templateName) const;
+
 	typedef std::map<std::string, nlohmann::json> TemplateJsonMap;
 	const TemplateJsonMap& getTemplateJsonMap() const { return mTemplateJsonMap; }
 
@@ -72,6 +76,7 @@ private:
 
 private:
 	Strings mTemplateNames;
+	std::map<std::string, skybolt::ScenarioObjectPath> mTemplateDirectories;
 	std::map<std::string, std::function<sim::EntityPtr()>> mBuiltinTemplates; // TODO: genericize these
 
 	TemplateJsonMap mTemplateJsonMap;
@@ -79,5 +84,7 @@ private:
 	Context mContext;
 	mutable sim::EntityId mNextEntityId{1,0};
 };
+
+const ScenarioObjectPath& getDefaultEntityScenarioObjectDirectory();
 
 } // namespace skybolt

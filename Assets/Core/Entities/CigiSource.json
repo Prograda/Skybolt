@@ -8,6 +8,9 @@
 			"entityTypes": {
 				"118": "UH60"
 			}
+		}},
+		{"scenarioMetadata": {
+			"scenarioObjectDirectory": "Input"
 		}}
 	]
 }

@@ -5,8 +5,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "ScenarioObjectCreationToolBar.h"
-#include "SkyboltQt/Scenario/ScenarioObject.h"
 #include "SkyboltQt/Icon/SkyboltIcons.h"
+#include "SkyboltQt/QtUtil/QtMenuUtil.h"
+#include "SkyboltQt/Scenario/ScenarioObject.h"
 #include "SkyboltQt/Scenario/ScenarioSelectionModel.h"
 
 #include <SkyboltCommon/MapUtility.h>
@@ -77,6 +78,35 @@ static void connectTreeItemTypeMenuAction(const ScenarioObjectTypePtr& type, QAc
 	});
 }
 
+static QAction* addCreateObjectSubMenu(QMenu& menu, const skybolt::ScenarioObjectPath& directory, const std::string& name)
+{
+	// Create menu hierarchy
+	QMenu* parentMenu = &menu;
+	for (const std::string& subMenuName : directory)
+	{
+		QString submenuNameQt = QString::fromStdString(subMenuName);
+		QMenu* subMenu = findSubMenuByName(*parentMenu, submenuNameQt);
+		if (!subMenu)
+		{
+			subMenu = new QMenu(submenuNameQt, parentMenu);
+			parentMenu->addMenu(subMenu);
+		}
+		parentMenu = subMenu;
+	}
+
+	// Add action
+	QAction* action = new QAction(QString::fromStdString(name), parentMenu);
+	parentMenu->addAction(action);
+	return action;
+}
+
+static QAction* addAndConnectCreateObjectSubMenu(QMenu& menu, const ScenarioObjectTypePtr& type, const std::string& templateName)
+{
+	QAction* action = addCreateObjectSubMenu(menu, type->getScenarioObjectDirectoryForTemplate(templateName), templateName);
+	connectTreeItemTypeMenuAction(type, action, templateName, templateName);
+	return action;
+}
+
 static QMenu* createCreateMenu(const ScenarioObjectTypeMap& types, QWidget* parent)
 {
 	QMenu* menu = new QMenu(parent);
@@ -87,19 +117,13 @@ static QMenu* createCreateMenu(const ScenarioObjectTypeMap& types, QWidget* pare
 		{
 			if (type->templateNames.empty())
 			{
-				QAction* action = new QAction(QString::fromStdString(type->name), menu);
-				menu->addAction(action);
-				connectTreeItemTypeMenuAction(type, action, type->name);
+				addAndConnectCreateObjectSubMenu(*menu, type, type->name);
 			}
 			else
 			{
-				QMenu* subMenu = new QMenu(QString::fromStdString(type->name), menu);
-				menu->addMenu(subMenu);
 				for (const auto& templateName : type->templateNames)
 				{
-					QAction* action = new QAction(QString::fromStdString(templateName), menu);
-					subMenu->addAction(action);
-					connectTreeItemTypeMenuAction(type, action, templateName, templateName);
+					addAndConnectCreateObjectSubMenu(*menu, type, templateName);
 				}
 			}
 		}

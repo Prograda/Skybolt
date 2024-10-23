@@ -77,7 +77,9 @@ struct ScenarioObjectType
 	virtual ~ScenarioObjectType() = default;
 
 	std::string name; //!< Name of the type
-	std::vector<std::string> templateNames; //!< Names of each templates of each type. For example, if the type is "entity", the templates would be things like "cargo ship" etc. Can be empty.
+	std::vector<std::string> templateNames; //!< Templates for instances that can be created. If empty, a "default" implied template is assumed for all instances.
+	
+	std::function<skybolt::ScenarioObjectPath(const std::string& templateName)> getScenarioObjectDirectoryForTemplate; //!< @returns default scenario object directory for objects created from the given template. Never null.
 	std::function<void(const std::string& instanceName, const std::string& templateName)> objectCreator; //!< Creates object. Null if objects of this type cannot be created by user.
 	std::function<bool(const ScenarioObject&)> isObjectRemovable; //!< Returns true if object can be removed by user. Never null.
 	std::function<void(const ScenarioObject&)> objectRemover; //!< Removes object from the scenario. Has no effect if object is not removable. Never null.

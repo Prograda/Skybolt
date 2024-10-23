@@ -1,5 +1,8 @@
 {
 	"components": [
-		{"ReplaySource": {}}
+		{"ReplaySource": {}},
+		{"scenarioMetadata": {
+			"scenarioObjectDirectory": "Input"
+		}}
 	]
 }

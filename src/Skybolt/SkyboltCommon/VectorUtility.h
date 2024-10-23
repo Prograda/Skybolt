@@ -62,4 +62,24 @@ static void fastUnstableEraseAtIndex(std::vector<T>& v, size_t index)
 	v.pop_back();
 }
 
+template <typename T>
+static std::vector<T> concatenate(const std::vector<T>& a, const std::vector<T>& b)
+{
+	std::vector<T> r;
+	r.reserve(a.size() + b.size());
+	r.insert(r.end(), a.begin(), a.end());
+	r.insert(r.end(), b.begin(), b.end());
+	return r;
+}
+
+template <typename T>
+static std::vector<T> concatenate(const std::vector<T>& a, const T& b)
+{
+	std::vector<T> r;
+	r.reserve(a.size() + 1);
+	r.insert(r.end(), a.begin(), a.end());
+	r.push_back(b);
+	return r;
+}
+
 } // namespace skybolt

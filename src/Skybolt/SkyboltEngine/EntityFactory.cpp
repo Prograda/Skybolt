@@ -588,10 +588,16 @@ static void loadVisualPlanet(Entity* entity, const EntityFactory::Context& conte
 
 using VisComponentLoader = std::function<void(Entity*, const EntityFactory::Context&, const EntityFactory::VisContext&, VisObjectsComponentPtr&, const SimVisBindingsComponentPtr&, const nlohmann::json&)>;
 
+const ScenarioObjectPath& skybolt::getDefaultEntityScenarioObjectDirectory()
+{
+	static ScenarioObjectPath d = {"Platforms"};
+	return d;
+}
+
 static std::shared_ptr<ScenarioMetadataComponent> createDefaultEntityScenarioMetadataComponent()
 {
 	auto component = std::make_shared<ScenarioMetadataComponent>();
-	component->directory = {"Entity"};
+	component->directory = getDefaultEntityScenarioObjectDirectory();
 	return component;
 }
 
@@ -684,6 +690,24 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 	return entity;
 }
 
+static ScenarioObjectPath readScenarioObjectDirectory(const nlohmann::json& json)
+{
+	ScenarioObjectPath result;
+	ifChildExists(json, "components", [&](const nlohmann::json& components) {
+		for (const auto& component : components)
+		{
+			ifChildExists(component, "scenarioMetadata", [&] (const nlohmann::json& c) {
+				result = parseStringList(c.at("scenarioObjectDirectory").get<std::string>(), "/");
+			});
+		}
+	});
+	if (result.empty())
+	{
+		return getDefaultEntityScenarioObjectDirectory();
+	}
+	return result;
+}
+
 EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::vector<std::filesystem::path>& entityFilenames) :
 	mContext(context)
 {
@@ -706,8 +730,10 @@ EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::v
 	for (const std::filesystem::path& filename : entityFilenames)
 	{
 		std::string name = filename.stem().string();
-		mTemplateJsonMap[name] = readJsonFile(filename.string());
+		nlohmann::json json = readJsonFile(filename.string());
+		mTemplateJsonMap[name] = json;
 		mTemplateNames.push_back(name);
+		mTemplateDirectories[name] = readScenarioObjectDirectory(json);
 	}
 }
 
@@ -848,6 +874,15 @@ EntityPtr EntityFactory::createStars(const EntityFactory::VisContext& visContext
 	object->addComponent(visObjectsComponent);
 
 	return object;
+}
+
+const skybolt::ScenarioObjectPath& EntityFactory::getScenarioObjectDirectoryForTemplate(const std::string& templateName) const
+{
+	if (auto i = mTemplateDirectories.find(templateName); i != mTemplateDirectories.end())
+	{
+		return i->second;
+	}
+	return getDefaultEntityScenarioObjectDirectory();
 }
 
 std::string EntityFactory::createUniqueObjectName(const std::string& baseName) const

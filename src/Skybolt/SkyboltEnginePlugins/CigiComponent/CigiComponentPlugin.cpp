@@ -20,6 +20,7 @@
 #include <SkyboltSim/Spatial/LatLonAlt.h>
 #include <SkyboltSim/Spatial/Orientation.h>
 #include <SkyboltCommon/MapUtility.h>
+#include <SkyboltCommon/VectorUtility.h>
 
 #include <boost/config.hpp>
 #include <boost/dll/alias.hpp>
@@ -182,7 +183,7 @@ private:
 		auto metadata = std::make_shared<ScenarioMetadataComponent>();
 		metadata->serializable = false;
 		metadata->deletable = false;
-		metadata->directory = { "Entity", getName(*mCigiGatewayEntity) };
+		metadata->directory = concatenate(getDefaultEntityScenarioObjectDirectory(), getName(*mCigiGatewayEntity));
 		return metadata;
 	}
 

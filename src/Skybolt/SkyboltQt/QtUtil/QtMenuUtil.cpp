@@ -26,3 +26,18 @@ void insertMenuBefore(QMenuBar& bar, const QString& before, QMenu& menu)
 	QAction* action = findMenuWithText(bar, before);
 	action ? bar.insertMenu(action, &menu) : bar.addMenu(&menu);
 }
+
+QMenu* findSubMenuByName(const QMenu& menu, const QString& subMenuName)
+{
+    for (QAction* action : menu.actions())
+	{
+        if (QMenu* submenu = action->menu())
+		{
+            if (submenu->title() == subMenuName)
+			{
+                return submenu;
+            }
+        }
+    }
+    return nullptr;
+}
