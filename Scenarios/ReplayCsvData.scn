@@ -1,0 +1,113 @@
+{
+    "mainWindowGeometry": "AdnQywADAAD/////////+AAADXAAAAV4AAAC+AAAAGQAAAp3AAAFEwAAAAACAAAADXAAAAAAAAAAFwAADW8AAAV3",
+    "scenario": {
+        "duration": 300.0,
+        "entities": {
+            "Camera1": {
+                "components": {
+                    "CameraComponent": {
+                        "fovY": 0.5
+                    },
+                    "CameraControllerComponent": {
+                        "controllers": {
+                            "Cockpit": {
+                                "pitch": -0.011247443608939648,
+                                "targetName": "Jaguar1",
+                                "yaw": 0.16564417334645987,
+                                "zoom": 0.5
+                            },
+                            "Follow": {
+                                "pitch": -0.05930469317315137,
+                                "targetName": "Jaguar1",
+                                "yaw": -0.009202445546398305,
+                                "zoom": 0.7199999880790713
+                            },
+                            "Free": {
+                                "pitch": 0.0,
+                                "yaw": 0.0,
+                                "zoom": 0.0
+                            },
+                            "Globe": {
+                                "latLon": [
+                                    23.15670642610633,
+                                    -92.62682754537474
+                                ],
+                                "pitch": 1.5707963705062866,
+                                "targetName": "Jaguar1",
+                                "zoom": 0.0
+                            },
+                            "Null": null
+                        },
+                        "selectedController": "Follow"
+                    },
+                    "Node": {
+                        "orientation": {
+                            "angleDeg": 162.02670890699176,
+                            "axis": [
+                                -0.8359776352663082,
+                                -0.4653705855520414,
+                                -0.2908119864061681
+                            ]
+                        },
+                        "position": [
+                            -2303482.760511915,
+                            -3642617.302882786,
+                            4692173.146852403
+                        ]
+                    }
+                },
+                "dynamicsEnabled": true,
+                "template": "Camera"
+            },
+            "PlanetEarth1": {
+                "components": {
+                    "CloudComponent": {
+                        "cloudsVisible": true
+                    },
+                    "Node": {
+                        "orientation": {
+                            "angleDeg": 0.0,
+                            "axis": [
+                                0.0,
+                                0.0,
+                                1.0
+                            ]
+                        },
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "OceanComponent": {
+                        "waveHeight": 1.0
+                    }
+                },
+                "dynamicsEnabled": true,
+                "template": "PlanetEarth"
+            },
+            "ReplaySource1": {
+                "components": {
+                    "PyComponent": {
+                        "replay_filename": "Scripts/Data/FlightReplay.csv"
+                    }
+                },
+                "dynamicsEnabled": true,
+                "template": "ReplaySource"
+            }
+        },
+        "julianDate": 2457983.191527778,
+        "timelineMode": "free"
+    },
+    "viewports": {
+        "DefaultViewport": {
+            "ambientLight": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "camera": "Camera1"
+        }
+    },
+    "windowLayout": "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"
+}

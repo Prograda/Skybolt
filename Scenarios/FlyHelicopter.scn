@@ -1,0 +1,137 @@
+{
+    "mainWindowGeometry": "AdnQywADAAD/////////+AAADXAAAAV4AAAC+AAAAGQAAAp3AAAFEwAAAAACAAAADXAAAAAAAAAAFwAADW8AAAV3",
+    "scenario": {
+        "duration": 300.0,
+        "entities": {
+            "Camera1": {
+                "components": {
+                    "CameraComponent": {
+                        "fovY": 0.7999999523162842
+                    },
+                    "CameraControllerComponent": {
+                        "controllers": {
+                            "Cockpit": {
+                                "pitch": -0.0858895754367113,
+                                "targetName": "UH601",
+                                "yaw": -0.0184049036875367,
+                                "zoom": 0.5
+                            },
+                            "Follow": {
+                                "pitch": -0.05930469317315137,
+                                "targetName": "UH601",
+                                "yaw": -0.009202445546398305,
+                                "zoom": 0.7199999880790713
+                            },
+                            "Free": {
+                                "pitch": 0.0,
+                                "yaw": 0.0,
+                                "zoom": 0.0
+                            },
+                            "Globe": {
+                                "latLon": [
+                                    23.15670642610633,
+                                    -92.62682754537474
+                                ],
+                                "pitch": 1.5707963705062866,
+                                "targetName": "UH601",
+                                "zoom": 0.0
+                            },
+                            "Null": null
+                        },
+                        "selectedController": "Cockpit"
+                    },
+                    "Node": {
+                        "orientation": {
+                            "angleDeg": 142.5933768223478,
+                            "axis": [
+                                -0.9945715798293548,
+                                0.02438469666076274,
+                                -0.1011571014042212
+                            ]
+                        },
+                        "position": [
+                            -2303048.9451161237,
+                            -3641662.847125181,
+                            4695676.812268733
+                        ]
+                    }
+                },
+                "dynamicsEnabled": true,
+                "template": "Camera"
+            },
+            "PlanetEarth1": {
+                "components": {
+                    "CloudComponent": {
+                        "cloudsVisible": true
+                    },
+                    "Node": {
+                        "orientation": {
+                            "angleDeg": 0.0,
+                            "axis": [
+                                0.0,
+                                0.0,
+                                1.0
+                            ]
+                        },
+                        "position": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "OceanComponent": {
+                        "waveHeight": 1.0
+                    }
+                },
+                "dynamicsEnabled": true,
+                "template": "PlanetEarth"
+            },
+            "UH601": {
+                "components": {
+                    "Motion": {
+                        "angularVelocity": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "linearVelocity": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "Node": {
+                        "orientation": {
+                            "angleDeg": 142.59914504856067,
+                            "axis": [
+                                -0.9888950850147048,
+                                0.0479980216119747,
+                                -0.14065098917212332
+                            ]
+                        },
+                        "position": [
+                            -2303052.5,
+                            -3641661.75,
+                            4695676.5
+                        ]
+                    }
+                },
+                "dynamicsEnabled": true,
+                "template": "UH60"
+            }
+        },
+        "julianDate": 2457983.191527778,
+        "timelineMode": "live"
+    },
+    "viewports": {
+        "DefaultViewport": {
+            "ambientLight": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "camera": "Camera1"
+        }
+    },
+    "windowLayout": "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"
+}
