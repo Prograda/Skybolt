@@ -7,6 +7,7 @@
 #include <SkyboltQt/MainWindow.h>
 #include <SkyboltQt/ContextAction/CreateContextActions.h>
 #include <SkyboltQt/Engine/EngineSettingsSerialization.h>
+#include <SkyboltQt/Engine/FindPython.h>
 #include <SkyboltQt/Engine/SimUpdater.h>
 #include <SkyboltQt/Input/ViewportInputSystem.h>
 #include <SkyboltQt/Input/InputPlatformQt.h>
@@ -59,6 +60,7 @@
 #include <QDialog>
 #include <QMenu>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QSplashScreen>
 #include <QVBoxLayout>
@@ -119,6 +121,15 @@ public:
 			config.engineSettings = engineSettings;
 			mEngineRoot = std::make_unique<EngineRoot>(config);
 		}
+
+#ifdef PYTHON_VERSION_MAJOR
+		// Warn user if python is not available
+		if (!isPythonOnPath(PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR))
+		{
+			QMessageBox::warning(nullptr, "Warning", QString("Python %1.%2 not found in PATH environment variable. Python functionality will be disabled.")
+				.arg(PYTHON_VERSION_MAJOR).arg(PYTHON_VERSION_MINOR));
+		}
+#endif
 
 		// Create splash screen
 		mSplashScreen = createSplashScreen(*mEngineRoot);
