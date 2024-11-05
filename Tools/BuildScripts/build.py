@@ -56,6 +56,7 @@ def package(skybolt_source_dir: Path, skybolt_build_dir: Path, resources_dir: Pa
     copy_tree(resources_dir / "SkyboltAssets/Assets", package_dir / "Assets")
     copy_tree(skybolt_source_dir / "Scenarios", package_dir / "Scenarios")
     copy_file(skybolt_source_dir / "License.txt", package_dir)
+    copy_file(skybolt_source_dir / "README.md", package_dir)
 
 
 def package_docs(skybolt_source_dir: Path, package_dir: Path):
