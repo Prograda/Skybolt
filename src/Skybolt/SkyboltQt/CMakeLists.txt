@@ -35,15 +35,21 @@ target_link_libraries (${TARGET_NAME} ${LIBS})
 skybolt_install(${TARGET_NAME})
 
 # Install Qt plugins, which are not tracked by CMake runtime dependency system
-install(
-	DIRECTORY ${qt_PACKAGE_FOLDER_RELEASE}/plugins/platforms
-    CONFIGURATIONS Release RelWithDebInfo MinSizeRel
-	DESTINATION bin/qtPlugins
-	FILES_MATCHING PATTERN "*"
-)
-install(
-	DIRECTORY ${qt_PACKAGE_FOLDER_DEBUG}/plugins/platforms
-    CONFIGURATIONS Debug
-	DESTINATION bin/qtPlugins
-	FILES_MATCHING PATTERN "*"
-)
+function(install_qt_plugins plugin_folder_name)
+	install(
+		DIRECTORY ${qt_PACKAGE_FOLDER_RELEASE}/plugins/${plugin_folder_name}
+		CONFIGURATIONS Release RelWithDebInfo MinSizeRel
+		DESTINATION bin/qtPlugins
+		FILES_MATCHING PATTERN "*"
+	)
+	install(
+		DIRECTORY ${qt_PACKAGE_FOLDER_DEBUG}/plugins/${plugin_folder_name}
+		CONFIGURATIONS Debug
+		DESTINATION bin/qtPlugins
+		FILES_MATCHING PATTERN "*"
+	)
+endfunction()
+
+install_qt_plugins(generic)
+install_qt_plugins(imageformats)
+install_qt_plugins(platforms)
