@@ -95,6 +95,9 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/conanfile.py) # File might not exist if during co
 endif()
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/Conan	DESTINATION .)
 
+# Install CMake scripts
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/CMake	DESTINATION .)
+
 # Install headers
 install(
 	DIRECTORY ${CMAKE_SOURCE_DIR}/src/Skybolt

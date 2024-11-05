@@ -85,7 +85,6 @@ class SkyboltConan(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
-        tc.variables["MYVAR"] = "MYVAR_VALUE"
         tc.variables["Boost_STATIC_LIBS"] = str(not self.dependencies["boost"].options.shared)
         tc.variables["OSG_STATIC_LIBS"] = str(not self.dependencies["openscenegraph-mr"].options.shared)
         tc.variables["SKYBOLT_PLUGINS_STATIC_BUILD"] = str(not self.options.shared_plugins)
@@ -130,6 +129,7 @@ class SkyboltConan(ConanFile):
         self.cpp_info.includedirs = ["include"]
         self.cpp_info.names["cmake_find_package"] = "Skybolt"
         self.cpp_info.libs = ["AircraftHud", "SkyboltEngine", "SkyboltVis", "SkyboltSim", "SkyboltReflection", "SkyboltCommon"]
+        self.cpp_info.builddirs = ["CMake"]
 		
         if self.options.enable_fft_ocean and not self.options.shared_plugins:
             self.cpp_info.libs.append("FftOcean")
