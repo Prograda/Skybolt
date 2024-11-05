@@ -59,19 +59,19 @@ TimeRateDialog::TimeRateDialog(double initialRate, QWidget* parent) :
 	toolBar->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
 	setMaximumWidth(toolBar->width());
 
-	connect(realtimeButton, &QPushButton::pressed, this, [this, customRateLineEdit] {
+	connect(realtimeButton, &QPushButton::clicked, this, [this, customRateLineEdit] {
 		mRate = 1;
 		customRateLineEdit->setText(QString::number(mRate));
 		emit rateChanged(mRate);
 	});
 
-	connect(slowDownButton, &QPushButton::pressed, this, [this, customRateLineEdit] {
+	connect(slowDownButton, &QPushButton::clicked, this, [this, customRateLineEdit] {
 		mRate /= 2;
 		customRateLineEdit->setText(QString::number(mRate));
 		emit rateChanged(mRate);
 	});
 
-	connect(speedUpButton, &QPushButton::pressed, this, [this, customRateLineEdit] {
+	connect(speedUpButton, &QPushButton::clicked, this, [this, customRateLineEdit] {
 		mRate *= 2;
 		customRateLineEdit->setText(QString::number(mRate));
 		emit rateChanged(mRate);

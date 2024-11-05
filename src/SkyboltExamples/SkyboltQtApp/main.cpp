@@ -28,6 +28,7 @@
 #include <SkyboltQt/Viewport/VisSelectionIcons.h>
 #include <SkyboltQt/Widgets/EngineSystemsWidget.h>
 #include <SkyboltQt/Widgets/EntityControllerWidget.h>
+#include <SkyboltQt/Widgets/ErrorLogModel.h>
 #include <SkyboltQt/Widgets/ScenarioPropertyEditorWidget.h>
 #include <SkyboltQt/Widgets/ScenarioObjectsEditorWidget.h>
 #include <SkyboltQt/Widgets/StatusBar.h>
@@ -113,6 +114,10 @@ public:
 	{
 		setStyle(new DarkStyle);
 
+		// Create model for logging application warnings and errors
+		auto errorLogModel = new ErrorLogModel(this);
+		connectToBoostLogger(errorLogModel);
+
 		// Create engine
 		{
 			QSettings settings(QApplication::applicationName());
@@ -126,8 +131,8 @@ public:
 		// Warn user if python is not available
 		if (!isPythonOnPath(PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR))
 		{
-			QMessageBox::warning(nullptr, "Warning", QString("Python %1.%2 not found in PATH environment variable. Python functionality will be disabled.")
-				.arg(PYTHON_VERSION_MAJOR).arg(PYTHON_VERSION_MINOR));
+			BOOST_LOG_TRIVIAL(warning) << QString("Python %1.%2 not found in PATH environment variable. Python functionality will be disabled.")
+				.arg(PYTHON_VERSION_MAJOR).arg(PYTHON_VERSION_MINOR).toStdString();
 		}
 #endif
 
@@ -188,7 +193,7 @@ public:
 			c.engineRoot = mEngineRoot;
 			return c;
 		}()));
-		addErrorLogStatusBar(*mMainWindow->statusBar());
+		addErrorLogStatusBar(*mMainWindow->statusBar(), errorLogModel);
 		enableDarkTitleBar(mMainWindow->winId());
 
 		auto selectionModel = new ScenarioSelectionModel(mMainWindow.get());
@@ -450,7 +455,7 @@ protected:
 
 		auto closeButton = new QPushButton("Close", &dialog);
 		layout.addWidget(closeButton);
-		QObject::connect(closeButton, &QPushButton::pressed, &dialog, &QDialog::accept);
+		QObject::connect(closeButton, &QPushButton::clicked, &dialog, &QDialog::accept);
 
 		dialog.exec();
 	}

@@ -173,7 +173,7 @@ QToolBar* createScenarioObjectCreationToolBar(ScenarioSelectionModel* selectionM
 		deleteButton->setEnabled(enabled);
 	});
 
-	QObject::connect(deleteButton, &QToolButton::pressed, parent, [selectionModel, scenarioObjectTypes]()
+	QObject::connect(deleteButton, &QToolButton::clicked, parent, [selectionModel, scenarioObjectTypes]()
 	{
 		if (const auto& object = getFirstSelectedScenarioObject(selectionModel->getSelectedItems()); object)
 		{

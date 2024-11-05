@@ -40,7 +40,7 @@ QDialog* createDialogNonModal(QWidget* content, const QString& title, QWidget* p
 	QPushButton* button = new QPushButton("Close");
 	button->setAutoDefault(false);
 	dialog->layout()->addWidget(button);
-	QObject::connect(button, &QPushButton::pressed, dialog, &QDialog::accept);
+	QObject::connect(button, &QPushButton::clicked, dialog, &QDialog::accept);
 	
 	return dialog;
 }
