@@ -34,23 +34,14 @@ class SkyboltConan(ConanFile):
     exports_sources = "*"
     no_copy_source = True
 
-    requires = [
-        "boost/1.75.0",
-        "catch2/2.13.8",
-        "cpp-httplib/0.10.1",
-        "earcut/2.2.3",
-        "glm/0.9.9.8",
-        "nlohmann_json/3.10.5",
-	]
-
-    def include_package(self, name, version, subfolder=None):
+    def include_package(self, name, version, subfolder=None, transitive_headers=False):
         currentDir = os.path.dirname(os.path.abspath(__file__))
         recipes_path = os.path.join(currentDir, "Conan/Recipes", name)
         if (subfolder):
             recipes_path = os.path.join(recipes_path, subfolder)
             
         self.run(f"conan export --version {version} .", cwd=recipes_path)
-        self.requires((f"{name}/{version}"))
+        self.requires(f"{name}/{version}", transitive_headers=transitive_headers)
 
     def configure(self):
         self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
@@ -59,9 +50,16 @@ class SkyboltConan(ConanFile):
             del self.options.fPIC
 
     def requirements(self):
+        self.requires("boost/1.75.0", transitive_headers=True)
+        self.requires("catch2/2.13.8")
+        self.requires("cpp-httplib/0.10.1")
+        self.requires("earcut/2.2.3")
+        self.requires("glm/0.9.9.8", transitive_headers=True)
+        self.requires("nlohmann_json/3.10.5", transitive_headers=True)
+		
         self.include_package("cxxtimer", "1.0.0")
-        self.include_package("px_sched", "1.0.0")
-        self.include_package("openscenegraph-mr", "3.7.0", "all")
+        self.include_package("px_sched", "1.0.0", transitive_headers=True)
+        self.include_package("openscenegraph-mr", "3.7.0", subfolder="all", transitive_headers=True)
 
         if self.options.enable_bullet:
             self.requires("bullet3/3.22a")
@@ -71,7 +69,7 @@ class SkyboltConan(ConanFile):
 
         if self.options.enable_fft_ocean:
             self.include_package("mufft", "1.0.0")
-            self.include_package("xsimd", "7.4.10")
+            self.include_package("xsimd", "7.4.10", transitive_headers=True)
 
         if self.options.enable_map_features_converter:
             self.requires("readosm/1.1.0a")
@@ -80,8 +78,8 @@ class SkyboltConan(ConanFile):
             self.requires("pybind11/2.13.6")
             
         if self.options.enable_qt:
-            self.requires("qt/5.15.14")
-            self.include_package("toolwindowmanager", "1.0.0")
+            self.requires("qt/5.15.14", transitive_headers=True)
+            self.include_package("toolwindowmanager", "1.0.0", transitive_headers=True)
 
     def generate(self):
         tc = CMakeToolchain(self)
@@ -127,7 +125,6 @@ class SkyboltConan(ConanFile):
 		
     def package_info(self):
         self.cpp_info.includedirs = ["include"]
-        self.cpp_info.names["cmake_find_package"] = "Skybolt"
         self.cpp_info.libs = ["AircraftHud", "SkyboltEngine", "SkyboltVis", "SkyboltSim", "SkyboltReflection", "SkyboltCommon"]
         self.cpp_info.builddirs = ["CMake"]
 		

@@ -25,10 +25,8 @@ endif()
 
 # Allow user to overwrite install path.
 # Solution from https://stackoverflow.com/questions/39481958/setting-cmake-install-prefix-from-cmakelists-txt-file
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-	if(DEFINED ENV{CMAKE_INSTALL_PREFIX})
-		set(CMAKE_INSTALL_PREFIX $ENV{CMAKE_INSTALL_PREFIX}/Skybolt CACHE PATH "Overriding CMAKE_INSTALL_PREFIX from environment variable" FORCE)
-	endif()
+if(DEFINED ENV{CMAKE_INSTALL_PREFIX})
+	set(CMAKE_INSTALL_PREFIX $ENV{CMAKE_INSTALL_PREFIX}/Skybolt CACHE PATH "Overriding CMAKE_INSTALL_PREFIX from environment variable" FORCE)
 endif()
 
 #-------------------------------------------------------------

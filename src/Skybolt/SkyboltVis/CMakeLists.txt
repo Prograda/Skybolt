@@ -5,7 +5,6 @@ add_source_group_tree(. SOURCE_FILES)
 include_directories("../")
 
 find_package(Boost COMPONENTS log REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
 
 if (OSG_STATIC_LIBS)
 	# Names of plugins to statically link to
@@ -42,7 +41,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(LIBRARIES
 	SkyboltCommon
 	SkyboltSim
-	${Boost_LIBRARIES}
+	Boost::boost
+	Boost::log
 	${OSG_LIBRARIES}
 	${OPENTHREADS_LIBRARIES}
 	${muFFT_LIBRARIES}
@@ -62,8 +62,8 @@ if (OSG_STATIC_LIBS)
 	list(APPEND LIBRARIES
 		${CMAKE_DL_LIBS}
 		${CURL_LIBRARIES}
-		${Freetype_LIBRARIES}
-		${JPEG_LIBRARIES}
+		Freetype::Freetype
+		JPEG::JPEG
 		${OPENGL_LIBRARIES}
 	)
 endif()

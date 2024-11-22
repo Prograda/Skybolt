@@ -46,9 +46,25 @@ bool readOptionalToVar(const nlohmann::json& j, const std::string& key, T& var)
 }
 
 template <typename T>
+static std::vector<T> readArray(const nlohmann::json& j, const std::string& key)
+{
+	std::vector<T> result;
+	auto item = j.find(key);
+	if (item != j.end())
+	{
+		for (const auto& i : item.value())
+		{
+			result.push_back(i.get<T>());
+		}
+	}
+
+	return result;
+}
+
+template <typename T>
 static std::map<std::string, T> readNameMap(const nlohmann::json& j, const std::string& key)
 {
-	std::map<std::string, std::string> result;
+	std::map<std::string, T> result;
 	auto item = j.find(key);
 	if (item != j.end())
 	{

@@ -38,7 +38,19 @@ skybolt_install(${TARGET_NAME})
 function(install_qt_plugins plugin_folder_name)
 	install(
 		DIRECTORY ${qt_PACKAGE_FOLDER_RELEASE}/plugins/${plugin_folder_name}
-		CONFIGURATIONS Release RelWithDebInfo MinSizeRel
+		CONFIGURATIONS Release
+		DESTINATION bin/qtPlugins
+		FILES_MATCHING PATTERN "*"
+	)
+	install(
+		DIRECTORY ${qt_PACKAGE_FOLDER_RELWITHDEBINFO}/plugins/${plugin_folder_name}
+		CONFIGURATIONS RelWithDebInfo
+		DESTINATION bin/qtPlugins
+		FILES_MATCHING PATTERN "*"
+	)
+	install(
+		DIRECTORY ${qt_PACKAGE_FOLDER_MINSIZEREL}/plugins/${plugin_folder_name}
+		CONFIGURATIONS MinSizeRel
 		DESTINATION bin/qtPlugins
 		FILES_MATCHING PATTERN "*"
 	)
