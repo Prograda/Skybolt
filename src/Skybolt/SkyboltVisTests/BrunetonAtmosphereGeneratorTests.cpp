@@ -5,8 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <catch2/catch.hpp>
-#include "Helpers/CaptureTexture.h"
 
+#include <SkyboltVis/CaptureTexture.h>
 #include <SkyboltVis/Renderable/Atmosphere/Bruneton/BruentonAtmosphereGenerator.h>
 #include <SkyboltVis/Window/OffscreenViewer.h>
 #include <SkyboltCommon/Stringify.h>

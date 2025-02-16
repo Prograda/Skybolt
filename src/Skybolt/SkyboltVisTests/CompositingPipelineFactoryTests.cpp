@@ -6,9 +6,9 @@
 
 
 #include <catch2/catch.hpp>
-#include "Helpers/CaptureTexture.h"
 #include "Helpers/CheckingHelpers.h"
 
+#include <SkyboltVis/CaptureTexture.h>
 #include <SkyboltVis/TextureGenerator/CompositingPipelineFactory.h>
 #include <SkyboltVis/Window/OffscreenViewer.h>
 

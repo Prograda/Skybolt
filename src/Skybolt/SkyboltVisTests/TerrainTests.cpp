@@ -6,10 +6,10 @@
 
 
 #include <catch2/catch.hpp>
-#include "Helpers/CaptureTexture.h"
 #include "Helpers/CheckingHelpers.h"
 
 #include <SkyboltVis/Camera.h>
+#include <SkyboltVis/CaptureTexture.h>
 #include <SkyboltVis/OsgTextureHelpers.h>
 #include <SkyboltVis/RenderContext.h>
 #include <SkyboltVis/Scene.h>

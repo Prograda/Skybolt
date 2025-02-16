@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <functional>
-#include <glm/glm.hpp>
 
 namespace skybolt {
 namespace vis {
@@ -67,7 +66,7 @@ static void fillTexture3d(osg::Image& image, ColorAtPositionGetter3d getter, int
 	}
 }
 
-float createWorleyFbm(const glm::vec3& pos, const FbmConfig& config)
+float sampleWorleyFbm(const glm::vec3& pos, const FbmConfig& config)
 {
 	float worleyNoise = 0;
 	float frequency = config.frequency;
@@ -89,9 +88,9 @@ float createWorleyFbm(const glm::vec3& pos, const FbmConfig& config)
 	return glm::clamp(worleyNoise, 0.0f, 1.0f);
 }
 
-float createPerlinWorley(const glm::vec3& pos, const PerlinWorleyConfig& config)
+float samplePerlinWorley(const glm::vec3& pos, const PerlinWorleyConfig& config)
 {
-	float worleyNoise = createWorleyFbm(pos, config.worley);
+	float worleyNoise = sampleWorleyFbm(pos, config.worley);
 
 	float perlinNoise = Tileable3dNoise::PerlinNoise(pos, config.perlinFrequency, config.perlinOctaves);
 	float perlWorlNoise = remap(perlinNoise, 0.5*worleyNoise, 1.0f, 0.0f, 1.0f);
@@ -106,7 +105,7 @@ osg::ref_ptr<osg::Image> createPerlinWorleyTexture2d(const PerlinWorleyConfig& c
 	image->allocateImage(config.width, config.width, config.width, GL_LUMINANCE, GL_UNSIGNED_BYTE);
 
 	fillTexture2d(*image, [=](const glm::vec2& pos) {
-		float c = 1.0 - createWorleyFbm(glm::vec3(pos.x, pos.y, 0.f), config.worley);
+		float c = 1.0 - sampleWorleyFbm(glm::vec3(pos.x, pos.y, 0.f), config.worley);
 		//float c = createPerlinWorley(pos, config); // Use to modulate output by perlin
 		return glm::vec4(c, c, c, 1.0);
 	});
@@ -120,7 +119,7 @@ osg::ref_ptr<osg::Image> createPerlinWorleyTexture3d(const PerlinWorleyConfig& c
 	image->allocateImage(config.width, config.width, config.width, GL_LUMINANCE, GL_UNSIGNED_BYTE);
 
 	fillTexture3d(*image, [=](const glm::vec3& pos) {
-		float c = 1.0 - createWorleyFbm(pos, config.worley);
+		float c = 1.0 - sampleWorleyFbm(pos, config.worley);
 		//float c = createPerlinWorley(pos, config); // Use to modulate output by perlin
 		return glm::vec4(c, c, c, 1.0);
 	});

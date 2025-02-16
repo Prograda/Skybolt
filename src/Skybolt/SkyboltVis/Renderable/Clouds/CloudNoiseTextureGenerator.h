@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <glm/glm.hpp>
 #include <osg/Image>
 
 namespace skybolt {
@@ -30,6 +31,9 @@ struct PerlinWorleyConfig
 	float perlinFrequency = 8.0f;
 	FbmConfig worley;
 };
+
+float sampleWorleyFbm(const glm::vec3& pos, const FbmConfig& config);
+float samplePerlinWorley(const glm::vec3& pos, const PerlinWorleyConfig& config);
 
 osg::ref_ptr<osg::Image> createPerlinWorleyTexture2d(const PerlinWorleyConfig& config);
 osg::ref_ptr<osg::Image> createPerlinWorleyTexture3d(const PerlinWorleyConfig& config);

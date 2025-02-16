@@ -8,7 +8,7 @@
 #include <catch2/catch.hpp>
 
 #define GLM_FORCE_SWIZZLE
-#include "Helpers/CaptureTexture.h"
+#include <SkyboltVis/CaptureTexture.h>
 #include <SkyboltVis/Shader/OsgShaderHelpers.h>
 #include <SkyboltVis/TextureGenerator/CompositingPipelineFactory.h>
 #include <SkyboltVis/Window/OffscreenViewer.h>
