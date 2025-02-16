@@ -19,7 +19,7 @@ namespace vis {
 
 osg::ref_ptr<RenderOperation> createRenderOperationVisualization(const osg::ref_ptr<RenderOperation>& rop, const ShaderPrograms& registry)
 {
-	return new RenderOperationVisualizer(rop, registry.getRequiredProgram("hudGeometry"));
+	return new RenderOperationVisualizer(rop, registry.getRequiredProgram("hudGeometry"), registry.getRequiredProgram("hudTexture3d"));
 }
 
 class RenderOperationFunction : public RenderOperation

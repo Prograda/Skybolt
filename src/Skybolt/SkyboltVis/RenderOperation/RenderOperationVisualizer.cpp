@@ -19,13 +19,15 @@
 namespace skybolt {
 namespace vis {
 
-RenderOperationVisualizer::RenderOperationVisualizer(const osg::ref_ptr<RenderOperation>& renderOperation, const osg::ref_ptr<osg::Program>& program) :
+RenderOperationVisualizer::RenderOperationVisualizer(const osg::ref_ptr<RenderOperation>& renderOperation, const osg::ref_ptr<osg::Program>& program2dTexture, const osg::ref_ptr<osg::Program>& program3dTexture) :
 	mRenderOperation(renderOperation),
-	mProgram(program),
+	mProgram2dTexture(program2dTexture),
+	mProgram3dTexture(program3dTexture),
 	mCamera(new osg::Camera)
 {
 	assert(mRenderOperation);
-	assert(mProgram);
+	assert(mProgram2dTexture);
+	assert(mProgram3dTexture);
 
 	mCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 	mCamera->setClearMask(0);
@@ -79,7 +81,10 @@ void RenderOperationVisualizer::updatePreRender(const RenderContext& renderConte
 				osg::Vec2f size(width - gap, width - gap);
 				osg::Vec2f pos(x * width + gap * 0.5, 1.0 - (size.y() + y * width + gap * 0.5));
 				BoundingBox2f box(pos, pos + size);
-				auto quad = std::make_shared<ScreenQuad>(createTexturedQuadStateSet(mProgram, texture), box);
+
+				auto program = dynamic_cast<osg::Texture2D*>(texture.get()) ? mProgram2dTexture : mProgram3dTexture;
+
+				auto quad = std::make_shared<ScreenQuad>(createTexturedQuadStateSet(program, texture), box);
 				mCamera->addChild(quad->_getNode());
 				mScreenQuads.push_back(quad);
 

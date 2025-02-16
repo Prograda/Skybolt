@@ -20,12 +20,13 @@ namespace vis {
 class RenderOperationVisualizer : public RenderOperation
 {
 public:
-	RenderOperationVisualizer(const osg::ref_ptr<RenderOperation>& renderOperation, const osg::ref_ptr<osg::Program>& program);
+	RenderOperationVisualizer(const osg::ref_ptr<RenderOperation>& renderOperation, const osg::ref_ptr<osg::Program>& program2dTexture, const osg::ref_ptr<osg::Program>& program3dTexture);
 	void updatePreRender(const RenderContext& renderContext) override;
 
 private:
 	osg::ref_ptr<RenderOperation> mRenderOperation;
-	osg::ref_ptr<osg::Program> mProgram;
+	osg::ref_ptr<osg::Program> mProgram2dTexture;
+	osg::ref_ptr<osg::Program> mProgram3dTexture;
 	osg::ref_ptr<osg::Camera> mCamera;
 
 	std::vector<osg::ref_ptr<osg::Texture>> mPrevTextures;
