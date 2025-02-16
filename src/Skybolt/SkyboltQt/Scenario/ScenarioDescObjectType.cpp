@@ -17,6 +17,9 @@ ScenarioObjectTypePtr createScenarioDescObjectType(skybolt::Scenario* scenario)
 
 	auto t = std::make_shared<ScenarioObjectType>();
 	t->name = "ScenarioDesc";
+	t->getScenarioObjectDirectoryForTemplate = [] (const std::string& templateName) {
+		return ScenarioObjectPath{};
+	};
 	t->isObjectRemovable = [] (const ScenarioObject& object) {
 		return false;
 	};

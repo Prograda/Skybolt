@@ -6,8 +6,10 @@
 
 #pragma once
 
-#include "SkyboltCommon/Registry.h"
 #include "SkyboltEngine/SkyboltEngineFwd.h"
+
+#include <SkyboltCommon/Registry.h>
+#include <SkyboltCommon/File/FileLocator.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
 #include <SkyboltVis/SkyboltVisFwd.h>
 #include <nlohmann/json.hpp>
@@ -23,6 +25,7 @@ struct ComponentFactoryContext
 	JulianDateProvider julianDateProvider;
 	EngineStats* stats;
 	vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
+	file::FileLocator fileLocator;
 };
 
 class ComponentFactory

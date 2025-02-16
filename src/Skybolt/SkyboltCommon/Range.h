@@ -28,6 +28,16 @@ struct RangeInclusive
 		return last < first;
 	}
 
+	bool contains(const T& value) const
+	{
+		return value >= minimum && value <= maximum;
+	}
+
+	T size() const
+	{
+		return maximum - minimum;
+	}
+
 	bool operator ==(const RangeInclusive<T>& other) const
 	{
 		return minimum == other.minimum && maximum == other.maximum;
@@ -60,6 +70,16 @@ struct RangeClosedOpen
 	bool isEmpty() const
 	{
 		return last <= first;
+	}
+
+	bool contains(const T& value) const
+	{
+		return value >= first && value < last;
+	}
+
+	T size() const
+	{
+		return last - first;
 	}
 
 	bool operator ==(const RangeClosedOpen<T>& other) const

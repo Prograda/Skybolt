@@ -55,7 +55,7 @@ class ReplaySource():
         elif name == "initial_time":
             self.set_sim_time(root.scenario.time)
 
-    # Called from C++.
+    # Called from C++
     def set_sim_time(self, time: float):
         root = sb.getGlobalEngineRoot()
 
