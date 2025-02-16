@@ -131,6 +131,9 @@ BruentonAtmosphere::BruentonAtmosphere(const BruentonAtmosphereConfig& config) :
 	generatorConfig.miePhaseFunctionG = config.miePhaseFunctionG;
 
 	generatorConfig.useHalfPrecision = true;
+	// Choose a max sun zenith angle. From Bruneton's implementation:
+	//   For the Earth case, 102 degrees is a good choice for most cases.
+	//   120 degrees is necessary for very high exposure values which may be possible in full precision.
 	generatorConfig.maxSunZenithAngle = (generatorConfig.useHalfPrecision ? 102.0 : 120.0) * math::degToRadD();
 
 	mGenerator = osg::ref_ptr<BruentonAtmosphereGenerator>(new BruentonAtmosphereGenerator(generatorConfig));

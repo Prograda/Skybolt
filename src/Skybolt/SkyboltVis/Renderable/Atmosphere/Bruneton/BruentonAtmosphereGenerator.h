@@ -40,7 +40,8 @@ struct BruentonAtmosphereGeneratorConfig
 	//! aerosols.
 	double miePhaseFunctionG;
 
-	bool useHalfPrecision;
+	bool useHalfPrecision = true;
+	bool useCombinedTextures = true;
 	double maxSunZenithAngle;
 	double lengthUnitInMeters = 1.0;
 };

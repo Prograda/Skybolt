@@ -13,9 +13,6 @@ using namespace atmosphere;
 namespace skybolt {
 namespace vis {
 
-constexpr double kPi = 3.1415926;
-
-bool use_combined_textures = true;
 bool use_precomputed_luminance = false;
 
 BruentonAtmosphereGenerator::BruentonAtmosphereGenerator(const BruentonAtmosphereGeneratorConfig& config) :
@@ -34,7 +31,7 @@ BruentonAtmosphereGenerator::BruentonAtmosphereGenerator(const BruentonAtmospher
 		{ config.mieLayer }, config.mieScattering, config.mieExtinction, config.miePhaseFunctionG,
 		config.ozoneDensity, config.absorptionExtinction, ground_albedo, config.maxSunZenithAngle,
 		config.lengthUnitInMeters, use_precomputed_luminance ? 15 : 3,
-		use_combined_textures, config.useHalfPrecision);
+		config.useCombinedTextures, config.useHalfPrecision);
 
 	atmosphere::Model::Pipeline pipeline = model.CreatePipeline();
 	mTransmittanceTexture = pipeline.transmittanceTexture;

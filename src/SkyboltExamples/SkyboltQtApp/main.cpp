@@ -488,8 +488,7 @@ int main(int argc, char *argv[])
 
 		addConsoleLogSink();
 
-		std::string pluginsDir = (executableDir / "plugins").string();
-		std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(getAllPluginFilepathsInDirectory(pluginsDir));
+		std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(getAllPluginFilepathsInDirectories(EngineRootFactory::getDefaultPluginDirs()));
 
 		try
 		{
