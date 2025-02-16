@@ -70,6 +70,9 @@ public:
 
 	void setWindSpeed(float windSpeed);
 
+	glm::ivec2 getTextureSizePixels() const { return glm::ivec2(mTextureSizePixels, mTextureSizePixels); }
+	glm::dvec2 getTextureWorldSize() const { return glm::dvec2(mTextureWorldSize, mTextureWorldSize); }
+
 	typedef std::complex<float> complex_type;
 
 private:
