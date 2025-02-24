@@ -51,7 +51,7 @@ public:
 		mValues[0] = addDoubleEditor(*layout, "X");
 		mValues[1] = addDoubleEditor(*layout, "Y");
 		mValues[2] = addDoubleEditor(*layout, "Z");
-		mValues[2] = addDoubleEditor(*layout, "W");
+		mValues[3] = addDoubleEditor(*layout, "W");
 	}
 
 	void setOrientation(const sim::OrientationPtr& orientation, const sim::LatLon& latLon) override
