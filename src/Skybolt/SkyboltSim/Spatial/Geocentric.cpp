@@ -44,7 +44,7 @@ sim::Quaternion latLonToGeocentricLtpOrientation(const sim::LatLon& latLon)
 sim::Matrix3 geocentricToLtpOrientation(const sim::Vector3& pos)
 {
 	sim::Vector3 down = -glm::normalize(pos);
-	sim::Vector3 north(0, 0, -1);
+	sim::Vector3 north(0, 0, 1);
 
 	sim::Vector3 east = glm::normalize(glm::cross(down, north));
 	north = glm::cross(east, down);

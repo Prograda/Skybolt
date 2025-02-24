@@ -13,7 +13,7 @@ namespace skybolt {
 template <typename T>
 bool almostEqual(T expected, T value, double maxError)
 {
-	return (std::abs(expected - value) < maxError);
+	return (std::abs(expected - value) <= maxError);
 }
 
 template <typename T>

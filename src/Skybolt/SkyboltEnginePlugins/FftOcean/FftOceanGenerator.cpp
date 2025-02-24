@@ -32,7 +32,8 @@ void FftOceanGenerator::MufftArrayDeleter::operator() (aligned_complex_type* p) 
 	mufft_free(p);
 }
 
-// http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.161.9102&rep=rep1&type=pdf
+//! This implementation is based on "Simulating Ocean Water" by Jerry Tessendorf, 2004.
+//! See https://people.computing.clemson.edu/~jtessen/reports/papers_files/coursenotes2004.pdf
 FftOceanGenerator::FftOceanGenerator(const FftOceanGeneratorConfig& config) :
 	mRandom(boost::mt19937(config.seed), boost::random::normal_distribution<float>()),
 	mNormalizedFrequencyRange(config.normalizedFrequencyRange),
@@ -158,6 +159,9 @@ float omega(float k)
 
 float omnispectrum = false;
 
+//! Bruneton's wave spectrum is from "A unified directional spectrum for long and short wind-driven waves"
+//! by T. Elfouhaily, B. Chapron, K. Katsaros, D. Vandemark.
+//! Journal of Geophysical Research vol 102, p781-796, 1997
 float FftOceanGenerator::calcBruenton(int n, int m) const
 {
 	glm::vec2 normalizedCoord(2 * n - mTextureSizePixels, 2 * m - mTextureSizePixels);
