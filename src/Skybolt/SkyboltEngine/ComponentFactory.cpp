@@ -258,7 +258,7 @@ static sim::ComponentPtr loadCameraController(Entity* entity, const ComponentFac
 
 	{
 		FreeCameraController::Params params;
-		params.fovY = 0.5;
+		params.baseFovY = 0.5;
 		CameraControllerPtr controller(new FreeCameraController(entity, params));
 		controllers["Free"] = controller;
 	}

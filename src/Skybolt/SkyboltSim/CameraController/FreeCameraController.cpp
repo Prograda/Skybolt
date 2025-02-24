@@ -19,16 +19,17 @@ SKYBOLT_REFLECT_BEGIN(FreeCameraController)
 		.superType<CameraController>()
 		.superType<Pitchable>()
 		.superType<Yawable>()
-		.superType<Zoomable>();
+		.superType<Zoomable>()
+		.property("baseFovY", &FreeCameraController::getBaseFov, &FreeCameraController::setBaseFov, {{PropertyMetadataNames::units, Units::Radians}});
 }
 SKYBOLT_REFLECT_END
 
 
 FreeCameraController::FreeCameraController(Entity* camera, const Params& params) :
 	CameraController(camera),
-	mBaseFov(params.fovY)
+	mBaseFov(params.baseFovY)
 {
-	mCameraComponent->getState().fovY = params.fovY;
+	mCameraComponent->getState().fovY = mBaseFov;
 }
 
 void FreeCameraController::update(SecondsD dt)

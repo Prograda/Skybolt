@@ -17,13 +17,16 @@ class FreeCameraController : public CameraController, public Pitchable, public Y
 public:
 	struct Params
 	{
-		float fovY;
+		float baseFovY;
 	};
 
 	FreeCameraController(Entity* camera, const Params& params);
 
 	void update(SecondsD dt) override;
 	void setInput(const Input& input) override { mInput = input; }
+
+	float getBaseFov() const { return mBaseFov; }
+	void setBaseFov(float fov) { mBaseFov = fov; }
 
 private:
 	float mBaseFov;

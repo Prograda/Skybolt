@@ -14,9 +14,8 @@ namespace skybolt::sim {
 
 CameraController::CameraController(Entity* camera)
 {
-	mNodeComponent = camera->getFirstComponent<Node>().get();
-	mCameraComponent = camera->getFirstComponent<CameraComponent>().get();
-	assert(mCameraComponent);
+	mNodeComponent = camera->getFirstComponentRequired<Node>().get();
+	mCameraComponent = camera->getFirstComponentRequired<CameraComponent>().get();
 }
 
 CameraController::~CameraController()
