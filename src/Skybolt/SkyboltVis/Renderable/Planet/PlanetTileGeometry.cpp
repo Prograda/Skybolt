@@ -17,31 +17,17 @@ using namespace skybolt;
 namespace skybolt {
 namespace vis {
 
-osg::PrimitiveSet::Mode toOsgPrimitiveType(PrimitiveType type)
-{
-	switch (type)
-	{
-	case Triangles:
-		return osg::PrimitiveSet::TRIANGLES;
-	case Quads:
-		return osg::PrimitiveSet::PATCHES;
-	default:
-		assert(!"Enum value not implemented");
-		return osg::PrimitiveSet::PATCHES;
-	}
-}
-
-osg::Geometry* createPlanetTileGeometry(const osg::Vec3d& tileCenter, const Box2d& latLonBounds,
+osg::ref_ptr<osg::Geometry> createPlanetTileGeometry(const osg::Vec3d& tileCenter, const Box2d& latLonBounds,
 	double radius, float skirtLength, PrimitiveType type)
 {
-	osg::Vec3Array* posBuffer = new osg::Vec3Array();
-	osg::UIntArray* indexBuffer = new osg::UIntArray();
+	osg::ref_ptr<osg::Vec3Array> posBuffer = new osg::Vec3Array();
+	osg::ref_ptr<osg::UIntArray> indexBuffer = new osg::UIntArray();
 	int segmentCountX = 64;
 	int segmentCountY = 64;
 
 	createPlaneBuffers(*posBuffer, *indexBuffer, osg::Vec2f(0,0), osg::Vec2f(1,1), segmentCountX, segmentCountY, type);
 
-	osg::Vec2Array* uvBuffer = new osg::Vec2Array();
+	osg::ref_ptr<osg::Vec2Array> uvBuffer = new osg::Vec2Array();
 	uvBuffer->resize(posBuffer->size());
 
 	int countX = segmentCountX + 1;
@@ -78,23 +64,18 @@ osg::Geometry* createPlanetTileGeometry(const osg::Vec3d& tileCenter, const Box2
 		}
 	}
 
-	osg::Geometry *geometry = new osg::Geometry();
-
-	geometry->setVertexArray(posBuffer);
+	osg::ref_ptr<osg::Geometry> geometry = createPrimitiveFromBuffers(posBuffer, indexBuffer, type);
 	geometry->setTexCoordArray(0, uvBuffer);
-	vis::configureDrawable(*geometry);
 	geometry->setComputeBoundingBoxCallback(createFixedBoundingBoxCallback(bounds));
-
-	geometry->addPrimitiveSet(new osg::DrawElementsUInt(toOsgPrimitiveType(type), indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
 	return geometry;
 }
 
-osg::Geode* createPlanetTileGeode(const osg::Vec3d& tileCenter, const Box2d& latLonBounds, double planetRadius, PrimitiveType type)
+osg::ref_ptr<osg::Geode> createPlanetTileGeode(const osg::Vec3d& tileCenter, const Box2d& latLonBounds, double planetRadius, PrimitiveType type)
 {
 	float skirtLength = 0.005 * latLonBounds.size().length() * planetRadius; // TODO: tweak
 	osg::ref_ptr<osg::Geometry> geometry = createPlanetTileGeometry(tileCenter, latLonBounds, planetRadius, skirtLength, type);
 
-	osg::Geode* geode = new osg::Geode;
+	osg::ref_ptr<osg::Geode> geode = new osg::Geode;
 	geode->addDrawable(geometry);
 
 	return geode;

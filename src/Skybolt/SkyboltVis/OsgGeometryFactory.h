@@ -28,19 +28,21 @@ enum QuadUpDirection
 
 void createPlaneBuffers(osg::Vec3Array& posBuffer, osg::UIntArray& indexBuffer, const osg::Vec2f& minBound, const osg::Vec2f& size, int segmentCountX, int segmentCountY, PrimitiveType type);
 
+osg::ref_ptr<osg::Geometry> createPrimitiveFromBuffers(const osg::ref_ptr<osg::Vec3Array>& posBuffer, const osg::ref_ptr<osg::UIntArray>& indexBuffer, PrimitiveType type);
+
 enum class SphereFacingMode
 {
 	OutsideFacing,
 	InsideFacing
 };
 
-osg::Geometry* createSphere(float radius, unsigned int rings, unsigned int sectors, SphereFacingMode facingMode);
+osg::ref_ptr<osg::Geometry> createSphere(float radius, unsigned int rings, unsigned int sectors, SphereFacingMode facingMode);
 
-osg::Geometry* createQuad(const BoundingBox2f& box, QuadUpDirection upDir);
+osg::ref_ptr<osg::Geometry> createQuad(const BoundingBox2f& box, QuadUpDirection upDir);
 
-osg::Geometry* createQuadWithUvs(const BoundingBox2f& box, QuadUpDirection upDir);
+osg::ref_ptr<osg::Geometry> createQuadWithUvs(const BoundingBox2f& box, QuadUpDirection upDir);
 
-osg::Geometry* createLineBox(const osg::BoundingBox& box);
+osg::ref_ptr<osg::Geometry> createLineBox(const osg::BoundingBox& box);
 
 } // namespace vis
 } // namespace skybolt

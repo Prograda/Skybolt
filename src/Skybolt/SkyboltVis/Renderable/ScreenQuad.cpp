@@ -21,7 +21,7 @@ ScreenQuad::ScreenQuad(osg::StateSet* stateSet, const BoundingBox2f& bounds)
 
 osg::ref_ptr<osg::Geode> ScreenQuad::createGeode(osg::StateSet* stateSet, const BoundingBox2f& bounds)
 {
-	osg::Geometry* quad = createQuadWithUvs(bounds, QuadUpDirectionY);
+	osg::ref_ptr<osg::Geometry> quad = createQuadWithUvs(bounds, QuadUpDirectionY);
 
 	quad->setStateSet(stateSet);
 	quad->setCullingActive(false);

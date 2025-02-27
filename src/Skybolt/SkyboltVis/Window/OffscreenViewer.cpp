@@ -49,10 +49,10 @@ osg::ref_ptr<osgViewer::Viewer> createOffscreenViewer(int width, int height)
 	return viewer;
 }
 
-void configureViewerToRenderToImage(osgViewer::Viewer& viewer, const osg::ref_ptr<osg::Image>& image)
+void configureViewerToRenderToImage(osgViewer::Viewer& viewer, const osg::ref_ptr<osg::Image>& image, int multiSampleCount)
 {
 	osg::Camera* camera = viewer.getCamera();
-	camera->attach(osg::Camera::COLOR_BUFFER, image.get());
+	camera->attach(osg::Camera::COLOR_BUFFER, image.get(), multiSampleCount, multiSampleCount);
 
 	// Allow OSG to automatically attach necessary buffers required for rendering to the image
 	camera->setImplicitBufferAttachmentMask(osg::Camera::IMPLICIT_COLOR_BUFFER_ATTACHMENT);

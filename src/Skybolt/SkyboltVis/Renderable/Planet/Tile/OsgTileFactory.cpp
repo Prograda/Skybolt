@@ -107,7 +107,7 @@ OsgTile OsgTileFactory::createOsgTile(const QuadTreeTileKey& key, const Box2d& l
 	else if (textures.albedo.texture)
 	{
 		// Low LOD terrain
-		osg::Geode* geode = createPlanetTileGeode(tilePosition, latLonBounds, mPlanetRadius, Triangles);
+		osg::ref_ptr<osg::Geode> geode = createPlanetTileGeode(tilePosition, latLonBounds, mPlanetRadius, Triangles);
 		result.transform->addChild(geode);
 
 		int unit = 0;

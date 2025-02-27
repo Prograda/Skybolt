@@ -76,12 +76,39 @@ void createPlaneBuffers(osg::Vec3Array& posBuffer, osg::UIntArray& indexBuffer, 
 	createPlaneIndicies(indexBuffer, segmentCountX, segmentCountY, type);
 }
 
-osg::Geometry* createSphere(float radius, unsigned int rings, unsigned int sectors, SphereFacingMode facingMode)
-{
-	osg::Geometry* sphereGeometry = new osg::Geometry;
 
-	osg::Vec3Array* sphereVertices = new osg::Vec3Array;
-	osg::Vec2Array* sphereTexCoords = new osg::Vec2Array;
+static osg::PrimitiveSet::Mode toOsgPrimitiveType(PrimitiveType type)
+{
+	switch (type)
+	{
+	case Triangles:
+		return osg::PrimitiveSet::TRIANGLES;
+	case Quads:
+		return osg::PrimitiveSet::PATCHES;
+	default:
+		assert(!"Enum value not implemented");
+		return osg::PrimitiveSet::PATCHES;
+	}
+}
+
+osg::ref_ptr<osg::Geometry> createPrimitiveFromBuffers(const osg::ref_ptr<osg::Vec3Array>& posBuffer, const osg::ref_ptr<osg::UIntArray>& indexBuffer, PrimitiveType type)
+{
+	osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry();
+
+	geometry->setVertexArray(posBuffer);
+	vis::configureDrawable(*geometry);
+
+	geometry->addPrimitiveSet(new osg::DrawElementsUInt(toOsgPrimitiveType(type), indexBuffer->size(), (GLuint*)indexBuffer->getDataPointer()));
+
+	return geometry;
+}
+
+osg::ref_ptr<osg::Geometry> createSphere(float radius, unsigned int rings, unsigned int sectors, SphereFacingMode facingMode)
+{
+	osg::ref_ptr<osg::Geometry> sphereGeometry = new osg::Geometry;
+
+	osg::ref_ptr<osg::Vec3Array> sphereVertices = new osg::Vec3Array;
+	osg::ref_ptr<osg::Vec2Array> sphereTexCoords = new osg::Vec2Array;
 
 	float const R = 1. / (float)(rings - 1);
 	float const S = 1. / (float)(sectors - 1);
@@ -111,7 +138,7 @@ osg::Geometry* createSphere(float radius, unsigned int rings, unsigned int secto
 	const int facingIndex1 = int(facingMode == SphereFacingMode::InsideFacing);
 
 	// Generate quads for each face.  
-	osg::UIntArray* indexBuffer = new osg::UIntArray();
+	osg::ref_ptr<osg::UIntArray> indexBuffer = new osg::UIntArray();
 	for (r = 0; r < rings - 1; r++)
 	{
 		for (s = 0; s < sectors - 1; s++)
@@ -130,12 +157,12 @@ osg::Geometry* createSphere(float radius, unsigned int rings, unsigned int secto
 	return sphereGeometry;
 }
 
-osg::Geometry* createQuad(const BoundingBox2f& box, QuadUpDirection upDir)
+osg::ref_ptr<osg::Geometry> createQuad(const BoundingBox2f& box, QuadUpDirection upDir)
 {
-	osg::Geometry* quad = new osg::Geometry();
+	osg::ref_ptr<osg::Geometry> quad = new osg::Geometry();
 
 	//quad to create a full screen quad 
-	osg::Vec3Array* verts = new osg::Vec3Array(4);
+	osg::ref_ptr<osg::Vec3Array> verts = new osg::Vec3Array(4);
 	if (upDir == QuadUpDirectionY)
 	{
 		(*verts)[0].set(box.xMin(), box.yMin(), 0);
@@ -157,12 +184,12 @@ osg::Geometry* createQuad(const BoundingBox2f& box, QuadUpDirection upDir)
 	return quad;
 }
 
-osg::Geometry* createQuadWithUvs(const BoundingBox2f& box, QuadUpDirection upDir)
+osg::ref_ptr<osg::Geometry> createQuadWithUvs(const BoundingBox2f& box, QuadUpDirection upDir)
 {
-	osg::Geometry* quad = new osg::Geometry();
+	osg::ref_ptr<osg::Geometry> quad = new osg::Geometry();
 
 	//quad to create a full screen quad 
-	osg::Vec3Array* verts = new osg::Vec3Array(4);
+	osg::ref_ptr<osg::Vec3Array> verts = new osg::Vec3Array(4);
 	if (upDir == QuadUpDirectionY)
 	{
 		(*verts)[0].set(box.xMin(), box.yMin(), 0);
@@ -192,11 +219,11 @@ osg::Geometry* createQuadWithUvs(const BoundingBox2f& box, QuadUpDirection upDir
 	return quad;
 }
 
-osg::Geometry* createLineBox(const osg::BoundingBox& box)
+osg::ref_ptr<osg::Geometry> createLineBox(const osg::BoundingBox& box)
 {
-	osg::Geometry* geometry = new osg::Geometry();
+	osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry();
 
-	osg::Vec3Array* vertices = new osg::Vec3Array(8);
+	osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array(8);
 	for (int i = 0; i < 8; ++i)
 	{
 		(*vertices)[i] = box.corner(i);

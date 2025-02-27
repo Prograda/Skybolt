@@ -29,7 +29,7 @@ using namespace skybolt::vis;
 Starfield::Starfield(const StarfieldConfig& config)
 {
 	// Create geo
-	osg::Geometry* geometry = createQuad(BoundingBox2f(osg::Vec2f(-0.5, -0.5), osg::Vec2f(0.5, 0.5)), QuadUpDirectionY);
+	osg::ref_ptr<osg::Geometry> geometry = createQuad(BoundingBox2f(osg::Vec2f(-0.5, -0.5), osg::Vec2f(0.5, 0.5)), QuadUpDirectionY);
 	geometry->getPrimitiveSet(0)->setNumInstances(BrightStarCatelog::stars.size());
 	geometry->setCullingActive(false);
 

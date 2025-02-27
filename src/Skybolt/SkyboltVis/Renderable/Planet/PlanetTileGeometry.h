@@ -15,10 +15,10 @@
 namespace skybolt {
 namespace vis {
 
-osg::Geometry* createPlanetTileGeometry(const osg::Vec3d& tileCenter, const Box2d& latLonBounds,
+osg::ref_ptr<osg::Geometry> createPlanetTileGeometry(const osg::Vec3d& tileCenter, const Box2d& latLonBounds,
 	double radius, float skirtLength, PrimitiveType type);
 
-osg::Geode* createPlanetTileGeode(const osg::Vec3d& tileCenter, const Box2d& latLonBounds, double radius, PrimitiveType type);
+osg::ref_ptr<osg::Geode> createPlanetTileGeode(const osg::Vec3d& tileCenter, const Box2d& latLonBounds, double radius, PrimitiveType type);
 
 } // namespace vis
 } // namespace skybolt

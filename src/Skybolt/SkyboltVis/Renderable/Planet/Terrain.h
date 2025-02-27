@@ -83,10 +83,10 @@ public:
 	Terrain(const TerrainConfig& config);
 	~Terrain();
 
-	osg::Node* getTerrainNode() const { return mNode; }
+	osg::ref_ptr<osg::Node> getTerrainNode() const { return mNode; }
 
 private:
-	osg::Node* mNode;
+	osg::ref_ptr<osg::Node> mNode;
 };
 
 } // namespace vis
