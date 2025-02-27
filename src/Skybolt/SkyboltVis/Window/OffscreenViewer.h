@@ -12,3 +12,5 @@
 osg::ref_ptr<osg::GraphicsContext> createOffscreenContext(int width, int height);
 
 osg::ref_ptr<osgViewer::Viewer> createOffscreenViewer(int width, int height);
+
+void configureViewerToRenderToImage(osgViewer::Viewer& viewer, const osg::ref_ptr<osg::Image>& image);

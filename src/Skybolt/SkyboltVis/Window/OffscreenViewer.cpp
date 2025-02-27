@@ -38,7 +38,7 @@ osg::ref_ptr<osgViewer::Viewer> createOffscreenViewer(int width, int height)
 	osg::ref_ptr<osgViewer::Viewer> viewer = new osgViewer::Viewer;
 	viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
 	viewer->getCamera()->setGraphicsContext(context);
-	viewer->getCamera()->setRenderTargetImplementation(osg::Camera::PIXEL_BUFFER);
+	viewer->getCamera()->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
 	viewer->getCamera()->setViewport(new osg::Viewport(0, 0, width, height));
 	viewer->realize();
 
@@ -47,4 +47,13 @@ osg::ref_ptr<osgViewer::Viewer> createOffscreenViewer(int width, int height)
 	state->setUseVertexAttributeAliasing(true);
 
 	return viewer;
+}
+
+void configureViewerToRenderToImage(osgViewer::Viewer& viewer, const osg::ref_ptr<osg::Image>& image)
+{
+	osg::Camera* camera = viewer.getCamera();
+	camera->attach(osg::Camera::COLOR_BUFFER, image.get());
+
+	// Allow OSG to automatically attach necessary buffers required for rendering to the image
+	camera->setImplicitBufferAttachmentMask(osg::Camera::IMPLICIT_COLOR_BUFFER_ATTACHMENT);
 }
