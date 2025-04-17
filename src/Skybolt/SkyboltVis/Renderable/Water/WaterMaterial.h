@@ -30,6 +30,9 @@ public:
 	void setWaveHeight(float height);
 	float getWaveHeight() const;
 
+	void setWindVelocityHeading(float heading);
+	float getWindVelocityHeading() const;
+
 	void setWakes(const std::vector<Wake>& wakes);
 
 	void update(double timeSeconds);

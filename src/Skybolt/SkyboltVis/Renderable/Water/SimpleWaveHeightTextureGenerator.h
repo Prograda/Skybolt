@@ -30,8 +30,10 @@ public:
 	}
 
 	float getWaveHeight() const override { return 0.0f; }
-
 	void setWaveHeight(float height) override {};
+
+	float getWindVelocityHeading() const override { return 0.0f; }
+	void setWindVelocityHeading(float heading) override {};
 
 	osg::ref_ptr<osg::Texture2D> getTexture() const override
 	{

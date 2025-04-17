@@ -22,14 +22,14 @@ public:
 		mWorldSize(textureWorldSize),
 		mWaveHeight(0.5)
 	{
-		mWindSpeed = FftOceanGenerator::calcWindSpeedFromMaxWaveHeight(mWaveHeight, mGravity);
+		mWindVelocity = calcWindVelocity();
 
 		FftOceanGeneratorConfig config;
 		config.gravity = mGravity;
 		config.seed = 0;
 		config.textureSizePixels = 512;
 		config.textureWorldSize = textureWorldSize;
-		config.windVelocity = glm::vec2(mWindSpeed.load(), 0);
+		config.windVelocity = mWindVelocity;
 		config.normalizedFrequencyRange = normalizedFrequencyRange;
 
 		mGeneratorResult = std::vector<glm::vec3>(config.textureSizePixels * config.textureSizePixels, glm::vec3(0,0,0));
@@ -107,10 +107,10 @@ public:
 			{
 				std::lock_guard<std::mutex> lock(mGeneratorResultMutex);
 
-				if (mWindSpeedChanged)
+				if (mWindVelocityChanged)
 				{
-					mGenerator->setWindSpeed(mWindSpeed);
-					mWindSpeedChanged = false;
+					mGenerator->setWindVelocity(mWindVelocity);
+					mWindVelocityChanged = false;
 				}
 
 				mGenerator->calculate(mRequestTime, mGeneratorResult);
@@ -127,13 +127,25 @@ public:
 
 	float getWaveHeight() const override { return mWaveHeight; }
 
-	void setWaveHeight(float height)
+	void setWaveHeight(float height) override
 	{
 		if (mWaveHeight != height)
 		{
 			mWaveHeight = height;
-			mWindSpeed = FftOceanGenerator::calcWindSpeedFromMaxWaveHeight(height, mGravity);
-			mWindSpeedChanged = true;
+			mWindVelocity = calcWindVelocity();
+			mWindVelocityChanged = true;
+		}
+	}
+
+	float getWindVelocityHeading() const override { return mWindVelocityHeading; }
+
+	void setWindVelocityHeading(float heading) override
+	{
+		if (mWindVelocityHeading != heading)
+		{
+			mWindVelocityHeading = heading;
+			mWindVelocity = calcWindVelocity();
+			mWindVelocityChanged = true;
 		}
 	}
 
@@ -143,11 +155,18 @@ public:
 	}
 
 private:
+	glm::vec2 calcWindVelocity() const {
+		float windSpeed = FftOceanGenerator::calcWindSpeedFromMaxWaveHeight(mWaveHeight, mGravity);
+		return math::vec2Rotate(glm::vec2(windSpeed, 0), mWindVelocityHeading);
+	}
+
+private:
 	const float mGravity = 9.8f;
 	std::unique_ptr<FftOceanGenerator> mGenerator;
 	osg::ref_ptr<osg::Texture2D> mTexture;
 	float mWorldSize;
 	float mWaveHeight;
+	float mWindVelocityHeading = 0;
 
 	std::thread mGeneratorThread;
 	std::atomic_bool mTerminateGeneratorThread = false;
@@ -162,8 +181,8 @@ private:
 	double mRequestTime = 0;
 	bool mGeneratorRequest = false;
 
-	std::atomic<float> mWindSpeed;
-	std::atomic_bool mWindSpeedChanged = false;
+	std::atomic<glm::vec2> mWindVelocity;
+	std::atomic_bool mWindVelocityChanged = false;
 };
 
 } // namespace vis

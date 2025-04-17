@@ -210,6 +210,7 @@ void MainWindow::openScenario(const QString& filename, OverwriteMode mode)
 
 	if (auto errorMessage = mWorkspace->loadScenario(filename); errorMessage)
 	{
+		BOOST_LOG_TRIVIAL(error) << errorMessage->toStdString();
 		QMessageBox::critical(this, "", *errorMessage);
 	}
 }

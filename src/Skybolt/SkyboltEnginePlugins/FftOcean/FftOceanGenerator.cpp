@@ -9,6 +9,7 @@
 #include <cxxtimer/cxxtimer.hpp>
 
 #include <muFFT/fft.h>
+#include <execution>
 
 using namespace skybolt;
 
@@ -41,6 +42,7 @@ FftOceanGenerator::FftOceanGenerator(const FftOceanGeneratorConfig& config) :
 	mTextureWorldSize(config.textureWorldSize),
 	mOneOnTextureWorldSize(1.0f / mTextureWorldSize),
 	mGravity(config.gravity),
+	mUseMultipleCores(config.useMultipleCores),
 	mWindVelocity(config.windVelocity),
 	mFftGeneratorData(new FftGeneratorData)
 {
@@ -157,7 +159,7 @@ float omega(float k)
 	return std::sqrt(9.81f * k * (1.0f + sqr(k / km))); // Eq 24
 }
 
-float omnispectrum = false;
+bool omnispectrum = false;
 
 //! Bruneton's wave spectrum is from "A unified directional spectrum for long and short wind-driven waves"
 //! by T. Elfouhaily, B. Chapron, K. Katsaros, D. Vandemark.
@@ -168,18 +170,22 @@ float FftOceanGenerator::calcBruenton(int n, int m) const
 	glm::vec2 k = math::piF() * normalizedCoord * mOneOnTextureWorldSize;
 
 	float windSpeed = glm::length(mWindVelocity);
+	if (windSpeed == 0)
+	{
+		return 0.0;
+	}
 
 	float U10 = windSpeed;
 	float Omega = OMEGA;
 
 	// phase speed
-	float kLength = std::sqrt(k.x * k.x + k.y * k.y);
-	float c = omega(kLength) / kLength;
-
+	float kLength = glm::length(k);
 	if (kLength < 0.000001)
 	{
 		return 0.0;
 	}
+
+	float c = omega(kLength) / kLength;
 
 	// spectral peak
 	float kp = 9.81f * sqr(Omega / U10); // after Eq 3
@@ -211,9 +217,10 @@ float FftOceanGenerator::calcBruenton(int n, int m) const
 	float a0 = log(2.0f) / 4.0f; float ap = 4.0; float am = 0.13f * u_star / cm; // Eq 59
 	float Delta = tanh(a0 + ap * pow(c / cp, 2.5f) + am * pow(cm / c, 2.5f)); // Eq 57
 
-	float phi = atan2(k.y, k.x);
+	float cosPhi = glm::dot(k / kLength, mWindVelocity / windSpeed);
 
-	if (k.x < 0.0) {
+	// Suppress waves traveling opposite to wind, and double waves traveling with wind to preserve energy
+	if (cosPhi < 0.0) {
 		return 0.0;
 	}
 	else {
@@ -221,7 +228,8 @@ float FftOceanGenerator::calcBruenton(int n, int m) const
 		Bh *= 2.0;
 	}
 
-	return A * (Bl + Bh) * (1.0f + Delta * cos(2.0f * phi)) / (2.0f * math::piF() * sqr(sqr(kLength))); // Eq 67
+	float cosTwoPhi = 2.f * cosPhi * cosPhi - 1.f;
+	return A * (Bl + Bh) * (1.0f + Delta * cosTwoPhi) / (2.0f * math::piF() * sqr(sqr(kLength))); // Eq 67
 }
 
 FftOceanGenerator::complex_type FftOceanGenerator::generateRandomComplexGaussian()
@@ -232,20 +240,42 @@ FftOceanGenerator::complex_type FftOceanGenerator::generateRandomComplexGaussian
 	return complex_type(a, b);
 }
 
+template <typename Container, typename Func>
+void runParallelOrSequential(bool useParallel, Container&& container, Func&& func) {
+    if (useParallel) {
+        std::for_each(std::execution::par,
+                      std::begin(container), std::end(container),
+                      std::forward<Func>(func));
+    } else {
+        std::for_each(std::execution::seq,
+                      std::begin(container), std::end(container),
+                      std::forward<Func>(func));
+    }
+}
+
 void FftOceanGenerator::calcHt0()
 {
-	float dk = 2.0f * math::piF() / mTextureWorldSize;
+	const float dk = 2.0f * math::piF() / mTextureWorldSize;
 
-	for (int m = 0; m < mTextureSizePixels; ++m)
+	std::vector<complex_type> gaussians(mTextureSizePixels * mTextureSizePixels);
+	for (auto& gaussian : gaussians)
 	{
+		gaussian = generateRandomComplexGaussian();
+	}
+
+    std::vector<int> mIndices(mTextureSizePixels);
+    std::iota(mIndices.begin(), mIndices.end(), 0); // Fill the vector with values 0 through size - 1
+
+	runParallelOrSequential(mUseMultipleCores, mIndices, [&](int& m) {
+		int index = m * mTextureSizePixels;
 		for (int n = 0; n < mTextureSizePixels; ++n)
 		{
-			int index = m * mTextureSizePixels + n;
-			complex_type r = generateRandomComplexGaussian() / std::sqrt(2.f);
+			complex_type r = gaussians[index] / std::sqrt(2.f);
 			mHt0[index] = r * std::sqrt(calcBruenton(n, m) / 2.0f) * dk;
 			mHt0Conj[index] = std::conj(r * std::sqrt(calcBruenton(-n, -m) / 2.0f) * dk);
+			++index;
 		}
-	}
+	});
 }
 
 // x range: [-PI,PI]
@@ -383,9 +413,9 @@ void FftOceanGenerator::calculate(float t, std::vector<glm::vec3>& result)
 	}
 }
 
-void FftOceanGenerator::setWindSpeed(float windSpeed)
+void FftOceanGenerator::setWindVelocity(const glm::vec2& windVelocity)
 {
-	mWindVelocity.x = windSpeed;
+	mWindVelocity = windVelocity;
 	calcHt0();
 }
 

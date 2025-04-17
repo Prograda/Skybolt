@@ -15,6 +15,7 @@ struct OceanComponent : public Component
 {
 public:
 	double waveHeight = 1;
+	double windVelocityHeading = 0;
 };
 
 SKYBOLT_REFLECT_EXTERN(OceanComponent)

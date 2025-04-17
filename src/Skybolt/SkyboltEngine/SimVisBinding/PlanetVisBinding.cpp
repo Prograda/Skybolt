@@ -30,6 +30,7 @@ void PlanetVisBinding::syncVis(const GeocentricToNedConverter& converter)
 		if (const auto& material = visPlanet->getWaterMaterial(); material)
 		{
 			material->setWaveHeight(ocean->waveHeight);
+			material->setWindVelocityHeading(ocean->windVelocityHeading);
 		}
 	}
 

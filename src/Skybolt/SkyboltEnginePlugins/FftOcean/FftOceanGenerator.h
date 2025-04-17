@@ -27,6 +27,7 @@ struct FftOceanGeneratorConfig
 	glm::vec2 windVelocity;
 	glm::vec2 normalizedFrequencyRange; //!< (min, max) in range [0, 1]
 	float gravity;
+	bool useMultipleCores = false;
 };
 
 template <typename T>
@@ -68,7 +69,7 @@ public:
 	//! Generates a vector displacement image of the wave field at given time
 	void calculate(float time, std::vector<glm::vec3>& result);
 
-	void setWindSpeed(float windSpeed);
+	void setWindVelocity(const glm::vec2& windVelocity);
 
 	glm::ivec2 getTextureSizePixels() const { return glm::ivec2(mTextureSizePixels, mTextureSizePixels); }
 	glm::dvec2 getTextureWorldSize() const { return glm::dvec2(mTextureWorldSize, mTextureWorldSize); }
@@ -99,6 +100,8 @@ private:
 	const float mTextureWorldSize;
 	const float mOneOnTextureWorldSize;
 	const float mGravity;
+	const bool mUseMultipleCores;
+
 	glm::vec2 mWindVelocity;
 	std::vector<complex_type> mHt0;
 	std::vector<complex_type> mHt0Conj;

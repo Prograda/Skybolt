@@ -30,6 +30,9 @@ public:
 	virtual float getWaveHeight() const = 0;
 	virtual void setWaveHeight(float height) = 0;
 
+	virtual float getWindVelocityHeading() const = 0;
+	virtual void setWindVelocityHeading(float heading) = 0;
+
 	virtual osg::ref_ptr<osg::Texture2D> getTexture() const = 0;
 };
 

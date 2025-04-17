@@ -106,6 +106,19 @@ public:
 		}
 	}
 
+	float getWindVelocityHeading() const
+	{
+		return mCascades[0]->getWindVelocityHeading();
+	}
+
+	void setWindVelocityHeading(float heading)
+	{
+		for (const auto& cascade : mCascades)
+		{
+			cascade->setWindVelocityHeading(heading);
+		}
+	}
+
 	static const int numCascades = 1;
 
 private:
@@ -251,6 +264,16 @@ void WaterMaterial::setWaveHeight(float height)
 float WaterMaterial::getWaveHeight() const
 {
 	return mWaveHeightTextureGenerator->getWaveHeight();
+}
+
+void WaterMaterial::setWindVelocityHeading(float heading)
+{
+	mWaveHeightTextureGenerator->setWindVelocityHeading(heading);
+}
+
+float WaterMaterial::getWindVelocityHeading() const
+{
+	return mWaveHeightTextureGenerator->getWindVelocityHeading();
 }
 
 void WaterMaterial::setWakes(const std::vector<Wake>& wakes)

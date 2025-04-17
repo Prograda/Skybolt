@@ -5,6 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "OceanComponent.h"
+#include "SkyboltSim/PropertyMetadata.h"
+#include <SkyboltCommon/Units.h>
 
 namespace skybolt {
 namespace sim {
@@ -13,7 +15,8 @@ SKYBOLT_REFLECT_BEGIN(OceanComponent)
 {
 	registry.type<OceanComponent>("OceanComponent")
 		.superType<Component>()
-		.property("waveHeight", &OceanComponent::waveHeight);
+		.property("waveHeight", &OceanComponent::waveHeight)
+		.property("windVelocityHeading", &OceanComponent::windVelocityHeading, {{PropertyMetadataNames::units, Units::Radians}});
 }
 SKYBOLT_REFLECT_END
 
