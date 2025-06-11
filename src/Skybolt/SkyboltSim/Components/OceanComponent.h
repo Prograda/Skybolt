@@ -7,6 +7,7 @@
 #pragma once
 
 #include "SkyboltSim/Component.h"
+#include "SkyboltSim/OceanSurfaceSampler.h"
 #include "SkyboltSim/SkyboltSimFwd.h"
 
 namespace skybolt::sim {
@@ -16,6 +17,7 @@ struct OceanComponent : public Component
 public:
 	double waveHeight = 1;
 	double windVelocityHeading = 0;
+	OceanSurfaceSamplerPtr surfaceSampler = std::make_shared<PlanarOceanSurfaceSampler>(); //!< Never null
 };
 
 SKYBOLT_REFLECT_EXTERN(OceanComponent)

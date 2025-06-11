@@ -14,6 +14,8 @@
 
 #include "SkyboltVis/VisFactory.h"
 #include <SkyboltCommon/Math/MathUtility.h>
+#include <SkyboltSim/OceanSurfaceSampler.h>
+#include <SkyboltSim/SkyboltSimFwd.h>
 #include <osg/Texture2D>
 
 namespace skybolt {
@@ -34,6 +36,13 @@ public:
 	virtual void setWindVelocityHeading(float heading) = 0;
 
 	virtual osg::ref_ptr<osg::Texture2D> getTexture() const = 0;
+
+	//! @returns an interface for sampling the ocean surface eometry. Result is never null.
+	virtual skybolt::sim::OceanSurfaceSamplerPtr getSurfaceSampler() const
+	{
+		static auto sampler = std::make_shared<sim::PlanarOceanSurfaceSampler>();
+		return sampler;
+	}
 };
 
 class WaveHeightTextureGeneratorFactory : public VisFactory

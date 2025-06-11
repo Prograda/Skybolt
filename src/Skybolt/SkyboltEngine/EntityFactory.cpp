@@ -576,10 +576,13 @@ static void loadVisualPlanet(Entity* entity, const EntityFactory::Context& conte
 	SimVisBindingPtr simVis(std::make_shared<PlanetVisBinding>(context.julianDateProvider, entity, visObject));
 	simVisBindingComponent->bindings.push_back(simVis);
 
-	if (visObject->getWaterMaterial())
+	if (const osg::ref_ptr<vis::WaterMaterial>& waterMaterial = visObject->getWaterMaterial(); waterMaterial)
 	{
-		auto binding = std::make_shared<WakeBinding>(context.simWorld, visObject->getWaterMaterial());
+		auto binding = std::make_shared<WakeBinding>(context.simWorld, waterMaterial);
 		simVisBindingComponent->bindings.push_back(binding);
+
+		// Allow the sim ocean component to sample the ocean height from the water material
+		oceanComponent->surfaceSampler = waterMaterial->getSurfaceSampler();
 	}
 
 	std::shared_ptr<PlanetStatsUpdater> statsUpdater = std::make_shared<PlanetStatsUpdater>(context.stats, static_cast<vis::Planet*>(visObject.get()));

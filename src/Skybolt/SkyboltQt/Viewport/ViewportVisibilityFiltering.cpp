@@ -110,16 +110,15 @@ EntityVisibilityPredicate createLineOfSightVisibilityPredicate(QPointer<Viewport
 			if (sim::Entity* camera = viewportWidget->getCamera(); camera)
 			{
 				sim::Vector3 cameraPosition = *getPosition(*camera);
-				if (sim::Entity* planet = sim::findNearestEntityWithComponent<sim::PlanetComponent>(world->getEntities(), cameraPosition).get(); planet)
+				std::shared_ptr< sim::PlanetComponent> planetComponent;
+				if (sim::Entity* planet = sim::findNearestEntityWithComponent<sim::PlanetComponent>(world->getEntities(), cameraPosition, planetComponent).get(); planet)
 				{
-					const sim::PlanetComponent& planetComponent = *planet->getFirstComponent<sim::PlanetComponent>();
-
 					sim::Vector3 planetPosition = *getPosition(*planet);
 					sim::Vector3 camToEntityDir = *entityPosition - cameraPosition;
 					double length = glm::length(camToEntityDir);
 					camToEntityDir /= length;
 
-					double effectivePlanetRadius = std::max(0.0, planetComponent.radius * 0.999); // use a slightly smaller radius for robustness
+					double effectivePlanetRadius = std::max(0.0, planetComponent->radius * 0.999); // use a slightly smaller radius for robustness
 					return !intersectRaySegmentSphere(cameraPosition, camToEntityDir, length, planetPosition, effectivePlanetRadius);
 				}
 			}

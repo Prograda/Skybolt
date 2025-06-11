@@ -12,14 +12,16 @@
 namespace skybolt {
 namespace sim {
 
+//! @returns the nearest entity with a given component, or null if no entity found.
+//! @param outComponent is the component found, or null if no entity/component found.
 template <class ComponentT>
-sim::EntityPtr findNearestEntityWithComponent(const std::vector<EntityPtr>& entities, const sim::Vector3& position)
+sim::EntityPtr findNearestEntityWithComponent(const std::vector<EntityPtr>& entities, const sim::Vector3& position, std::shared_ptr<ComponentT>& outComponent)
 {
 	sim::EntityPtr result = nullptr;
 	double resultDistanceSq = 0;
 	for (const sim::EntityPtr& entity : entities)
 	{
-		if (auto* component = entity->getFirstComponent<ComponentT>().get())
+		if (auto component = entity->getFirstComponent<ComponentT>(); component)
 		{
 			const auto& entityPosition = getPosition(*entity);
 			if (entityPosition)
@@ -30,11 +32,20 @@ sim::EntityPtr findNearestEntityWithComponent(const std::vector<EntityPtr>& enti
 				{
 					result = entity;
 					resultDistanceSq = distanceSq;
+					outComponent = component;
 				}
 			}
 		}
 	}
 	return result;
+}
+
+//! @returns the nearest entity with a given component, or null if no entity found.
+template <class ComponentT>
+sim::EntityPtr findNearestEntityWithComponent(const std::vector<EntityPtr>& entities, const sim::Vector3& position)
+{
+	std::shared_ptr<ComponentT> component;
+	return findNearestEntityWithComponent(entities, position, component);
 }
 
 } // namespace sim

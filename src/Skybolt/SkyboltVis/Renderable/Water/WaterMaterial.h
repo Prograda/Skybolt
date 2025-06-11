@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "SkyboltSim/SkyboltSimFwd.h"
 #include "SkyboltVis/SkyboltVisFwd.h"
 #include "SkyboltVis/Renderable/Water/WaterStateSet.h"
 
@@ -41,6 +42,8 @@ public:
 	osg::ref_ptr<osg::Texture2D> getNormalTexture(int cascadeIndex) const;
 	osg::ref_ptr<osg::Texture2D> getFoamMaskTexture(int cascadeIndex) const;
 	int getCascadeCount() { return WaterStateSetConfig::waveTextureCount; }
+
+	sim::OceanSurfaceSamplerPtr getSurfaceSampler() const; //!< Never returns null
 
 private:
 	std::unique_ptr<class CascadedWaveHeightTextureGenerator> mWaveHeightTextureGenerator;

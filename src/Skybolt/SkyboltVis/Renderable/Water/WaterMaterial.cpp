@@ -119,6 +119,11 @@ public:
 		}
 	}
 
+	sim::OceanSurfaceSamplerPtr getSurfaceSampler() const
+	{
+		return mCascades[0]->getSurfaceSampler();
+	}
+
 	static const int numCascades = 1;
 
 private:
@@ -315,6 +320,11 @@ osg::ref_ptr<osg::Texture2D> WaterMaterial::getNormalTexture(int cascadeIndex) c
 osg::ref_ptr<osg::Texture2D> WaterMaterial::getFoamMaskTexture(int cascadeIndex) const
 {
 	return mWaveFoamMaskGenerator[cascadeIndex]->getOutputTexture();
+}
+
+sim::OceanSurfaceSamplerPtr WaterMaterial::getSurfaceSampler() const
+{
+	return mWaveHeightTextureGenerator->getSurfaceSampler();
 }
 
 } // namespace vis

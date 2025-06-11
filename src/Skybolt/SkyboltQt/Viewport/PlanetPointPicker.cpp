@@ -21,11 +21,11 @@ using namespace skybolt;
 std::optional<PickedEntity> pickPointOnPlanet(const skybolt::sim::World& world, const sim::Vector3& origin, const glm::dmat4& invViewProjTransform, const glm::vec2& pointNdc)
 {
 	sim::Vector3 dir = screenToWorldDirection(origin, invViewProjTransform, pointNdc);
-	if (const sim::EntityPtr& entity = sim::findNearestEntityWithComponent<sim::PlanetComponent>(world.getEntities(), origin); entity)
+	std::shared_ptr<sim::PlanetComponent> component;
+	if (const sim::EntityPtr& entity = sim::findNearestEntityWithComponent<sim::PlanetComponent>(world.getEntities(), origin, component); entity)
 	{
 		if (auto position = getPosition(*entity); position)
 		{
-			auto component = entity->getFirstComponentRequired<sim::PlanetComponent>();
 			if (auto pickedPosition = pickPointOnPlanet(*entity, *component, origin, dir); pickedPosition)
 			{
 				return PickedEntity({
