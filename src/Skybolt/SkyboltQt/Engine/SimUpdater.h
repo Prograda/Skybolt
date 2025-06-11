@@ -27,7 +27,8 @@ public:
 	void setMaxSimTimeStep(double dt) { mMaxSimDt = dt; }
 
 protected:
-	void simulate(skybolt::TimeSource& timeSource, float dt);
+	void advanceWallTime(skybolt::sim::SecondsD wallDt);
+	void simulate(skybolt::TimeSource& timeSource, skybolt::sim::SecondsD dt);
 
 	std::shared_ptr<skybolt::EngineRoot> mEngineRoot;
 	std::unique_ptr<skybolt::sim::SimStepper> mSimStepper;
