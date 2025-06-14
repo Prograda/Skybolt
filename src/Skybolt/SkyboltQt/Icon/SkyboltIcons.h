@@ -27,6 +27,8 @@ enum class SkyboltIcon
 	Screenshot,
 	Sequence,
 	Settings,
+	SkipBackward,
+	SkipForward,
 	Speed
 };
 

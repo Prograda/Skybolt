@@ -128,13 +128,17 @@ void ScenarioWorkspace::unloadScenario()
 
 void ScenarioWorkspace::loadScenario(const nlohmann::json& json)
 {
-	ifChildExists(json, "scenario", [this] (const nlohmann::json& child) {
-		readScenario(*mEngineRoot->typeRegistry, *mEngineRoot->scenario, *mEngineRoot->entityFactory, child);
+	EntityFactoryFn entityFactoryFn = [entityFactory = mEngineRoot->entityFactory.get()](const std::string& templateName, const std::string& instanceName) {
+		return entityFactory->createEntity(templateName, instanceName);
+	};
+
+	ifChildExists(json, "scenario", [this, entityFactoryFn] (const nlohmann::json& child) {
+		readScenario(*mEngineRoot->typeRegistry, *mEngineRoot->scenario, entityFactoryFn, child);
 	});
 
 	// @deprecated because entities are serialized within scenario
-	ifChildExists(json, "entities", [this] (const nlohmann::json& child) {
-		readEntities(*mEngineRoot->typeRegistry, mEngineRoot->scenario->world, *mEngineRoot->entityFactory, child);
+	ifChildExists(json, "entities", [this, entityFactoryFn] (const nlohmann::json& child) {
+		readEntities(*mEngineRoot->typeRegistry, mEngineRoot->scenario->world, entityFactoryFn, child);
 	});
 
 	emit scenarioLoaded(json);

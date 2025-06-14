@@ -182,7 +182,7 @@ private:
 	{
 		auto metadata = std::make_shared<ScenarioMetadataComponent>();
 		metadata->serializable = false;
-		metadata->deletable = false;
+		metadata->lifetimePolicy = ScenarioMetadataComponent::LifetimePolicy::Procedural;
 		metadata->directory = concatenate(getDefaultEntityScenarioObjectDirectory(), getName(*mCigiGatewayEntity));
 		return metadata;
 	}

@@ -17,11 +17,11 @@
 
 using namespace skybolt;
 
-static bool isDeletable(const sim::Entity& entity)
+static bool isUserDeletable(const sim::Entity& entity)
 {
 	if (auto metadata = entity.getFirstComponent<ScenarioMetadataComponent>(); metadata)
 	{
-		return metadata->deletable;
+		return metadata->lifetimePolicy == ScenarioMetadataComponent::LifetimePolicy::User;
 	}
 	return false;
 }
@@ -160,7 +160,7 @@ ScenarioObjectTypePtr createEntityObjectType(sim::World* world, EntityFactory* e
 	};
 	t->isObjectRemovable = [world] (const ScenarioObject& object) {
 		sim::Entity* entity = world->getEntityById(static_cast<const EntityObject*>(&object)->data).get();
-		return entity ? isDeletable(*entity) : false;
+		return entity ? isUserDeletable(*entity) : false;
 	};
 	t->objectRemover = [world] (const ScenarioObject& object) {
 		if (sim::Entity* entity = world->getEntityById(static_cast<const EntityObject*>(&object)->data).get(); entity)

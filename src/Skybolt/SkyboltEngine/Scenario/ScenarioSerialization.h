@@ -14,11 +14,14 @@
 
 namespace skybolt {
 
-void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, EntityFactory& entityFactory, const nlohmann::json& value);
+using EntityFactoryFn = std::function<sim::EntityPtr(const std::string& templateName, const std::string& instanceName)>;
+
+//! Reads scenario state from json. Any existing world state will be overwritten.
+void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, const EntityFactoryFn& entityFactory, const nlohmann::json& value);
 
 nlohmann::json writeScenario(refl::TypeRegistry& typeRegistry, const Scenario& scenario);
 
-void readEntities(refl::TypeRegistry& registry, sim::World& world, EntityFactory& factory, const nlohmann::json& value);
+void readEntities(refl::TypeRegistry& registry, sim::World& world, const EntityFactoryFn& factory, const nlohmann::json& value);
 
 nlohmann::json writeEntities(refl::TypeRegistry& registry, const sim::World& world);
 

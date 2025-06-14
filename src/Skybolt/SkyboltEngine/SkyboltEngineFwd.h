@@ -27,6 +27,7 @@ class LogicalAxis;
 class Plugin;
 class PolylineVisBinding;
 struct Scenario;
+class SimSnapshotRegistry;
 class SimVisBinding;
 class StateSequenceController;
 class StatsDisplaySystem;

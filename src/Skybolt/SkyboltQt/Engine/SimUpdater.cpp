@@ -25,13 +25,20 @@ SimUpdater::~SimUpdater() = default;
 
 void SimUpdater::update(SecondsD wallDt)
 {
-	mSimStepper->setDynamicsEnabled(mEngineRoot->scenario->timelineMode.get() == TimelineMode::Live);
-	
-	// Set SimStepper to the current time.
-	// This is necessary because the current time may have changed since the last update, for example if we jumped to a different point on the timeline.
-	TimeSource& timeSource = mEngineRoot->scenario->timeSource;
+	bool isLive = mEngineRoot->scenario->timelineMode.get() == TimelineMode::Live;
+	mSimStepper->setDynamicsEnabled(isLive);
+
+	const auto& timeSource = mEngineRoot->scenario->timeSource;
+
+	// Update simulation to sim time from time source.
+	// This is necessary because the current time may have changed since the last update,
+	// for example if we jumped to a different point on the timeline.
 	SecondsD simTime = timeSource.getTime();
-	mSimStepper->setTime(simTime);
+	if (mSimStepper->getTime() != simTime)
+	{
+		// Update SimStepper to the current time.
+		mSimStepper->setTime(simTime);
+	}
 
 	// Advance forward time
 	if (wallDt > 0)

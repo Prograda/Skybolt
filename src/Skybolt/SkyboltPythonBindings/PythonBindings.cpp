@@ -297,7 +297,9 @@ PYBIND11_MODULE(skybolt, m) {
 
 	py::class_<ScenarioMetadataComponent, std::shared_ptr<ScenarioMetadataComponent>, Component>(m, "ScenarioMetadataComponent")
 		.def_readwrite("serializable", &ScenarioMetadataComponent::serializable)
-		.def_readwrite("deletable", &ScenarioMetadataComponent::deletable)
+		.def_property("deletable", // TODO: deprecate deletable and expose setting the ScenarioMetadataComponent::LifetimePolicy enum value directly
+			[] (const ScenarioMetadataComponent& c) { return c.lifetimePolicy == ScenarioMetadataComponent::LifetimePolicy::User; }, // user is allowed to delete
+			[] (ScenarioMetadataComponent& c, bool value) { return c.lifetimePolicy = value ? ScenarioMetadataComponent::LifetimePolicy::User : ScenarioMetadataComponent::LifetimePolicy::Procedural; })
 		.def_readwrite("directory", &ScenarioMetadataComponent::directory);
 
 	py::class_<TemplateNameComponent, std::shared_ptr<TemplateNameComponent>, Component>(m, "TemplateNameComponent", "A component storing the name of the template which an `Entity` instantiates")

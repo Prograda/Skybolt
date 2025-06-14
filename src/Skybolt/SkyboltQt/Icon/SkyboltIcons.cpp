@@ -28,6 +28,8 @@ static std::map<SkyboltIcon, QIcon> createSkyboltIcons()
 		{SkyboltIcon::Screenshot, "Icons/google/screenshot_keyboard.svg"},
 		{SkyboltIcon::Sequence, "Icons/google/playlist_play.svg"},
 		{SkyboltIcon::Settings, "Icons/google/settings.svg"},
+		{SkyboltIcon::SkipBackward, "Icons/google/round-skip-prev.svg"},
+		{SkyboltIcon::SkipForward, "Icons/google/round-skip-next.svg"},
 		{SkyboltIcon::Speed, "Icons/google/round-speed.svg"}
 	};
 

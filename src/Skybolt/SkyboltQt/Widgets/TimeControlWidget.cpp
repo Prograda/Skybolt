@@ -20,10 +20,10 @@ TimeControlWidget::TimeControlWidget(QWidget* parent) :
 	mPlayAction = new QAction(getSkyboltIcon(SkyboltIcon::Play), tr("Play"), this);
 	mPlayAction->setShortcut(tr("Ctrl+P"));
 
-	mForwardAction = new QAction(getSkyboltIcon(SkyboltIcon::FastForward), tr("Forward"), this);
+	mForwardAction = new QAction(getSkyboltIcon(SkyboltIcon::SkipForward), tr("Forward to end"), this);
 	mForwardAction->setShortcut(tr("Ctrl+F"));
 	
-	mBackwardAction = new QAction(getSkyboltIcon(SkyboltIcon::FastRewind), tr("Backward"), this);
+	mBackwardAction = new QAction(getSkyboltIcon(SkyboltIcon::SkipBackward), tr("Back to start"), this);
 	mBackwardAction->setShortcut(tr("Ctrl+B"));
 
 	auto rateAction = new QAction(getSkyboltIcon(SkyboltIcon::Speed), tr("Rate"), this);
@@ -96,8 +96,14 @@ void TimeControlWidget::setTimeSource(TimeSource* source)
 			}
 		}));
 
-		mQtTimeSourceConnections.push_back(connect(mForwardAction, &QAction::triggered, [&]() { mSource->setTime(mSource->getRange().end); }));
-		mQtTimeSourceConnections.push_back(connect(mBackwardAction, &QAction::triggered, [&]() { mSource->setTime(mSource->getRange().start); }));
+		mQtTimeSourceConnections.push_back(connect(mForwardAction, &QAction::triggered, [&]() {
+			mSource->setState(TimeSource::StateStopped);
+			mSource->setTime(mSource->getRange().end);
+		}));
+		mQtTimeSourceConnections.push_back(connect(mBackwardAction, &QAction::triggered, [&]() {
+			mSource->setState(TimeSource::StateStopped);
+			mSource->setTime(mSource->getRange().start);
+		}));
 
 		mBoostTimeSourceConnection = mSource->stateChanged.connect([&](const TimeSource::State& state) {
 			switch (state)
@@ -123,7 +129,6 @@ void TimeControlWidget::setTimelineMode(TimelineMode timelineMode)
 	{
 		mTimelineMode = timelineMode;
 		mForwardAction->setVisible(timelineMode == TimelineMode::Free);
-		mBackwardAction->setVisible(timelineMode == TimelineMode::Free);
 	}
 }
 
