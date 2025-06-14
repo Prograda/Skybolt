@@ -14,6 +14,11 @@ namespace skybolt {
 void writeJsonFile(const nlohmann::json& j, const std::string& filename)
 {
 	std::ofstream out(filename);
+	if (!out)
+	{
+		throw std::runtime_error("Could not write to file: '" + filename + "'");
+	}
+
 	out << std::setw(4) << j << std::endl;
 	out.close();
 }
