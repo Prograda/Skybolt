@@ -14,6 +14,8 @@
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
+#include <SkyboltSim/Spatial/Geocentric.h>
+#include <SkyboltSim/Spatial/GreatCircle.h>
 
 using namespace skybolt;
 
@@ -155,7 +157,8 @@ ScenarioObjectTypePtr createEntityObjectType(sim::World* world, EntityFactory* e
 		return entityFactory->getScenarioObjectDirectoryForTemplate(templateName);
 	};
 	t->objectCreator = [world, entityFactory] (const std::string& instanceName, const std::string& templateName) {
-		sim::EntityPtr entity = entityFactory->createEntity(templateName);
+		static auto defaultPosition = sim::llaToGeocentric(sim::LatLonAlt(0, 0, 0), sim::earthRadius());
+		sim::EntityPtr entity = entityFactory->createEntity(templateName, /* instanceName */ "", defaultPosition);
 		world->addEntity(entity);
 	};
 	t->isObjectRemovable = [world] (const ScenarioObject& object) {
