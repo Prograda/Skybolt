@@ -346,20 +346,29 @@ static QWidget* createDoubleEditor(QtProperty* property, QWidget* parent)
 
 static QWidget* createBoolEditor(QtProperty* property, QWidget* parent)
 {
-	QCheckBox* widget = new QCheckBox(parent);
-	widget->setChecked(property->value.toBool());
+	QAbstractButton* button;
+	if (auto attributeType = property->property(QtPropertyMetadataNames::attributeType); attributeType.isValid() && attributeType.toInt() == int(sim::AttributeType::ToggleButton))
+	{
+		button = new QPushButton(property->name, parent);
+		button->setCheckable(true);
+	}
+	else
+	{
+		button = new QCheckBox(parent);
+	}
+	button->setChecked(property->value.toBool());
 
-	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property]() {
-		widget->blockSignals(true);
-		widget->setChecked(property->value.toBool());
-		widget->blockSignals(false);
+	QObject::connect(property, &QtProperty::valueChanged, button, [button, property]() {
+		button->blockSignals(true);
+		button->setChecked(property->value.toBool());
+		button->blockSignals(false);
 	});
 
-	QObject::connect(widget, &QCheckBox::stateChanged, property, [=](int state) {
+	QObject::connect(button, &QAbstractButton::toggled, property, [=](int state) {
 		property->setValue((bool)state);
 	});
 
-	return widget;
+	return button;
 }
 
 static QWidget* createDateTimeEditor(QtProperty* property, QWidget* parent)
@@ -404,7 +413,7 @@ static QWidget* createOptionalVariantEditor(const PropertyEditorWidgetFactoryMap
 		layout->setMargin(0);
 		widget->setLayout(layout);
 
-		auto activateCheckbox = new QCheckBox("Valid", widget);
+		auto activateCheckbox = new QCheckBox("Enable", widget);
 		activateCheckbox->setChecked(optionalProperty.present);
 		QWidget* valueEditorWidget = i->second(optionalProperty.property.get(), parent);
 		valueEditorWidget->setEnabled(optionalProperty.present);
