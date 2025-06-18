@@ -264,10 +264,13 @@ template <typename ObjectT, typename MemberT>
 class MemberProperty : public Property
 {
 public:
-	MemberProperty(TypeRegistry* typeRegistry, const std::string& name, const TypePtr& type, MemberT ObjectT::*member) :
+	using ValueChangedCallbackT = void(ObjectT::*)(const std::string&);
+
+	MemberProperty(TypeRegistry* typeRegistry, const std::string& name, const TypePtr& type, MemberT ObjectT::*member, ValueChangedCallbackT valueChangedCallback) :
 		Property(name, type),
 		mTypeRegistry(typeRegistry),
-		mMember(member)
+		mMember(member),
+		mValueChangedCallback(valueChangedCallback)
 	{
 		assert(mTypeRegistry);
 	}
@@ -281,7 +284,14 @@ public:
 			return false;
 		}
 
-		obj.getObject<ObjectT>()->*mMember = *value.getObject<MemberT>();
+		auto object = obj.getObject<ObjectT>();
+		object->*mMember = *value.getObject<MemberT>();
+
+		if (mValueChangedCallback)
+		{
+			(object->*mValueChangedCallback)(getName());
+		}
+
 		return true;
 	}
 
@@ -294,6 +304,7 @@ public:
 private:
 	TypeRegistry* mTypeRegistry;
 	MemberT ObjectT::*mMember;
+	ValueChangedCallbackT mValueChangedCallback = nullptr;
 };
 
 template <typename ObjectT, typename GetterValueT, typename SetterValueT>
@@ -422,10 +433,10 @@ public:
 
 	//! Read/writable property backed by a member variable
 	template <typename MemberT>
-	TypeBuilder<TypeT>& property(const std::string& name, MemberT TypeT::*member, Property::MetadataMap metadata = {})
+	TypeBuilder<TypeT>& property(const std::string& name, MemberT TypeT::*member, Property::MetadataMap metadata = {}, typename MemberProperty<TypeT, MemberT>::ValueChangedCallbackT valueChanged = nullptr)
 	{
-		mRegisterLater([name = std::move(name), member = std::move(member), metadata = std::move(metadata), type = mType] (TypeRegistry& registry) {
-			auto p = std::make_shared<MemberProperty<TypeT, MemberT>>(&registry, name, registry.getOrCreateType<MemberT>(), member);
+		mRegisterLater([name = std::move(name), member = std::move(member), metadata = std::move(metadata), type = mType, valueChanged = std::move(valueChanged)] (TypeRegistry& registry) {
+			auto p = std::make_shared<MemberProperty<TypeT, MemberT>>(&registry, name, registry.getOrCreateType<MemberT>(), member, valueChanged);
 			p->addMetadata(std::move(metadata));
 			type->addProperty(p);
 		});
