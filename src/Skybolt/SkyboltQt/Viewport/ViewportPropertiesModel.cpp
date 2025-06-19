@@ -17,7 +17,7 @@ ViewportPropertiesModel::ViewportPropertiesModel(vis::Scene* Scene, sim::CameraC
 	{
 		mFov = createQtProperty("Vertical FOV", 0.0);
 		mFov->setValue(camera->getState().fovY * skybolt::math::radToDegF());
-		mProperties.push_back(mFov);
+		mProperties[PropertiesModel::getDefaultSectionName()].push_back(mFov);
 
 		connect(mFov.get(), &QtProperty::valueChanged, [=]()
 		{
@@ -27,7 +27,7 @@ ViewportPropertiesModel::ViewportPropertiesModel(vis::Scene* Scene, sim::CameraC
 	{
 		mAmbientLight = createQtProperty("Ambient Light", 0.0);
 		mAmbientLight->setValue(mScene->getAmbientLightColor().x());
-		mProperties.push_back(mAmbientLight);
+		mProperties[PropertiesModel::getDefaultSectionName()].push_back(mAmbientLight);
 
 		connect(mAmbientLight.get(), &QtProperty::valueChanged, [=]()
 		{

@@ -51,26 +51,35 @@ class PropertiesModel : public QObject, public skybolt::Updatable
 {
 	Q_OBJECT
 public:
+	using Properties = std::vector<QtPropertyPtr>;
+	using SectionProperties = std::map<std::string, Properties>;
+
 	PropertiesModel();
-	PropertiesModel(const std::vector<QtPropertyPtr>& properties);
+	PropertiesModel(const SectionProperties& properties);
 	~PropertiesModel() {}
 
 	void update() override;
 
-	virtual std::vector<QtPropertyPtr> getProperties() const { return mProperties; }
+	virtual SectionProperties getProperties() const { return mProperties; }
 
 	using QtPropertyUpdater = std::function<void(QtProperty&)> ;
 	using QtPropertyApplier = std::function<void(const QtProperty&)>;
 
+	static const std::string& getDefaultSectionName()
+	{
+		static std::string s;
+		return s;
+	}
+
 	//! @param updater is regularly called update the value of QtProperty from an external model
 	//! @param applier is called when a QtProperty value should be applied to an external model (e.g. if the user pressent 'Enter' key in a text box
-	void addProperty(const QtPropertyPtr& property, QtPropertyUpdater updater = nullptr, QtPropertyApplier applier = nullptr);
+	void addProperty(const QtPropertyPtr& property, QtPropertyUpdater updater = nullptr, QtPropertyApplier applier = nullptr, const std::string& sectionName = getDefaultSectionName());
 
 signals:
 	void modelReset(PropertiesModel*);
 
 protected:
-	std::vector<QtPropertyPtr> mProperties;
+	SectionProperties mProperties;
 	std::map<QtPropertyPtr, QtPropertyUpdater> mPropertyUpdaters;
 	bool mCurrentlyUpdating = false;
 };

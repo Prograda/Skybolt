@@ -233,6 +233,9 @@ public:
 	void addMetadata(const std::string& name, const std::any& value);
 	std::any getMetadata(const std::string& name) const;
 
+	void setCategory(const std::string& category) { mCategory = category; }
+	const std::string& getCategory() { return mCategory; }
+
 protected:
 	bool mReadOnly = false;
 	const TypePtr mType;
@@ -240,6 +243,7 @@ protected:
 private:
 	std::string mName;
 	std::map<std::string, std::any> mMetadata;
+	std::string mCategory; //!< Optional name of the category/section to group the property in within the UI
 };
 
 template <typename T>
@@ -428,16 +432,18 @@ public:
 	//! types have been registered.
 	TypeBuilder(TypePtr type, TypeDefinitionRegisterLater registerLater) :
 		mType(std::move(type)),
-		mRegisterLater(std::move(registerLater))
+		mRegisterLater(std::move(registerLater)),
+		mCategory(mType->getName())
 	{}
 
 	//! Read/writable property backed by a member variable
 	template <typename MemberT>
 	TypeBuilder<TypeT>& property(const std::string& name, MemberT TypeT::*member, Property::MetadataMap metadata = {}, typename MemberProperty<TypeT, MemberT>::ValueChangedCallbackT valueChanged = nullptr)
 	{
-		mRegisterLater([name = std::move(name), member = std::move(member), metadata = std::move(metadata), type = mType, valueChanged = std::move(valueChanged)] (TypeRegistry& registry) {
+		mRegisterLater([name = std::move(name), member = std::move(member), metadata = std::move(metadata), type = mType, valueChanged = std::move(valueChanged), categoryName = mCategory] (TypeRegistry& registry) {
 			auto p = std::make_shared<MemberProperty<TypeT, MemberT>>(&registry, name, registry.getOrCreateType<MemberT>(), member, valueChanged);
 			p->addMetadata(std::move(metadata));
+			p->setCategory(categoryName);
 			type->addProperty(p);
 		});
 		return *this;
@@ -451,6 +457,7 @@ public:
 			auto p = std::make_shared<MemberProperty<TypeT, MemberT>>(&registry, name, registry.getOrCreateType<MemberT>(), member);
 			p->addMetadata(std::move(metadata));
 			p->setReadOnly(true);
+			p->setCategory(mCategory);
 			type->addProperty(p);
 		});
 		return *this;
@@ -460,13 +467,14 @@ public:
 	template <typename GetterValueT, typename SetterValueT>
 	TypeBuilder<TypeT>& property(const std::string& name, GetterValueT (TypeT::*getter)() const, void (TypeT::*setter)(SetterValueT), Property::MetadataMap metadata = {})
 	{
-		mRegisterLater([name = std::move(name), getter = std::move(getter), setter = std::move(setter), metadata = std::move(metadata), type = mType] (TypeRegistry& registry) {
+		mRegisterLater([name = std::move(name), getter = std::move(getter), setter = std::move(setter), metadata = std::move(metadata), type = mType, categoryName = mCategory] (TypeRegistry& registry) {
 			using UnqualifiedGetterValueT = typename std::remove_cv<typename std::remove_reference<GetterValueT>::type>::type;
 			using UnqualifiedSetterValueT = typename std::remove_cv<typename std::remove_reference<SetterValueT>::type>::type;
 			static_assert(std::is_same<UnqualifiedGetterValueT, UnqualifiedSetterValueT>::value, "Getter and setter must have same value type, ignoring const ref qualifiers");
 
 			auto p = std::make_shared<GetterSetterMethodProperty<TypeT, GetterValueT, SetterValueT>>(&registry, name, registry.getOrCreateType<UnqualifiedGetterValueT>(), getter, setter);
 			p->addMetadata(std::move(metadata));
+			p->setCategory(categoryName);
 			type->addProperty(p);
 		});
 		return *this;
@@ -476,10 +484,11 @@ public:
 	template <typename MethodT>
 	TypeBuilder<TypeT>& propertyReadOnly(const std::string& name, MethodT (TypeT::*getter)() const, Property::MetadataMap metadata = {})
 	{
-		mRegisterLater([name = std::move(name), getter = std::move(getter), metadata = std::move(metadata), type = mType] (TypeRegistry& registry) {
+		mRegisterLater([name = std::move(name), getter = std::move(getter), metadata = std::move(metadata), type = mType, categoryName = mCategory] (TypeRegistry& registry) {
 			auto p = std::make_shared<GetterMethodProperty<TypeT, MethodT>>(&registry, name, registry.getOrCreateType<MethodT>(), getter);
 			p->addMetadata(std::move(metadata));
 			p->setReadOnly(true);
+			p->setCategory(categoryName);
 			type->addProperty(p);
 		});
 		return *this;
@@ -489,13 +498,14 @@ public:
 	template <typename GetterValueT, typename SetterValueT>
 	TypeBuilder<TypeT>& propertyFn(const std::string& name, std::function<GetterValueT(const TypeT&)> getter, std::function<void(TypeT&, SetterValueT)> setter, Property::MetadataMap metadata = {})
 	{
-		mRegisterLater([name = std::move(name), getter = std::move(getter), setter = std::move(setter), metadata = std::move(metadata), type = mType] (TypeRegistry& registry) {
+		mRegisterLater([name = std::move(name), getter = std::move(getter), setter = std::move(setter), metadata = std::move(metadata), type = mType, categoryName = mCategory] (TypeRegistry& registry) {
 			using UnqualifiedGetterValueT = typename std::remove_cv<typename std::remove_reference<GetterValueT>::type>::type;
 			using UnqualifiedSetterValueT = typename std::remove_cv<typename std::remove_reference<SetterValueT>::type>::type;
 			static_assert(std::is_same<UnqualifiedGetterValueT, UnqualifiedSetterValueT>::value, "Getter and setter must have same value type, ignoring const ref qualifiers");
 
 			auto p = std::make_shared<GetterSetterFunctionProperty<TypeT, GetterValueT, SetterValueT>>(&registry, name, registry.getOrCreateType<UnqualifiedGetterValueT>(), getter, setter);
 			p->addMetadata(std::move(metadata));
+			p->setCategory(categoryName);
 			type->addProperty(p);
 		});
 		return *this;
@@ -512,9 +522,16 @@ public:
 		return *this;
 	}
 
+	TypeBuilder<TypeT>& category(const std::string& categoryName)
+	{
+		mCategory = categoryName;
+		return *this;
+	}
+
 private:
 	TypePtr mType;
 	TypeDefinitionRegisterLater mRegisterLater;
+	std::string mCategory; //! Category for future properties to be created under
 };
 
 class TypeRegistryBuilder

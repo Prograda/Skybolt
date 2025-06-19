@@ -30,9 +30,9 @@ void PropertiesModel::update()
 	}
 }
 
-void PropertiesModel::addProperty(const QtPropertyPtr& property, QtPropertyUpdater updater, QtPropertyApplier applier)
+void PropertiesModel::addProperty(const QtPropertyPtr& property, QtPropertyUpdater updater, QtPropertyApplier applier, const std::string& sectionName)
 {
-	mProperties.push_back(property);
+	mProperties[sectionName].push_back(property);
 	if (updater)
 	{
 		mPropertyUpdaters[property] = updater;
@@ -53,7 +53,7 @@ PropertiesModel::PropertiesModel()
 {
 }
 
-PropertiesModel::PropertiesModel(const std::vector<QtPropertyPtr>& properties) :
+PropertiesModel::PropertiesModel(const SectionProperties& properties) :
 	mProperties(properties)
 {
 }

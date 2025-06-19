@@ -105,11 +105,15 @@ SettingsEditor::SettingsEditor(const QString& settingsFilename, const nlohmann::
 	{
 		mSettingsFilenameProperty = createQtProperty("Settings filename", settingsFilename);
 		PropertyEditor* editor = new PropertyEditor();
-		editor->setModel(std::make_shared<PropertiesModel>(std::vector<QtPropertyPtr>{ mSettingsFilenameProperty }));
+		editor->setModel(std::make_shared<PropertiesModel>(PropertiesModel::SectionProperties{
+			{ PropertiesModel::getDefaultSectionName(), PropertiesModel::Properties{ mSettingsFilenameProperty } }
+		}));
 		layout->addWidget(editor, 0);
 	}
 	{
-		mSettingsModel = std::make_shared<PropertiesModel>(properties);
+		mSettingsModel = std::make_shared<PropertiesModel>(PropertiesModel::SectionProperties{
+			{ PropertiesModel::getDefaultSectionName(), properties }
+		});
 		PropertyEditor* editor = new PropertyEditor();
 		editor->setModel(mSettingsModel);
 		layout->addWidget(wrapWithVerticalScrollBar(editor, this), 1);
@@ -124,9 +128,12 @@ QString SettingsEditor::getSettingsFilename() const
 nlohmann::json SettingsEditor::getJson() const
 {
 	nlohmann::json j;
-	for (const auto& item : mSettingsModel->getProperties())
+	for (const auto& [sectionName, properties] : mSettingsModel->getProperties())
 	{
-		setJsonQVariant(j, item->name.toStdString(), item->value);
+		for (const auto& property : properties)
+		{
+			setJsonQVariant(j, property->name.toStdString(), property->value);
+		}
 	}
 
 	return j;

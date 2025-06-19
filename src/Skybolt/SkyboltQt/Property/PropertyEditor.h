@@ -14,7 +14,7 @@
 #include <memory>
 #include <typeindex>
 
-class QGridLayout;
+class QVBoxLayout;
 
 class PropertyEditor : public QWidget
 {
@@ -33,6 +33,8 @@ private:
 
 private:
 	PropertiesModelPtr mModel;
-	QGridLayout* mGridLayout;
+	QVBoxLayout* mLayout;
 	PropertyEditorWidgetFactoryMap mFactoryMap;
+
+	std::map<std::string, bool> mDefaultSectionExpandedState;
 };

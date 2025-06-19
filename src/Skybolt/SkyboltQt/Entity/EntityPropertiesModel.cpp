@@ -89,7 +89,9 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 				{
 					mEntity->setDynamicsEnabled(property.value.toBool());
 				}
-			}
+			},
+			// Section name
+			"Dynamics"
 		);
 	}
 

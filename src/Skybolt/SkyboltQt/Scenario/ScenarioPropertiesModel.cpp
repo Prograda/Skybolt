@@ -20,7 +20,7 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 
 	{
 		mStartDateTime = createQtProperty("startTime", QDateTime());
-		mProperties.push_back(mStartDateTime);
+		mProperties[PropertiesModel::getDefaultSectionName()].push_back(mStartDateTime);
 
 		connect(mStartDateTime.get(), &QtProperty::valueChanged, [this]() {
 			QDateTime dateTime = mStartDateTime->value.toDateTime();
@@ -29,7 +29,7 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 	}
 	{
 		mDuration = createQtProperty("duration", 0.0);
-		mProperties.push_back(mDuration);
+		mProperties[PropertiesModel::getDefaultSectionName()].push_back(mDuration);
 
 		connect(mDuration.get(), &QtProperty::valueChanged, [this]() {
 			TimeRange range = mScenario->timeSource.getRange();
@@ -40,7 +40,7 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 	{
 		mTimelineMode = createQtProperty("timelineMode", 0);
 		mTimelineMode->setProperty(QtPropertyMetadataNames::optionNames, QStringList({"Live", "Free"}));
-		mProperties.push_back(mTimelineMode);
+		mProperties[PropertiesModel::getDefaultSectionName()].push_back(mTimelineMode);
 
 		connect(mTimelineMode.get(), &QtProperty::valueChanged, [this]() {
 			mScenario->timelineMode.set(skybolt::TimelineMode(mTimelineMode->value.toInt()));

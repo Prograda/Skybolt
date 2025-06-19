@@ -32,7 +32,9 @@ void showCaptureImageSequenceDialog(const FrameImageWriter& frameImageWriter, co
 	auto startTime = createQtProperty("Start Time", 0.0);
 	auto endTime = createQtProperty("End Time", 1.0);
 	auto frameRate = createQtProperty("Frame Rate", 30.0);
-	auto properties = std::make_shared<PropertiesModel>(std::vector<QtPropertyPtr>({filenameTemplate, startTime, endTime, frameRate}));
+	auto properties = std::make_shared<PropertiesModel>(PropertiesModel::SectionProperties{
+		{PropertiesModel::getDefaultSectionName(), PropertiesModel::Properties({filenameTemplate, startTime, endTime, frameRate})}
+	});
 
 	PropertyEditor* editor = new PropertyEditor();
 	editor->setModel(properties);

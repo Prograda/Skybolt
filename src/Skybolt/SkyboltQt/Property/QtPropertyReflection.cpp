@@ -286,7 +286,7 @@ void addRttrPropertiesToModel(refl::TypeRegistry& typeRegistry, PropertiesModel&
 		std::optional<QtPropertyUpdaterApplier> qtProperty = reflPropertyToQt(typeRegistry, instanceGetter, property);
 		if (qtProperty)
 		{
-			model.addProperty(qtProperty->property, qtProperty->updater, qtProperty->applier);
+			model.addProperty(qtProperty->property, qtProperty->updater, qtProperty->applier, property->getCategory());
 		}
 	}
 }

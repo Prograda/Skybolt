@@ -5,7 +5,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "PropertyEditor.h"
+#include "Widgets/CollapsiblePanelWidget.h"
 #include "SkyboltQt/QtUtil/QtLayoutUtil.h"
+#include <SkyboltCommon/MapUtility.h>
 
 #include <QtCore/QDate>
 #include <QtCore/QLocale>
@@ -19,7 +21,7 @@ using namespace skybolt;
 PropertyEditor::PropertyEditor(const PropertyEditorWidgetFactoryMap& factoryMap, QWidget* parent) :
 	QWidget(parent),
 	mFactoryMap(factoryMap),
-	mGridLayout(new QGridLayout(this))
+	mLayout(new QVBoxLayout(this))
 {
 }
 
@@ -45,26 +47,51 @@ void PropertyEditor::modelReset(PropertiesModel* model)
 {
 	assert(mModel.get() == model);
 
-	clearLayout(*mGridLayout);
+	// Remove existing property widgets
+	clearLayout(*mLayout);
 
-	int r = 0;
-	for (const QtPropertyPtr& property : model->getProperties())
+	// Add property widgets
+	for (const auto& [sectionName, properties] : model->getProperties())
 	{
-		auto label = new QLabel(property->name, this);
-		auto labelLayout = new QVBoxLayout();
-		labelLayout->setContentsMargins(3, 3, 6, 3);
-		labelLayout->addWidget(label);
-		mGridLayout->addLayout(labelLayout, r, 0, Qt::AlignTop | Qt::AlignRight);
-		QWidget* widget = createEditor(property.get());
-		if (widget)
-		{
-			mGridLayout->addWidget(widget, r, 1);
-			mGridLayout->setRowStretch(r, -1);
-		}
+		QGridLayout* gridLayout;
 
-		++r;
+		if (sectionName.empty())
+		{
+			auto widget = new QWidget();
+			mLayout->addWidget(widget);
+			gridLayout = new QGridLayout(widget);
+		}
+		else
+		{
+			auto section = new CollapsiblePanelWidget(QString::fromStdString(sectionName), this);
+			section->setExpanded(skybolt::findOptional(mDefaultSectionExpandedState, sectionName).value_or(true));
+			connect(section, &CollapsiblePanelWidget::expandedStateChanged, this, [this, sectionName = sectionName] (bool expanded) {
+				mDefaultSectionExpandedState[sectionName] = expanded;
+			});
+
+			mLayout->addWidget(section);
+			gridLayout = new QGridLayout(section->getContentWidget());
+		}
+		gridLayout->setColumnMinimumWidth(0, 100);
+		gridLayout->setColumnStretch(1, 1);
+
+		int rowCount = 0;
+		for (const QtPropertyPtr& property : properties)
+		{
+			auto label = new QLabel(property->name, this);
+			auto labelLayout = new QVBoxLayout();
+			labelLayout->setContentsMargins(3, 3, 6, 3);
+			labelLayout->addWidget(label);
+			gridLayout->addLayout(labelLayout, rowCount, 0, Qt::AlignTop | Qt::AlignRight);
+			QWidget* widget = createEditor(property.get());
+			if (widget)
+			{
+				gridLayout->addWidget(widget, rowCount, 1);
+				++rowCount;
+			}
+		}
 	}
-	mGridLayout->setRowStretch(r, 1);
+	mLayout->addStretch(1);
 }
 
 static void setEditable(QWidget& widget, bool editable)
