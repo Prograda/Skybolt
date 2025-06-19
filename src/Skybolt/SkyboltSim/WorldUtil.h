@@ -48,5 +48,21 @@ sim::EntityPtr findNearestEntityWithComponent(const std::vector<EntityPtr>& enti
 	return findNearestEntityWithComponent(entities, position, component);
 }
 
+//! @returns the nearest entity with a given component, or null if no entity found.
+//! @param outComponent is the component found, or null if no entity/component found.
+template <class ComponentT>
+std::vector<sim::EntityPtr> findEntitiesWithComponent(const std::vector<EntityPtr>& entities)
+{
+	std::vector<sim::EntityPtr> result;
+	for (const sim::EntityPtr& entity : entities)
+	{
+		if (auto component = entity->getFirstComponent<ComponentT>(); component)
+		{
+			result.push_back(entity);
+		}
+	}
+	return result;
+}
+
 } // namespace sim
 } // namespace skybolt

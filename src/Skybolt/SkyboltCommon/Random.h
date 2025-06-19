@@ -42,6 +42,8 @@ public:
 		return dist(generator);
 	}
 
+	std::mt19937& getGenerator() { return generator; }
+
 private:
 	std::mt19937 generator;
 };
