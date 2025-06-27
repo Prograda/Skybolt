@@ -29,9 +29,9 @@ PythonInterpreter::PythonInterpreter(EngineRoot* engineRoot) :
 			sysPath.append(scriptFolder.string());
 		}
 
-		if (const char* skyboltLibPath = std::getenv("SKYBOLT_LIB_PATH"); skyboltLibPath)
+		if (const char* pythonPath = std::getenv("SKYBOLT_PYTHON_PATH"); pythonPath)
 		{
-			for (const std::string& path : file::splitByPathListSeparator(skyboltLibPath))
+			for (const std::string& path : file::splitByPathListSeparator(pythonPath))
 			{
 				sysPath.append(path);
 			}
