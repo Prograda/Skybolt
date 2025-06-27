@@ -8,6 +8,8 @@
 
 #include "Plugin.h"
 #include "SkyboltEngine/SkyboltEngineFwd.h"
+#include <SkyboltCommon/LibraryUtil.h>
+#include <boost/algorithm/string.hpp>
 #include <boost/dll/import.hpp>
 #include <boost/log/trivial.hpp>
 #include <filesystem>
@@ -60,7 +62,20 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 		}
 		catch (const std::exception& e)
 		{
-			BOOST_LOG_TRIVIAL(error) << "Error loading plugin '" << path.string() << "': " << e.what();
+			std::string diagnosticMessage;
+			try
+			{
+				if (auto missingDependencies = getMissingDependencies(path.string()); !missingDependencies.empty())
+				{
+					diagnosticMessage = "Missing modules: " + boost::join(missingDependencies, ", ");
+				}
+			}
+			catch (const std::exception& e)
+			{
+				diagnosticMessage = std::string("Failed to generate diagnostic message because: ") + e.what();
+			}
+
+			BOOST_LOG_TRIVIAL(error) << "Error loading plugin '" << path.string() << "': " << e.what() << (!diagnosticMessage.empty() ? ". " + diagnosticMessage : "");
 		}
 	}
 
