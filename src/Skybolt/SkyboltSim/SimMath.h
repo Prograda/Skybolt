@@ -18,9 +18,6 @@ typedef glm::dquat Quaternion;
 typedef glm::dmat3 Matrix3;
 typedef glm::dmat4 Matrix4;
 
-//! Returns tangent and bitangent perpendiular to normal and each other
-void getOrthonormalBasis(const Vector3 &normal, Vector3 &tangent, Vector3 &bitangent);
-
 //! Generates an orientation from a direction, with arbitrary roll angle
 Matrix3 getOrientationFromDirection(const Vector3& direction);
 

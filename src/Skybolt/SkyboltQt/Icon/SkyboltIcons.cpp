@@ -19,6 +19,8 @@ static std::map<SkyboltIcon, QIcon> createSkyboltIcons()
 		{SkyboltIcon::FastRewind, "Icons/google/round-fast_rewind.svg"},
 		{SkyboltIcon::Filter, "Icons/google/filter_alt.svg"},
 		{SkyboltIcon::Folder, "Icons/google/folder.svg"},
+		{SkyboltIcon::MoveDown, "Icons/google/move_down.svg"},
+		{SkyboltIcon::MoveUp, "Icons/google/move_up.svg"},
 		{SkyboltIcon::Node, "Icons/google/brightness_1.svg"},
 		{SkyboltIcon::NodeGraph, "Icons/google/view_agenda.svg"},
 		{SkyboltIcon::Pause, "Icons/google/round-pause.svg"},

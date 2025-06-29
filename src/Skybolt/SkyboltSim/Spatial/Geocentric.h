@@ -21,11 +21,14 @@ LatLonAlt geocentricToLla(const Vector3& pos, double planetRadius);
 
 LatLon geocentricToLatLon(const Vector3& pos);
 
-//! Returns the orientation of the north-east-down local-tangent-plane relative to geocentric axes
+//! @returns the orientation of the north-east-down local-tangent-plane relative to geocentric axes
 Quaternion latLonToGeocentricLtpOrientation(const LatLon& latLon);
 
-//! Returns the north-east-down local-tangent-plane orientation for a geocentric point
+//! @returns the north-east-down local-tangent-plane orientation for a geocentric point
 Matrix3 geocentricToLtpOrientation(const Vector3& pos);
+
+//! @returns the up direction of the local-tangent-plane at pos
+Vector3 calcLtpUpDirection(const Vector3& pos);
 
 } // namespace skybolt
 } // namespace sim

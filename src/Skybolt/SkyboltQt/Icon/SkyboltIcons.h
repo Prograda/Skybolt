@@ -18,6 +18,8 @@ enum class SkyboltIcon
 	FastRewind,
 	Filter,
 	Folder,
+	MoveDown,
+	MoveUp,
 	Node,
 	NodeGraph,
 	Pause,

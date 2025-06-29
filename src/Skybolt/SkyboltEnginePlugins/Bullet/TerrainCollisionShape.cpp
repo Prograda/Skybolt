@@ -42,7 +42,7 @@ void TerrainCollisionShape::processAllTriangles(btTriangleCallback *callback, co
 
 	Vector3 normal = glm::normalize(aabbCenter);
 	Vector3 tangent, bitangent;
-	getOrthonormalBasis(normal, tangent, bitangent);
+	math::getOrthonormalBasis(normal, tangent, bitangent);
 
 	Vector3 planetCenter = normal * earthRadius();
 

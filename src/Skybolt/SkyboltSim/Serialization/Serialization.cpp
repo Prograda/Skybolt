@@ -19,7 +19,7 @@ template <typename T>
 ToReflVariantTranslator createToReflVariantTranslator()
 {
 	return [] (refl::TypeRegistry& registry, const nlohmann::json& json) {
-		return refl::createOwningInstance(&registry, json.get<T>());
+		return refl::createOwningInstance(registry, json.get<T>());
 		};
 }
 
@@ -27,7 +27,7 @@ template <typename T>
 ToReflVariantTranslator createOptionalToReflVariantTranslator()
 {
 	return [] (refl::TypeRegistry& registry, const nlohmann::json& json) {
-		return refl::createOwningInstance(&registry, std::optional<T>(json.get<T>()));
+		return refl::createOwningInstance(registry, std::optional<T>(json.get<T>()));
 		};
 }
 
@@ -53,10 +53,10 @@ static std::optional<refl::Instance> jsonToReflVariant(refl::TypeRegistry& regis
 		{ registry.getOrCreateType<std::optional<double>>().get(), createOptionalToReflVariantTranslator<double>() },
 		{ registry.getOrCreateType<std::optional<std::string>>().get(), createToReflVariantTranslator<std::string>() },
 
-		{ registry.getOrCreateType<sim::Vector3>().get(), [] (refl::TypeRegistry& registry, const nlohmann::json& json) { return refl::createOwningInstance(&registry, readVector3(json)); }},
-		{ registry.getOrCreateType<sim::Quaternion>().get(), [] (refl::TypeRegistry& registry, const nlohmann::json& json) { return refl::createOwningInstance(&registry, readQuaternion(json)); }},
-		{ registry.getOrCreateType<sim::LatLon>().get(), [] (refl::TypeRegistry& registry, const nlohmann::json& json) { return refl::createOwningInstance(&registry, readLatLon(json)); }},
-		{ registry.getOrCreateType<sim::LatLonAlt>().get(), [] (refl::TypeRegistry& registry, const nlohmann::json& json) { return refl::createOwningInstance(&registry, readLatLonAlt(json)); }}
+		{ registry.getOrCreateType<sim::Vector3>().get(), [] (refl::TypeRegistry& registry, const nlohmann::json& json) { return refl::createOwningInstance(registry, readVector3(json)); }},
+		{ registry.getOrCreateType<sim::Quaternion>().get(), [] (refl::TypeRegistry& registry, const nlohmann::json& json) { return refl::createOwningInstance(registry, readQuaternion(json)); }},
+		{ registry.getOrCreateType<sim::LatLon>().get(), [] (refl::TypeRegistry& registry, const nlohmann::json& json) { return refl::createOwningInstance(registry, readLatLon(json)); }},
+		{ registry.getOrCreateType<sim::LatLonAlt>().get(), [] (refl::TypeRegistry& registry, const nlohmann::json& json) { return refl::createOwningInstance(registry, readLatLonAlt(json)); }}
 	};
 
 	if (const auto& i = translators.find(&type); i != translators.end())

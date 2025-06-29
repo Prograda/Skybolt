@@ -15,5 +15,12 @@ struct OptionalProperty
 	bool present = false;
 };
 
+struct PropertyVector
+{
+	std::vector<QtPropertyPtr> items;
+	QVariant itemDefaultValue;
+};
+
 Q_DECLARE_METATYPE(OptionalProperty)
+Q_DECLARE_METATYPE(PropertyVector)
 Q_DECLARE_METATYPE(skybolt::sim::LatLon)

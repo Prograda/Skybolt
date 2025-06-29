@@ -43,14 +43,20 @@ sim::Quaternion latLonToGeocentricLtpOrientation(const sim::LatLon& latLon)
 
 sim::Matrix3 geocentricToLtpOrientation(const sim::Vector3& pos)
 {
-	sim::Vector3 down = -glm::normalize(pos);
+	sim::Vector3 down = -calcLtpUpDirection(pos);
 	sim::Vector3 north(0, 0, 1);
 
+	// TODO FIXME: fix singularity at poles
 	sim::Vector3 east = glm::normalize(glm::cross(down, north));
 	north = glm::cross(east, down);
 
 	sim::Matrix3 orientation(north, east, down);
 	return orientation;
+}
+
+Vector3 calcLtpUpDirection(const Vector3& pos)
+{
+	return glm::normalize(pos);
 }
 
 } // namespace skybolt

@@ -10,28 +10,6 @@ namespace skybolt {
 
 namespace math {
 
-	glm::vec2 vec2Rotate(const glm::vec2 &v, float theta)
-	{
-		float cs = cos(theta);
-		float sn = sin(theta);
-
-		glm::vec2 r;
-		r.x = v.x * cs - v.y * sn;
-		r.y = v.x * sn + v.y * cs;
-		return r;
-	}
-
-	void getOrthonormalBasis(const glm::vec3 &normal, glm::vec3 &tangent, glm::vec3 &bitangent)
-	{
-		float d = glm::dot(normal, vec3UnitY());
-		if (d > -0.95f && d < 0.95f)
-			bitangent = glm::cross(normal, vec3UnitY());
-		else
-			bitangent = glm::cross(normal, vec3UnitZ());
-		bitangent = glm::normalize(bitangent);
-		tangent = glm::cross(bitangent, normal);
-	}
-
 	glm::quat quatFromEuler(const glm::vec3 &eulerRPY)
 	{
 		return glm::angleAxis(eulerRPY.z, vec3UnitZ()) * glm::angleAxis(eulerRPY.y, vec3UnitY()) * glm::angleAxis(eulerRPY.x, vec3UnitX());

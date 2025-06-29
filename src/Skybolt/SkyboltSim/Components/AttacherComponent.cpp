@@ -18,22 +18,16 @@
 namespace skybolt {
 namespace sim {
 
-SKYBOLT_REFLECT_BEGIN(AttachmentState)
-{
-	registry.type<AttachmentState>("AttachmentState")
-	.property("parentEntityAttachmentPoint", &AttachmentState::parentEntityAttachmentPoint)
-	.property("ownEntityAttachmentPoint", &AttachmentState::ownEntityAttachmentPoint)
-	.property("positionOffset", &AttachmentState::positionOffset)
-	.property("orientationOffset", &AttachmentState::orientationOffset);
-}
-SKYBOLT_REFLECT_END
-
 SKYBOLT_REFLECT_BEGIN(AttacherComponent)
 {
 	registry.type<AttacherComponent>("AttacherComponent")
 		.superType<Component>()
-		.property("state", &AttacherComponent::state)
-		.superType<ExplicitSerialization>();
+		.property("enabled", &AttacherComponent::enabled)
+		.property("parentEntity", &AttacherComponent::getParentEntityName, &AttacherComponent::setParentEntityByName)
+		.property("parentEntityAttachmentPoint", &AttacherComponent::parentEntityAttachmentPoint)
+		.property("ownEntityAttachmentPoint", &AttacherComponent::ownEntityAttachmentPoint)
+		.property("positionOffset", &AttacherComponent::positionOffset)
+		.property("orientationOffset", &AttacherComponent::orientationOffset);
 }
 SKYBOLT_REFLECT_END
 
@@ -47,26 +41,44 @@ AttacherComponent::AttacherComponent(const World* world, Entity* ownEntity) :
 
 AttacherComponent::~AttacherComponent() = default;
 
+std::string AttacherComponent::getParentEntityName() const
+{
+	if (parentEntityId == sim::nullEntityId()) { return std::string(); }
+
+	EntityPtr entity = mWorld->getEntityById(parentEntityId);
+	if (!entity) { return std::string(); }
+
+	return getName(*entity);
+}
+
+void AttacherComponent::setParentEntityByName(const std::string& name)
+{
+	EntityPtr entity = mWorld->findObjectByName(name);
+	if (!entity) { return; }
+
+	parentEntityId = entity->getId();
+}
+
 void AttacherComponent::updatePose()
 {
-	const EntityPtr& parentEntity = mWorld->getEntityById(state->parentEntityId);
-	if (!parentEntity) { return; }
+	if (!enabled || parentEntityId == sim::nullEntityId()) { return; }
 
-	if (!state) { return; }
+	const EntityPtr& parentEntity = mWorld->getEntityById(parentEntityId);
+	if (!parentEntity) { return; }
 
 	// Calculate parent attachment point pose
 	sim::Vector3 position;
 	sim::Quaternion orientation;
-	if (!calcParentAttachmentPointPose(*parentEntity, *state, position, orientation)) { return; }
+	if (!calcParentAttachmentPointPose(*parentEntity, position, orientation)) { return; }
 
 	// Apply position and orientation offset
-	position += orientation * state->positionOffset;
-	orientation = orientation * state->orientationOffset;
+	position += orientation * positionOffset;
+	orientation = orientation * orientationOffset;
 
 	// Apply own attachment point transform
-	if (!state->ownEntityAttachmentPoint.empty())
+	if (!ownEntityAttachmentPoint.empty())
 	{
-		auto ownAttachmentPoint = findAttachmentPoint(*mOwnEntity, state->ownEntityAttachmentPoint);
+		auto ownAttachmentPoint = findAttachmentPoint(*mOwnEntity, ownEntityAttachmentPoint);
 		if (!ownAttachmentPoint) { return; }
 	
 		orientation *= glm::inverse(ownAttachmentPoint->orientationRelBody * glm::angleAxis(math::piD(), glm::dvec3(0,1,0)));
@@ -93,9 +105,9 @@ void AttacherComponent::updatePose()
 	}
 }
 
-bool AttacherComponent::calcParentAttachmentPointPose(const Entity& parentEntity, const AttachmentState& attachmentState, sim::Vector3& position, sim::Quaternion& orientation) const
+bool AttacherComponent::calcParentAttachmentPointPose(const Entity& parentEntity, sim::Vector3& position, sim::Quaternion& orientation) const
 {
-	if (state->parentEntityAttachmentPoint.empty())
+	if (parentEntityAttachmentPoint.empty())
 	{
 		// Attach to entity
 		auto optionalPosition = getPosition(parentEntity);
@@ -108,51 +120,13 @@ bool AttacherComponent::calcParentAttachmentPointPose(const Entity& parentEntity
 	else
 	{
 		// Attach to attachment point
-		auto parentAttachmentPoint = findAttachmentPoint(parentEntity, state->parentEntityAttachmentPoint);
+		auto parentAttachmentPoint = findAttachmentPoint(parentEntity, parentEntityAttachmentPoint);
 		if (!parentAttachmentPoint) { return false; }
 
 		position = calcAttachmentPointPosition(parentEntity, *parentAttachmentPoint);
 		orientation = calcAttachmentPointOrientation(parentEntity, *parentAttachmentPoint);
 	}
 	return true;
-}
-
-nlohmann::json AttacherComponent::toJson(refl::TypeRegistry& typeRegistry) const
-{
-	nlohmann::json json;
-	if (!state)
-	{
-		return json;
-	}
-	
-	auto entity = mWorld->getEntityById(state->parentEntityId);
-	if (!entity)
-	{
-		return json;
-	}
-
-	if (std::string parentName = getName(*entity); !parentName.empty())
-	{
-		AttachmentState stateCopy = *state;
-		json["state"] = writeReflectedObject(typeRegistry, refl::createNonOwningInstance(&typeRegistry, &stateCopy));
-		json["state"]["parentEntity"] = parentName;
-	}
-	return json;
-}
-
-void AttacherComponent::fromJson(refl::TypeRegistry& typeRegistry, const nlohmann::json& j)
-{
-	state = std::nullopt;
-	ifChildExists(j, "state", [&] (const nlohmann::json& stateJson) {
-		state = AttachmentState{};
-		std::string parentName = stateJson.at("parentEntity");
-		if (auto entity = mWorld->findObjectByName(parentName); entity)
-		{
-			state->parentEntityId = entity->getId();
-			refl::Instance instance = refl::createNonOwningInstance(&typeRegistry, &state.value());
-			readReflectedObject(typeRegistry, instance, stateJson);
-		}
-	});
 }
 
 } // namespace sim

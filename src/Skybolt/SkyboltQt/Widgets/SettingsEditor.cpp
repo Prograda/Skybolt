@@ -122,7 +122,7 @@ SettingsEditor::SettingsEditor(const QString& settingsFilename, const nlohmann::
 
 QString SettingsEditor::getSettingsFilename() const
 {
-	return mSettingsFilenameProperty->value.toString();
+	return mSettingsFilenameProperty->value().toString();
 }
 
 nlohmann::json SettingsEditor::getJson() const
@@ -132,7 +132,7 @@ nlohmann::json SettingsEditor::getJson() const
 	{
 		for (const auto& property : properties)
 		{
-			setJsonQVariant(j, property->name.toStdString(), property->value);
+			setJsonQVariant(j, property->name.toStdString(), property->value());
 		}
 	}
 

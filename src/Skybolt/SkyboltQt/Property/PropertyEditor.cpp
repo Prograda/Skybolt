@@ -108,7 +108,7 @@ static void setEditable(QWidget& widget, bool editable)
 
 QWidget* PropertyEditor::createEditor(QtProperty* property)
 {
-	auto i = mFactoryMap.find(property->value.userType());
+	auto i = mFactoryMap.find(property->value().userType());
 	if (i != mFactoryMap.end())
 	{
 		if (QWidget* widget = i->second(property, this); widget)

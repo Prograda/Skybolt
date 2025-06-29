@@ -21,7 +21,7 @@ ViewportPropertiesModel::ViewportPropertiesModel(vis::Scene* Scene, sim::CameraC
 
 		connect(mFov.get(), &QtProperty::valueChanged, [=]()
 		{
-			camera->getState().fovY = mFov->value.toFloat() * skybolt::math::degToRadF();
+			camera->getState().fovY = mFov->value().toFloat() * skybolt::math::degToRadF();
 		});
 	}
 	{
@@ -31,7 +31,7 @@ ViewportPropertiesModel::ViewportPropertiesModel(vis::Scene* Scene, sim::CameraC
 
 		connect(mAmbientLight.get(), &QtProperty::valueChanged, [=]()
 		{
-			float v = mAmbientLight->value.toFloat();
+			float v = mAmbientLight->value().toFloat();
 			mScene->setAmbientLightColor(osg::Vec3f(v, v, v));
 		});
 	}

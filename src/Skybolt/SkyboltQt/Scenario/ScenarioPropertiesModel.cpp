@@ -23,7 +23,7 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 		mProperties[PropertiesModel::getDefaultSectionName()].push_back(mStartDateTime);
 
 		connect(mStartDateTime.get(), &QtProperty::valueChanged, [this]() {
-			QDateTime dateTime = mStartDateTime->value.toDateTime();
+			QDateTime dateTime = mStartDateTime->value().toDateTime();
 			mScenario->startJulianDate = qdateTimeToJulianDate(dateTime);
 		});
 	}
@@ -33,7 +33,7 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 
 		connect(mDuration.get(), &QtProperty::valueChanged, [this]() {
 			TimeRange range = mScenario->timeSource.getRange();
-			range.end = mDuration->value.toDouble();
+			range.end = mDuration->value().toDouble();
 			mScenario->timeSource.setRange(range);
 		});
 	}
@@ -43,7 +43,7 @@ ScenarioPropertiesModel::ScenarioPropertiesModel(Scenario* scenario) :
 		mProperties[PropertiesModel::getDefaultSectionName()].push_back(mTimelineMode);
 
 		connect(mTimelineMode.get(), &QtProperty::valueChanged, [this]() {
-			mScenario->timelineMode.set(skybolt::TimelineMode(mTimelineMode->value.toInt()));
+			mScenario->timelineMode.set(skybolt::TimelineMode(mTimelineMode->value().toInt()));
 		});
 	}
 

@@ -7,5 +7,7 @@
 #pragma once
 
 #include "PropertyEditorWidgetFactory.h"
+#include <SkyboltReflection/SkyboltReflectionFwd.h>
 
-PropertyEditorWidgetFactoryMap getDefaultEditorWidgetFactoryMap();
+//! If typeRegistry is provided, editing of complex reflected types (e.g. structs) is enabled. Otherwise only primitive types are supported.
+PropertyEditorWidgetFactoryMap getDefaultEditorWidgetFactoryMap(skybolt::refl::TypeRegistry* typeRegistry = nullptr);

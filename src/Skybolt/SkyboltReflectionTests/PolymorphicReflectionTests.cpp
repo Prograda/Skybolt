@@ -113,47 +113,47 @@ TEST_CASE("Access properties of type with multiple super classes")
 
 	SECTION("Set derived class value on instance created from derived class")
 	{
-		auto instance = createNonOwningInstance(&registry, &derivedObj);
-		derivedClassProperty->setValue(instance, createOwningInstance(&registry, 1));
+		auto instance = createNonOwningInstance(registry, &derivedObj);
+		derivedClassProperty->setValue(instance, createOwningInstance(registry, 1));
 		CHECK(derivedObj.intC == 1);
 	}
 
 	SECTION("Set derived class value on instance created from second base class")
 	{
 		BaseB* baseObj = &derivedObj;
-		auto instance = createNonOwningInstance(&registry, baseObj);
-		derivedClassProperty->setValue(instance, createOwningInstance(&registry, 2));
+		auto instance = createNonOwningInstance(registry, baseObj);
+		derivedClassProperty->setValue(instance, createOwningInstance(registry, 2));
 		CHECK(derivedObj.intC == 2);
 	}
 
 	SECTION("Set derived class value on instance created from second base class")
 	{
 		BaseB* baseObj = &derivedObj;
-		auto instance = createNonOwningInstance(&registry, baseObj);
-		derivedClassProperty->setValue(instance, createOwningInstance(&registry, 3));
+		auto instance = createNonOwningInstance(registry, baseObj);
+		derivedClassProperty->setValue(instance, createOwningInstance(registry, 3));
 		CHECK(derivedObj.intC == 3);
 	}
 
 	SECTION("Set first base class value on instance created from second base class")
 	{
 		BaseB* baseObj = &derivedObj;
-		auto instance = createNonOwningInstance(&registry, baseObj);
-		firstBaseClassProperty->setValue(instance, createOwningInstance(&registry, 1));
+		auto instance = createNonOwningInstance(registry, baseObj);
+		firstBaseClassProperty->setValue(instance, createOwningInstance(registry, 1));
 		CHECK(derivedObj.intA == 1);
 	}
 
 	SECTION("Set second base class value on instance created from first base class")
 	{
 		BaseA* baseObj = &derivedObj;
-		auto instance = createNonOwningInstance(&registry, baseObj);
-		secondBaseClassProperty->setValue(instance, createOwningInstance(&registry, 2));
+		auto instance = createNonOwningInstance(registry, baseObj);
+		secondBaseClassProperty->setValue(instance, createOwningInstance(registry, 2));
 		CHECK(derivedObj.intB == 2);
 	}
 
 	SECTION("Set second base class value on instance created from derived class")
 	{
-		auto instance = createNonOwningInstance(&registry, &derivedObj);
-		secondBaseClassProperty->setValue(instance, createOwningInstance(&registry, 3));
+		auto instance = createNonOwningInstance(registry, &derivedObj);
+		secondBaseClassProperty->setValue(instance, createOwningInstance(registry, 3));
 		CHECK(derivedObj.intB == 3);
 	}
 }
@@ -176,15 +176,15 @@ TEST_CASE("Access properties of multi-level derived type")
 
 	SECTION("Set proeprty values on instance created from multi-level derived class")
 	{
-		auto instance = createNonOwningInstance(&registry, &derivedObj);
+		auto instance = createNonOwningInstance(registry, &derivedObj);
 		
-		multiLevelDerivedClassProperty->setValue(instance, createOwningInstance(&registry, 1));
+		multiLevelDerivedClassProperty->setValue(instance, createOwningInstance(registry, 1));
 		CHECK(derivedObj.intD == 1);
 
-		derivedClassProperty->setValue(instance, createOwningInstance(&registry, 2));
+		derivedClassProperty->setValue(instance, createOwningInstance(registry, 2));
 		CHECK(derivedObj.intC == 2);
 
-		baseClassProperty->setValue(instance, createOwningInstance(&registry, 3));
+		baseClassProperty->setValue(instance, createOwningInstance(registry, 3));
 		CHECK(derivedObj.intA == 3);
 	}
 }

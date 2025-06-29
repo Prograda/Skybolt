@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <optional>
 #include <vector>
 #include <algorithm>
 #include <assert.h>
@@ -22,6 +23,19 @@ static const T* findFirst(const std::vector<T>& v, const T& t)
 		return &*it;
 	}
 	return nullptr;
+}
+
+template <typename T>
+static std::optional<std::size_t> findFirstIndex(const std::vector<T>& v, const T& t)
+{
+	for (std::size_t i = 0; i < v.size(); ++i)
+	{
+		if (v[i] == t)
+		{
+			return i;
+		}
+	}
+	return std::nullopt;
 }
 
 template <typename T>

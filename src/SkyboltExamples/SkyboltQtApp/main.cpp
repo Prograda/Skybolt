@@ -208,7 +208,7 @@ public:
 				c.engineRoot = mEngineRoot.get();
 				c.selectionModel = selectionModel;
 				c.propertyModelFactoryMap = getDefaultPropertyModelFactories(mEngineRoot.get());
-				c.widgetFactoryMap = getDefaultEditorWidgetFactoryMap();
+				c.widgetFactoryMap = getDefaultEditorWidgetFactoryMap(mEngineRoot->typeRegistry.get());
 				c.parent = mMainWindow.get();
 				return c;
 			}());

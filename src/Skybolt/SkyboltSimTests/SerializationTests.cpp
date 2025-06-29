@@ -58,11 +58,11 @@ TEST_CASE("Read and write to JSON")
 	originalObject.nestedObjectProperty.intProperty = 3;
 	// Leave originalObject.optionalIntProperty1 unset
 	originalObject.optionalIntProperty2 = 123;
-	nlohmann::json json = writeReflectedObject(registry, refl::createNonOwningInstance(&registry, &originalObject));
+	nlohmann::json json = writeReflectedObject(registry, refl::createNonOwningInstance(registry, &originalObject));
 
 	// Read
 	TestObject readObject;
-	auto instance = refl::createNonOwningInstance(&registry, &readObject);
+	auto instance = refl::createNonOwningInstance(registry, &readObject);
 	readReflectedObject(registry, instance, json);
 
 	CHECK(readObject.intProperty == originalObject.intProperty);
@@ -105,11 +105,11 @@ TEST_CASE("Read and write polymorphic type to JSON")
 	derivedObject.floatProperty = 123;
 
 	TestBaseObject& baseObject = derivedObject;
-	nlohmann::json json = writeReflectedObject(registry, refl::createNonOwningInstance(&registry, &baseObject)); // test writing the base object reference
+	nlohmann::json json = writeReflectedObject(registry, refl::createNonOwningInstance(registry, &baseObject)); // test writing the base object reference
 
 	// Read
 	TestDerivedObject readObject;
-	auto instance = refl::createNonOwningInstance(&registry, &readObject);
+	auto instance = refl::createNonOwningInstance(registry, &readObject);
 	readReflectedObject(registry, instance, json);
 
 	CHECK(readObject.floatProperty == derivedObject.floatProperty);
@@ -145,11 +145,11 @@ TEST_CASE("Use explicit to/from json methods if an object provides them")
 	// Write
 	TestObjectWithSerializationMethods writeObject;
 	writeObject.data = 123;
-	nlohmann::json json = writeReflectedObject(registry, refl::createNonOwningInstance(&registry, &writeObject));
+	nlohmann::json json = writeReflectedObject(registry, refl::createNonOwningInstance(registry, &writeObject));
 
 	// Read
 	TestObjectWithSerializationMethods readObject;
-	auto instance = refl::createNonOwningInstance(&registry, &readObject);
+	auto instance = refl::createNonOwningInstance(registry, &readObject);
 	readReflectedObject(registry, instance, json);
 	CHECK(readObject.data == 123);
 }

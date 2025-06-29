@@ -42,15 +42,15 @@ void showCaptureImageSequenceDialog(const FrameImageWriter& frameImageWriter, co
 	std::shared_ptr<QDialog> dialog = createDialogModal(editor, "Capture Image Sequence");
 	if (dialog->exec() == QDialog::Accepted)
 	{
-		int frameCount = frameRate->value.toDouble() * std::max(0.0, (endTime->value.toDouble() - startTime->value.toDouble()));
+		int frameCount = frameRate->value().toDouble() * std::max(0.0, (endTime->value().toDouble() - startTime->value().toDouble()));
 		QProgressDialog progress("Capturing Sequence...", "Cancel", 0, frameCount, parent);
 		progress.setWindowModality(Qt::WindowModal);
 
 		for (int frame = 0; frame < frameCount; ++frame)
 		{
-			double time = startTime->value.toDouble() + (double)frame / frameRate->value.toDouble();
+			double time = startTime->value().toDouble() + (double)frame / frameRate->value().toDouble();
 
-			QString frameStr = specializeImageSequenceFilenameTemplate(filenameTemplate->value.toString(), frame);
+			QString frameStr = specializeImageSequenceFilenameTemplate(filenameTemplate->value().toString(), frame);
 			std::filesystem::path directory = std::filesystem::path(frameStr.toStdString()).parent_path();
 			std::filesystem::create_directories(directory);
 			frameImageWriter(time, frameStr);

@@ -7,9 +7,13 @@
 #include "DefaultEditorWidgets.h"
 #include "PropertyEditor.h"
 #include "QtPropertyMetadata.h"
+#include "QtPropertyReflection.h"
 #include "QtMetaTypes.h"
-#include "SkyboltQt/Widgets/PositionEditor.h"
+#include "QtUtil/QtLayoutUtil.h"
+#include "Widgets/ListEditorWidget.h"
 
+#include <SkyboltCommon/MapUtility.h>
+#include "SkyboltQt/Widgets/PositionEditor.h"
 #include <SkyboltReflection/Reflection.h>
 #include <SkyboltSim/PropertyMetadata.h>
 #include <SkyboltSim/Spatial/Position.h>
@@ -21,6 +25,7 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QListWidget>
 #include <QPushButton>
 #include <QSpinBox>
 #include <QTextEdit>
@@ -50,10 +55,10 @@ static QLineEdit* addDoubleEditor(QGridLayout& layout, const QString& name)
 	return editor;
 }
 
-class VectorEditor : public QWidget
+class DoubleVectorEditor : public QWidget
 {
 public:
-	VectorEditor(const QStringList& componentLabels, QWidget* parent = nullptr) :
+	DoubleVectorEditor(const QStringList& componentLabels, QWidget* parent = nullptr) :
 		QWidget(parent)
 	{
 		QGridLayout* layout = new QGridLayout;
@@ -84,17 +89,17 @@ private:
 	std::vector<QLineEdit*> mEditors;
 };
 
-class QVector3PropertyEditor : public VectorEditor
+class QVector3PropertyEditor : public DoubleVectorEditor
 {
 public:
 	QVector3PropertyEditor(QtProperty* property, const QStringList& componentLabels, QWidget* parent = nullptr) :
 		mProperty(property),
-		VectorEditor(componentLabels, parent)
+		DoubleVectorEditor(componentLabels, parent)
 	{
-		setValue(mProperty->value.value<QVector3D>());
+		setValue(mProperty->value().value<QVector3D>());
 
 		connect(property, &QtProperty::valueChanged, this, [=]() {
-			setValue(mProperty->value.value<QVector3D>());
+			setValue(mProperty->value().value<QVector3D>());
 		});
 	}
 
@@ -103,13 +108,13 @@ protected:
 	{
 		for (int i = 0; i < 3; ++i)
 		{
-			VectorEditor::setValue(i, value[i]);
+			DoubleVectorEditor::setValue(i, value[i]);
 		}
 	}
 
 	void componentEdited(int index, double value) override
 	{
-		QVector3D vec = mProperty->value.value<QVector3D>();
+		QVector3D vec = mProperty->value().value<QVector3D>();
 		vec[index] = value;
 		mProperty->setValue(vec);
 	}
@@ -118,17 +123,17 @@ private:
 	QtProperty* mProperty;
 };
 
-class LatLonPropertyEditor : public VectorEditor
+class LatLonPropertyEditor : public DoubleVectorEditor
 {
 public:
 	LatLonPropertyEditor(QtProperty* property, QWidget* parent = nullptr) :
 		mProperty(property),
-		VectorEditor({"Latitude", "Longitude"}, parent)
+		DoubleVectorEditor({"Latitude", "Longitude"}, parent)
 	{
-		setValue(mProperty->value.value<sim::LatLon>());
+		setValue(mProperty->value().value<sim::LatLon>());
 
 		connect(property, &QtProperty::valueChanged, this, [=]() {
-			setValue(mProperty->value.value<sim::LatLon>());
+			setValue(mProperty->value().value<sim::LatLon>());
 		});
 	}
 
@@ -137,13 +142,13 @@ protected:
 	{
 		for (int i = 0; i < 2; ++i)
 		{
-			VectorEditor::setValue(i, value[i]);
+			DoubleVectorEditor::setValue(i, value[i]);
 		}
 	}
 
 	void componentEdited(int index, double value) override
 	{
-		sim::LatLon v = mProperty->value.value<sim::LatLon>();
+		sim::LatLon v = mProperty->value().value<sim::LatLon>();
 		v[index] = value;
 		mProperty->setValue(QVariant::fromValue(v));
 	}
@@ -165,11 +170,11 @@ static QVector3D toQVector3D(const sim::Vector3& v)
 static PositionEditor* createWorldPositionEditor(QtProperty* property, QWidget* parent)
 {
 	auto widget = new PositionEditor(parent);
-	widget->setPosition(sim::GeocentricPosition(toSimVector3(property->value.value<QVector3D>())));
+	widget->setPosition(sim::GeocentricPosition(toSimVector3(property->value().value<QVector3D>())));
 
 	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property]() {
 		widget->blockSignals(true);
-		widget->setPosition(sim::GeocentricPosition(toSimVector3(property->value.value<QVector3D>())));
+		widget->setPosition(sim::GeocentricPosition(toSimVector3(property->value().value<QVector3D>())));
 		widget->blockSignals(false);
 	});
 
@@ -184,12 +189,12 @@ static QWidget* createComboStringEditor(QtProperty* property, QWidget* parent)
 	QStringList optionNames = property->property(QtPropertyMetadataNames::optionNames).toStringList();
 	auto widget = new QComboBox(parent);
 	widget->addItems(optionNames);
-	widget->setCurrentText(property->value.toString());
+	widget->setCurrentText(property->value().toString());
 	widget->setEditable(property->property(QtPropertyMetadataNames::allowCustomOptions).toBool());
 
 	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property]() {
 		widget->blockSignals(true);
-		widget->setCurrentText(property->value.toString());
+		widget->setCurrentText(property->value().toString());
 		widget->blockSignals(false);
 	});
 
@@ -203,11 +208,11 @@ static QWidget* createComboStringEditor(QtProperty* property, QWidget* parent)
 static QWidget* createSingleLineStringEditor(QtProperty* property, QWidget* parent)
 {
 	QLineEdit* widget = new QLineEdit(parent);
-	widget->setText(property->value.toString());
+	widget->setText(property->value().toString());
 
 	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property]() {
 		widget->blockSignals(true);
-		widget->setText(property->value.toString());
+		widget->setText(property->value().toString());
 		widget->blockSignals(false);
 	});
 
@@ -221,11 +226,11 @@ static QWidget* createSingleLineStringEditor(QtProperty* property, QWidget* pare
 static QWidget* createMultiLineStringEditor(QtProperty* property, QWidget* parent)
 {
 	QTextEdit* widget = new QTextEdit(parent);
-	widget->setText(property->value.toString());
+	widget->setText(property->value().toString());
 
 	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property]() {
 		widget->blockSignals(true);
-		widget->setText(property->value.toString());
+		widget->setText(property->value().toString());
 		widget->blockSignals(false);
 	});
 
@@ -258,11 +263,11 @@ static QWidget* createIntEditor(QtProperty* property, QWidget* parent)
 {
 	QSpinBox* widget = new QSpinBox(parent);
 	widget->setMaximum(999999);
-	widget->setValue(property->value.toInt());
+	widget->setValue(property->value().toInt());
 
 	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property]() {
 		widget->blockSignals(true);
-		widget->setValue(property->value.toInt());
+		widget->setValue(property->value().toInt());
 		widget->blockSignals(false);
 	});
 
@@ -278,11 +283,11 @@ static QWidget* createEnumEditor(QtProperty* property, QWidget* parent)
 	QStringList optionNames = property->property(QtPropertyMetadataNames::optionNames).toStringList();
 	auto widget = new QComboBox(parent);
 	widget->addItems(optionNames);
-	widget->setCurrentIndex(property->value.toInt());
+	widget->setCurrentIndex(property->value().toInt());
 
 	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property]() {
 		widget->blockSignals(true);
-		widget->setCurrentIndex(property->value.toInt());
+		widget->setCurrentIndex(property->value().toInt());
 		widget->blockSignals(false);
 	});
 
@@ -329,11 +334,11 @@ static QWidget* createDoubleEditor(QtProperty* property, QWidget* parent)
 	auto widgetTextSetter = [widget](double value) {
 		widget->setText(QString::number(value, 'f', 4));
 	};
-	widgetTextSetter(property->value.toDouble());
+	widgetTextSetter(property->value().toDouble());
 
 	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property, widgetTextSetter]() {
 		widget->blockSignals(true);
-		widgetTextSetter(property->value.toDouble());
+		widgetTextSetter(property->value().toDouble());
 		widget->blockSignals(false);
 	});
 
@@ -356,11 +361,11 @@ static QWidget* createBoolEditor(QtProperty* property, QWidget* parent)
 	{
 		button = new QCheckBox(parent);
 	}
-	button->setChecked(property->value.toBool());
+	button->setChecked(property->value().toBool());
 
 	QObject::connect(property, &QtProperty::valueChanged, button, [button, property]() {
 		button->blockSignals(true);
-		button->setChecked(property->value.toBool());
+		button->setChecked(property->value().toBool());
 		button->blockSignals(false);
 	});
 
@@ -374,11 +379,11 @@ static QWidget* createBoolEditor(QtProperty* property, QWidget* parent)
 static QWidget* createDateTimeEditor(QtProperty* property, QWidget* parent)
 {
 	QDateTimeEdit* widget = new QDateTimeEdit(parent);
-	widget->setDateTime(property->value.toDateTime());
+	widget->setDateTime(property->value().toDateTime());
 
 	QObject::connect(property, &QtProperty::valueChanged, widget, [widget, property]() {
 		widget->blockSignals(true);
-		widget->setDateTime(property->value.toDateTime());
+		widget->setDateTime(property->value().toDateTime());
 		widget->blockSignals(false);
 	});
 
@@ -405,8 +410,8 @@ static QWidget* createLatLonEditor(QtProperty* property, QWidget* parent)
 
 static QWidget* createOptionalVariantEditor(const PropertyEditorWidgetFactoryMap& factories, QtProperty* property, QWidget* parent)
 {
-	auto optionalProperty = property->value.value<OptionalProperty>();
-	if (auto i = factories.find(optionalProperty.property->value.userType()); i != factories.end())
+	auto optionalProperty = property->value().value<OptionalProperty>();
+	if (auto i = factories.find(optionalProperty.property->value().userType()); i != factories.end())
 	{
 		auto widget = new QWidget(parent);
 		auto layout = new QVBoxLayout(widget);
@@ -415,33 +420,198 @@ static QWidget* createOptionalVariantEditor(const PropertyEditorWidgetFactoryMap
 
 		auto activateCheckbox = new QCheckBox("Enable", widget);
 		activateCheckbox->setChecked(optionalProperty.present);
+		layout->addWidget(activateCheckbox);
+
 		QWidget* valueEditorWidget = i->second(optionalProperty.property.get(), parent);
-		valueEditorWidget->setEnabled(optionalProperty.present);
+		if (valueEditorWidget)
+		{
+			valueEditorWidget->setEnabled(optionalProperty.present);
+			layout->addWidget(valueEditorWidget);
+		}
 
 		QObject::connect(property, &QtProperty::valueChanged, activateCheckbox, [activateCheckbox, valueEditorWidget, property]() {
-			bool present = property->value.value<OptionalProperty>().present;
+			bool present = property->value().value<OptionalProperty>().present;
 			activateCheckbox->blockSignals(true);
 			activateCheckbox->setChecked(present);
 			activateCheckbox->blockSignals(false);
-			valueEditorWidget->setEnabled(present && property->enabled);
+
+			if (valueEditorWidget)
+			{
+				valueEditorWidget->setEnabled(present && property->enabled);
+			}
 		});
 
 		QObject::connect(activateCheckbox, &QCheckBox::stateChanged, property, [=](bool value) {
-			auto optionalProperty = property->value.value<OptionalProperty>();
+			auto optionalProperty = property->value().value<OptionalProperty>();
 			optionalProperty.present = value;
 			property->setValue(QVariant::fromValue(optionalProperty));
-			valueEditorWidget->setEnabled(value && property->enabled);
+
+			if (valueEditorWidget)
+			{
+				valueEditorWidget->setEnabled(value && property->enabled);
+			}
 		});
 
-		layout->addWidget(activateCheckbox);
-		layout->addWidget(valueEditorWidget);
 		return widget;
 	}
 	return nullptr;
 }
 
+static QWidget* createPropertyVectorEditor(const PropertyEditorWidgetFactoryMap& factories, QtProperty* property, QWidget* parent)
+{
+	auto propertyVector = property->value().value<PropertyVector>();
+	if (auto i = factories.find(propertyVector.itemDefaultValue.userType()); i != factories.end())
+	{
+		auto widget = new QWidget(parent);
+		auto layout = new QVBoxLayout(widget);
+		layout->setMargin(0);
 
-static PropertyEditorWidgetFactoryMap createDefaultEditorWidgetFactoryMap()
+		auto listWidget = new QListWidget(parent);
+		layout->addWidget(listWidget);
+
+		auto itemEditorWidget = new QWidget(parent);
+		auto itemEditorLayout = new QVBoxLayout(itemEditorWidget);
+		itemEditorLayout->setContentsMargins(0, 0, 0, 0);
+
+		auto listEditorWidget = new ListEditorWidget(itemEditorWidget, parent);
+		layout->addWidget(listEditorWidget);
+
+		auto updateControlButtonsState = [listWidget, listEditorWidget]() {
+			int index = listWidget->currentRow();
+			listEditorWidget->setMoveUpEnabled(index > 0);
+			listEditorWidget->setMoveDownEnabled((index >= 0) && (index + 1 < listWidget->count()));
+			listEditorWidget->setRemoveEnabled(index >= 0);
+		};
+
+		auto updateListWidgetFunction = [property, listWidget, previousItems = QStringList(), updateControlButtonsState] () mutable {
+			QStringList newItems;
+			auto propertyVector = property->value().value<PropertyVector>();
+			for (const auto& itemProperty : propertyVector.items)
+			{
+				newItems.push_back(itemProperty->value().toString());
+			}
+
+			if (newItems != previousItems)
+			{
+				listWidget->clear();
+				listWidget->addItems(newItems);
+				previousItems = newItems;
+				updateControlButtonsState();
+			}
+		};
+
+		updateListWidgetFunction();
+		QObject::connect(property, &QtProperty::valueChanged, [listWidget, updateListWidgetFunction = std::move(updateListWidgetFunction)] () mutable {
+			updateListWidgetFunction();
+			});
+
+		QObject::connect(listWidget, &QListWidget::itemSelectionChanged, listEditorWidget, updateControlButtonsState);
+
+		auto newItemProperty = std::make_shared<QtPropertyPtr>();
+
+		QObject::connect(listEditorWidget, &ListEditorWidget::itemAddInitiated, [
+			newItemProperty,
+			defaultValue = propertyVector.itemDefaultValue,
+			factory = i->second,
+			parent,
+			itemEditorLayout
+		]() {
+			(*newItemProperty) = createQtProperty("newItem", defaultValue);
+			QWidget* valueEditorWidget = factory(newItemProperty->get(), parent);
+			itemEditorLayout->addWidget(valueEditorWidget);
+			});
+
+		QObject::connect(listEditorWidget, &ListEditorWidget::itemAddAccepted, [
+			property,
+			newItemProperty,
+			itemEditorLayout
+		]() {
+			assert(newItemProperty);
+			auto propertyVector = property->value().value<PropertyVector>();
+			propertyVector.items.push_back(*newItemProperty);
+			property->setValue(QVariant::fromValue(propertyVector));
+			newItemProperty->reset();
+
+			clearLayout(*itemEditorLayout);
+			});
+
+		QObject::connect(listEditorWidget, &ListEditorWidget::itemAddCancelled, [
+			property,
+				newItemProperty,
+				itemEditorLayout
+		]() {
+				assert(newItemProperty);
+				newItemProperty->reset();
+
+				clearLayout(*itemEditorLayout);
+			});
+
+		QObject::connect(listEditorWidget, &ListEditorWidget::itemRemoveRequested, [
+			property,
+			listWidget
+		]() {
+			auto propertyVector = property->value().value<PropertyVector>();
+			int row = listWidget->currentRow();
+			if (row >= 0 && row < propertyVector.items.size())
+			{
+				propertyVector.items.erase(propertyVector.items.begin() + row);
+				property->setValue(QVariant::fromValue(propertyVector));
+			}
+		});
+
+		QObject::connect(listEditorWidget, &ListEditorWidget::itemMoveUpRequested, [
+			property,
+			listWidget
+		]() {
+			auto propertyVector = property->value().value<PropertyVector>();
+			int row = listWidget->currentRow();
+			if (row >= 1 && row < propertyVector.items.size())
+			{
+				std::swap(propertyVector.items[row - 1], propertyVector.items[row]);
+				property->setValue(QVariant::fromValue(propertyVector));
+			}
+		});
+
+
+		QObject::connect(listEditorWidget, &ListEditorWidget::itemMoveDownRequested, [
+			property,
+			listWidget
+		]() {
+			auto propertyVector = property->value().value<PropertyVector>();
+			int row = listWidget->currentRow();
+			if (row >= 0 && row + 1 < propertyVector.items.size())
+			{
+				std::swap(propertyVector.items[row], propertyVector.items[row+1]);
+				property->setValue(QVariant::fromValue(propertyVector));
+			}
+		});
+
+		return widget;
+	}
+	return nullptr;
+}
+
+static QWidget* createReflPropertyInstanceEditor(QtProperty* property, QWidget* parent, refl::TypeRegistry* typeRegistry)
+{
+	auto instanceGetter = [property] () -> std::optional<refl::Instance> {
+		auto instanceProperty = property->value().value<ReflPropertyInstanceVariant>();
+		return instanceProperty.instance;
+	};
+
+	std::optional<refl::Instance> instance = instanceGetter();
+	if (!instance) { return nullptr; }
+
+	refl::TypePtr type = instance->getType();
+
+	auto model = std::make_shared<PropertiesModel>();
+	addRttrPropertiesToModel(*typeRegistry, *model, toValuesVector(type->getProperties()), instanceGetter);
+
+	auto editor = new PropertyEditor(getDefaultEditorWidgetFactoryMap(typeRegistry), parent);
+	editor->setModel(model);
+	return editor;
+}
+
+static PropertyEditorWidgetFactoryMap createDefaultEditorWidgetFactoryMap(refl::TypeRegistry* typeRegistry = nullptr)
 {
 	static PropertyEditorWidgetFactoryMap m = {
 		{ QMetaType::Type::QString, &createStringEditor },
@@ -454,15 +624,26 @@ static PropertyEditorWidgetFactoryMap createDefaultEditorWidgetFactoryMap()
 		{ qMetaTypeId<sim::LatLon>(), &createLatLonEditor }
 	};
 
-	m[qMetaTypeId<OptionalProperty>()] = [factories = &m] (QtProperty* property, QWidget* parent) {
+	PropertyEditorWidgetFactoryMap result = m;
+	if (typeRegistry)
+	{
+		result[qMetaTypeId<ReflPropertyInstanceVariant>()] = [typeRegistry] (QtProperty* property, QWidget* parent) {
+			return createReflPropertyInstanceEditor(property, parent, typeRegistry);
+		};
+	}
+
+	result[qMetaTypeId<OptionalProperty>()] = [factories = &result] (QtProperty* property, QWidget* parent) {
 		return createOptionalVariantEditor(*factories, property, parent);
 	};
+	result[qMetaTypeId<PropertyVector>()] = [factories = &result](QtProperty* property, QWidget* parent) {
+		return createPropertyVectorEditor(*factories, property, parent);
+	};
 
-	return m;
+	return result;
 }
 
-PropertyEditorWidgetFactoryMap getDefaultEditorWidgetFactoryMap()
+PropertyEditorWidgetFactoryMap getDefaultEditorWidgetFactoryMap(refl::TypeRegistry* registry)
 {
-	static PropertyEditorWidgetFactoryMap m = createDefaultEditorWidgetFactoryMap();
+	static PropertyEditorWidgetFactoryMap m = createDefaultEditorWidgetFactoryMap(registry);
 	return m;
 }

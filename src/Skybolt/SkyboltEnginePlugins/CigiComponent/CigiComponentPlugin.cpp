@@ -86,12 +86,12 @@ public:
 					mAttacherComponent = std::make_shared<AttacherComponent>(mWorld, mEntity.get());
 					mEntity->addComponent(mAttacherComponent);
 				}
-				mAttacherComponent->state = AttachmentState{};
-				mAttacherComponent->state->parentEntityId = parentEntity->getId();
+				mAttacherComponent->enabled = true;
+				mAttacherComponent->parentEntityId = parentEntity->getId();
 			}
 			else if (mAttacherComponent) // Detatch from parent
 			{
-				mAttacherComponent->state = std::nullopt;
+				mAttacherComponent->enabled = false;
 			}
 		}
 		mParent = parent;
@@ -99,17 +99,17 @@ public:
 
 	void setPositionOffset(const sim::Vector3& position) override
 	{
-		if (mAttacherComponent && mAttacherComponent->state)
+		if (mAttacherComponent)
 		{
-			mAttacherComponent->state->positionOffset = position;
+			mAttacherComponent->positionOffset = position;
 		}
 	}
 
 	void setOrientationOffset(const sim::Vector3& rpy) override
 	{
-		if (mAttacherComponent && mAttacherComponent->state)
+		if (mAttacherComponent)
 		{
-			mAttacherComponent->state->orientationOffset = math::quatFromEuler(rpy);
+			mAttacherComponent->orientationOffset = math::quatFromEuler(rpy);
 		}
 	}
 

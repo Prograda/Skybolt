@@ -50,8 +50,8 @@ TEST_CASE("Properties backed by class members")
 	REQUIRE(property);
 	
 	TestClass obj;
-	auto instance = createNonOwningInstance(&registry, &obj);
-	property->setValue(instance, createOwningInstance(&registry, 123));
+	auto instance = createNonOwningInstance(registry, &obj);
+	property->setValue(instance, createOwningInstance(registry, 123));
 	CHECK(obj.intProperty == 123);
 	
 	obj.intProperty = 456;
@@ -68,8 +68,8 @@ TEST_CASE("Properties backed by getter and setter methods")
 	REQUIRE(property);
 	
 	TestClass obj;
-	auto instance = createNonOwningInstance(&registry, &obj);
-	property->setValue(instance, createOwningInstance(&registry, 123));
+	auto instance = createNonOwningInstance(registry, &obj);
+	property->setValue(instance, createOwningInstance(registry, 123));
 	CHECK(obj.getterSetterMethodProperty == 123);
 	
 	obj.getterSetterMethodProperty = 456;
@@ -87,8 +87,8 @@ TEST_CASE("Properties backed by getter and setter functions")
 	REQUIRE(property);
 	
 	TestClass obj;
-	auto instance = createNonOwningInstance(&registry, &obj);
-	property->setValue(instance, createOwningInstance(&registry, 123));
+	auto instance = createNonOwningInstance(registry, &obj);
+	property->setValue(instance, createOwningInstance(registry, 123));
 	CHECK(obj.getterSetterFunctionProperty == 123);
 	
 	obj.getterSetterFunctionProperty = 456;
@@ -140,6 +140,6 @@ TEST_CASE("Type that type can be registered after the type that refers to it")
 	REQUIRE(property);
 	
 	TypeReferringToAnotherType object;
-	Instance value = property->getValue(createNonOwningInstance(&registry, &object));
+	Instance value = property->getValue(createNonOwningInstance(registry, &object));
 	CHECK(value.getType()->getName() == "TestValueCustomName");
 }

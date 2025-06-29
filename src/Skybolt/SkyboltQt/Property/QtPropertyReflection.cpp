@@ -15,6 +15,7 @@
 #include <SkyboltReflection/Reflection.h>
 #include <SkyboltSim/PropertyMetadata.h>
 #include <SkyboltSim/Spatial/LatLon.h>
+#include <SkyboltSim/Components/AttacherComponent.h>
 
 #include <QVector3D>
 
@@ -163,113 +164,295 @@ static void addMetadata(QtProperty& qtProperty, const refl::Property& reflProper
 	}
 }
 
+template <typename SimValueT>
+static QVariant valueInstanceToQt(const refl::Property& property, const refl::Instance& valueInstance)
+{
+	if constexpr (std::is_same_v<SimValueT, ReflPropertyInstanceVariant>)
+	{
+		return QVariant::fromValue(ReflPropertyInstanceVariant{ valueInstance });
+	}
+	else
+	{
+		SimValueT value = *valueInstance.getObject<SimValueT>();
+		return simValueToQt(property, value);
+	}
+}
+
+template <typename SimValueT>
+static std::optional<refl::Instance> qtToValueInstance(const refl::Property& property, refl::TypeRegistry& typeRegistry, const QVariant value, const QVariant& defaultValue)
+{
+	if constexpr (std::is_same_v<SimValueT, ReflPropertyInstanceVariant>)
+	{
+		std::optional<refl::Instance> optionalValueInstance = value.value<ReflPropertyInstanceVariant>().valueInstance;
+		if (!optionalValueInstance)
+		{
+			optionalValueInstance = defaultValue.value<ReflPropertyInstanceVariant>().instance;
+		}
+		return optionalValueInstance;
+	}
+	else
+	{
+		SimValueT simValue = qtValueToSim<SimValueT>(property, value);
+		return refl::createOwningInstance(typeRegistry, simValue);
+	}
+}
+
 using PropertyFactory = std::function<QtPropertyUpdaterApplier(refl::TypeRegistry& typeRegistry, const ReflInstanceGetter& instanceGetter, const refl::PropertyPtr& property)>;
+
+template <typename SimValueT, typename QtValueT>
+static QtPropertyUpdaterApplier createValueProperty(refl::TypeRegistry& typeRegistry, const ReflInstanceGetter& instanceGetter, const refl::PropertyPtr& property, const QtValueT& defaultValue)
+{
+	QString name = QString::fromStdString(property->getName());
+	QVariant defaultValueVariant = QVariant::fromValue(defaultValue);
+
+	QtPropertyUpdaterApplier r;
+	r.property = createQtProperty(name, defaultValueVariant);
+	r.property->enabled = !property->isReadOnly();
+	addMetadata(*r.property, *property);
+		
+	r.updater = [instanceGetter, property] (QtProperty& qtProperty) {
+		if (const auto& objectInstance = instanceGetter(); objectInstance)
+		{
+			refl::Instance valueInstance = property->getValue(*objectInstance);
+			qtProperty.setValue(valueInstanceToQt<SimValueT>(*property, valueInstance));
+		}
+	};
+	r.updater(*r.property);
+
+	if (!property->isReadOnly())
+	{
+		r.applier = [typeRegistry = &typeRegistry, instanceGetter, property, defaultValueVariant] (const QtProperty& qtProperty) {
+			if (auto objectInstance = instanceGetter(); objectInstance)
+			{
+				std::optional<refl::Instance> valueInstance = qtToValueInstance<SimValueT>(*property, *typeRegistry, qtProperty.value(), defaultValueVariant);
+				if (valueInstance)
+				{
+					property->setValue(*objectInstance, *valueInstance);
+				}
+			}
+		};
+	}
+
+	return r;
+}
+
+static std::optional<refl::Instance> getOptionalValue(refl::TypeRegistry& registry, const refl::Instance& optionalInstance)
+{
+	auto accessor = optionalInstance.getType()->getContainerValueAccessor();
+	if (!accessor) { return std::nullopt; }
+
+	auto values = accessor->getValues(registry, optionalInstance);
+	return values.empty() ? std::optional<refl::Instance>() : values.front();
+}
+
+static void setOptionalValue(refl::Instance& optionalInstance, const std::optional<refl::Instance>& value)
+{
+	auto accessor = optionalInstance.getType()->getContainerValueAccessor();
+	if (!accessor) { return; }
+
+	accessor->setValues(optionalInstance, value ? std::vector<refl::Instance>({*value}) : std::vector<refl::Instance>());
+}
+
+template <typename SimValueT, typename QtValueT>
+static QtPropertyUpdaterApplier createOptionalValueProperty(refl::TypeRegistry& typeRegistry, const ReflInstanceGetter& instanceGetter, const refl::PropertyPtr& property, const QtValueT& defaultValue)
+{
+	QString name = QString::fromStdString(property->getName());
+	QVariant defaultValueVariant = QVariant::fromValue(defaultValue);
+	QtPropertyPtr childProperty = createQtProperty(name, defaultValueVariant);
+	addMetadata(*childProperty, *property);
+
+	OptionalProperty optionalProperty;
+	optionalProperty.property = childProperty;
+
+	QtPropertyUpdaterApplier r;
+	r.property = createQtProperty(name, QVariant::fromValue(optionalProperty));
+	r.property->enabled = !property->isReadOnly();
+
+	auto propagateChangeSignalToParent = std::make_shared<bool>(true);
+	QObject::connect(childProperty.get(), &QtProperty::valueChanged, r.property.get(), [propagateChangeSignalToParent, parentProperty = r.property.get()] {
+		if (*propagateChangeSignalToParent) { parentProperty->valueChanged(); }
+		});
+
+	r.updater = [typeRegistry = &typeRegistry, instanceGetter, property, propagateChangeSignalToParent] (QtProperty& qtProperty) {
+		if (const auto& objectInstance = instanceGetter(); objectInstance)
+		{
+			refl::Instance optionalInstance = property->getValue(*objectInstance);
+			std::optional<refl::Instance> valueInstance = getOptionalValue(*typeRegistry, optionalInstance);
+
+			OptionalProperty optionalProperty = qtProperty.value().value<OptionalProperty>();
+
+			if (valueInstance)
+			{
+				// Update the child property witout propagating update signal to parent
+				// to avoid unnecessary update, as we will be updating the parent after.
+				*propagateChangeSignalToParent = false;
+				QVariant qtValue = valueInstanceToQt<SimValueT>(*property, *valueInstance);
+				optionalProperty.property->setValue(qtValue);
+				*propagateChangeSignalToParent = true;
+			}
+
+			optionalProperty.present = valueInstance.has_value();
+			qtProperty.setValue(QVariant::fromValue(optionalProperty));
+		}
+	};
+	r.updater(*r.property);
+
+	if (!property->isReadOnly())
+	{
+		r.applier = [typeRegistry = &typeRegistry, instanceGetter, property, defaultValue] (const QtProperty& qtProperty) {
+			if (auto objectInstance = instanceGetter(); objectInstance)
+			{
+				std::optional<refl::Instance> valueInstance;
+
+				OptionalProperty optionalProperty = qtProperty.value().value<OptionalProperty>();
+				if (optionalProperty.present)
+				{
+					assert(optionalProperty.property);
+					valueInstance = qtToValueInstance<SimValueT>(*property, *typeRegistry, optionalProperty.property->value(), defaultValue);
+				}
+					
+				refl::Instance optionalInstance = property->getValue(*objectInstance);
+				setOptionalValue(optionalInstance, valueInstance);
+				property->setValue(*objectInstance, optionalInstance);
+			}
+		};
+	}
+
+	return r;
+}
+
+static std::vector<refl::Instance> getVectorValues(refl::TypeRegistry& registry, const refl::Instance& vectorInstance)
+{
+	auto accessor = vectorInstance.getType()->getContainerValueAccessor();
+	if (!accessor) { return {}; }
+
+	return accessor->getValues(registry, vectorInstance);
+}
+
+static void setVectorValues(refl::Instance& vectorInstance, const std::vector<refl::Instance>& values)
+{
+	auto accessor = vectorInstance.getType()->getContainerValueAccessor();
+	if (!accessor) { return; }
+
+	accessor->setValues(vectorInstance, values);
+}
+
+template <typename SimValueT, typename QtValueT>
+static QtPropertyUpdaterApplier createVectorValueProperty(refl::TypeRegistry& typeRegistry, const ReflInstanceGetter& instanceGetter, const refl::PropertyPtr& property, const QtValueT& defaultValue)
+{
+	QString name = QString::fromStdString(property->getName());
+	QVariant defaultValueVariant = QVariant::fromValue(defaultValue);
+
+	PropertyVector propertyVector;
+	propertyVector.itemDefaultValue = defaultValueVariant;
+
+	QtPropertyUpdaterApplier r;
+	r.property = createQtProperty(name, QVariant::fromValue(propertyVector));
+	r.property->enabled = !property->isReadOnly();
+
+	r.updater = [typeRegistry = &typeRegistry, instanceGetter, property](QtProperty& qtProperty) {
+		if (const auto& objectInstance = instanceGetter(); objectInstance)
+		{
+			refl::Instance vectorInstance = property->getValue(*objectInstance);
+			std::vector<refl::Instance> valueInstances = getVectorValues(*typeRegistry, vectorInstance);
+
+			PropertyVector propertyVector = qtProperty.value().value<PropertyVector>();
+			propertyVector.items.reserve(valueInstances.size());
+			propertyVector.items.clear();
+			
+			int i = 0;
+			for (const auto& valueInstance : valueInstances)
+			{
+				QString name = QString::number(i);
+				QVariant qtValue = valueInstanceToQt<SimValueT>(*property, valueInstance);
+
+				QtPropertyPtr itemProperty = createQtProperty(name, qtValue);
+				addMetadata(*itemProperty, *property);
+				QObject::connect(itemProperty.get(), &QtProperty::valueChanged, &qtProperty, &QtProperty::valueChanged);
+				propertyVector.items.push_back(itemProperty);
+				++i;
+			}
+
+			qtProperty.setValue(QVariant::fromValue(propertyVector));
+		}
+	};
+	r.updater(*r.property);
+
+	if (!property->isReadOnly())
+	{
+		r.applier = [typeRegistry = &typeRegistry, instanceGetter, property, defaultValueVariant](const QtProperty& qtProperty) {
+			if (auto objectInstance = instanceGetter(); objectInstance)
+			{
+				PropertyVector propertyVector = qtProperty.value().value<PropertyVector>();
+
+				std::vector<refl::Instance> valueInstances;
+				valueInstances.reserve(propertyVector.items.size());
+
+				for (const auto& valueProperty : propertyVector.items)
+				{
+					assert(valueProperty);
+					std::optional<refl::Instance> valueInstance = qtToValueInstance<SimValueT>(*property, *typeRegistry, valueProperty->value(), defaultValueVariant);
+					if (valueInstance)
+					{
+						valueInstances.push_back(*valueInstance);
+					}
+				}
+
+				refl::Instance vectorInstance = property->getValue(*objectInstance);
+				setVectorValues(vectorInstance, valueInstances);
+				property->setValue(*objectInstance, vectorInstance);
+			}
+		};
+	}
+
+	return r;
+}
 
 template <typename SimValueT, typename QtValueT>
 PropertyFactory createPropertyFactory(const QtValueT& defaultValue)
 {
-	return [defaultValue] (refl::TypeRegistry& typeRegistry, const ReflInstanceGetter& instanceGetter, const refl::PropertyPtr& property) {
-		QtPropertyUpdaterApplier r;
+	return [defaultValue] (refl::TypeRegistry& typeRegistry, const ReflInstanceGetter& instanceGetter, const refl::PropertyPtr& property) {	
+		refl::TypePtr type = property->getType();
+		auto accessor = type->getContainerValueAccessor();
 		
-		QString name = QString::fromStdString(property->getName());
-		r.property = createQtProperty(name, defaultValue);
-		r.property->enabled = !property->isReadOnly();
-		addMetadata(*r.property, *property);
-		
-		r.updater = [instanceGetter, property] (QtProperty& qtProperty) {
-			if (const auto& instance = instanceGetter(); instance)
-			{
-				refl::Instance valueInstance = property->getValue(*instance);
-				SimValueT value = *valueInstance.getObject<SimValueT>();
-				qtProperty.setValue(simValueToQt(*property, value));
-			}
-		};
-		r.updater(*r.property);
-
-		if (!property->isReadOnly())
+		if (accessor)
 		{
-			r.applier = [typeRegistry = &typeRegistry, instanceGetter, property] (const QtProperty& qtProperty) {
-				if (auto instance = instanceGetter(); instance)
-				{
-					auto value = qtValueToSim<SimValueT>(*property, static_cast<const QtProperty&>(qtProperty).value);
-					property->setValue(*instance, refl::createOwningInstance(typeRegistry, value));
-				}
-			};
+			if (auto optionalValueAccessor = dynamic_cast<refl::StdOptionalValueAccessor*>(accessor.get()); optionalValueAccessor)
+			{
+				 return createOptionalValueProperty<SimValueT, QtValueT>(typeRegistry, instanceGetter, property, defaultValue);
+			}
+			else if (auto vectorValueAccessor = dynamic_cast<refl::StdVectorValueAccessor*>(accessor.get()); vectorValueAccessor)
+			{
+				return createVectorValueProperty<SimValueT, QtValueT>(typeRegistry, instanceGetter, property, defaultValue);
+			}
 		}
 
-		return r;
-	};
-}
-
-template <typename SimValueT, typename QtValueT>
-PropertyFactory createOptionalPropertyFactory(const QtValueT& defaultValue)
-{
-	return [defaultValue, basePropertyFactory = createPropertyFactory<SimValueT, QtValueT>(defaultValue)] (refl::TypeRegistry& typeRegistry, const ReflInstanceGetter& instanceGetter, const refl::PropertyPtr& property) {
-		QString name = QString::fromStdString(property->getName());
-		QtPropertyPtr baseProperty = createQtProperty(name, defaultValue);
-		addMetadata(*baseProperty, *property);
-
-		OptionalProperty optionalProperty;
-		optionalProperty.property = baseProperty;
-
-		QtPropertyUpdaterApplier r;
-		r.property = createQtProperty(name, QVariant::fromValue(optionalProperty));
-		r.property->enabled = !property->isReadOnly();
-		QObject::connect(baseProperty.get(), &QtProperty::valueChanged, r.property.get(), &QtProperty::valueChanged);
-
-		r.updater = [instanceGetter, property, defaultValue] (QtProperty& qtProperty) {
-			if (const auto& instance = instanceGetter(); instance)
-			{
-				refl::Instance valueInstance = property->getValue(*instance);
-				std::optional<SimValueT> value = *valueInstance.getObject<std::optional<SimValueT>>();
-
-				OptionalProperty optionalProperty = qtProperty.value.value<OptionalProperty>();
-				optionalProperty.property->setValue(simValueToQt(*property, value.value_or(defaultValue)));
-				optionalProperty.present = value.has_value();
-				qtProperty.value.setValue(optionalProperty);
-			}
-		};
-		r.updater(*r.property);
-
-		if (!property->isReadOnly())
-		{
-			r.applier = [typeRegistry = &typeRegistry, instanceGetter, property] (const QtProperty& qtProperty) {
-				if (auto instance = instanceGetter(); instance)
-				{
-					std::optional<SimValueT> value;
-
-					OptionalProperty optionalProperty = qtProperty.value.value<OptionalProperty>();
-					if (optionalProperty.present)
-					{
-						value = qtValueToSim<SimValueT>(*property, optionalProperty.property->value);
-					}
-					property->setValue(*instance, refl::createOwningInstance(typeRegistry, value));
-				}
-			};
-		}
-
-		return r;
+		return createValueProperty<SimValueT, QtValueT>(typeRegistry, instanceGetter, property, defaultValue);
 	};
 }
 
 std::optional<QtPropertyUpdaterApplier> reflPropertyToQt(refl::TypeRegistry& typeRegistry, const ReflInstanceGetter& instanceGetter, const refl::PropertyPtr& property)
 {
-	const auto& type = property->getType();
+	auto type = property->getType();
+	if (auto accessor = type->getContainerValueAccessor(); accessor)
+	{
+		type = typeRegistry.getTypeByName(accessor->valueTypeName);
+		if (!type)
+		{
+			return std::nullopt;
+		}
+	}
 
 	std::map<refl::TypePtr, PropertyFactory> typePropertyFactories = {
-		{ typeRegistry.getOrCreateType<std::string>(), createPropertyFactory<std::string>("") },
+		{ typeRegistry.getOrCreateType<std::string>(), createPropertyFactory<std::string>(QString()) },
 		{ typeRegistry.getOrCreateType<bool>(), createPropertyFactory<bool>(false) },
 		{ typeRegistry.getOrCreateType<int>(), createPropertyFactory<int>(0) },
 		{ typeRegistry.getOrCreateType<float>(), createPropertyFactory<float>(0.f) },
 		{ typeRegistry.getOrCreateType<double>(), createPropertyFactory<double>(0.0) },
-		{ typeRegistry.getOrCreateType<std::optional<std::string>>(), createPropertyFactory<std::string>("") },
-		{ typeRegistry.getOrCreateType<std::optional<bool>>(), createOptionalPropertyFactory<bool>(false) },
-		{ typeRegistry.getOrCreateType<std::optional<int>>(), createOptionalPropertyFactory<int>(0) },
-		{ typeRegistry.getOrCreateType<std::optional<float>>(), createOptionalPropertyFactory<float>(0.f) },
-		{ typeRegistry.getOrCreateType<std::optional<double>>(), createOptionalPropertyFactory<double>(0.0) },
 		{ typeRegistry.getOrCreateType<sim::Vector3>(), createPropertyFactory<sim::Vector3>(QVector3D(0,0,0)) },
 		{ typeRegistry.getOrCreateType<sim::Quaternion>(), createPropertyFactory<sim::Quaternion>(QVector3D(0,0,0)) },
 		{ typeRegistry.getOrCreateType<sim::LatLon>(), createPropertyFactory<sim::LatLon>(QVariant::fromValue(sim::LatLon(0,0))) }
+		// MTODO { typeRegistry.getOrCreateType<sim::AttachmentState>(), createPropertyFactory<ReflPropertyInstanceVariant>(ReflPropertyInstanceVariant{refl::createOwningInstance(typeRegistry, sim::AttachmentState{})}) }
 	};
 
 	if (const auto& i = typePropertyFactories.find(type); i != typePropertyFactories.end())

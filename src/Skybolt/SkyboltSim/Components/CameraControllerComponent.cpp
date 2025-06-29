@@ -71,7 +71,7 @@ nlohmann::json CameraControllerComponent::toJson(refl::TypeRegistry& typeRegistr
 	nlohmann::json controllersJson;
 	for (const auto& [name, controller] : getControllers())
 	{
-		controllersJson[name] = writeReflectedObject(typeRegistry, refl::createNonOwningInstance(&typeRegistry, controller.get()));
+		controllersJson[name] = writeReflectedObject(typeRegistry, refl::createNonOwningInstance(typeRegistry, controller.get()));
 	}
 	json["controllers"] = controllersJson;
 	return json;
@@ -85,7 +85,7 @@ void CameraControllerComponent::fromJson(refl::TypeRegistry& typeRegistry, const
 		for (const auto& i : getControllers())
 		{
 			ifChildExists(controllersJson, i.first, [&, controller = i.second] (const nlohmann::json& controllerJson) {
-				refl::Instance instance = refl::createNonOwningInstance(&typeRegistry, controller.get());
+				refl::Instance instance = refl::createNonOwningInstance(typeRegistry, controller.get());
 				readReflectedObject(typeRegistry, instance, controllerJson);
 			});
 		}

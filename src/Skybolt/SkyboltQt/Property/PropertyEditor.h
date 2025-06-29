@@ -20,7 +20,7 @@ class PropertyEditor : public QWidget
 {
 	Q_OBJECT
 public:
-	PropertyEditor(const PropertyEditorWidgetFactoryMap& factoryMap = getDefaultEditorWidgetFactoryMap(), QWidget* parent = nullptr);
+	PropertyEditor(const PropertyEditorWidgetFactoryMap& factoryMap = getDefaultEditorWidgetFactoryMap(nullptr), QWidget* parent = nullptr);
 
 	void setModel(const PropertiesModelPtr& model);
 	PropertiesModelPtr getModel() const { return mModel; }

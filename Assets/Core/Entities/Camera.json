@@ -8,6 +8,8 @@
     }},
 	{"scenarioMetadata": {
 		"scenarioObjectDirectory": "Cameras"
+	}},
+	{"attacher": {
 	}}
 	]
 }

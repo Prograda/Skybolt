@@ -68,9 +68,9 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 		{
 			if (refl::TypePtr type = mTypeRegistry->getMostDerivedType(*component); type)
 			{
-				ReflInstanceGetter getter = [this, component] { return refl::createNonOwningInstance(mTypeRegistry, component.get()); };
+				ReflInstanceGetter getter = [this, component] { return refl::createNonOwningInstance(*mTypeRegistry, component.get()); };
 
-				refl::Instance instance = refl::createNonOwningInstance(mTypeRegistry, component.get());
+				refl::Instance instance = refl::createNonOwningInstance(*mTypeRegistry, component.get());
 				addRttrPropertiesToModel(*mTypeRegistry, *this, toValuesVector(refl::getProperties(instance)), getter);
 			}
 		}
@@ -87,7 +87,7 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 			[this](const QtProperty& property) {
 				if (mEntity)
 				{
-					mEntity->setDynamicsEnabled(property.value.toBool());
+					mEntity->setDynamicsEnabled(property.value().toBool());
 				}
 			},
 			// Section name

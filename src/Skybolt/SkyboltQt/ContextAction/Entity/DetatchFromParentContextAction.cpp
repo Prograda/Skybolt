@@ -13,12 +13,12 @@ using namespace skybolt::sim;
 bool DetatchFromParentContextAction::handles(const Entity& entity) const
 {
 	auto component = entity.getFirstComponent<AttacherComponent>();
-	return  component && component->state;
+	return  component && component->enabled;
 }
 
 void DetatchFromParentContextAction::execute(Entity& entity) const
 {
 	AttacherComponentPtr component = entity.getFirstComponent<AttacherComponent>();
 	assert(component);
-	component->state = std::nullopt;
+	component->enabled = false;
 }

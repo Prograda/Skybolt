@@ -15,17 +15,36 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <variant>
+#include <vector>
 #include <typeindex>
 
 namespace skybolt::refl {
 
+struct ContainerValueAccessor
+{
+	ContainerValueAccessor(std::string valueTypeName) : valueTypeName(std::move(valueTypeName)) {}
+	virtual ~ContainerValueAccessor() = default;
+
+	virtual std::vector<Instance> getValues(TypeRegistry& registry, const Instance& instance) const = 0;
+
+	virtual void setValues(Instance& instance, const std::vector<Instance>& values) const = 0;
+
+	const std::string valueTypeName;
+};
+
+using ContainerValueAccessorPtr = std::shared_ptr<ContainerValueAccessor>;
+
 class Type
 {
 public:
-	Type(const std::string& name, const std::type_index& typeIndex) :
+	//! @param containerValueAccessor specifies an interface for accessing values if type is a container, otherwise null if type is a simple value.
+	Type(const std::string& name, const std::type_index& typeIndex, ContainerValueAccessorPtr containerValueAccessor = nullptr) :
 		mName(name),
-		mTypeIndex(typeIndex)
-	{}
+		mTypeIndex(typeIndex),
+		mContainerValueAccessor(containerValueAccessor)
+	{
+	}
 
 	void addProperty(const PropertyPtr& property);
 	PropertyPtr getProperty(const std::string& name);
@@ -60,12 +79,158 @@ public:
 	const std::string& getName() const { return mName; }
 	const std::type_index& getTypeIndex() const { return mTypeIndex; }
 
+	const ContainerValueAccessorPtr getContainerValueAccessor() const { return mContainerValueAccessor; } //!< Can return null
+
 private:
 	std::string mName;
 	std::type_index mTypeIndex;
+	ContainerValueAccessorPtr mContainerValueAccessor; //!< Can be null
 	PropertyMap mProperties;
 	std::map<std::type_index, std::pair<TypePtr, std::ptrdiff_t>> mSuperTypes;
 };
+
+//! Instance of a Type
+class Instance
+{
+public:
+	Instance(std::shared_ptr<void> objectPtr, TypePtr type) :
+		mObjectPtr(std::move(objectPtr)),
+		mType(std::move(type))
+	{
+		assert(mObjectPtr);
+	}
+
+	TypePtr getType() const { return mType; }
+
+	//! Never returns null
+	template <typename T>
+	T* getObject()
+	{
+		return const_cast<T*>(static_cast<const Instance*>(this)->getObject<T>());
+	}
+
+	//! Never returns null
+	template <typename T>
+	const T* getObject() const
+	{
+		std::type_index resultTypeIndex = typeid(T);
+		if (resultTypeIndex == mType->getTypeIndex()) // if result type is same type
+		{
+			return static_cast<T*>(mObjectPtr.get());
+		}
+		else if (auto offset = mType->getOffsetFromThisToSuper(resultTypeIndex); offset) // if result type is a super type
+		{
+			return static_cast<T*>(addPointerByteOffset(mObjectPtr.get(), *offset));
+		}
+
+		throw std::runtime_error("Instance::getObject() could not cast from " + mType->getName() + " to " + resultTypeIndex.name());
+	}
+
+private:
+	std::shared_ptr<void> mObjectPtr;
+	TypePtr mType;
+};
+
+struct StdOptionalValueAccessor : public ContainerValueAccessor
+{
+	using ContainerValueAccessor::ContainerValueAccessor;
+};
+
+template <typename ValueT>
+struct StdOptionalValueAccessorT : public StdOptionalValueAccessor
+{
+	using StdOptionalValueAccessor::StdOptionalValueAccessor;
+	~StdOptionalValueAccessorT() override = default;
+
+	std::vector<Instance> getValues(TypeRegistry& registry, const Instance& instance) const override
+	{
+		const auto* optionalValue = instance.getObject<std::optional<ValueT>>();
+		assert(optionalValue);
+		if (!optionalValue->has_value())
+		{
+			return {};
+		}
+		return { createOwningInstance(registry, optionalValue->value()) };	
+	};
+
+	void setValues(Instance& instance, const std::vector<Instance>& values) const override
+	{
+		auto* optionalValue = instance.getObject<std::optional<ValueT>>();
+		(*optionalValue) = !values.empty() ? (*values.front().getObject<ValueT>()) : std::optional<ValueT>();
+	};
+};
+
+struct StdVectorValueAccessor : public ContainerValueAccessor
+{
+	using ContainerValueAccessor::ContainerValueAccessor;
+};
+
+template <typename ValueT>
+struct StdVectorValueAccessorT : public StdVectorValueAccessor
+{
+	using StdVectorValueAccessor::StdVectorValueAccessor;
+	~StdVectorValueAccessorT() override = default;
+
+	std::vector<Instance> getValues(TypeRegistry& registry, const Instance& instance) const override
+	{
+		const auto* values = instance.getObject<std::vector<ValueT>>();
+		assert(values);
+
+		std::vector<Instance> result;
+		for (const ValueT& v : *values)
+		{
+			result.push_back(createOwningInstance(registry, v));
+		}
+		return result;
+	};
+
+	void setValues(Instance& instance, const std::vector<Instance>& values) const override
+	{
+		auto* destinationValues = instance.getObject<std::vector<ValueT>>();
+		assert(destinationValues);
+
+		destinationValues->clear();
+		destinationValues->reserve(values.size());
+		for (const auto& value : values)
+		{
+			destinationValues->push_back(*value.getObject<ValueT>());
+		}
+	};
+};
+
+template<typename ValueT>
+struct ContainerValueAccessorFactory
+{
+	static ContainerValueAccessorPtr create(TypeRegistry& registry)
+	{
+		return nullptr;
+	}
+};
+
+template<typename ValueT>
+struct ContainerValueAccessorFactory<std::optional<ValueT>>
+{
+	static ContainerValueAccessorPtr create(TypeRegistry& registry)
+	{
+		return std::make_shared<StdOptionalValueAccessorT<ValueT>>(registry.getOrCreateType<ValueT>()->getName());
+	}
+};
+
+template<typename ValueT>
+struct ContainerValueAccessorFactory<std::vector<ValueT>>
+{
+    static ContainerValueAccessorPtr create(TypeRegistry& registry)
+	{
+		return std::make_shared<StdVectorValueAccessorT<ValueT>>(registry.getOrCreateType<ValueT>()->getName());
+	}
+};
+
+//! Can return null
+template<typename T>
+ContainerValueAccessorPtr createContainerValueAccessor(TypeRegistry& registry)
+{
+    return ContainerValueAccessorFactory<std::decay_t<T>>::create(registry);
+}
 
 class TypeRegistry
 {
@@ -106,27 +271,22 @@ public:
 		throw std::runtime_error("Could not find type " + std::string(typeid(T).name()));
 	}
 
-	TypePtr getOrCreateTypeByIndex(const std::type_index& index)
+	template <typename T>
+	TypePtr getOrCreateType(const std::type_index& index = typeid(T))
 	{
 		if (TypePtr t = getTypeByIndex(index); t)
 		{
 			return t;
 		}
-		auto type = std::make_shared<Type>(index.name(), index);
+		auto type = std::make_shared<Type>(index.name(), index, createContainerValueAccessor<T>(*this));
 		addType(type);
 		return type;
 	}
 
 	template <typename T>
-	TypePtr getOrCreateType()
-	{
-		return getOrCreateTypeByIndex(typeid(T));
-	}
-
-	template <typename T>
 	TypePtr getOrCreateMostDerivedType(const T& object)
 	{
-		return getOrCreateTypeByIndex(typeid(object));
+		return getOrCreateType<T>(typeid(object));
 	}
 
 private:
@@ -140,72 +300,29 @@ T* addPointerByteOffset(T* p, std::ptrdiff_t offset)
 	return reinterpret_cast<T*>(reinterpret_cast<unsigned char*>(p) + offset);
 }
 
-//! Instance of a Type
-class Instance
-{
-public:
-	Instance(TypeRegistry* typeRegistry, std::shared_ptr<void> objectPtr, TypePtr type) :
-		mTypeRegistry(typeRegistry),
-		mObjectPtr(std::move(objectPtr)),
-		mType(std::move(type))
-	{
-		assert(mTypeRegistry);
-		assert(mObjectPtr);
-	}
-
-	TypePtr getType() const { return mType; }
-
-	template <typename T>
-	T* getObject()
-	{
-		return const_cast<T*>(static_cast<const Instance*>(this)->getObject<T>());
-	}
-
-	template <typename T>
-	const T* getObject() const
-	{
-		std::type_index resultTypeIndex = typeid(T);
-		if (resultTypeIndex == mType->getTypeIndex()) // if result type is same type
-		{
-			return static_cast<T*>(mObjectPtr.get());
-		}
-		else if (auto offset = mType->getOffsetFromThisToSuper(resultTypeIndex); offset) // if result type is a super type
-		{
-			return static_cast<T*>(addPointerByteOffset(mObjectPtr.get(), *offset));
-		}
-
-		throw std::runtime_error("Instance::getObject() could not cast from " + mType->getName() + " to " + resultTypeIndex.name());
-	}
-
-private:
-	TypeRegistry* mTypeRegistry;
-	std::shared_ptr<void> mObjectPtr;
-	TypePtr mType;
-};
-
 template <typename T>
 inline void null_deleter(T*) {};
 
 template <typename T>
-Instance createNonOwningInstance(TypeRegistry* registry, T* object)
+Instance createNonOwningInstance(TypeRegistry& registry, T* object)
 {
-	TypePtr type = registry->getOrCreateType<T>();
-	TypePtr derivedType = registry->getOrCreateMostDerivedType(*object);
+	TypePtr type = registry.getOrCreateType<T>();
+	TypePtr derivedType = registry.getOrCreateMostDerivedType(*object);
 	if (type != derivedType)
 	{
 		if (auto offset = derivedType->getOffsetFromThisToSuper(type->getTypeIndex()); offset)
 		{
 			void* derivedPointer = addPointerByteOffset(object, -*offset);
-			return Instance(registry, std::shared_ptr<void>(derivedPointer, &null_deleter<void>), derivedType);
+			return Instance(std::shared_ptr<void>(derivedPointer, &null_deleter<void>), derivedType);
 		}
 	}
-	return Instance(registry, std::shared_ptr<T>(object, &null_deleter<T>), type);
+	return Instance(std::shared_ptr<T>(object, &null_deleter<T>), type);
 }
 
 template <typename T>
-Instance createOwningInstance(TypeRegistry* registry, T object)
+Instance createOwningInstance(TypeRegistry& registry, T object)
 {
-	return Instance(registry, std::make_shared<T>(std::move(object)), registry->getOrCreateType<T>());
+	return Instance(std::make_shared<T>(std::move(object)), registry.getOrCreateType<T>());
 }
 
 class Property
@@ -302,7 +419,7 @@ public:
 	Instance getValue(const Instance& obj) const override
 	{
 		const ObjectT* objT = obj.getObject<ObjectT>();
-		return createNonOwningInstance(mTypeRegistry, const_cast<MemberT*>(&(objT->*mMember)));
+		return createNonOwningInstance(*mTypeRegistry, const_cast<MemberT*>(&(objT->*mMember)));
 	}
 
 private:
@@ -335,7 +452,7 @@ public:
 
 	Instance getValue(const Instance& obj) const override
 	{
-		return createOwningInstance(mTypeRegistry, (obj.getObject<ObjectT>()->*mGetter)());
+		return createOwningInstance(*mTypeRegistry, (obj.getObject<ObjectT>()->*mGetter)());
 	}
 
 private:
@@ -365,7 +482,7 @@ public:
 
 	Instance getValue(const Instance& obj) const override
 	{
-		return createOwningInstance(mTypeRegistry, (obj.getObject<ObjectT>()->*mGetter)());
+		return createOwningInstance(*mTypeRegistry, (obj.getObject<ObjectT>()->*mGetter)());
 	}
 
 private:
@@ -400,7 +517,7 @@ public:
 	Instance getValue(const Instance& obj) const override
 	{
 		auto value = mGetter(*obj.getObject<ObjectT>());
-		return createOwningInstance(mTypeRegistry, value);
+		return createOwningInstance(*mTypeRegistry, value);
 	}
 
 private:
@@ -451,13 +568,14 @@ public:
 
 	//! Read only property backed by a member variable
 	template <typename MemberT>
-	TypeBuilder<TypeT>& propertyReadOnly(const std::string& name, MemberT TypeT::*member, Property::MetadataMap metadata = {})
+	std::enable_if_t<!std::is_member_function_pointer_v<MemberT TypeT::*>, TypeBuilder<TypeT>&>
+	propertyReadOnly(const std::string& name, MemberT TypeT::*member, Property::MetadataMap metadata = {}, typename MemberProperty<TypeT, MemberT>::ValueChangedCallbackT valueChanged = nullptr)
 	{
-		mRegisterLater([name = std::move(name), member = std::move(member), metadata = std::move(metadata), type = mType] (TypeRegistry& registry) {
-			auto p = std::make_shared<MemberProperty<TypeT, MemberT>>(&registry, name, registry.getOrCreateType<MemberT>(), member);
+		mRegisterLater([name = std::move(name), member = std::move(member), metadata = std::move(metadata), type = mType, valueChanged = std::move(valueChanged), categoryName = mCategory] (TypeRegistry& registry) {
+			auto p = std::make_shared<MemberProperty<TypeT, MemberT>>(&registry, name, registry.getOrCreateType<MemberT>(), member, valueChanged);
 			p->addMetadata(std::move(metadata));
 			p->setReadOnly(true);
-			p->setCategory(mCategory);
+			p->setCategory(categoryName);
 			type->addProperty(p);
 		});
 		return *this;
@@ -480,7 +598,7 @@ public:
 		return *this;
 	}
 
-	//! Read only property backed by getter and setter methods
+	//! Read only property backed by getter method
 	template <typename MethodT>
 	TypeBuilder<TypeT>& propertyReadOnly(const std::string& name, MethodT (TypeT::*getter)() const, Property::MetadataMap metadata = {})
 	{

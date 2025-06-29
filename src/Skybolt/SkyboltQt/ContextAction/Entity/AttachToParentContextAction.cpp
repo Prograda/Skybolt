@@ -103,10 +103,10 @@ void AttachToParentContextAction::execute(Entity& entity) const
 			auto parentEntityId = i->second;
 			if (const sim::AttacherComponentPtr& attachment = entity.getFirstComponent<AttacherComponent>(); attachment)
 			{
-				attachment->state = AttachmentState();
-				attachment->state->parentEntityId = parentEntityId;
-				attachment->state->parentEntityAttachmentPoint = parentAttachmentPointChooserComboBox->currentText().toStdString();
-				attachment->state->ownEntityAttachmentPoint = ownAttachmentPointChooserComboBox->currentText().toStdString();
+				attachment->enabled = true;
+				attachment->parentEntityId = parentEntityId;
+				attachment->parentEntityAttachmentPoint = parentAttachmentPointChooserComboBox->currentText().toStdString();
+				attachment->ownEntityAttachmentPoint = ownAttachmentPointChooserComboBox->currentText().toStdString();
 			}
 		}
 	}

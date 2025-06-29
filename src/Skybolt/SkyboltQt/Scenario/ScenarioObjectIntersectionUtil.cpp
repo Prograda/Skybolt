@@ -14,7 +14,7 @@ using namespace skybolt;
 std::optional<sim::Vector3> intersectRayWithIcon(const sim::Vector3& rayOrigin, const sim::Vector3& rayDirection, const glm::dmat4& viewProjTransform, const sim::Vector3& objectPosition)
 {
 	sim::Vector3 tangent, binormal;
-	sim::getOrthonormalBasis(rayDirection, tangent, binormal);
+	math::getOrthonormalBasis(rayDirection, tangent, binormal);
 
 	auto entityPositionNdc0 = worldToScreenNdcPoint(viewProjTransform, objectPosition);
 	auto entityPositionNdc1 = worldToScreenNdcPoint(viewProjTransform, objectPosition + tangent);

@@ -76,7 +76,7 @@ static void readEntityComponents(refl::TypeRegistry& registry, World& world, sim
 	{
 		refl::TypePtr type = registry.getOrCreateMostDerivedType(*component);
 		ifChildExists(json, type->getName(), [&] (const nlohmann::json& componentJson) {
-			refl::Instance instance = refl::createNonOwningInstance(&registry, component.get());
+			refl::Instance instance = refl::createNonOwningInstance(registry, component.get());
 			readReflectedObject(registry, instance, componentJson);
 		});
 	}
@@ -93,7 +93,7 @@ static nlohmann::json writeEntityComponents(refl::TypeRegistry& registry, const 
 	for (const auto& component : entity.getComponents())
 	{
 		refl::TypePtr type = registry.getOrCreateMostDerivedType(*component);
-		refl::Instance instance = refl::createNonOwningInstance(&registry, component.get());
+		refl::Instance instance = refl::createNonOwningInstance(registry, component.get());
 		if (nlohmann::json componentJson = writeReflectedObject(registry, instance); !componentJson.is_null())
 		{
 			json[type->getName()] = componentJson;

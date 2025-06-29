@@ -20,6 +20,13 @@ struct QtPropertyUpdaterApplier
 	PropertiesModel::QtPropertyApplier applier; //!< Null for read-only properties
 };
 
+struct ReflPropertyInstanceVariant
+{
+	std::optional<skybolt::refl::Instance> instance;
+};
+
+Q_DECLARE_METATYPE(ReflPropertyInstanceVariant);
+
 using ReflInstanceGetter = std::function<std::optional<skybolt::refl::Instance>()>;
 
 std::optional<QtPropertyUpdaterApplier> reflPropertyToQt(skybolt::refl::TypeRegistry& typeRegistry, const ReflInstanceGetter& instanceGetter, const skybolt::refl::PropertyPtr& property);

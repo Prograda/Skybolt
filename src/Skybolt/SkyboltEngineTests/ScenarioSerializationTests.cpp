@@ -16,7 +16,7 @@ using namespace skybolt;
 
 static sim::EntityPtr createEntity(const std::string& templateName, const std::string& instanceName)
 {
-	static int nextEntityId = 1;
+	static std::uint32_t nextEntityId = 1;
 	sim::EntityId id{ 1, nextEntityId++ };
 	auto entity = std::make_shared<sim::Entity>(id);
 	entity->addComponent(std::make_shared<TemplateNameComponent>(templateName));

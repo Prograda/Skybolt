@@ -11,6 +11,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include <algorithm>
+#include <optional>
 #include <string>
 
 namespace skybolt {
@@ -28,13 +29,23 @@ T lerp(T x, T y, T t)
 	return x + t*(y-x);
 }
 
-template <class T>
-T vec2SwapComponents(const T& v)
+template <class VecT>
+VecT vec2SwapComponents(const VecT& v)
 {
-	return T(v[1], v[0]);
+	return VecT(v[1], v[0]);
 }
 
-glm::vec2 vec2Rotate(const glm::vec2 &v, float theta);
+template <class VecT>
+VecT vec2Rotate(const VecT &v, typename VecT::value_type theta)
+{
+	VecT::value_type cs = cos(theta);
+	VecT::value_type sn = sin(theta);
+
+	return VecT(
+		v.x * cs - v.y * sn,
+		v.x * sn + v.y * cs
+	);
+}
 
 template <typename T>
 constexpr size_t componentCount(const typename glm::tvec2<T>& v) {return 2; }
@@ -85,8 +96,43 @@ T componentWiseLerp(const T& a, const T& b, V t)
 }
 
 //! @param normal must be normalized.
-//! Output vectors are normalized
-void getOrthonormalBasis(const glm::vec3 &normal, glm::vec3 &tangent, glm::vec3 &bitangent);
+//! @param tangent is a vector in the tangent plane (perpendicular to the normal and the bitangent)
+//! @param outTangent is a normalized output tangent vector
+//! @param outBitangent is a normalized output tangent vector
+template <typename VecT>
+void getOrthonormalBasis(const VecT& normal, const VecT& tangent, VecT& outTangent, VecT& outBitangent)
+{
+	outBitangent = glm::normalize(
+		glm::cross(normal, tangent)
+	);
+	outTangent = glm::cross(outBitangent, normal);
+}
+
+//! @param normal must be normalized.
+//! @param outTangent is a normalized output tangent vector
+//! @param outBitangent is a normalized output tangent vector
+template <typename VecT>
+void getOrthonormalBasis(const VecT &normal, VecT &outTangent, VecT &outBitangent)
+{
+	constexpr VecT unitY(0, 1, 0);
+	constexpr VecT unitZ(0, 0, 1);
+	auto d = glm::dot(normal, unitY);
+	bool parallelWithY = std::abs(d) > VecT::value_type(0.95);
+	VecT tangent = parallelWithY ? unitZ : unitY;
+
+	getOrthonormalBasis(normal, tangent, outTangent, outBitangent);
+}
+
+template <typename VecT>
+inline std::optional<VecT> normalizeSafe(const VecT& v)
+{
+	double length = glm::length(v);
+	if (length < std::numeric_limits<VecT::value_type>::epsilon())
+	{
+		return std::nullopt;
+	}
+	return v / length;
+}
 
 //! @returns angle between two normalized vectors
 template <typename T>
@@ -183,6 +229,20 @@ T lerpShortestRotation(T a, T b, T weight)
 			b += T(twoPiD());
 	}
 	return a + weight * calcSmallestAngleFromTo(a, b);
+}
+
+//! reranges value from range [originalMin, originalMax] to [0, 1]
+template<typename T>
+float rerangeNormalized(T originalValue, T originalMin, T originalMax)
+{
+	return (((originalValue - originalMin) / (originalMax - originalMin)));
+}
+
+//! reranges value from range [originalMin, originalMax] to [newMin, newMax]
+template<typename T>
+float rerange(T originalValue, T originalMin, T originalMax, T newMin, T newMax)
+{
+	return newMin + (((originalValue - originalMin) / (originalMax - originalMin)) * (newMax - newMin));
 }
 
 } // namespace math

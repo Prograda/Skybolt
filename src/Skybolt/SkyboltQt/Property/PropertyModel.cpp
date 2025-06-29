@@ -13,7 +13,7 @@ QtPropertyPtr createQtProperty(const QString& name, const QVariant& value)
 {
 	auto property = std::make_shared<QtProperty>();
 	property->name = name;
-	property->value = value;
+	property->setValue(value);
 	return property;
 }
 

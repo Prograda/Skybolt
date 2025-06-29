@@ -29,20 +29,24 @@ public:
 		}
 	}
 
+	const QVariant& value() const { return mValue; }
+
 	void setValue(const QVariant& v)
 	{
-		if (value != v)
+		if (mValue != v)
 		{
-			value = v;
+			mValue = v;
 			emit valueChanged();
 		}
 	}
 
-	QVariant value;
 
 signals:
 	void valueChanged();
 	void enabledChanged(bool enabled);
+
+private:
+	QVariant mValue;
 };
 
 QtPropertyPtr createQtProperty(const QString& name, const QVariant& value);
