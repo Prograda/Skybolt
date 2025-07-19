@@ -10,6 +10,8 @@
 #include "SkyboltSim/Spatial/LatLon.h"
 #include "SkyboltSim/Spatial/LatLonAlt.h"
 
+#include <optional>
+
 namespace skybolt {
 namespace sim {
 
@@ -27,8 +29,8 @@ Quaternion latLonToGeocentricLtpOrientation(const LatLon& latLon);
 //! @returns the north-east-down local-tangent-plane orientation for a geocentric point
 Matrix3 geocentricToLtpOrientation(const Vector3& pos);
 
-//! @returns the up direction of the local-tangent-plane at pos
-Vector3 calcLtpUpDirection(const Vector3& pos);
+//! @returns the up direction of the local-tangent-plane at pos, or nullopt if position is inside planet
+std::optional<Vector3> calcLtpUpDirection(const Vector3& pos);
 
 } // namespace skybolt
 } // namespace sim

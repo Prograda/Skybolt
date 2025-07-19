@@ -22,9 +22,10 @@ public:
 	};
 
 	Type type;
-	float startRadius;
-	float endRadius;
+	float startAheadDistance; //!< Distance at which wake starts relative to the entity's origin, along the +x axis
+	float startWidth;
 	float length;
+	float spreadAngularWidth; //!< Angular width in radians of the wave spread. A value of zero maintains startWidth.
 };
 
 } // namespace sim

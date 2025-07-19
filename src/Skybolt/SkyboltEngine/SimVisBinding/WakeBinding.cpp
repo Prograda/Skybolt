@@ -52,10 +52,13 @@ void WakeBinding::syncVis(const GeocentricToNedConverter& converter)
 				osg::Vec3f startPoint = converter.convertPosition(*position);
 				if (component->type == sim::ShipWakeComponent::Type::SHIP_WAKE)
 				{
+					double startRadius = component->startWidth * 0.5;
+					double endRadius = startRadius + std::atan(component->spreadAngularWidth * 0.5) * component->length;
+
 					wake.points[0] = startPoint;
-					wake.points[0].z() = component->startRadius;
+					wake.points[0].z() = startRadius;
 					wake.points[1] = startPoint - wakeDir * component->length;
-					wake.points[1].z() = component->endRadius;
+					wake.points[1].z() = endRadius;
 				}
 				else if(component->type == sim::ShipWakeComponent::Type::ROTOR_WASH)
 				{
