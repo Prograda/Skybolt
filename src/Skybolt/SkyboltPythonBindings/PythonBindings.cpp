@@ -5,15 +5,18 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "PyComponent.h"
+#include "PyComponentProperty.h"
 #include "PythonBindings.h"
 
 #include <SkyboltCommon/Math/Box3.h>
+#include <SkyboltEngine/EntityFactory.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineRootFactory.h>
-#include <SkyboltEngine/EntityFactory.h>
+#include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/WindowUtil.h>
 #include <SkyboltEngine/Components/TemplateNameComponent.h>
 #include <SkyboltEngine/Components/VisObjectsComponent.h>
+#include <SkyboltEngine/Plugin/PluginHelpers.h>
 #include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
 #include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
@@ -67,6 +70,25 @@ static void setGlobalEngineRoot(EngineRoot* root) { gEngineRoot = root;
 
 static std::unique_ptr<EngineRoot> createEngineRootWithDefaults() {
 	return EngineRootFactory::create({});
+}
+
+static std::unique_ptr<EngineRoot> createEngineRoot(bool enableVis = true, bool loadPlugins = true)
+{
+	nlohmann::json settings = readEngineSettings({});
+
+	std::vector<PluginFactory> pluginFactories;
+	
+	if (loadPlugins)
+	{
+		pluginFactories = loadPluginFactories<Plugin, PluginConfig>(getAllPluginFilepathsInDirectories(EngineRootFactory::getDefaultPluginDirs()));
+	}
+
+	EngineRootConfig config;
+	config.engineSettings = settings;
+	config.enableVis = enableVis;
+	auto engineRoot = std::make_unique<EngineRoot>(config);
+	engineRoot->loadPlugins(pluginFactories);
+	return engineRoot;
 }
 
 } // namespace skybolt
@@ -361,6 +383,11 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_property("time", [](Scenario* scenario) { return scenario->timeSource.getTime(); }, [](Scenario* scenario, double time) { return scenario->timeSource.setTime(time); })
 		.def_property_readonly("currentJulianDate", [](Scenario* scenario) {return getCurrentJulianDate(*scenario); });
 
+	py::class_<PyComponentProperty, PyComponentPropertyPtr>(m, "Property")
+		.def_property_readonly("name", &PyComponentProperty::getName)
+		.def_property_readonly("readOnly", &PyComponentProperty::isReadOnly)
+		.def_property("value", [] (PyComponentProperty& p) { return p.getValue(); }, [] (PyComponentProperty& p, const py::handle& value) {p.setValue(value);});
+
 	py::class_<EngineRoot>(m, "EngineRoot")
 		.def_property_readonly("world", [](const EngineRoot& r) {return &r.scenario->world; }, py::return_value_policy::reference_internal)
 		.def_property_readonly("entityFactory", [](const EngineRoot& r) {return r.entityFactory.get(); }, py::return_value_policy::reference_internal)
@@ -388,7 +415,8 @@ PYBIND11_MODULE(skybolt, m) {
 
 	m.def("getGlobalEngineRoot", &getGlobalEngineRoot, "Get global EngineRoot", py::return_value_policy::reference);
 	m.def("setGlobalEngineRoot", &setGlobalEngineRoot, "Set global EngineRoot");
-	m.def("createEngineRootWithDefaults", &createEngineRootWithDefaults, "Create an EngineRoot with default values");
+	m.def("createEngineRootWithDefaults", &createEngineRootWithDefaults, "Create an EngineRoot with default values"); //@deprecated
+	m.def("createEngineRoot", &createEngineRoot, py::arg("enableVis"), py::arg("loadPlugins"), "Create an EngineRoot");
 	m.def("attachCameraToWindowWithEngine", &attachCameraToWindowWithEngine);
 	m.def("registerComponent", &registerComponent);
 	m.def("stepSim", &stepSim);
@@ -408,4 +436,6 @@ PYBIND11_MODULE(skybolt, m) {
 	m.def("transformToScreenSpace", &transformToScreenSpace);
 	m.def("setWaveHeight", &setWaveHeight);
 	m.def("calcSmallestAngleFromTo", &math::calcSmallestAngleFromTo<double>);
+	m.def("getProperties", &getComponentProperties);
+	m.def("getProperty", &getComponentProperty);
 }
