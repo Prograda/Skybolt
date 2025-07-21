@@ -23,7 +23,7 @@ public:
 	~PythonInterpreter();
 
 private:
-	std::unique_ptr<pybind11::scoped_interpreter> mPyInterpreter;
+	std::unique_ptr<pybind11::scoped_interpreter> mPyInterpreter; //!< Will be null if interpreter is managed externally
 };
 
 } // namespace skybolt

@@ -43,7 +43,7 @@ public:
 		sim::World* simWorld;
 		JulianDateProvider julianDateProvider;
 		ComponentFactoryRegistryPtr componentFactoryRegistry;
-		vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
+		vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry; //!< Never null
 		EngineStats* stats;
 		file::FileLocator fileLocator;
 		std::vector<std::string> assetPackagePaths;
