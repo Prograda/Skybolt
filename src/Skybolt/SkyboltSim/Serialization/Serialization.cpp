@@ -94,16 +94,21 @@ void readReflectedObject(refl::TypeRegistry& registry, refl::Instance& object, c
 	}
 	else // use reflection based serialization
 	{
-		for (const auto& [name, property] : getProperties(object))
+		readReflectedObjectProperties(registry, object, json);
+	}
+}
+
+void readReflectedObjectProperties(refl::TypeRegistry& registry, refl::Instance& object, const nlohmann::json& json)
+{
+	for (const auto& [name, property] : getProperties(object))
+	{
+		if (isSerializable(*property))
 		{
-			if (isSerializable(*property))
-			{
-				ifChildExists(json, property->getName(), [&] (const nlohmann::json& propertyJson) {
-					refl::Instance value = property->getValue(object);
-					jsonToExistingReflVariant(registry, value, propertyJson);
-					property->setValue(object, value);
+			ifChildExists(json, property->getName(), [&](const nlohmann::json& propertyJson) {
+				refl::Instance value = property->getValue(object);
+				jsonToExistingReflVariant(registry, value, propertyJson);
+				property->setValue(object, value);
 				});
-			}
 		}
 	}
 }
@@ -181,17 +186,26 @@ nlohmann::json writeReflectedObject(refl::TypeRegistry& registry, const refl::In
 	}
 	else // use reflection based serialization
 	{
-		for (const auto& [name, property] : getProperties(object))
+		json = writeReflectedObjectProperties(registry, object);
+	}
+
+	return json;
+}
+
+nlohmann::json writeReflectedObjectProperties(refl::TypeRegistry& registry, const refl::Instance& object)
+{
+	nlohmann::json json;
+
+	for (const auto& [name, property] : getProperties(object))
+	{
+		if (isSerializable(*property))
 		{
-			if (isSerializable(*property))
+			auto type = property->getType();
+			refl::Instance var = property->getValue(object);
+			nlohmann::json valueJson = toJson(registry, *property->getType(), var);
+			if (!valueJson.is_null())
 			{
-				auto type = property->getType();
-				refl::Instance var = property->getValue(object);
-				nlohmann::json valueJson = toJson(registry, *property->getType(), var);
-				if (!valueJson.is_null())
-				{
-					json[property->getName()] = valueJson;
-				}
+				json[property->getName()] = valueJson;
 			}
 		}
 	}
