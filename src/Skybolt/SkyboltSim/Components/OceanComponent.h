@@ -15,6 +15,7 @@ namespace skybolt::sim {
 struct OceanComponent : public Component
 {
 public:
+	int seed = 0;
 	double waveHeight = 1;
 	double windVelocityHeading = 0;
 	OceanSurfaceSamplerPtr surfaceSampler = std::make_shared<PlanarOceanSurfaceSampler>(); //!< Never null

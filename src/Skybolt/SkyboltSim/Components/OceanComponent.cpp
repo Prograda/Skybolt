@@ -15,6 +15,7 @@ SKYBOLT_REFLECT_BEGIN(OceanComponent)
 {
 	registry.type<OceanComponent>("OceanComponent")
 		.superType<Component>()
+		.property("seed", &OceanComponent::seed)
 		.property("waveHeight", &OceanComponent::waveHeight)
 		.property("windVelocityHeading", &OceanComponent::windVelocityHeading, {{PropertyMetadataNames::units, Units::Radians}});
 }
