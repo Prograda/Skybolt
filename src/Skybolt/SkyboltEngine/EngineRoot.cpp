@@ -44,7 +44,7 @@ Expected<file::Path> locateFile(const std::string& filename)
 	return resolvedFilename;
 };
 
-static std::vector<std::string> transparentMaterialNames() { return { "transparentExt", "transparent" }; }
+static std::vector<std::string> transparentMaterialNames() { return { "transparentExt", "transparent" }; } //@deprecated. Set osg::Material diffuse alpha < 1 instead to treat geometry as transparent.
 
 static vis::ModelFactoryPtr createModelFactory(const vis::ShaderPrograms& programs)
 {
@@ -52,6 +52,7 @@ static vis::ModelFactoryPtr createModelFactory(const vis::ShaderPrograms& progra
 
 	vis::ModelFactoryConfig config;
 	config.defaultProgram = programs.getRequiredProgram("model");
+	config.glassProgram = glassProgram;
 	for (const std::string& name : transparentMaterialNames())
 	{
 		config.stateSetModifiers[name] = [=](osg::StateSet& stateSet, const osg::Material& material) {

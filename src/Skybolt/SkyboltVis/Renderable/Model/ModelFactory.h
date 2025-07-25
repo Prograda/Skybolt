@@ -22,6 +22,7 @@ struct ModelFactoryConfig
 {
 	NamedStateSetModifiers stateSetModifiers;
 	osg::ref_ptr<osg::Program> defaultProgram;
+	osg::ref_ptr<osg::Program> glassProgram;
 };
 
 class ModelFactory : public DefaultRootNode
@@ -41,6 +42,7 @@ public:
 private:
 	NamedStateSetModifiers mStateSetModifiers;
 	osg::ref_ptr<osg::Program> mDefaultProgram;
+	osg::ref_ptr<osg::Program> mGlassProgram;
 };
 
 } // namespace vis

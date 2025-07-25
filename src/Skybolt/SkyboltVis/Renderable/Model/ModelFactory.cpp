@@ -126,9 +126,11 @@ static float specularExponentToRoughness(float exponent)
 class MaterialShaderAssignmentsModifier : public StateSetVisitor
 {
 public:
-	MaterialShaderAssignmentsModifier(const NamedStateSetModifiers& modifiers) :
-		mModifiers(modifiers)
+	MaterialShaderAssignmentsModifier(const NamedStateSetModifiers& modifiers, const osg::ref_ptr<osg::Program>& glassProgram) :
+		mModifiers(modifiers),
+		mGlassProgram(glassProgram)
 	{
+		assert(mGlassProgram);
 	}
 
 	void apply(osg::StateSet& stateSet) override
@@ -162,6 +164,13 @@ public:
 				stateSet.setDefine("ENABLE_SPECULAR");
 				stateSet.setDefine("ENABLE_ENVIRONMENT_MAP");
 			}
+			
+			const float alpha = material->getDiffuse(osg::Material::FRONT).a();
+			if (alpha < 0.9)
+			{
+				stateSet.setAttribute(mGlassProgram);
+				makeStateSetTransparent(stateSet, TransparencyMode::PremultipliedAlpha);
+			}
 		}
 	}
 
@@ -172,13 +181,16 @@ public:
 
 private:
 	NamedStateSetModifiers mModifiers;
+	osg::ref_ptr<osg::Program> mGlassProgram;
 };
 
 ModelFactory::ModelFactory(const ModelFactoryConfig &config) :
 	mStateSetModifiers(config.stateSetModifiers),
-	mDefaultProgram(config.defaultProgram)
+	mDefaultProgram(config.defaultProgram),
+	mGlassProgram(config.glassProgram)
 {
 	assert(mDefaultProgram);
+	assert(mGlassProgram);
 }
 
 osg::ref_ptr<osg::Node> ModelFactory::createModel(const std::string& filename, const std::vector<TextureRole>& textureRoles)
@@ -204,7 +216,7 @@ osg::ref_ptr<osg::Node> ModelFactory::createModel(const std::string& filename, c
 		}
 
 		{
-			MaterialShaderAssignmentsModifier modifier(mStateSetModifiers);
+			MaterialShaderAssignmentsModifier modifier(mStateSetModifiers, mGlassProgram);
 			model->accept(modifier);
 		}
 
