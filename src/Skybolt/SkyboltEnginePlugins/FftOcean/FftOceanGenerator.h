@@ -27,6 +27,7 @@ struct FftOceanGeneratorConfig
 	glm::vec2 windVelocity;
 	glm::vec2 normalizedFrequencyRange; //!< (min, max) in range [0, 1]
 	float gravity;
+	float cutoffFrequencyNyquistMultiplier = 0.5f;
 	bool useMultipleCores = false;
 };
 
@@ -75,6 +76,7 @@ public:
 	glm::dvec2 getTextureWorldSize() const { return glm::dvec2(mTextureWorldSize, mTextureWorldSize); }
 
 	typedef std::complex<float> complex_type;
+	const std::vector<complex_type>& getHt0Image() const { return mHt0; } //!< Image has dimensions of (mTextureSizePixels, mTextureSizePixels)
 
 private:
 	Simd4 calcDispersion(Simd4 kx, Simd4 kz) const;
@@ -100,6 +102,7 @@ private:
 	const float mTextureWorldSize;
 	const float mOneOnTextureWorldSize;
 	const float mGravity;
+	const float mCutoffFrequencyNyquistMultiplier;
 	const bool mUseMultipleCores;
 
 	glm::vec2 mWindVelocity;

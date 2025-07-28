@@ -42,6 +42,7 @@ FftOceanGenerator::FftOceanGenerator(const FftOceanGeneratorConfig& config) :
 	mTextureWorldSize(config.textureWorldSize),
 	mOneOnTextureWorldSize(1.0f / mTextureWorldSize),
 	mGravity(config.gravity),
+	mCutoffFrequencyNyquistMultiplier(config.cutoffFrequencyNyquistMultiplier),
 	mUseMultipleCores(config.useMultipleCores),
 	mWindVelocity(config.windVelocity),
 	mFftGeneratorData(new FftGeneratorData)
@@ -149,12 +150,14 @@ const float cm = 0.23f; // Eq 59
 
 const float km = 370.0f; // Eq 59
 
-float sqr(float x)
+inline float sqr(float x)
 {
 	return x * x;
 }
 
-float omega(float k)
+//! @param k is the wave magnitude in frequency space
+//! @return wave angular frequency for a given k value
+static float omega(float k)
 {
 	return std::sqrt(9.81f * k * (1.0f + sqr(k / km))); // Eq 24
 }
@@ -185,16 +188,20 @@ float FftOceanGenerator::calcBruenton(int n, int m) const
 		return 0.0;
 	}
 
+	// Calculate wave phase speed
 	float c = omega(kLength) / kLength;
 
-	// spectral peak
+	// Calculate wave vector magnitude at spectral peak
 	float kp = 9.81f * sqr(Omega / U10); // after Eq 3
+
+	// Calculate phase speed at spectral peak
 	float cp = omega(kp) / kp;
 
-	// friction velocity
+	// Calculate friction velocity
 	float z0 = 3.7e-5f * sqr(U10) / 9.81f * pow(U10 / cp, 0.9f); // Eq 66
 	float u_star = 0.41f * U10 / log(10.0f / z0); // Eq 60
 
+	// Calculate low frequency wave component
 	float Lpm = exp(-5.0f / 4.0f * sqr(kp / kLength)); // after Eq 3
 	float gamma = Omega < 1.0f ? 1.7f : 1.7f + 6.0f * log(Omega); // after Eq 3 // log10 or log??
 	float sigma = 0.08f * (1.0f + 4.0f / pow(Omega, 3.0f)); // after Eq 3
@@ -204,12 +211,14 @@ float FftOceanGenerator::calcBruenton(int n, int m) const
 	float alphap = 0.006f * std::sqrt(Omega); // Eq 34
 	float Bl = 0.5f * alphap * cp / c * Fp; // Eq 31
 
+	// Calculate high frequency wave component
 	float alpham = 0.01f * (u_star < cm ? 1.0f + log(u_star / cm) : 1.0f + 3.0f * log(u_star / cm)); // Eq 44
 	float Fm = exp(-0.25f * sqr(kLength / km - 1.0f)); // Eq 41
 	float Bh = 0.5f * alpham * cm / c * Fm * Lpm; // Eq 40 (fixed)
 
 	float A = 1.f;
 
+	// Calculate amplitude with repect to wave direction
 	if (omnispectrum) {
 		return A * (Bl + Bh) / (kLength * sqr(kLength)); // Eq 30
 	}
@@ -348,10 +357,12 @@ static float filterNan(float v, float valueIfNan)
 
 void FftOceanGenerator::calculate(float t, std::vector<glm::vec3>& result)
 {
-	cxxtimer::Timer timer(true);
+	//cxxtimer::Timer timer(true);
 
 	result.resize(mTextureSizePixels * mTextureSizePixels);
 	complex_type_simd4 htVertical, htHorizontalX, htHorizontalZ;
+
+	const float nyquist = math::piF() * mTextureSizePixels / mTextureWorldSize;
 
 	// Prepare fft input
 	for (int m = 0; m < mTextureSizePixels; ++m)
@@ -375,6 +386,13 @@ void FftOceanGenerator::calculate(float t, std::vector<glm::vec3>& result)
 
 			// Calculate dispersion with simd4 intrinsics
 			htVertical = ht(t, calcDispersion(kx, kz), ht0, ht0Conj);
+
+			// Calculate damping
+			float kCutoff = nyquist * mCutoffFrequencyNyquistMultiplier;
+			constexpr float dampingPower = 2.0f; // Higher values give more aggressive damping
+
+			Simd4 damping = exp(-pow(len / fromScalar(kCutoff), fromScalar(dampingPower)));
+			htVertical *= damping;
 
 			// Unpack from simd4 to muFFT input
 			htHorizontalX = htVertical * complex_type_simd4(simd4Zero, -kx / len);
