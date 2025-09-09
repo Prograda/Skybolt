@@ -384,6 +384,12 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("setOrientation", [](Entity* entity, const Quaternion& orientation) {
 			setOrientation(*entity, orientation);
 		})
+		.def("getVelocity", [](Entity* entity) {
+			return *getVelocity(*entity);
+		})
+		.def("setVelocity", [](Entity* entity, const Vector3& position) {
+			setVelocity(*entity, position);
+		})
 		.def("getComponents", &Entity::getComponents)
 		.def("getComponentsOfType", &getComponentsOfTypeName)
 		.def("getFirstComponentOfType", &getFirstComponentOfTypeName)

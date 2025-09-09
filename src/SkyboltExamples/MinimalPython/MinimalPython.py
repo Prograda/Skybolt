@@ -1,5 +1,5 @@
 import os, sys
-sys.path.append(os.getenv("SKYBOLT_LIB_DIR"))
+sys.path.extend(os.getenv("SKYBOLT_PYTHON_PATH").split(os.pathsep))
 
 import skybolt as sb
 
