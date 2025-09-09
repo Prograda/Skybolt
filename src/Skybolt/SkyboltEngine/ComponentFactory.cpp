@@ -185,8 +185,11 @@ static sim::ComponentPtr loadShipWake(Entity* entity, const ComponentFactoryCont
 	std::string type = json.at("type");
 	if (type == "shipWake")
 	{
+		float startAheadDistance = readOptionalOrDefault(json, "startAheadDistance", 0); //@ deprecated
+
 		component->type = ShipWakeComponent::Type::SHIP_WAKE;
-		component->startAheadDistance = readOptionalOrDefault(json, "startAheadDistance", 0);
+		component->bowWakeForwardOffset = readOptionalOrDefault(json, "bowWakeForwardOffset", startAheadDistance);
+		component->sternWakeForwardOffset = readOptionalOrDefault(json, "sternWakeForwardOffset", 0);
 		component->startWidth = readOptionalOrDefault(json, "startWidth", 16.f);
 		component->spreadAngularWidth = readOptionalOrDefault(json, "spreadAngularWidth", 5 * math::degToRadD());
 		component->length = readOptionalOrDefault(json, "length", 700.f);

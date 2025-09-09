@@ -30,7 +30,10 @@ void addAttachmentPoint(Entity& entity, const std::string& name, const Attachmen
 //@return nullptr if not found
 AttachmentPointPtr findAttachmentPoint(const Entity& entity, const std::string& name);
 
+//! @returns world space position of the attachment point
 Vector3 calcAttachmentPointPosition(const Entity& entity, const AttachmentPoint& point);
+
+//! @returns world space orientation of the attachment point
 Quaternion calcAttachmentPointOrientation(const Entity& entity, const AttachmentPoint& point);
 
 } // namespace sim

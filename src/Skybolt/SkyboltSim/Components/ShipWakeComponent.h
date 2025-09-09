@@ -22,7 +22,8 @@ public:
 	};
 
 	Type type;
-	float startAheadDistance; //!< Distance at which wake starts relative to the entity's origin, along the +x axis
+	float bowWakeForwardOffset; //!< Distance at which wake starts relative to the entity's origin, along the +x axis
+	float sternWakeForwardOffset;
 	float startWidth;
 	float length;
 	float spreadAngularWidth; //!< Angular width in radians of the wave spread. A value of zero maintains startWidth.
