@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <SkyboltVis/Renderable/Water/WaveHeightTextureGenerator.h>
+#include "WaveSpectrumWindow.h"
 #include "FftOceanGenerator.h"
 
 #include <atomic>
@@ -15,26 +16,34 @@
 namespace skybolt {
 namespace vis {
 
+struct FftOceanWaveHeightTextureGeneratorConfig
+{
+	float textureWorldSize;
+	int textureSizePixels;
+	WaveSpectrumWindow waveSpectrumWindow;
+};
+
 class FftOceanWaveHeightTextureGenerator : public WaveHeightTextureGenerator
 {
 public:
-	FftOceanWaveHeightTextureGenerator(float textureWorldSize, const glm::vec2& normalizedFrequencyRange) :
-		mWorldSize(textureWorldSize),
+	FftOceanWaveHeightTextureGenerator(const FftOceanWaveHeightTextureGeneratorConfig& config) :
+		mWorldSize(config.textureWorldSize),
 		mWaveHeight(0.5)
 	{
 		mWindVelocity = calcWindVelocity();
 
-		FftOceanGeneratorConfig config;
-		config.gravity = mGravity;
-		config.seed = 0;
-		config.textureSizePixels = 512;
-		config.textureWorldSize = textureWorldSize;
-		config.windVelocity = mWindVelocity;
-		config.normalizedFrequencyRange = normalizedFrequencyRange;
-
 		mGeneratorResult = std::vector<glm::vec3>(config.textureSizePixels * config.textureSizePixels, glm::vec3(0,0,0));
 
-		mGenerator.reset(new FftOceanGenerator(config));
+		mGenerator.reset(new FftOceanGenerator([&] {
+			FftOceanGeneratorConfig c;
+			c.gravity = mGravity;
+			c.seed = 0;
+			c.textureSizePixels = config.textureSizePixels;
+			c.textureWorldSize = config.textureWorldSize;
+			c.windVelocity = mWindVelocity;
+			c.waveSpectrumWindow = config.waveSpectrumWindow;
+			return c;
+			}()));
 
 		osg::Image* image = new osg::Image();
 		image->setDataVariance(osg::Image::DYNAMIC);
@@ -113,7 +122,7 @@ public:
 					mWindVelocityChanged = false;
 				}
 
-				mGenerator->calculate(mRequestTime, mGeneratorResult);
+				mGenerator->calculate(mRequestTime, span<glm::vec3>{mGeneratorResult.data(), mGeneratorResult.size()});
 				mGeneratorHasResult = true;
 				mGeneratorRequest = false;
 			}
@@ -149,10 +158,15 @@ public:
 		}
 	}
 
-	osg::ref_ptr<osg::Texture2D> getTexture() const
+	int getTextureCount() const { return 1; }
+
+	osg::ref_ptr<osg::Texture2D> getTexture(int index) const
 	{
+		assert(index == 0);
 		return mTexture;
 	}
+
+	float getTextureWorldSize(int index) const { return mWorldSize; }
 
 private:
 	glm::vec2 calcWindVelocity() const {

@@ -41,14 +41,14 @@ public:
 	osg::ref_ptr<osg::Texture2D> getHeightTexture(int cascadeIndex) const;
 	osg::ref_ptr<osg::Texture2D> getNormalTexture(int cascadeIndex) const;
 	osg::ref_ptr<osg::Texture2D> getFoamMaskTexture(int cascadeIndex) const;
-	int getCascadeCount() { return WaterStateSetConfig::waveTextureCount; }
+	int getCascadeCount() const;
 
 	sim::OceanSurfaceSamplerPtr getSurfaceSampler() const; //!< Never returns null
 
 private:
-	std::unique_ptr<class CascadedWaveHeightTextureGenerator> mWaveHeightTextureGenerator;
+	std::unique_ptr<class WaveHeightTextureGenerator> mWaveHeightTextureGenerator;
 	std::vector<osg::ref_ptr<GpuTextureGenerator>> mWaterSurfaceGpuTextureGenerators; //!< stored in execution order
-	osg::ref_ptr<class WaveFoamMaskGenerator> mWaveFoamMaskGenerator[WaterStateSetConfig::waveTextureCount];
+	std::vector<osg::ref_ptr<class WaveFoamMaskGenerator>> mWaveFoamMaskGenerators;
 };
 
 } // namespace vis

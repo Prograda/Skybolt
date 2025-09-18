@@ -23,11 +23,16 @@ namespace vis {
 
 WaterStateSet::WaterStateSet(const WaterStateSetConfig& config)
 {
-	osg::Uniform* heightMapTexCoordScales = new osg::Uniform(osg::Uniform::FLOAT_VEC2, "heightMapTexCoordScales", config.waveTextureCount);
-	for (int i = 0; i < config.waveTextureCount; ++i)
+	const int waveTextureCount = config.waveTextureSets.size();
+
+	setDefine("OCEAN_CASCADE_COUNT", std::to_string(waveTextureCount));
+	osg::Uniform* heightMapTexCoordScales = new osg::Uniform(osg::Uniform::FLOAT_VEC2, "heightMapTexCoordScales", waveTextureCount);
+
+	for (int i = 0; i < waveTextureCount; ++i)
 	{
+		const auto& textureSet = config.waveTextureSets[i];
 		// TODO: replace 10000 with Scene::mWrappedNoisePeriod
-		osg::Vec2f size(10000 / config.waveHeightMapWorldSizes[i], 10000 / config.waveHeightMapWorldSizes[i]);
+		osg::Vec2f size(10000 / textureSet.waveHeightMapWorldSizes, 10000 / textureSet.waveHeightMapWorldSizes);
 		heightMapTexCoordScales->setElement(i, size);
 	}
 
@@ -57,36 +62,33 @@ WaterStateSet::WaterStateSet(const WaterStateSetConfig& config)
 	foamTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
 
 	int i = 0;
-	if (config.waveTextureCount == 1)
+	for (const auto& textureSet : config.waveTextureSets)
 	{
-		setTextureAttributeAndModes(i++, config.waveHeightTexture[0], osg::StateAttribute::ON);
-		setTextureAttributeAndModes(i++, config.waveNormalTexture[0], osg::StateAttribute::ON);
-		mFirstFoamMaskTextureIndex = i;
-		setTextureAttributeAndModes(i++, config.waveFoamMaskTexture[0], osg::StateAttribute::ON);
+		setTextureAttributeAndModes(i++, textureSet.waveHeight, osg::StateAttribute::ON);
 	}
-	else
+	for (const auto& textureSet : config.waveTextureSets)
 	{
-		assert(config.waveTextureCount == 2);
+		setTextureAttributeAndModes(i++, textureSet.waveNormal, osg::StateAttribute::ON);
+	}
 
-		setTextureAttributeAndModes(i++, config.waveHeightTexture[0], osg::StateAttribute::ON);
-		setTextureAttributeAndModes(i++, config.waveHeightTexture[1], osg::StateAttribute::ON);
-		setTextureAttributeAndModes(i++, config.waveNormalTexture[0], osg::StateAttribute::ON);
-		setTextureAttributeAndModes(i++, config.waveNormalTexture[1], osg::StateAttribute::ON);
-		mFirstFoamMaskTextureIndex = i;
-		setTextureAttributeAndModes(i++, config.waveFoamMaskTexture[0], osg::StateAttribute::ON);
-		setTextureAttributeAndModes(i++, config.waveFoamMaskTexture[1], osg::StateAttribute::ON);
+	mFirstFoamMaskTextureIndex = i;
+
+	for (const auto& textureSet : config.waveTextureSets)
+	{
+		setTextureAttributeAndModes(i++, textureSet.waveFoamMask, osg::StateAttribute::ON);
 	}
+
 	setTextureAttributeAndModes(i++, foamTexture, osg::StateAttribute::ON);
 	setTextureAttribute(i++, wakeHashMapTexture, osg::StateAttribute::ON);
 	setTextureAttribute(i++, wakeParamsTexture, osg::StateAttribute::ON);
 
 	i = 0;
-	addUniform(createArrayOfUniformSampler2d("heightSamplers", i, config.waveTextureCount));
-	i += config.waveTextureCount;
-	addUniform(createArrayOfUniformSampler2d("normalSamplers", i, config.waveTextureCount));
-	i += config.waveTextureCount;
-	addUniform(createArrayOfUniformSampler2d("foamMaskSamplers", i, config.waveTextureCount));
-	i += config.waveTextureCount;
+	addUniform(createArrayOfUniformSampler2d("heightSamplers", i, waveTextureCount));
+	i += waveTextureCount;
+	addUniform(createArrayOfUniformSampler2d("normalSamplers", i, waveTextureCount));
+	i += waveTextureCount;
+	addUniform(createArrayOfUniformSampler2d("foamMaskSamplers", i, waveTextureCount));
+	i += waveTextureCount;
 	addUniform(createUniformSampler2d("foamSampler", i++));
 	addUniform(createUniformSamplerTbo("wakeHashMapTexture", i++));
 	addUniform(createUniformSamplerTbo("wakeParamsTexture", i++));

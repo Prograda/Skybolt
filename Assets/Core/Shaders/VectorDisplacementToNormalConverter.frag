@@ -17,7 +17,7 @@ uniform vec2 textureSizeInWorldSpace;
 vec3 sampleVectorDisplacementMap(sampler2D sampler, vec2 texCoord, vec2 textureSizeInWorldSpace)
 {
 	vec3 P = vec3(texCoord * textureSizeInWorldSpace, 0);
-	return P + vec3(0,0,texture(sampler, texCoord).z);
+	return P + texture(sampler, texCoord).rgb;
 }
 
 void main()

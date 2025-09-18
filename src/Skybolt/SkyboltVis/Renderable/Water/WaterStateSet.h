@@ -18,12 +18,15 @@ struct Wake
 
 struct WaterStateSetConfig
 {
-	static const int waveTextureCount = 1;
-	osg::ref_ptr<osg::Texture2D> waveHeightTexture[waveTextureCount];
-	osg::ref_ptr<osg::Texture2D> waveNormalTexture[waveTextureCount];
-	osg::ref_ptr<osg::Texture2D> waveFoamMaskTexture[waveTextureCount];
+	struct WaveTextureSet
+	{
+		osg::ref_ptr<osg::Texture2D> waveHeight;
+		osg::ref_ptr<osg::Texture2D> waveNormal;
+		osg::ref_ptr<osg::Texture2D> waveFoamMask;
+		float waveHeightMapWorldSizes;
+	};
 
-	float waveHeightMapWorldSizes[waveTextureCount];
+	std::vector<WaveTextureSet> waveTextureSets;
 };
 
 //! StateSet containing textures and uniforms for a generic water shader.

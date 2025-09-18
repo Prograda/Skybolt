@@ -9,6 +9,7 @@
 
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltEngine/EngineRoot.h>
+#include <SkyboltVis/Renderable/Water/SimpleWaveHeightTextureGenerator.h>
 
 #include <boost/config.hpp>
 #include <boost/dll/alias.hpp>
@@ -19,9 +20,14 @@ namespace skybolt {
 class FftOceanWaveHeightTextureGeneratorFactory : public vis::WaveHeightTextureGeneratorFactory
 {
 public:
-	std::unique_ptr<vis::WaveHeightTextureGenerator> create(float textureWorldSize, const glm::vec2& normalizedFrequencyRange) const override
+	std::unique_ptr<vis::WaveHeightTextureGenerator> create() const override
 	{
-		return std::make_unique<vis::FftOceanWaveHeightTextureGenerator>(textureWorldSize, normalizedFrequencyRange);
+		return std::make_unique<vis::FftOceanWaveHeightTextureGenerator>([&] {
+			vis::FftOceanWaveHeightTextureGeneratorConfig c;
+			c.textureWorldSize = 500; // FIXME: To avoid texture wrapping issues, Scene::mWrappedNoisePeriod divided by this should have no remainder;
+			c.textureSizePixels = 512;
+			return c;
+			}());
 	}
 };
 
@@ -29,7 +35,13 @@ FftOceanPlugin::FftOceanPlugin(const PluginConfig& config)
 {
 	mVisFactoryRegistry = valueOrThrowException(getExpectedRegistry<vis::VisFactoryRegistry>(*config.engineRoot->factoryRegistries));
 
-	(*mVisFactoryRegistry)[vis::VisFactoryType::WaveHeightTextureGenerator] = std::make_shared<FftOceanWaveHeightTextureGeneratorFactory>();
+	// If using the default SimpleWaveHeightTextureGeneratorFactory, or no factory, then use this plugin instead.
+	// Otherwise anothe plugin is already being used and it should take precedent, so do nothing.
+	auto currentFactory = (*mVisFactoryRegistry)[vis::VisFactoryType::WaveHeightTextureGenerator];
+	if (!currentFactory || dynamic_cast<vis::SimpleWaveHeightTextureGeneratorFactory*>(currentFactory.get()))
+	{
+		(*mVisFactoryRegistry)[vis::VisFactoryType::WaveHeightTextureGenerator] = std::make_shared<FftOceanWaveHeightTextureGeneratorFactory>();
+	}
 }
 
 FftOceanPlugin::~FftOceanPlugin()

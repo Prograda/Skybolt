@@ -5,8 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #version 440 core
-#pragma import_defines ( DISTANCE_CULL )
-#pragma import_defines ( ENABLE_DEPTH_OFFSET )
+#pragma import_defines(DISTANCE_CULL)
+#pragma import_defines(ENABLE_DEPTH_OFFSET)
 
 #extension GL_EXT_gpu_shader4 : enable // Required by HARDWARE_ANISTROPIC_FILTERING
 #define HARDWARE_ANISTROPIC_FILTERING
@@ -28,12 +28,12 @@ in AtmosphericScattering scattering;
 
 out vec4 color;
 
-uniform sampler2D normalSamplers[NUM_OCEAN_CASCADES];
-uniform sampler2D foamMaskSamplers[NUM_OCEAN_CASCADES];
+uniform sampler2D normalSamplers[OCEAN_CASCADE_COUNT];
+uniform sampler2D foamMaskSamplers[OCEAN_CASCADE_COUNT];
 uniform sampler2D foamSampler;
 
 uniform mat4 reflectionViewProjectionMatrix;
-uniform vec2 heightMapTexCoordScales[NUM_OCEAN_CASCADES];
+uniform vec2 heightMapTexCoordScales[OCEAN_CASCADE_COUNT];
 uniform vec3 lightDirection; // direction to light
 uniform float waterHeight;
 uniform vec3 ambientLightColor;
@@ -146,25 +146,16 @@ void main(void)
 #endif
 	vec2 texCoord = wrappedNoiseCoord * heightMapTexCoordScales[0];
 	vec3 normalSample = texture(normalSamplers[0], texCoord, normalMipmapBias).rgb;
+	vec3 normal = normalize(normalSample * vec3(2) - vec3(1));
 	float foamMask = texture(foamMaskSamplers[0], texCoord).r;
-
-	vec3 normal = normalSample * vec3(2) - vec3(1);
-	float normalLength = length(normal);
 	
-	if (NUM_OCEAN_CASCADES == 1)
+	for (int i = 1; i < OCEAN_CASCADE_COUNT; ++i)
 	{
-		normal = normal / normalLength;
-	}
-	else
-	{
-		for (int i = 1; i < NUM_OCEAN_CASCADES; ++i)
-		{
-			vec2 texCoord = wrappedNoiseCoord * heightMapTexCoordScales[i];
-			
-			vec3 normalSample2 = texture(normalSamplers[i], texCoord, normalMipmapBias).rgb;
-			normal = blendNormals(normalSample, normalSample2);
-			foamMask = max(foamMask, texture(foamMaskSamplers[i], texCoord, normalMipmapBias).r);
-		}
+		vec2 texCoord = wrappedNoiseCoord * heightMapTexCoordScales[i];
+		vec3 prevNormalSample = normal * 0.5 + vec3(0.5);
+		normalSample = texture(normalSamplers[i], texCoord, normalMipmapBias).rgb;		
+		normal = blendNormals(prevNormalSample, normalSample);
+		foamMask = max(foamMask, texture(foamMaskSamplers[i], texCoord, normalMipmapBias).r);
 	}
 
 	normal.z = -normal.z;
@@ -224,7 +215,7 @@ void main(void)
 	float foamFraction = pow(foamTexture, 2 / (foamMask + 0.0001)) * smoothstep(0.0, 0.1, foamMask);
 	foamFraction += foamTexture * foamMask * 0.15; // simulate bubbles under surface
 	foamFraction = clamp(foamFraction, 0, 1);
-	
+
 	color.rgb = mix(color.rgb, foamColor * foamReflectance, foamFraction);
 	
 	color.rgb = color.rgb * scattering.transmittance + scattering.skyRadianceToPoint;

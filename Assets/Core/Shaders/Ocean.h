@@ -7,7 +7,13 @@
 #ifndef OCEAN_H
 #define OCEAN_H
 
-#define NUM_OCEAN_CASCADES 1
+// FIXME: We should use #pragma import_defines(OCEAN_CASCADE_COUNT) to set this macro,
+// but it cause a GLSL compilation error. Therefore we set  it manually here.
+// This value needs to match CascadedWaveHeightTextureGenerator::numCascades
+#pragma import_defines(OCEAN_CASCADE_COUNT)
+#ifndef OCEAN_CASCADE_COUNT
+	#define OCEAN_CASCADE_COUNT 1
+#endif
 
 const vec3 shallowScatterColor = vec3(0.16, 0.2, 0.25);
 const vec3 deepScatterColor = vec3(0.04, 0.15, 0.47) * 0.098; // From Bruenton ocean demo

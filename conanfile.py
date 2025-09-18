@@ -128,7 +128,7 @@ class SkyboltConan(ConanFile):
         self.cpp_info.libs = ["AircraftHud", "SkyboltEngine", "SkyboltVis", "SkyboltSim", "SkyboltReflection", "SkyboltCommon"]
         self.cpp_info.builddirs = ["CMake"]
 		
-        if self.options.enable_fft_ocean and not self.options.shared_plugins:
+        if self.options.enable_fft_ocean:
             self.cpp_info.libs.append("FftOcean")
         if self.options.enable_qt == True:
             self.cpp_info.libs.append("SkyboltQt")

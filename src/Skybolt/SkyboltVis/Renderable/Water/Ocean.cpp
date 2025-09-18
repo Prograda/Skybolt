@@ -24,7 +24,7 @@
 
 using namespace skybolt::vis;
 
-osg::Node* createPlane(const osg::Vec2f &size)
+static osg::Node* createPlane(const osg::Vec2f &size)
 {
 	int segmentCountX = 512;
 	int segmentCountY = 512;
@@ -47,7 +47,7 @@ osg::Node* createPlane(const osg::Vec2f &size)
     return geode;
 }
 
-osg::StateSet* createStateSet(const OceanConfig& config, const Ocean::Uniforms& uniforms)
+static osg::StateSet* createStateSet(const OceanConfig& config, const Ocean::Uniforms& uniforms)
 {
 	osg::StateSet* stateSet = new osg::StateSet();
 	stateSet->setDefine("DISTANCE_CULL");

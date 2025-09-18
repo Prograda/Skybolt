@@ -14,14 +14,33 @@
 
 #include <osg/Group>
 #include <osg/Switch>
+#include <boost/log/trivial.hpp>
 
 namespace skybolt {
 namespace vis {
 
+osg::ref_ptr<osg::Texture2D> createRenderTextureRgb16F(int width, int height)
+{
+#ifdef USE_DELL_XPS_RTT_FIX
+	// Fixes bug on integrated Dell xps 13 graphics where textures attached to frame buffer render black if image is not allocated first
+	osg::Image* outputImage = new osg::Image();
+	outputImage->allocateImage(width, height, 1, GL_RGB16F_ARB, GL_UNSIGNED_BYTE);
+
+	osg::Texture2D* texture = new osg::Texture2D(outputImage);
+#else
+	osg::Texture2D* texture = new osg::Texture2D();
+#endif
+	texture->setTextureWidth(width);
+	texture->setTextureHeight(height);
+	texture->setInternalFormat(GL_RGB16F_ARB);
+	return texture;
+}
+
 static osg::ref_ptr<osg::Texture2D> createNormalTexture(int width, int height)
 {
-	osg::ref_ptr<osg::Texture2D> texture = createRenderTexture(width, height);
-	texture->setInternalFormat(GL_RGBA);
+	// Use a 16 bit float texture because an 8 bit RGB texture causes aliasing artifacts due to insufficient precision
+	osg::ref_ptr<osg::Texture2D> texture = createRenderTextureRgb16F(width, height);
+
 	texture->setFilter(osg::Texture2D::FilterParameter::MIN_FILTER, osg::Texture2D::FilterMode::LINEAR_MIPMAP_LINEAR);
 	texture->setFilter(osg::Texture2D::FilterParameter::MAG_FILTER, osg::Texture2D::FilterMode::LINEAR);
 	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
@@ -47,91 +66,6 @@ osg::Texture2D* createFoamMaskTexture(int width, int height)
 
 	return texture;
 }
-
-class CascadedWaveHeightTextureGenerator
-{
-public:
-	CascadedWaveHeightTextureGenerator(const WaveHeightTextureGeneratorFactory& factory, float smallestTextureWorldSize)
-	{
-		for (int i = 0; i < numCascades; ++i)
-		{
-			float scale = (i == 0) ? 1 : 5;
-			float worldSize = smallestTextureWorldSize * scale;
-			glm::vec2 normalizedFrequencyRange = glm::vec2(0.0, 1);
-
-			// If this is not the last cascade, cut off the lower part of the frequency range so that the frequencies are not repeated in other cascades
-			if (i < numCascades - 1)
-			{
-				normalizedFrequencyRange = glm::vec2(0.2, 1);
-			}
-
-			mCascades[i] = factory.create(worldSize, normalizedFrequencyRange);
-			mWorldSizes[i] = worldSize;
-		}
-	}
-
-	bool update(double time)
-	{
-		bool updated = false;
-		for (int i = 0; i < numCascades; ++i)
-		{
-			if (mCascades[i]->generate(time))
-			{
-				updated = true;
-			}
-		}
-		return updated;
-	}
-
-	float getWorldSize(int i) const
-	{
-		return mWorldSizes[i];
-	}
-
-	osg::ref_ptr<osg::Texture2D> getTexture(int cascade) const
-	{
-		return mCascades[cascade]->getTexture();
-	}
-
-	float getWaveHeight() const
-	{
-		return mCascades[0]->getWaveHeight();
-	}
-
-	void setWaveHeight(float height)
-	{
-		for (const auto& cascade : mCascades)
-		{
-			cascade->setWaveHeight(height);
-		}
-	}
-
-	float getWindVelocityHeading() const
-	{
-		return mCascades[0]->getWindVelocityHeading();
-	}
-
-	void setWindVelocityHeading(float heading)
-	{
-		for (const auto& cascade : mCascades)
-		{
-			cascade->setWindVelocityHeading(heading);
-		}
-	}
-
-	sim::OceanSurfaceSamplerPtr getSurfaceSampler() const
-	{
-		return mCascades[0]->getSurfaceSampler();
-	}
-
-	static const int numCascades = 1;
-
-private:
-	std::unique_ptr<WaveHeightTextureGenerator> mCascades[numCascades];
-	float mWorldSizes[numCascades];
-};
-
-static_assert(WaterStateSetConfig::waveTextureCount == CascadedWaveHeightTextureGenerator::numCascades, "Number of wave image cascades should match number of textures");
 
 struct WaveFoamMaskGeneratorConfig
 {
@@ -162,7 +96,7 @@ public:
 
 		for (int i = 0; i < 2; ++i)
 		{
-			const int otherIndex = !i;
+			const int otherIndex = (i == 0);
 			mGenerator[i] = new GpuTextureGenerator(mOutputTexture[i], createWaveFoamMaskGeneratorStateSet(config.program, config.waveVectorDisplacementTexture, mOutputTexture[otherIndex], config.textureWorldSize, jacobianLambda), generateMipMaps);
 			mSwitch->addChild(mGenerator[i], i == 0);
 		}
@@ -227,35 +161,42 @@ WaterMaterial::WaterMaterial(const WaterMaterialConfig& config)
 {
 	WaterStateSetConfig stateSetConfig;
 
-	float smallestWaveHeightMapWorldSize = 500.0f; // FIXME: To avoid texture wrapping issues, Scene::mWrappedNoisePeriod divided by this should have no remainder
-	mWaveHeightTextureGenerator.reset(new CascadedWaveHeightTextureGenerator(*config.factory, smallestWaveHeightMapWorldSize));
+	mWaveHeightTextureGenerator = config.factory->create();
+	const int cascadeCount = mWaveHeightTextureGenerator->getTextureCount();
 
-	for (int i = 0; i < CascadedWaveHeightTextureGenerator::numCascades; ++i)
+	for (int i = 0; i < cascadeCount; ++i)
 	{
-		stateSetConfig.waveHeightMapWorldSizes[i] = mWaveHeightTextureGenerator->getWorldSize(i);
+		WaterStateSetConfig::WaveTextureSet waveTextureSet;
 
-		stateSetConfig.waveHeightTexture[i] = mWaveHeightTextureGenerator->getTexture(i);
-		stateSetConfig.waveHeightTexture[i]->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
-		stateSetConfig.waveHeightTexture[i]->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+		float textureWorldSize = mWaveHeightTextureGenerator->getTextureWorldSize(i);
+		waveTextureSet.waveHeightMapWorldSizes = textureWorldSize;
 
-		int width = stateSetConfig.waveHeightTexture[i]->getImage(0)->s();
-		int height = stateSetConfig.waveHeightTexture[i]->getImage(0)->t();
+		waveTextureSet.waveHeight = mWaveHeightTextureGenerator->getTexture(i);
+		waveTextureSet.waveHeight->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
+		waveTextureSet.waveHeight->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
 
-		osg::Vec2f textureWorldSize(mWaveHeightTextureGenerator->getWorldSize(i), mWaveHeightTextureGenerator->getWorldSize(i));
+		int width = waveTextureSet.waveHeight->getImage(0)->s();
+		int height = waveTextureSet.waveHeight->getImage(0)->t();
+
+		osg::Vec2f textureWorldSize2d(textureWorldSize, textureWorldSize);
 		const bool generateMipMaps = true;
-		stateSetConfig.waveNormalTexture[i] = createNormalTexture(width, height);
-		osg::ref_ptr<GpuTextureGenerator> generator = new GpuTextureGenerator(stateSetConfig.waveNormalTexture[i], createVectorDisplacementToNormalMapStateSet(config.programs->getRequiredProgram("vectorDisplacementToNormal"), stateSetConfig.waveHeightTexture[i], textureWorldSize), generateMipMaps);
+		waveTextureSet.waveNormal = createNormalTexture(width, height);
+		osg::ref_ptr<GpuTextureGenerator> generator = new GpuTextureGenerator(waveTextureSet.waveNormal, createVectorDisplacementToNormalMapStateSet(config.programs->getRequiredProgram("vectorDisplacementToNormal"), waveTextureSet.waveHeight, textureWorldSize2d), generateMipMaps);
 		addChild(generator);
 		mWaterSurfaceGpuTextureGenerators.push_back(generator);
 
 		WaveFoamMaskGeneratorConfig generatorConfig;
 		generatorConfig.program = config.programs->getRequiredProgram("waveFoamMaskGenerator");
 		generatorConfig.textureSizePixels = osg::Vec2i(width, height);
-		generatorConfig.textureWorldSize = textureWorldSize;
-		generatorConfig.waveVectorDisplacementTexture = stateSetConfig.waveHeightTexture[i];
-		mWaveFoamMaskGenerator[i] = new WaveFoamMaskGenerator(generatorConfig);
-		addChild(mWaveFoamMaskGenerator[i]);
-		stateSetConfig.waveFoamMaskTexture[i] = mWaveFoamMaskGenerator[i]->getOutputTexture();
+		generatorConfig.textureWorldSize = textureWorldSize2d;
+		generatorConfig.waveVectorDisplacementTexture = waveTextureSet.waveHeight;
+		
+		osg::ref_ptr<WaveFoamMaskGenerator> waveFoamMaskGenerator = new WaveFoamMaskGenerator(generatorConfig);
+		mWaveFoamMaskGenerators.push_back(waveFoamMaskGenerator);
+		addChild(waveFoamMaskGenerator);
+		waveTextureSet.waveFoamMask = waveFoamMaskGenerator->getOutputTexture();
+
+		stateSetConfig.waveTextureSets.push_back(waveTextureSet);
 	}
 
 	setStateSet(new WaterStateSet(stateSetConfig));
@@ -291,20 +232,25 @@ void WaterMaterial::update(double timeSeconds)
 	double loopPeriod = 1000; // TODO: Seamless looping
 	double loopedTimeSeconds = std::fmod(timeSeconds, loopPeriod);
 		
-	if (mWaveHeightTextureGenerator->update(loopedTimeSeconds))
+	if (mWaveHeightTextureGenerator->generate(loopedTimeSeconds))
 	{
 		for (const auto& generator : mWaterSurfaceGpuTextureGenerators)
 		{
 			generator->requestRegenerate();
 		}
 
-		for (int i = 0; i < CascadedWaveHeightTextureGenerator::numCascades; ++i)
+		for (int i = 0; i < mWaveFoamMaskGenerators.size(); ++i)
 		{
-			mWaveFoamMaskGenerator[i]->advanceTime(loopedTimeSeconds);
-			static_cast<WaterStateSet*>(getStateSet())->setFoamTexture(i, mWaveFoamMaskGenerator[i]->getOutputTexture());
-			mWaveFoamMaskGenerator[i]->swapBuffers();
+			mWaveFoamMaskGenerators[i]->advanceTime(loopedTimeSeconds);
+			static_cast<WaterStateSet*>(getStateSet())->setFoamTexture(i, mWaveFoamMaskGenerators[i]->getOutputTexture());
+			mWaveFoamMaskGenerators[i]->swapBuffers();
 		}
 	}
+}
+
+int WaterMaterial::getCascadeCount() const
+{
+	return mWaveHeightTextureGenerator->getTextureCount();
 }
 
 osg::ref_ptr<osg::Texture2D> WaterMaterial::getHeightTexture(int cascadeIndex) const
@@ -319,7 +265,7 @@ osg::ref_ptr<osg::Texture2D> WaterMaterial::getNormalTexture(int cascadeIndex) c
 
 osg::ref_ptr<osg::Texture2D> WaterMaterial::getFoamMaskTexture(int cascadeIndex) const
 {
-	return mWaveFoamMaskGenerator[cascadeIndex]->getOutputTexture();
+	return mWaveFoamMaskGenerators[cascadeIndex]->getOutputTexture();
 }
 
 sim::OceanSurfaceSamplerPtr WaterMaterial::getSurfaceSampler() const

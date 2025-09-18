@@ -452,7 +452,6 @@ std::optional<QtPropertyUpdaterApplier> reflPropertyToQt(refl::TypeRegistry& typ
 		{ typeRegistry.getOrCreateType<sim::Vector3>(), createPropertyFactory<sim::Vector3>(QVector3D(0,0,0)) },
 		{ typeRegistry.getOrCreateType<sim::Quaternion>(), createPropertyFactory<sim::Quaternion>(QVector3D(0,0,0)) },
 		{ typeRegistry.getOrCreateType<sim::LatLon>(), createPropertyFactory<sim::LatLon>(QVariant::fromValue(sim::LatLon(0,0))) }
-		// MTODO { typeRegistry.getOrCreateType<sim::AttachmentState>(), createPropertyFactory<ReflPropertyInstanceVariant>(ReflPropertyInstanceVariant{refl::createOwningInstance(typeRegistry, sim::AttachmentState{})}) }
 	};
 
 	if (const auto& i = typePropertyFactories.find(type); i != typePropertyFactories.end())

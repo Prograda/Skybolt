@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "FftOceanGenerator.h"
+#include "FastRandomNormalDistribution.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <cxxtimer/cxxtimer.hpp>
 
@@ -36,13 +37,11 @@ void FftOceanGenerator::MufftArrayDeleter::operator() (aligned_complex_type* p) 
 //! This implementation is based on "Simulating Ocean Water" by Jerry Tessendorf, 2004.
 //! See https://people.computing.clemson.edu/~jtessen/reports/papers_files/coursenotes2004.pdf
 FftOceanGenerator::FftOceanGenerator(const FftOceanGeneratorConfig& config) :
-	mRandom(boost::mt19937(config.seed), boost::random::normal_distribution<float>()),
-	mNormalizedFrequencyRange(config.normalizedFrequencyRange),
 	mTextureSizePixels(config.textureSizePixels),
 	mTextureWorldSize(config.textureWorldSize),
 	mOneOnTextureWorldSize(1.0f / mTextureWorldSize),
 	mGravity(config.gravity),
-	mCutoffFrequencyNyquistMultiplier(config.cutoffFrequencyNyquistMultiplier),
+	mWaveSpectrumWindow(config.waveSpectrumWindow),
 	mUseMultipleCores(config.useMultipleCores),
 	mWindVelocity(config.windVelocity),
 	mFftGeneratorData(new FftGeneratorData)
@@ -123,12 +122,6 @@ float FftOceanGenerator::calcPhillips(int n, int m) const
 	// Equation 23, damped by eq. 24
 	float A = 1.f;
 	float val = A * expf(-1.f / (k_len2 * Lsq)) / k_len4 * kw;// *exp(-k_len2 * l2);
-
-	float normalizedCoordLength = glm::length(normalizedCoord) * mOneOnTextureWorldSize;
-	if (normalizedCoordLength < mNormalizedFrequencyRange.x || normalizedCoordLength > mNormalizedFrequencyRange.y)
-	{
-		return 0;
-	}
 
 	//#define DEBUG_1D_SINUSOID
 #ifdef DEBUG_1D_SINUSOID
@@ -241,14 +234,6 @@ float FftOceanGenerator::calcBruenton(int n, int m) const
 	return A * (Bl + Bh) * (1.0f + Delta * cosTwoPhi) / (2.0f * math::piF() * sqr(sqr(kLength))); // Eq 67
 }
 
-FftOceanGenerator::complex_type FftOceanGenerator::generateRandomComplexGaussian()
-{
-	// produces gaussian random draws with mean 0 and std dev 1
-	float a = mRandom();
-	float b = mRandom();
-	return complex_type(a, b);
-}
-
 template <typename Container, typename Func>
 void runParallelOrSequential(bool useParallel, Container&& container, Func&& func) {
     if (useParallel) {
@@ -266,11 +251,10 @@ void FftOceanGenerator::calcHt0()
 {
 	const float dk = 2.0f * math::piF() / mTextureWorldSize;
 
-	std::vector<complex_type> gaussians(mTextureSizePixels * mTextureSizePixels);
-	for (auto& gaussian : gaussians)
-	{
-		gaussian = generateRandomComplexGaussian();
-	}
+	// Calculate a minimum delta k to use to quantize k for random number lookup, to ensure random number generation is deterministic as a function of k.
+	// Determinism is important as it ensoure ocean surface shape looks similar across different texture resolutions.
+	constexpr float maxFftResolution = 100000; // The precise value doesn't matter, so long as it's high enough to achieve good quanitization of k, but not so high as to cause numerical artifacts.
+	const float kQuantizationCellSize = 2.f * math::piF() / maxFftResolution;
 
     std::vector<int> mIndices(mTextureSizePixels);
     std::iota(mIndices.begin(), mIndices.end(), 0); // Fill the vector with values 0 through size - 1
@@ -279,53 +263,20 @@ void FftOceanGenerator::calcHt0()
 		int index = m * mTextureSizePixels;
 		for (int n = 0; n < mTextureSizePixels; ++n)
 		{
-			complex_type r = gaussians[index] / std::sqrt(2.f);
+			// Calculate wave number at given m and n coordinates
+			glm::vec2 normalizedCoord(2 * n - mTextureSizePixels, 2 * m - mTextureSizePixels);
+			glm::vec2 k = math::piF() * normalizedCoord * mOneOnTextureWorldSize;
+
+			// Calculate complex random number from standard normal distribution as a deterministic function of wave number.
+			int kxInt = int(k.x / kQuantizationCellSize); // Quantize k to ensure determinism.
+			int kyInt = int(k.y / kQuantizationCellSize);
+			complex_type r = complex_type(deterministicNormalFast(kxInt, kyInt, 0), deterministicNormalFast(kxInt, kyInt, 1)) / std::sqrt(2.f);
+
 			mHt0[index] = r * std::sqrt(calcBruenton(n, m) / 2.0f) * dk;
 			mHt0Conj[index] = std::conj(r * std::sqrt(calcBruenton(-n, -m) / 2.0f) * dk);
 			++index;
 		}
 	});
-}
-
-// x range: [-PI,PI]
-float fast_sin(float x) {
-	constexpr float PI = 3.14159265358f;
-	constexpr float B = 4.0f / PI;
-	constexpr float C = -4.0f / (PI * PI);
-	constexpr float P = 0.225f;
-
-	float y = B * x + C * x * (x < 0 ? -x : x);
-	return P * (y * (y < 0 ? -y : y) - y) + y;
-}
-
-// x range: [-PI, PI]
-float fast_cos(float x) {
-	constexpr float PI = 3.14159265358f;
-	constexpr float B = 4.0f / PI;
-	constexpr float C = -4.0f / (PI * PI);
-	constexpr float P = 0.225f;
-
-	x = (x > 0) ? -x : x;
-	x += PI / 2;
-
-	return fast_sin(x);
-}
-
-/* wrap x -> [0,max) */
-float wrapMax(float x, float max)
-{
-	/* integer math: `(max + x % max) % max` */
-	return fmod(max + fmod(x, max), max);
-}
-/* wrap x -> [min,max) */
-float wrapMinMax(float x, float min, float max)
-{
-	return min + wrapMax(x - min, max - min);
-}
-
-float wrapNegPiPosPi(float angle)
-{
-	return wrapMinMax(angle, -math::piF(), math::piF());
 }
 
 // Equation 26
@@ -355,14 +306,18 @@ static float filterNan(float v, float valueIfNan)
 	return std::isnan(v) ? valueIfNan : v;
 }
 
-void FftOceanGenerator::calculate(float t, std::vector<glm::vec3>& result)
+void FftOceanGenerator::calculate(float t, span<glm::vec3>& result)
 {
 	//cxxtimer::Timer timer(true);
 
-	result.resize(mTextureSizePixels * mTextureSizePixels);
+	if (result.extent != (mTextureSizePixels * mTextureSizePixels))
+	{
+		throw std::runtime_error("FftOceanGenerator::calculate was given output buffer of unexpected size");
+	}
 	complex_type_simd4 htVertical, htHorizontalX, htHorizontalZ;
 
-	const float nyquist = math::piF() * mTextureSizePixels / mTextureWorldSize;
+	const std::optional<float> kLowerCutoff = mWaveSpectrumWindow.cutoffWavelengthLongest ? (2.f * math::piF() / *mWaveSpectrumWindow.cutoffWavelengthLongest) : std::optional<float>();
+	const std::optional<float> kUpperCutoff = mWaveSpectrumWindow.cutoffWavelengthShortest ? (2.f * math::piF() / *mWaveSpectrumWindow.cutoffWavelengthShortest) : std::optional<float>();
 
 	// Prepare fft input
 	for (int m = 0; m < mTextureSizePixels; ++m)
@@ -372,7 +327,7 @@ void FftOceanGenerator::calculate(float t, std::vector<glm::vec3>& result)
 		{
 			Simd4 n(float(ns), float(ns + 1), float(ns + 2), float(ns + 3));
 			Simd4 kx = math::piF() * (2 * n - (float)mTextureSizePixels) * mOneOnTextureWorldSize;
-			Simd4 len = sqrt(kx * kx + kz * kz) + 0.0000001f; // add epsilon to prevent divide by zero
+			Simd4 kMagnitude = sqrt(kx * kx + kz * kz) + 0.0000001f; // add epsilon to prevent divide by zero
 			int index = m * mTextureSizePixels + ns;
 
 			// Pack 4 array items at a time into simd4
@@ -388,15 +343,25 @@ void FftOceanGenerator::calculate(float t, std::vector<glm::vec3>& result)
 			htVertical = ht(t, calcDispersion(kx, kz), ht0, ht0Conj);
 
 			// Calculate damping
-			float kCutoff = nyquist * mCutoffFrequencyNyquistMultiplier;
-			constexpr float dampingPower = 2.0f; // Higher values give more aggressive damping
+			if (kUpperCutoff)
+			{
+				constexpr float dampingPower = 20.0f; // Higher values give more aggressive damping
 
-			Simd4 damping = exp(-pow(len / fromScalar(kCutoff), fromScalar(dampingPower)));
-			htVertical *= damping;
+				Simd4 damping = exp(-pow(kMagnitude / fromScalar(*kUpperCutoff), fromScalar(dampingPower)));
+				htVertical *= damping;
+
+			}
+			if (kLowerCutoff)
+			{
+				constexpr float dampingPower = 20.0f; // Higher values give more aggressive damping
+
+				Simd4 damping = Simd4(1.0f) - exp(-pow(kMagnitude / *kLowerCutoff, fromScalar(dampingPower)));
+				htVertical *= damping;
+			}
 
 			// Unpack from simd4 to muFFT input
-			htHorizontalX = htVertical * complex_type_simd4(simd4Zero, -kx / len);
-			htHorizontalZ = htVertical * complex_type_simd4(simd4Zero, -kz / len);
+			htHorizontalX = htVertical * complex_type_simd4(simd4Zero, -kx / kMagnitude);
+			htHorizontalZ = htVertical * complex_type_simd4(simd4Zero, -kz / kMagnitude);
 
 			for (int i = 0; i < 4; ++i)
 			{
@@ -417,6 +382,8 @@ void FftOceanGenerator::calculate(float t, std::vector<glm::vec3>& result)
 	float lambda = 8.f; // Controls wave peak steepness
 	float signs[] = { 1.0f, -1.0f };
 
+	glm::vec3* data = result.data;
+
 	for (int m = 0; m < mTextureSizePixels; ++m)
 	{
 		for (int n = 0; n < mTextureSizePixels; ++n)
@@ -424,9 +391,9 @@ void FftOceanGenerator::calculate(float t, std::vector<glm::vec3>& result)
 			int index = m * mTextureSizePixels + n;
 			int sign = (int)signs[(n + m) & 1];
 
-			result[index].x = filterNan(mFftOutputHorizontal[0][index].real() * sign * lambda, 0.f);
-			result[index].y = filterNan(mFftOutputHorizontal[1][index].real() * sign * lambda, 0.f);
-			result[index].z = filterNan(mFftOutputVertical[index].real() * sign, 0.f);
+			data[index].x = filterNan(mFftOutputHorizontal[0][index].real() * sign * lambda, 0.f);
+			data[index].y = filterNan(mFftOutputHorizontal[1][index].real() * sign * lambda, 0.f);
+			data[index].z = filterNan(mFftOutputVertical[index].real() * sign, 0.f);
 		}
 	}
 }

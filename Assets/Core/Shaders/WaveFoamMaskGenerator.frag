@@ -34,7 +34,7 @@ void main()
 	float Jyx = lambdaOnH.x * (y1.x - y0.x);
 
 	float J = Jxx * Jyy - Jxy * Jyx;
-	color = vec4(0.5-J);
+	color = vec4(0.55-J)*2;
 	
 	// Max with slightly darkened output from previous frame to make foam slowly fade out over time
 	color = max(color, texture(prevOutputSampler, texCoord.xy).rrrr - vec4(foamMaskSubtractionAmount));

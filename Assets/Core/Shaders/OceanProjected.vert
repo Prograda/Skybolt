@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #version 420 core
+
 #include "DepthPrecision.h"
 #include "AtmosphericScatteringWithClouds.h"
 #include "Ocean.h"
@@ -17,7 +18,7 @@ out float logZ;
 out vec2 wrappedNoiseCoord;
 out AtmosphericScattering scattering;
 
-uniform sampler2D heightSamplers[NUM_OCEAN_CASCADES];
+uniform sampler2D heightSamplers[OCEAN_CASCADE_COUNT];
 uniform sampler2D cloudSampler;
 uniform mat4 viewProjectionMatrix;
 uniform vec3 cameraPosition;
@@ -27,7 +28,7 @@ uniform vec3 topRightDir;
 uniform vec3 bottomLeftDir;
 uniform vec3 bottomRightDir;
 uniform float waterHeight;
-uniform vec2 heightMapTexCoordScales[NUM_OCEAN_CASCADES];
+uniform vec2 heightMapTexCoordScales[OCEAN_CASCADE_COUNT];
 
 const float infinity = 1e10;
 
@@ -57,10 +58,12 @@ void main()
 	wrappedNoiseCoord = calcWrappedNoiseCoord(positionWS).xy;
 	positionWS.z += planetSurfaceDrop(length(vec2(positionWS.x, positionWS.y)));
 	
-	float lod = length(positionWS) / 200; // TODO: should be based on texture-space size of projected quad onto ocean
+	// Decrease displacement LOD level into distance to avoid shimmering artifacts due to geometric undersampling, and also
+	// to avoid z-fighting artifacts caused by high-res displaced ocean intersecting low-res non displaced ocean at distance.
+	float lod = length(positionWS) / 1000; // TODO: should be based on texture-space size of projected quad onto ocean
 	
 	vec3 offset = vec3(0);
-	for (int i = 0; i < NUM_OCEAN_CASCADES; ++i)
+	for (int i = 0; i < OCEAN_CASCADE_COUNT; ++i)
 	{
 		vec2 texCoord = wrappedNoiseCoord * heightMapTexCoordScales[i];
 		offset += textureLod(heightSamplers[i], texCoord, lod).xyz;
