@@ -35,7 +35,7 @@ public:
 
 private:
 	using SnapshotVector = std::vector<std::pair<sim::SecondsD, Snapshot>>;
-	SnapshotVector::const_iterator SimSnapshotRegistry::findSnapshotIteratorAtTime(sim::SecondsD simTime, sim::SecondsD epsilon = 0.001) const;
+	SnapshotVector::const_iterator findSnapshotIteratorAtTime(sim::SecondsD simTime, sim::SecondsD epsilon = 0.001) const;
 
 private:
 	const EntityFactoryFn mEntityFactory;

@@ -23,16 +23,10 @@ else()
 	set (SKYBOLT_PLUGINS_LIBRARY_TYPE SHARED)
 endif()
 
-# Allow user to overwrite install path.
-# Solution from https://stackoverflow.com/questions/39481958/setting-cmake-install-prefix-from-cmakelists-txt-file
-if(DEFINED ENV{CMAKE_INSTALL_PREFIX})
-	set(CMAKE_INSTALL_PREFIX $ENV{CMAKE_INSTALL_PREFIX}/Skybolt CACHE PATH "Overriding CMAKE_INSTALL_PREFIX from environment variable" FORCE)
-endif()
-
 #-------------------------------------------------------------
 # Compiler flags
 #-------------------------------------------------------------
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 OPTION(DISABLE_OPTIMIZATION_RELWITHDEBINFO "Disable Optimization in RelWithDebInfo")

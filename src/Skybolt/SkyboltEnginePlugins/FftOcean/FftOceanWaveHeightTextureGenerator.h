@@ -122,7 +122,7 @@ public:
 					mWindVelocityChanged = false;
 				}
 
-				mGenerator->calculate(mRequestTime, span<glm::vec3>{mGeneratorResult.data(), mGeneratorResult.size()});
+				mGenerator->calculate(mRequestTime, std::span<glm::vec3>{mGeneratorResult.data(), mGeneratorResult.size()});
 				mGeneratorHasResult = true;
 				mGeneratorRequest = false;
 			}

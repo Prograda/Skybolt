@@ -116,7 +116,7 @@ class SkyboltConan(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure()
+        cmake.configure(variables={"CMAKE_INSTALL_PREFIX": f"{self.build_folder}/Install"})
         cmake.build()
 		
     def package(self):

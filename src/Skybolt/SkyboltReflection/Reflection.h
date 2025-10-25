@@ -89,6 +89,12 @@ private:
 	std::map<std::type_index, std::pair<TypePtr, std::ptrdiff_t>> mSuperTypes;
 };
 
+template <typename T>
+T* addPointerByteOffset(T* p, std::ptrdiff_t offset)
+{
+	return reinterpret_cast<T*>(reinterpret_cast<unsigned char*>(p) + offset);
+}
+
 //! Instance of a Type
 class Instance
 {
@@ -207,24 +213,6 @@ struct ContainerValueAccessorFactory
 	}
 };
 
-template<typename ValueT>
-struct ContainerValueAccessorFactory<std::optional<ValueT>>
-{
-	static ContainerValueAccessorPtr create(TypeRegistry& registry)
-	{
-		return std::make_shared<StdOptionalValueAccessorT<ValueT>>(registry.getOrCreateType<ValueT>()->getName());
-	}
-};
-
-template<typename ValueT>
-struct ContainerValueAccessorFactory<std::vector<ValueT>>
-{
-    static ContainerValueAccessorPtr create(TypeRegistry& registry)
-	{
-		return std::make_shared<StdVectorValueAccessorT<ValueT>>(registry.getOrCreateType<ValueT>()->getName());
-	}
-};
-
 //! Can return null
 template<typename T>
 ContainerValueAccessorPtr createContainerValueAccessor(TypeRegistry& registry)
@@ -294,11 +282,23 @@ private:
 	std::map<std::type_index, TypePtr> mTypesByTypeIndex;
 };
 
-template <typename T>
-T* addPointerByteOffset(T* p, std::ptrdiff_t offset)
+template<typename ValueT>
+struct ContainerValueAccessorFactory<std::optional<ValueT>>
 {
-	return reinterpret_cast<T*>(reinterpret_cast<unsigned char*>(p) + offset);
-}
+	static ContainerValueAccessorPtr create(TypeRegistry& registry)
+	{
+		return std::make_shared<StdOptionalValueAccessorT<ValueT>>(registry.template getOrCreateType<ValueT>()->getName());
+	}
+};
+
+template<typename ValueT>
+struct ContainerValueAccessorFactory<std::vector<ValueT>>
+{
+    static ContainerValueAccessorPtr create(TypeRegistry& registry)
+	{
+		return std::make_shared<StdVectorValueAccessorT<ValueT>>(registry.template getOrCreateType<ValueT>()->getName());
+	}
+};
 
 template <typename T>
 inline void null_deleter(T*) {};

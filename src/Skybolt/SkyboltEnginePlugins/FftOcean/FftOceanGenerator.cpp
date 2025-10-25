@@ -306,11 +306,11 @@ static float filterNan(float v, float valueIfNan)
 	return std::isnan(v) ? valueIfNan : v;
 }
 
-void FftOceanGenerator::calculate(float t, span<glm::vec3>& result)
+void FftOceanGenerator::calculate(float t, const std::span<glm::vec3>& result)
 {
 	//cxxtimer::Timer timer(true);
 
-	if (result.extent != (mTextureSizePixels * mTextureSizePixels))
+	if (result.size() != (mTextureSizePixels * mTextureSizePixels))
 	{
 		throw std::runtime_error("FftOceanGenerator::calculate was given output buffer of unexpected size");
 	}
@@ -382,7 +382,7 @@ void FftOceanGenerator::calculate(float t, span<glm::vec3>& result)
 	float lambda = 8.f; // Controls wave peak steepness
 	float signs[] = { 1.0f, -1.0f };
 
-	glm::vec3* data = result.data;
+	glm::vec3* data = result.data();
 
 	for (int m = 0; m < mTextureSizePixels; ++m)
 	{

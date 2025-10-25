@@ -25,7 +25,7 @@ TEST_CASE("Generate FFT ocean texture")
 	float maxHeight = generator.calcMaxWaveHeight(glm::length(config.windVelocity), config.gravity);
 
 	std::vector<glm::vec3> result(generator.getTextureWorldSize().x * generator.getTextureWorldSize().y);
-	generator.calculate(0, span<glm::vec3>{result.data(), result.size()});
+	generator.calculate(0, std::span<glm::vec3>{result.data(), result.size()});
 
 	float vMax = 0;
 
@@ -108,7 +108,7 @@ static float calcSignificantWaveHeightForWindSpeed(float speed)
 	FftOceanGenerator generator(config);
 
 	std::vector<glm::vec3> result(generator.getTextureWorldSize().x * generator.getTextureWorldSize().y);
-	generator.calculate(0, span<glm::vec3>{result.data(), result.size()});
+	generator.calculate(0, std::span<glm::vec3>{result.data(), result.size()});
 
 	return calcSignificantWaveHeight(result);
 }

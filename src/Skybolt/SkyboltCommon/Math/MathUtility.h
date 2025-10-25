@@ -38,8 +38,8 @@ VecT vec2SwapComponents(const VecT& v)
 template <class VecT>
 VecT vec2Rotate(const VecT &v, typename VecT::value_type theta)
 {
-	VecT::value_type cs = cos(theta);
-	VecT::value_type sn = sin(theta);
+	typename VecT::value_type cs = cos(theta);
+	typename VecT::value_type sn = sin(theta);
 
 	return VecT(
 		v.x * cs - v.y * sn,
@@ -117,7 +117,7 @@ void getOrthonormalBasis(const VecT &normal, VecT &outTangent, VecT &outBitangen
 	constexpr VecT unitY(0, 1, 0);
 	constexpr VecT unitZ(0, 0, 1);
 	auto d = glm::dot(normal, unitY);
-	bool parallelWithY = std::abs(d) > VecT::value_type(0.95);
+	bool parallelWithY = std::abs(d) > typename VecT::value_type(0.95);
 	VecT tangent = parallelWithY ? unitZ : unitY;
 
 	getOrthonormalBasis(normal, tangent, outTangent, outBitangent);
@@ -127,7 +127,7 @@ template <typename VecT>
 inline std::optional<VecT> normalizeSafe(const VecT& v)
 {
 	double length = glm::length(v);
-	if (length < std::numeric_limits<VecT::value_type>::epsilon())
+	if (length < std::numeric_limits<typename VecT::value_type>::epsilon())
 	{
 		return std::nullopt;
 	}

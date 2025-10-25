@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <xsimd/xsimd.hpp>
+#include <span>
 
 namespace skybolt {
 namespace vis {
@@ -47,14 +48,6 @@ inline Complex<T> operator*(const Complex<T>& a, const Complex<T>& b)
 typedef xsimd::batch<float, 4> Simd4;
 typedef std::complex<Simd4> complex_type_simd4;
 
-// TODO: replace with c++20 span
-template <typename T>
-struct span
-{
-	T* data;
-	std::size_t extent; //!< Number of elements in the sequence
-};
-
 class FftOceanGenerator
 {
 public:
@@ -74,7 +67,7 @@ public:
 
 	//! Generates a vector displacement image of the wave field at given time
 	//! @param result is a pointer to a buffer of size mTextureSizePixels * mTextureSizePixels in which to store the calculated output
-	void calculate(float time, span<glm::vec3>& result);
+	void calculate(float time, const std::span<glm::vec3>& result);
 
 	void setWindVelocity(const glm::vec2& windVelocity);
 
