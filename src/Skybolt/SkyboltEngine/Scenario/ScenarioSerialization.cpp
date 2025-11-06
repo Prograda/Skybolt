@@ -43,7 +43,7 @@ static std::string toString(TimelineMode mode)
 	return "live";
 }
 
-void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, const EntityFactoryFn& entityFactory, const nlohmann::json& json)
+void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, const EntityFactoryFn& entityFactory, const nlohmann::json& json, EntityPersistenceFlags entityPersistenceFlags)
 {
 	SecondsD startTime = readOptionalOrDefault(json, "startTime", SecondsD(0));
 
@@ -53,7 +53,7 @@ void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, const En
 	scenario.timelineMode = readTimelineMode(readOptionalOrDefault<std::string>(json, "timelineMode", "live"));
 
 	ifChildExists(json, "entities", [&] (const nlohmann::json& child) {
-		readEntities(typeRegistry, scenario.world, entityFactory, child);
+		readEntities(typeRegistry, scenario.world, entityFactory, child, entityPersistenceFlags);
 	});
 }
 
@@ -144,24 +144,23 @@ static bool isSerializable(const Entity& entity)
 }
 
 //! @returns whether an entity should continue to exist even if it doesn't exist in in simulation state being load in.
-static bool shouldPersistAcrossLoad(const Entity& entity)
+static bool shouldPersistAcrossLoad(const Entity& entity, EntityPersistenceFlags entityPersistanceFlags)
 {
 	if (auto metadata = entity.getFirstComponent<ScenarioMetadataComponent>(); metadata)
 	{
-		// Non-serializable entities should persist because they won't exist in the serialized state anyhow.
-		// User-managed entities should persist because their lifetime is managed by the user (usually from the UI) rather than by serialization state loads.
-		return !metadata->serializable || metadata->lifetimePolicy == ScenarioMetadataComponent::LifetimePolicy::User;
+		if (entityPersistanceFlags.persistNonSerializable && !metadata->serializable) { return true; }
+		if (entityPersistanceFlags.persistUserManaged && metadata->lifetimePolicy == ScenarioMetadataComponent::LifetimePolicy::User)  { return true; }
 	}
-	return true; // Entities should not persist by default.
+	return false; // Entities should not persist by default.
 }
 
-void readEntities(refl::TypeRegistry& registry, World& world, const EntityFactoryFn& factory, const nlohmann::json& json)
+void readEntities(refl::TypeRegistry& registry, World& world, const EntityFactoryFn& factory, const nlohmann::json& json, EntityPersistenceFlags entityPersistenceFlags)
 {
 	// Make a set of names of entities in the world that should be removed if they don't exist in the serialized state being read.
 	std::set<std::string> oldEntityNames;
 	for (const auto& entity : world.getEntities())
 	{
-		if (shouldPersistAcrossLoad(*entity)) { continue; }
+		if (shouldPersistAcrossLoad(*entity, entityPersistenceFlags)) { continue; }
 
 		if (const std::string& name = getName(*entity); !name.empty())
 		{

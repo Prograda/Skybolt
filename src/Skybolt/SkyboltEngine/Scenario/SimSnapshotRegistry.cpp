@@ -16,7 +16,14 @@ SimSnapshotRegistry::SimSnapshotRegistry(const SimSnapshotRegistryConfig& config
 
 void SimSnapshotRegistry::loadSnapshot(const Snapshot& snapshot)
 {
-	readScenario(*mTypeRegistry, *mScenario, mEntityFactory, snapshot.state);
+	EntityPersistenceFlags entityPersistenceFlags = {
+		// Non-serializable entities should persist because they won't exist in the serialized state anyhow.
+		.persistNonSerializable = true,
+		// User-managed entities should persist because their lifetime is managed by the user (usually from the UI) rather than by serialization state loads.
+		.persistUserManaged = true
+	};
+
+	readScenario(*mTypeRegistry, *mScenario, mEntityFactory, snapshot.state, entityPersistenceFlags);
 }
 
 void SimSnapshotRegistry::saveSnapshotAtCurrentTime()
