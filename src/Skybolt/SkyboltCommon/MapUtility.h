@@ -22,6 +22,26 @@ std::optional<ValueT> findOptional(const std::map<KeyT, ValueT>& m, const KeyT& 
 	return std::nullopt;
 }
 
+template <typename ContainerT, typename KeyT>
+static const typename ContainerT::value_type::second_type* findValuePtr(const ContainerT& c, const KeyT& k)
+{
+	if (auto i = c.find(k); i != c.end())
+	{
+		return &i->second;
+	}
+	return nullptr;
+}
+
+template <typename ContainerT, typename KeyT>
+static typename ContainerT::value_type::second_type* findValuePtr(ContainerT& c, const KeyT& k)
+{
+	if (auto i = c.find(k); i != c.end())
+	{
+		return &i->second;
+	}
+	return nullptr;
+}
+
 template <typename KeyT, typename ValueT>
 std::vector<ValueT> toValuesVector(const std::map<KeyT, ValueT>& m)
 {

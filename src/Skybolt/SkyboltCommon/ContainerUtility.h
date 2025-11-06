@@ -7,9 +7,10 @@
 
 #pragma once
 
-#include <vector>
 #include <algorithm>
 #include <assert.h>
+#include <iterator>
+#include <vector>
 
 namespace skybolt {
 
