@@ -105,8 +105,8 @@ QuadTreeTileKey getKeyAtLevelIntersectingLonLatPoint(int level, const VecType& p
 	double yMax = double(1 << level);
 	QuadTreeTileKey key;
 	key.level = level;
-	key.x = int((position.x() + math::piD()) * yMax / math::piD());
-	key.y = int((math::halfPiD() - position.y()) * yMax / math::piD());
+	key.x = int((position[0] + math::piD()) * yMax / math::piD());
+	key.y = int((math::halfPiD() - position[1]) * yMax / math::piD());
 	return key;
 }
 

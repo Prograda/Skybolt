@@ -49,8 +49,8 @@ struct LatLonVec2Adapter : public sim::LatLon
 		return lat;
 	}
 
-	double operator[] (int i) const { return (&lat)[i]; }
-	double& operator[] (int i) { return (&lat)[i]; }
+	double operator[] (int i) const { return (i == 0) ? lon : lat; }
+	double& operator[] (int i) { return (i == 0) ? lon : lat; }
 
 	LatLonVec2Adapter operator+(const LatLonVec2Adapter& latLon) const
 	{
