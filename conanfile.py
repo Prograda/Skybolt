@@ -8,7 +8,6 @@ class SkyboltConan(ConanFile):
     settings = "os", "compiler", "arch", "build_type"
     options = {
         "enable_bullet": [True, False],
-        "enable_cigi": [True, False],
         "enable_fft_ocean": [True, False],
         "enable_map_features_converter": [True, False],
         "enable_python": [True, False],
@@ -19,7 +18,6 @@ class SkyboltConan(ConanFile):
     }
     default_options = {
         "enable_bullet": False,
-        "enable_cigi": False,
         "enable_fft_ocean": True,
         "enable_map_features_converter": True,
         "enable_python": True,
@@ -64,9 +62,6 @@ class SkyboltConan(ConanFile):
         if self.options.enable_bullet:
             self.requires("bullet3/3.22a")
 
-        if self.options.enable_cigi:
-            self.include_package("cigicl", "4.0.6a")
-
         if self.options.enable_fft_ocean:
             self.include_package("mufft", "1.0.0")
             self.include_package("xsimd", "7.4.10", transitive_headers=True)
@@ -92,9 +87,6 @@ class SkyboltConan(ConanFile):
 
         if self.options.enable_bullet:
             tc.variables["BUILD_BULLET_PLUGIN"] = "true"
-
-        if self.options.enable_cigi:
-            tc.variables["BUILD_CIGI_COMPONENT_PLUGIN"] = "true"
 
         if self.options.enable_fft_ocean:
             tc.variables["BUILD_FFT_OCEAN_PLUGIN"] = "true"
