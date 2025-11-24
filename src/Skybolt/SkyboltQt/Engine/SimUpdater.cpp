@@ -45,6 +45,9 @@ void SimUpdater::update(SecondsD wallDt)
 	{
 		advanceWallTime(wallDt);
 	}
+
+	// TimeSource time should equal SimStepper time after update
+	assert (timeSource.getTime() == mSimStepper->getTime());
 }
 
 void SimUpdater::advanceWallTime(SecondsD wallDt)
@@ -83,9 +86,7 @@ void SimUpdater::advanceWallTime(SecondsD wallDt)
 
 void SimUpdater::simulate(TimeSource& timeSource, SecondsD dt)
 {
-	SecondsD prevSimTime = timeSource.getTime();
-	timeSource.advanceTime(dt);
-	
-	double dtSim = std::max(0.0, timeSource.getTime() - prevSimTime);
-	mSimStepper->update(dtSim);
+	assert(dt >= 0);
+	mSimStepper->update(dt);
+	timeSource.setTime(mSimStepper->getTime());
 }
