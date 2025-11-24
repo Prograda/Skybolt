@@ -10,7 +10,7 @@
 #include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
 #include <SkyboltEngine/Scenario/ScenarioSerialization.h>
 #include <SkyboltSim/Components/NameComponent.h>
-#include <SkyboltReflection/Reflection.h>
+#include <SkyboltReflect/Reflection.h>
 
 using namespace skybolt;
 

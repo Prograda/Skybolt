@@ -46,7 +46,7 @@ private:
 			}
 		};
 
-		mProperties[name] = std::make_shared<refl::GetterSetterFunctionProperty<PyComponent, T, const T&>>(&typeRegistry, name, typeRegistry.getOrCreateType<T>(), getter, setter);
+		mProperties[name] = std::make_shared<refl::GetterSetterFunctionProperty<PyComponent, T, const T&>>(&typeRegistry, name, typeRegistry.getOrCreateType<T>(), getter, setter, /* valueChangedCallback */nullptr);
 	}
 
 private:
@@ -55,12 +55,10 @@ private:
 	refl::Type::PropertyMap mProperties;
 };
 
-SKYBOLT_REFLECT_BEGIN(PyComponent)
-{
+SKYBOLT_REFLECT(PyComponent) {
 	registry.type<PyComponent>("PyComponent")
 		.superType<sim::Component>()
 		.superType<refl::DynamicPropertySource>();
 }
-SKYBOLT_REFLECT_END
 
 } // namespace skybolt

@@ -1,7 +1,7 @@
 #include "PyComponentProperty.h"
 
 #include <SkyboltEngine/EngineRoot.h>
-#include <SkyboltReflection/Reflection.h>
+#include <SkyboltReflect/Reflection.h>
 #include <SkyboltSim/Component.h>
 
 #include <boost/log/trivial.hpp>
@@ -18,9 +18,8 @@ template <typename CppTypeT, typename PythonTypeT>
 ReflInstanceToPyObject createReflInstanceToPyObject()
 {
 	return [] (const refl::Instance& instance) -> py::object {
-		auto value = instance.getObject<CppTypeT>();
-		if (!value) { return py::object(); }
-		return PythonTypeT(*value);
+		const auto& value = instance.cast<CppTypeT>();
+		return PythonTypeT(value);
 		};
 }
 
@@ -48,7 +47,7 @@ template <typename CppTypeT>
 PyHandleToReflInstance createPyHandleToReflInstance()
 {
 	return [] (refl::TypeRegistry& typeRegistry, const py::handle& value) -> refl::Instance {
-		return refl::createOwningInstance(typeRegistry, value.cast<CppTypeT>());
+		return refl::makeValueInstance(typeRegistry, value.cast<CppTypeT>());
 		};
 }
 
@@ -88,7 +87,7 @@ bool PyComponentProperty::isReadOnly() const { return mProperty->isReadOnly(); }
 
 py::object PyComponentProperty::getValue()
 {
-	auto objectInstance = refl::createNonOwningInstance(*mTypeRegistry, mComponent.get());
+	auto objectInstance = refl::makeRefInstance(*mTypeRegistry, mComponent.get());
 	auto valueInstance = mProperty->getValue(objectInstance);
 	return reflInstanceToPyObject(*mTypeRegistry, valueInstance);
 }
@@ -102,13 +101,13 @@ void PyComponentProperty::setValue(const py::handle& value)
 		return;
 	}
 
-	auto objectInstance = refl::createNonOwningInstance(*mTypeRegistry, mComponent.get());
+	auto objectInstance = refl::makeRefInstance(*mTypeRegistry, mComponent.get());
 	mProperty->setValue(objectInstance, *valueInstance);
 }
 
 std::map<std::string, PyComponentPropertyPtr> getComponentProperties(EngineRoot& engineRoot, const ComponentPtr& component)
 {
-	refl::Instance instance = refl::createNonOwningInstance(*engineRoot.typeRegistry, component.get());
+	refl::Instance instance = refl::makeRefInstance(*engineRoot.typeRegistry, component.get());
 	auto properties = refl::getProperties(instance);
 
 	std::map<std::string, PyComponentPropertyPtr> result;
@@ -121,7 +120,7 @@ std::map<std::string, PyComponentPropertyPtr> getComponentProperties(EngineRoot&
 
 PyComponentPropertyPtr getComponentProperty(EngineRoot& engineRoot, const ComponentPtr& component, const std::string& name)
 {
-	refl::Instance instance = refl::createNonOwningInstance(*engineRoot.typeRegistry, component.get());
+	refl::Instance instance = refl::makeRefInstance(*engineRoot.typeRegistry, component.get());
 	auto properties = refl::getProperties(instance);
 	if (auto i = properties.find(name); i != properties.end())
 	{

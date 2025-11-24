@@ -13,12 +13,10 @@
 namespace skybolt {
 namespace sim {
 
-SKYBOLT_REFLECT_BEGIN(SimpleDynamicBodyComponent)
-{
+SKYBOLT_REFLECT(SimpleDynamicBodyComponent) {
 	registry.type<SimpleDynamicBodyComponent>("SimpleDynamicBodyComponent")
 		.superType<DynamicBodyComponent>();
 }
-SKYBOLT_REFLECT_END
 
 constexpr std::size_t maxQueuedForces = 32;
 

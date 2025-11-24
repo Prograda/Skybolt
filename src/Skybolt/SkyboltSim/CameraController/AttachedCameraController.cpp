@@ -22,8 +22,7 @@ const float AttachedCameraController::msYawRate = 1.0f;
 const float AttachedCameraController::msPitchRate = 1.0f;
 const float AttachedCameraController::msZoomRate = 1.0f;
 
-SKYBOLT_REFLECT_BEGIN(AttachedCameraController)
-{
+SKYBOLT_REFLECT(AttachedCameraController) {
 	registry.type<AttachedCameraController>("AttachedCameraController")
 		.superType<CameraController>()
 		.superType<Pitchable>()
@@ -31,7 +30,6 @@ SKYBOLT_REFLECT_BEGIN(AttachedCameraController)
 		.superType<Yawable>()
 		.superType<Zoomable>();
 }
-SKYBOLT_REFLECT_END
 
 AttachedCameraController::AttachedCameraController(Entity* camera, World* world, const Params& params) :
 	CameraController(camera),

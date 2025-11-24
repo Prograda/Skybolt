@@ -13,8 +13,7 @@
 
 namespace skybolt::sim {
 
-SKYBOLT_REFLECT_BEGIN(FreeCameraController)
-{
+SKYBOLT_REFLECT(FreeCameraController) {
 	registry.type<FreeCameraController>("FreeCameraController")
 		.superType<CameraController>()
 		.superType<Pitchable>()
@@ -22,7 +21,6 @@ SKYBOLT_REFLECT_BEGIN(FreeCameraController)
 		.superType<Zoomable>()
 		.property("baseFovY", &FreeCameraController::getBaseFov, &FreeCameraController::setBaseFov, {{PropertyMetadataNames::units, Units::Radians}});
 }
-SKYBOLT_REFLECT_END
 
 
 FreeCameraController::FreeCameraController(Entity* camera, const Params& params) :

@@ -18,8 +18,7 @@
 namespace skybolt {
 namespace sim {
 
-SKYBOLT_REFLECT_BEGIN(AttacherComponent)
-{
+SKYBOLT_REFLECT(AttacherComponent) {
 	registry.type<AttacherComponent>("AttacherComponent")
 		.superType<Component>()
 		.property("enabled", &AttacherComponent::enabled)
@@ -29,7 +28,6 @@ SKYBOLT_REFLECT_BEGIN(AttacherComponent)
 		.property("positionOffset", &AttacherComponent::positionOffset)
 		.property("orientationOffset", &AttacherComponent::orientationOffset);
 }
-SKYBOLT_REFLECT_END
 
 AttacherComponent::AttacherComponent(const World* world, Entity* ownEntity) :
 	mWorld(world),

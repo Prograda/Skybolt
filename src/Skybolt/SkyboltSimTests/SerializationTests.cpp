@@ -31,22 +31,18 @@ struct TestObject
 	std::optional<int> optionalIntProperty2;
 };
 
-SKYBOLT_REFLECT_BEGIN(TestNestedObject)
-{
+SKYBOLT_REFLECT(TestNestedObject) {
 	registry.type<TestNestedObject>("TestNestedObject")
 		.property("intProperty", &TestNestedObject::intProperty);
 }
-SKYBOLT_REFLECT_END
 
-SKYBOLT_REFLECT_BEGIN(TestObject)
-{
+SKYBOLT_REFLECT(TestObject) {
 	registry.type<TestObject>("TestObject")
 		.property("intProperty", &TestObject::intProperty)
 		.property("nestedObjectProperty", &TestObject::nestedObjectProperty)
 		.property("optionalIntProperty1", &TestObject::optionalIntProperty1)
 		.property("optionalIntProperty2", &TestObject::optionalIntProperty2);
 }
-SKYBOLT_REFLECT_END
 
 TEST_CASE("Read and write to JSON")
 {
@@ -58,11 +54,11 @@ TEST_CASE("Read and write to JSON")
 	originalObject.nestedObjectProperty.intProperty = 3;
 	// Leave originalObject.optionalIntProperty1 unset
 	originalObject.optionalIntProperty2 = 123;
-	nlohmann::json json = writeReflectedObject(registry, refl::createNonOwningInstance(registry, &originalObject));
+	nlohmann::json json = writeReflectedObject(registry, refl::makeRefInstance(registry, &originalObject));
 
 	// Read
 	TestObject readObject;
-	auto instance = refl::createNonOwningInstance(registry, &readObject);
+	auto instance = refl::makeRefInstance(registry, &readObject);
 	readReflectedObject(registry, instance, json);
 
 	CHECK(readObject.intProperty == originalObject.intProperty);
@@ -88,13 +84,11 @@ public:
 	float floatProperty;
 };
 
-SKYBOLT_REFLECT_BEGIN(TestDerivedObject)
-{
+SKYBOLT_REFLECT(TestDerivedObject) {
 	registry.type<TestDerivedObject>("TestDerivedObject")
 		.superType<TestBaseObject>()
 		.property("floatProperty", &TestDerivedObject::floatProperty);
 }
-SKYBOLT_REFLECT_END
 
 TEST_CASE("Read and write polymorphic type to JSON")
 {
@@ -105,11 +99,11 @@ TEST_CASE("Read and write polymorphic type to JSON")
 	derivedObject.floatProperty = 123;
 
 	TestBaseObject& baseObject = derivedObject;
-	nlohmann::json json = writeReflectedObject(registry, refl::createNonOwningInstance(registry, &baseObject)); // test writing the base object reference
+	nlohmann::json json = writeReflectedObject(registry, refl::makeRefInstance(registry, &baseObject)); // test writing the base object reference
 
 	// Read
 	TestDerivedObject readObject;
-	auto instance = refl::createNonOwningInstance(registry, &readObject);
+	auto instance = refl::makeRefInstance(registry, &readObject);
 	readReflectedObject(registry, instance, json);
 
 	CHECK(readObject.floatProperty == derivedObject.floatProperty);
@@ -131,12 +125,10 @@ public:
 	int data = 0;
 };
 
-SKYBOLT_REFLECT_BEGIN(TestObjectWithSerializationMethods)
-{
+SKYBOLT_REFLECT(TestObjectWithSerializationMethods) {
 	registry.type<TestObjectWithSerializationMethods>("TestObjectWithSerializationMethods")
 		.superType<ExplicitSerialization>();
 }
-SKYBOLT_REFLECT_END
 
 TEST_CASE("Use explicit to/from json methods if an object provides them")
 {
@@ -145,11 +137,11 @@ TEST_CASE("Use explicit to/from json methods if an object provides them")
 	// Write
 	TestObjectWithSerializationMethods writeObject;
 	writeObject.data = 123;
-	nlohmann::json json = writeReflectedObject(registry, refl::createNonOwningInstance(registry, &writeObject));
+	nlohmann::json json = writeReflectedObject(registry, refl::makeRefInstance(registry, &writeObject));
 
 	// Read
 	TestObjectWithSerializationMethods readObject;
-	auto instance = refl::createNonOwningInstance(registry, &readObject);
+	auto instance = refl::makeRefInstance(registry, &readObject);
 	readReflectedObject(registry, instance, json);
 	CHECK(readObject.data == 123);
 }

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <SkyboltReflection/Reflection.h>
+#include <SkyboltReflect/Reflection.h>
 
 namespace skybolt {
 namespace sim {
@@ -22,12 +22,10 @@ protected:
 	double mZoom = 0;
 };
 
-SKYBOLT_REFLECT_BEGIN(Zoomable)
-{
+SKYBOLT_REFLECT(Zoomable) {
 	registry.type<Zoomable>("Zoomable")
 		.property("zoom", &Zoomable::getZoom, &Zoomable::setZoom);
 }
-SKYBOLT_REFLECT_END
 
 } // namespace sim
 } // namespace skybolt

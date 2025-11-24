@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "SkyboltReflection/Reflection.h"
+#include "SkyboltReflect/Reflection.h"
 
 #include <nlohmann/json.hpp>
 

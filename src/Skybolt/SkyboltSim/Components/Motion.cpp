@@ -9,13 +9,11 @@
 
 namespace skybolt::sim {
 
-SKYBOLT_REFLECT_BEGIN(Motion)
-{
+SKYBOLT_REFLECT(Motion) {
 	registry.type<Motion>("Motion")
 		.superType<Component>()
 		.property("linearVelocity", &Motion::linearVelocity)
 		.property("angularVelocity", &Motion::angularVelocity);
 }
-SKYBOLT_REFLECT_END
 
 } // namespace skybolt::sim

@@ -9,13 +9,11 @@
 namespace skybolt {
 namespace sim {
 
-SKYBOLT_REFLECT_BEGIN(DynamicBodyComponent)
-{
+SKYBOLT_REFLECT(DynamicBodyComponent) {
 	registry.type<DynamicBodyComponent>("DynamicBodyComponent")
 		.superType<Component>()
 		.property("mass", &DynamicBodyComponent::getMass, &DynamicBodyComponent::setMass);
 }
-SKYBOLT_REFLECT_END
 
 } // namespace sim
 } // namespace skybolt

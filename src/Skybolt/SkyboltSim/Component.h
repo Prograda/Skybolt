@@ -8,7 +8,7 @@
 
 #include "SkyboltSim/SimUpdatable.h"
 #include <SkyboltCommon/TypedItemContainer.h>
-#include <SkyboltReflection/Reflection.h>
+#include <SkyboltReflect/Reflection.h>
 
 namespace skybolt {
 namespace sim {

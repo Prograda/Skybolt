@@ -11,7 +11,7 @@
 #include "FactoryRegistries.h"
 #include "Scenario/Scenario.h"
 #include "Plugin/Plugin.h"
-#include <SkyboltReflection/SkyboltReflectionFwd.h>
+#include <SkyboltReflect/SkyboltReflectFwd.h>
 #include <SkyboltSim/System/SystemRegistry.h>
 #include <SkyboltVis/Shader/ShaderProgramRegistry.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>

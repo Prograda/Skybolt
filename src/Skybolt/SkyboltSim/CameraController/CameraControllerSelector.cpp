@@ -13,13 +13,11 @@
 namespace skybolt {
 namespace sim {
 
-SKYBOLT_REFLECT_BEGIN(CameraControllerSelector)
-{
+SKYBOLT_REFLECT(CameraControllerSelector) {
 	registry.type<CameraControllerSelector>("CameraControllerSelector")
 		.property("selectedController", &CameraControllerSelector::getSelectedControllerName, &CameraControllerSelector::selectController)
 		.propertyReadOnly("controllers", &CameraControllerSelector::getControllers);
 }
-SKYBOLT_REFLECT_END
 
 CameraControllerSelector::CameraControllerSelector(const ControllersMap& controllers) :
 	mControllers(controllers)

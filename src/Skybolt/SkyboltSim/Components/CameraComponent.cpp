@@ -11,12 +11,10 @@
 
 namespace skybolt::sim {
 
-SKYBOLT_REFLECT_BEGIN(CameraComponent)
-{
+SKYBOLT_REFLECT(CameraComponent) {
 	registry.type<CameraComponent>("CameraComponent")
 		.superType<Component>()
 		.property("fovY", &CameraComponent::getFovY, &CameraComponent::setFovY, {{PropertyMetadataNames::units, Units::Radians}});
 }
-SKYBOLT_REFLECT_END
 
 } // namespace skybolt::sim

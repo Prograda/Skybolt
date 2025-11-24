@@ -24,8 +24,7 @@ const float PlanetCameraController::msPitchRate = 1.f;
 const float PlanetCameraController::msZoomRate = 0.2f;
 constexpr float pitchControlSensitivity = 2.f;
 
-SKYBOLT_REFLECT_BEGIN(PlanetCameraController)
-{
+SKYBOLT_REFLECT(PlanetCameraController) {
 	registry.type<PlanetCameraController>("PlanetCameraController")
 		.superType<CameraController>()
 		.superType<LatLonSettable>()
@@ -33,7 +32,6 @@ SKYBOLT_REFLECT_BEGIN(PlanetCameraController)
 		.superType<EntityTargeter>()
 		.superType<Zoomable>();
 }
-SKYBOLT_REFLECT_END
 
 PlanetCameraController::PlanetCameraController(sim::Entity* camera, World* world, const Params& params) :
 	CameraController(camera),

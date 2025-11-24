@@ -22,12 +22,10 @@ protected:
 	LatLon mLatLon = LatLon(0,0);
 };
 
-SKYBOLT_REFLECT_BEGIN(LatLonSettable)
-{
+SKYBOLT_REFLECT(LatLonSettable) {
 	registry.type<LatLonSettable>("LatLonSettable")
 		.property("latLon", &LatLonSettable::getLatLon, &LatLonSettable::setLatLon);
 }
-SKYBOLT_REFLECT_END
 
 } // namespace sim
 } // namespace skybolt

@@ -7,7 +7,7 @@
 #include <catch2/catch.hpp>
 #include <SkyboltEngine/Scenario/Scenario.h>
 #include <SkyboltEngine/Scenario/SimSnapshotRegistry.h>
-#include <SkyboltReflection/Reflection.h>
+#include <SkyboltReflect/Reflection.h>
 #include <SkyboltSim/EntityId.h>
 
 using namespace skybolt;

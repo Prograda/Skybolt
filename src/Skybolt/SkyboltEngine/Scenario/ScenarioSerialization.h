@@ -7,7 +7,7 @@
 #pragma once
 
 #include <SkyboltEngine/SkyboltEngineFwd.h>
-#include <SkyboltReflection/SkyboltReflectionFwd.h>
+#include <SkyboltReflect/SkyboltReflectFwd.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
 
 #include <nlohmann/json.hpp>

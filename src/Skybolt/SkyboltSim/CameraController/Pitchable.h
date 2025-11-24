@@ -8,7 +8,7 @@
 
 #include "SkyboltSim/PropertyMetadata.h"
 #include <SkyboltCommon/Units.h>
-#include <SkyboltReflection/Reflection.h>
+#include <SkyboltReflect/Reflection.h>
 
 namespace skybolt {
 namespace sim {
@@ -24,12 +24,10 @@ protected:
 	double mPitch = 0;
 };
 
-SKYBOLT_REFLECT_BEGIN(Pitchable)
-{
+SKYBOLT_REFLECT(Pitchable) {
 	registry.type<Pitchable>("Pitchable")
 		.property("pitch", &Pitchable::getPitch, &Pitchable::setPitch, {{PropertyMetadataNames::units, Units::Radians}});
 }
-SKYBOLT_REFLECT_END
 
 } // namespace sim
 } // namespace skybolt

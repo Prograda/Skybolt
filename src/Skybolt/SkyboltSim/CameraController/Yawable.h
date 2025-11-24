@@ -8,7 +8,7 @@
 
 #include "SkyboltSim/PropertyMetadata.h"
 #include <SkyboltCommon/Units.h>
-#include <SkyboltReflection/Reflection.h>
+#include <SkyboltReflect/Reflection.h>
 
 namespace skybolt {
 namespace sim {
@@ -24,12 +24,10 @@ protected:
 	double mYaw = 0;
 };
 
-SKYBOLT_REFLECT_BEGIN(Yawable)
-{
+SKYBOLT_REFLECT(Yawable) {
 	registry.type<Yawable>("Yawable")
 		.property("yaw", &Yawable::getYaw, &Yawable::setYaw, {{PropertyMetadataNames::units, Units::Radians}});
 }
-SKYBOLT_REFLECT_END
 
 } // namespace sim
 } // namespace skybolt

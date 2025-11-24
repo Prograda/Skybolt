@@ -17,8 +17,6 @@ endif()
 add_subdirectory (SkyboltEnginePlugins)
 
 add_subdirectory (SkyboltEngineTests)
-add_subdirectory (SkyboltReflection)
-add_subdirectory (SkyboltReflectionTests)
 
 OPTION(BUILD_SKYBOLT_QT "Build SkyboltQt")
 if (BUILD_SKYBOLT_QT)

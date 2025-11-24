@@ -18,13 +18,11 @@ public:
 	std::optional<float> cloudCoverageFraction;
 };
 
-SKYBOLT_REFLECT_BEGIN(CloudComponent)
-{
+SKYBOLT_REFLECT(CloudComponent) {
 	registry.type<CloudComponent>("CloudComponent")
 		.superType<Component>()
 		.property("cloudsVisible", &CloudComponent::cloudsVisible)
 		.property("cloudCoverageFraction", &CloudComponent::cloudCoverageFraction);
 }
-SKYBOLT_REFLECT_END
 
 } // namespace skybolt::sim

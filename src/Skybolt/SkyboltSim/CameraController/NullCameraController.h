@@ -18,12 +18,10 @@ public:
 	NullCameraController(Entity* camera) : CameraController(camera) {}
 };
 
-SKYBOLT_REFLECT_BEGIN(NullCameraController)
-{
+SKYBOLT_REFLECT(NullCameraController) {
 	registry.type<NullCameraController>("NullCameraController")
 		.superType<CameraController>();
 }
-SKYBOLT_REFLECT_END
 
 } // namespace sim
 } // namespace skybolt

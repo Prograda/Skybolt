@@ -11,12 +11,10 @@
 namespace skybolt {
 namespace sim {
 
-SKYBOLT_REFLECT_BEGIN(EntityTargeter)
-{
+SKYBOLT_REFLECT(EntityTargeter) {
 	registry.type<EntityTargeter>("EntityTargeter")
 		.property("targetName", &EntityTargeter::getTargetName, &EntityTargeter::setTargetName);
 }
-SKYBOLT_REFLECT_END
 
 EntityTargeter::EntityTargeter(World* world) :
 	mWorld(world)

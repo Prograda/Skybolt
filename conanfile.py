@@ -58,6 +58,7 @@ class SkyboltConan(ConanFile):
         self.include_package("cxxtimer", "1.0.0")
         self.include_package("px_sched", "1.0.0", transitive_headers=True)
         self.include_package("openscenegraph-mr", "3.7.0", subfolder="all", transitive_headers=True)
+        self.include_package("skybolt-reflect", "1.0.0", transitive_headers=True)
 
         if self.options.enable_bullet:
             self.requires("bullet3/3.22a")
@@ -117,7 +118,7 @@ class SkyboltConan(ConanFile):
 		
     def package_info(self):
         self.cpp_info.includedirs = ["include"]
-        self.cpp_info.libs = ["AircraftHud", "SkyboltEngine", "SkyboltVis", "SkyboltSim", "SkyboltReflection", "SkyboltCommon"]
+        self.cpp_info.libs = ["AircraftHud", "SkyboltEngine", "SkyboltVis", "SkyboltSim", "SkyboltCommon"]
         self.cpp_info.builddirs = ["CMake"]
 		
         if self.options.enable_fft_ocean:

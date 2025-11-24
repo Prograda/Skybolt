@@ -2,7 +2,7 @@
 
 #include "SkyboltEngine/SkyboltEngineFwd.h"
 #include "SkyboltEngine/Scenario/ScenarioSerialization.h"
-#include <SkyboltReflection/SkyboltReflectionFwd.h>
+#include <SkyboltReflect/SkyboltReflectFwd.h>
 #include <SkyboltSim/Chrono.h>
 
 #include <vector>

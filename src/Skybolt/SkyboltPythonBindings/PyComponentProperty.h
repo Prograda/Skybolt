@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SkyboltReflection/SkyboltReflectionFwd.h>
+#include <SkyboltReflect/SkyboltReflectFwd.h>
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
 

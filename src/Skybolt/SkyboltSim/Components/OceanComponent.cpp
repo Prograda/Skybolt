@@ -11,15 +11,13 @@
 namespace skybolt {
 namespace sim {
 
-SKYBOLT_REFLECT_BEGIN(OceanComponent)
-{
+SKYBOLT_REFLECT(OceanComponent) {
 	registry.type<OceanComponent>("OceanComponent")
 		.superType<Component>()
 		.property("seed", &OceanComponent::seed)
 		.property("waveHeight", &OceanComponent::waveHeight)
 		.property("windVelocityHeading", &OceanComponent::windVelocityHeading, {{PropertyMetadataNames::units, Units::Radians}});
 }
-SKYBOLT_REFLECT_END
 
 } // namespace sim
 } // namespace skybolt
