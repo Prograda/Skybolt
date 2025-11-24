@@ -22,7 +22,7 @@
 
 using namespace skybolt;
 
-ScenarioWorkspace::ScenarioWorkspace(const std::shared_ptr<skybolt::EngineRoot>& engineRoot, ScenarioSetupFunction scenarioSetupFunction) :
+ScenarioWorkspace::ScenarioWorkspace(const skybolt::NonNullPtr<skybolt::EngineRoot>& engineRoot, ScenarioSetupFunction scenarioSetupFunction) :
 	mScenarioSetupFunction(scenarioSetupFunction),
 	mEngineRoot(engineRoot)
 {

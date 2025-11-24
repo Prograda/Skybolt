@@ -186,14 +186,12 @@ public:
 		}
 
 		// Create Main window
-		auto scenarioWorkspace = std::make_shared<ScenarioWorkspace>(mEngineRoot);
+		auto scenarioWorkspace = std::make_shared<ScenarioWorkspace>(mEngineRoot.get());
 
-		mMainWindow.reset(new MainWindow([&] {
-			MainWindowConfig c;
-			c.workspace = scenarioWorkspace;
-			c.engineRoot = mEngineRoot;
-			return c;
-		}()));
+		mMainWindow.reset(new MainWindow(MainWindowConfig{
+			.workspace = scenarioWorkspace,
+			.engineRoot = mEngineRoot.get()
+		}));
 		addErrorLogStatusBar(*mMainWindow->statusBar(), errorLogModel);
 		enableDarkTitleBar(mMainWindow->winId());
 
@@ -466,10 +464,10 @@ protected:
 
 private:
 	vis::VisRootPtr mVisRoot;
+	std::shared_ptr<EngineRoot> mEngineRoot;
 	std::unique_ptr<SimUpdater> mSimUpdater;
 	std::shared_ptr<skybolt::SimSnapshotRegistry> mSnapshotRegistry;
 	std::unique_ptr<MainWindow> mMainWindow;
-	std::shared_ptr<EngineRoot> mEngineRoot;
 	std::unique_ptr<QSplashScreen> mSplashScreen;
 	vis::WindowPtr mWindow;
 	osg::ref_ptr<skybolt::vis::RenderCameraViewport> mViewport;

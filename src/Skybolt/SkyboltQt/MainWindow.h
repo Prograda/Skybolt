@@ -9,6 +9,7 @@
 #include "SkyboltQtFwd.h"
 #include "Scenario/JsonScenarioSerializable.h"
 
+#include <SkyboltCommon/NonNullPtr.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Plugin/PluginHelpers.h>
 
@@ -23,7 +24,7 @@ namespace Ui { class MainWindow; }
 struct MainWindowConfig
 {
 	ScenarioWorkspacePtr workspace;
-	std::shared_ptr<skybolt::EngineRoot> engineRoot; //!< Never null
+	skybolt::NonNullPtr<skybolt::EngineRoot> engineRoot;
 	QWidget *parent = nullptr;
 	Qt::WindowFlags flags = Qt::WindowFlags();
 };
@@ -80,7 +81,7 @@ private:
 
 private:
 	ScenarioWorkspacePtr mWorkspace;
-	std::shared_ptr<skybolt::EngineRoot> mEngineRoot;
+	skybolt::NonNullPtr<skybolt::EngineRoot> mEngineRoot;
 	std::unique_ptr<Ui::MainWindow> ui;
 	ToolWindowManager* mToolWindowManager;
 	std::vector<QAction*> mToolActions;

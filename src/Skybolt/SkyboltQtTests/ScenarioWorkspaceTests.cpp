@@ -12,7 +12,7 @@
 
 using namespace skybolt;
 
-static std::shared_ptr<EngineRoot> createEngineRoot()
+static std::unique_ptr<EngineRoot> createEngineRoot()
 {
 	nlohmann::json engineSettings;
 	return EngineRootFactory::create({}, engineSettings);
@@ -26,7 +26,7 @@ static void createTestNewScenarioEntities(skybolt::sim::World& world, skybolt::E
 TEST_CASE("Workspace initialized with new scenario")
 {
 	auto engineRoot = createEngineRoot();
-	ScenarioWorkspace workspace(engineRoot, &createTestNewScenarioEntities);
+	ScenarioWorkspace workspace(engineRoot.get(), &createTestNewScenarioEntities);
 	CHECK(engineRoot->scenario->world.findObjectByName("DefaultCamera") != nullptr);
 }
 
@@ -35,7 +35,7 @@ TEST_CASE("Scenario state reset on new scenario")
 	auto engineRoot = createEngineRoot();
 	engineRoot->scenario->world.addEntity(engineRoot->entityFactory->createEntity("Camera", "TestCamera123"));
 	
-	ScenarioWorkspace workspace(engineRoot, &createTestNewScenarioEntities);
+	ScenarioWorkspace workspace(engineRoot.get(), &createTestNewScenarioEntities);
 	workspace.newScenario();
 	CHECK(engineRoot->scenario->world.findObjectByName("TestCamera123") == nullptr);
 }
@@ -43,7 +43,7 @@ TEST_CASE("Scenario state reset on new scenario")
 TEST_CASE("Workspace contains default entities on new scenario")
 {
 	auto engineRoot = createEngineRoot();
-	ScenarioWorkspace workspace(engineRoot, &createTestNewScenarioEntities);
+	ScenarioWorkspace workspace(engineRoot.get(), &createTestNewScenarioEntities);
 	workspace.newScenario();
 	CHECK(!engineRoot->scenario->world.getEntities().empty());
 }
@@ -56,7 +56,7 @@ TEST_CASE("Workspace saves and loads scenario")
 	QTemporaryDir dir;
 	QString filename = dir.filePath("temp.scn");
 	{
-		ScenarioWorkspace workspace(engineRoot, &createTestNewScenarioEntities);
+		ScenarioWorkspace workspace(engineRoot.get(), &createTestNewScenarioEntities);
 		engineRoot->scenario->world.addEntity(engineRoot->entityFactory->createEntity("Camera", "TestCamera123"));
 
 		CHECK(workspace.saveScenario(filename) == std::nullopt);
@@ -64,7 +64,7 @@ TEST_CASE("Workspace saves and loads scenario")
 	}
 
 	// Load to a different workspace
-	ScenarioWorkspace workspace(engineRoot, &createTestNewScenarioEntities);
+	ScenarioWorkspace workspace(engineRoot.get(), &createTestNewScenarioEntities);
 	CHECK(workspace.loadScenario(filename) == std::nullopt);
 
 	CHECK(workspace.getScenarioFilename() == filename);

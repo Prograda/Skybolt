@@ -6,9 +6,10 @@
 
 #pragma once
 
+#include <SkyboltCommon/NonNullPtr.h>
+#include <SkyboltEngine/SkyboltEngineFwd.h>
 #include "SkyboltQt/Scenario/JsonScenarioSerializable.h"
 #include "SkyboltQt/SkyboltQtFwd.h"
-#include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltSim/Chrono.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
 
@@ -25,7 +26,7 @@ class ScenarioWorkspace : public QObject
 	Q_OBJECT
 public:
 	using ScenarioSetupFunction = std::function<void(skybolt::sim::World& world, skybolt::EntityFactory& factory)>;
-	ScenarioWorkspace(const std::shared_ptr<skybolt::EngineRoot>& engineRoot, ScenarioSetupFunction scenarioSetupFunction = &createDefaultNewScenarioEntities);
+	ScenarioWorkspace(const skybolt::NonNullPtr<skybolt::EngineRoot>& engineRoot, ScenarioSetupFunction scenarioSetupFunction = &createDefaultNewScenarioEntities);
 	virtual ~ScenarioWorkspace() = default;
 
 	using ErrorMessage = QString;
@@ -56,7 +57,7 @@ protected:
 
 private:
 	ScenarioSetupFunction mScenarioSetupFunction;
-	std::shared_ptr<skybolt::EngineRoot> mEngineRoot;
+	skybolt::NonNullPtr<skybolt::EngineRoot> mEngineRoot;
 	QString mScenarioFilename;
 };
 
