@@ -38,9 +38,16 @@ void SimStepper::update(SecondsD dt)
 	updateSystem(systems, UpdateStage::Input);
 	updateSystem(systems, UpdateStage::BeginStateUpdate);
 
-	if (mDynamicsEnabled && dt > 0)
+	if (dt > 0)
 	{
-		updateDynamicsStep(systems, dt);
+		if (mDynamicsEnabled)
+		{
+			advanceTimeByDynamicsSubSteps(systems, dt);
+		}
+		else
+		{
+			advaniceTimeByNonDynamicsStep(systems, dt);
+		}
 	}
 
 	updateSystem(systems, UpdateStage::EndStateUpdate);
@@ -48,7 +55,7 @@ void SimStepper::update(SecondsD dt)
 	updateSystem(systems, UpdateStage::Output);
 }
 
-void SimStepper::updateDynamicsStep(const std::vector<SystemPtr>& systems, SecondsD dt)
+void SimStepper::advanceTimeByDynamicsSubSteps(const std::vector<SystemPtr>& systems, SecondsD dt)
 {
 	assert(mDynamicsEnabled);
 
@@ -78,6 +85,19 @@ void SimStepper::updateDynamicsStep(const std::vector<SystemPtr>& systems, Secon
 		}
 		updateSystem(systems, UpdateStage::DynamicsSubStep);
 		updateSystem(systems, UpdateStage::PostDynamicsSubStep);
+	}
+}
+
+void SimStepper::advaniceTimeByNonDynamicsStep(const std::vector<SystemPtr>& systems, SecondsD dt)
+{
+	assert(!mDynamicsEnabled);
+
+	// Dynamics is disabled, so just advance time by dt without taking substeps
+	mCurrentTime += dt;
+
+	for (const SystemPtr& system : *mSystems)
+	{
+		system->advanceSimTime(mCurrentTime, mDynamicsStepSize);
 	}
 }
 

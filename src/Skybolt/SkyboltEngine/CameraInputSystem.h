@@ -8,6 +8,7 @@
 
 #include "SkyboltEngine/SkyboltEngineFwd.h"
 #include <SkyboltCommon/Event.h>
+#include <SkyboltCommon/NonNullPtr.h>
 #include <SkyboltSim/CameraController/CameraController.h>
 #include <SkyboltSim/System/System.h>
 
@@ -66,7 +67,8 @@ private:
 
 CameraInputAxes createDefaultCameraInputAxes(const skybolt::InputPlatform& inputPlatform);
 
-void connectToCamera(CameraInputSystem& system, const sim::EntityPtr& camera);
+//! Connects the input system to the camera, allowing the camera to be controlled by user input. Any previous connection (i.e. to another camera) will be disconnected.
+void connectToCameraExclusivly(CameraInputSystem& system, skybolt::NonNullPtr<skybolt::sim::World> world, const sim::EntityId& cameraId);
 
 void configure(CameraInputSystem& system, int screenHeightPixels, const nlohmann::json& engineSettings);
 

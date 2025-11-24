@@ -64,6 +64,12 @@ void PyComponent::advanceSimTime(SecondsD newTime, SecondsD dt)
 	{
 		mPythonComponent.attr("advance_sim_time")(newTime, dt);
 	}
+	else
+	{
+		// If no python "advance_sim_time" implementation exists, call "set_sim_time" as default implmentation.
+		// This behavior is consistant with SimUpdatable interface.
+		setSimTime(newTime);
+	}
 }
 
 void PyComponent::addProperty(refl::TypeRegistry& typeRegistry, const std::string& name, const py::handle& value)

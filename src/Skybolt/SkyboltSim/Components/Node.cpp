@@ -14,8 +14,8 @@ namespace skybolt::sim {
 SKYBOLT_REFLECT(Node) {
 	registry.type<Node>("Node")
 		.superType<Component>()
-		.property("position", &Node::getPosition, &Node::setPosition, {{PropertyMetadataNames::attributeType, AttributeType::PositionInWorld}})
-		.property("orientation", &Node::getOrientation, &Node::setOrientation, {{PropertyMetadataNames::attributeType, AttributeType::Orientation}});
+		.property("position", &Node::getPosition, &Node::setPosition, {{PropertyMetadataNames::attributeType, PropertyRepresentations::worldPosition}})
+		.property("orientation", &Node::getOrientation, &Node::setOrientation, {{PropertyMetadataNames::attributeType, PropertyRepresentations::worldOrientation}});
 }
 
 Node::Node(const Vector3 &localPosition, const Quaternion &localOrientation) :

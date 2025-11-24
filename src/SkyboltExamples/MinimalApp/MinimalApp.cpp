@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 
 		auto cameraInputSystem = std::make_shared<CameraInputSystem>(inputPlatform, axes);
 		configure(*cameraInputSystem, window->getWidth(), engineRoot->engineSettings);
-		connectToCamera(*cameraInputSystem, simCamera);
+		connectToCameraExclusivly(*cameraInputSystem, &engineRoot->scenario->world, simCamera->getId());
 		engineRoot->systemRegistry->push_back(cameraInputSystem);
 
 		osg::ref_ptr<HelpDisplayRenderOperation> helpDisplay = createHelpDisplay();

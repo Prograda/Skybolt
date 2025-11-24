@@ -18,14 +18,13 @@ add_subdirectory (SkyboltEnginePlugins)
 
 add_subdirectory (SkyboltEngineTests)
 
-OPTION(BUILD_SKYBOLT_QT "Build SkyboltQt")
-if (BUILD_SKYBOLT_QT)
-	add_subdirectory (SkyboltQt)
-	add_subdirectory (SkyboltQtTests)
-endif()
-
 add_subdirectory (SkyboltSim)
 add_subdirectory (SkyboltSimTests)
 add_subdirectory (SkyboltVis)
 add_subdirectory (SkyboltVisTests)
 add_subdirectory (TileMapGenerator)
+
+OPTION(BUILD_WITH_QT "Build with Qt")
+if (BUILD_WITH_QT)
+	add_subdirectory (SkyboltEngineQt)
+endif()

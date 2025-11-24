@@ -75,8 +75,8 @@ class SkyboltConan(ConanFile):
             
         if self.options.enable_qt:
             self.requires("qt/5.15.14", transitive_headers=True)
-            self.include_package("toolwindowmanager", "1.0.0", transitive_headers=True)
-
+            self.include_package("skybolt-widgets", "1.0.0", transitive_headers=True)
+			
     def generate(self):
         tc = CMakeToolchain(self)
         tc.variables["Boost_STATIC_LIBS"] = str(not self.dependencies["boost"].options.shared)
@@ -100,7 +100,7 @@ class SkyboltConan(ConanFile):
             tc.variables["BUILD_PYTHON_PLUGIN"] = "true"
 
         if self.options.enable_qt:
-            tc.variables["BUILD_SKYBOLT_QT"] = "true"
+            tc.variables["BUILD_WITH_QT"] = "true"
 
         tc.generate()
 
@@ -123,5 +123,3 @@ class SkyboltConan(ConanFile):
 		
         if self.options.enable_fft_ocean:
             self.cpp_info.libs.append("FftOcean")
-        if self.options.enable_qt == True:
-            self.cpp_info.libs.append("SkyboltQt")

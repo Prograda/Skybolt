@@ -8,6 +8,7 @@
 #include <SkyboltCommon/MapUtility.h>
 #include <SkyboltEngine/Input/InputPlatform.h>
 #include <SkyboltEngine/Input/LogicalAxis.h>
+#include <SkyboltSim/World.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 
 #include <boost/log/trivial.hpp>
@@ -121,9 +122,14 @@ CameraInputAxes createDefaultCameraInputAxes(const skybolt::InputPlatform& input
 	};
 }
 
-void connectToCamera(CameraInputSystem& system, const sim::EntityPtr& camera)
+void connectToCameraExclusivly(CameraInputSystem& system, NonNullPtr<sim::World> world, const sim::EntityId& cameraId)
 {
-	system.cameraInputGenerated.connect([camera] (const sim::CameraController::Input& input) {
+	system.cameraInputGenerated.disconnect_all_slots();
+	system.cameraInputGenerated.connect([world, cameraId] (const sim::CameraController::Input& input) {
+
+		sim::Entity* camera = world->getEntityById(cameraId).get();
+		if (!camera) { return; }
+
 		if (auto controller = camera->getFirstComponent<sim::CameraControllerComponent>(); controller)
 		{
 			if (controller->getSelectedController())

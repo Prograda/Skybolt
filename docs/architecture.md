@@ -22,7 +22,7 @@ Environments are rendered use multiple **physically-based lighting** techniques:
 * Planetary atmospheric scattering model
 * Volumetric cloud ray-marcher
 
-Under the hood, `SkyboltVis` uses [OpenSceneGraph](https://github.com/openscenegraph/OpenSceneGraph) to manage scene graph state, issue draw calls, and handle 2D/3D asset file IO.
+Under the hood, `SkyboltVis` uses [OpenSceneGraph](https://github.com/openscenegraph/OpenSceneGraph) to manage scene graph state, issue draw calls, and handle 2D/3D asset file I/O.
 
 ### SkyboltEngine
 The `SkyboltEngine` library ties together `SkyboltSim` and `SkyboltVis`, and provides engine-level functionality like user input, scenario management, and plugin support.
@@ -32,7 +32,3 @@ To support a wide variety of use cases, the simulation engine is extensible thro
 
 * **C++ Plugins**: Leverages high-performance code for simulation-critical functionality.
 * **Python Plugins**: For rapid prototyping, scripting, and extending functionality, for example adding new entity component types.
-
-
-## Graphical User Interface (GUI)
-The application features a **Qt-based** graphical user interface that allows users to interact with entities in the 3D environment. The `SkyboltQt` library provides funcionality for GUI widgets and bindings between the GUI and the engine.

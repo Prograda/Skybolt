@@ -30,7 +30,7 @@ public:
 
 	virtual void setSimTime(SecondsD newTime) {};
 	virtual void advanceWallTime(SecondsD newTime, SecondsD dt) {};
-	virtual void advanceSimTime(SecondsD newTime, SecondsD dt) {};
+	virtual void advanceSimTime(SecondsD newTime, SecondsD dt) { setSimTime(newTime); };
 	virtual void update(UpdateStage stage) {};
 };
 

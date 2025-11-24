@@ -49,7 +49,6 @@ class SkybolyReflectConan(ConanFile):
         cmake.build()
 
     def package(self):
-        #files.copy(self, pattern="*.h", src=os.path.join(self.source_folder, self.name, "src"), dst=os.path.join(self.package_folder, "include"))
         cmake = CMake(self)
         cmake.install()
 		
