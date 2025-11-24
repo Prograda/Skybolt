@@ -13,7 +13,6 @@
 #include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 
-#include <httplib/httplib.h>
 #include <osg/Vec2i>
 
 #include <boost/algorithm/string/replace.hpp>

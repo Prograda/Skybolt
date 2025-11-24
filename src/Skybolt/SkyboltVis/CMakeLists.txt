@@ -61,23 +61,32 @@ set(LIBRARIES
 	px_sched::px_sched
 )
 
+add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
+
 if (OSG_STATIC_LIBS)
 	# Statically link to dependencies of OSG dependencies
-	find_package(CURL REQUIRED)
 	find_package(Freetype REQUIRED)
 	find_package(JPEG REQUIRED)
 	find_package(OpenGL REQUIRED)
 
 	list(APPEND LIBRARIES
 		${CMAKE_DL_LIBS}
-		${CURL_LIBRARIES}
 		Freetype::Freetype
 		JPEG::JPEG
 		${OPENGL_LIBRARIES}
 	)
-endif()
 
-add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
+	# The OSG curl plugin gets statically linked when using OSG static libraries.
+	# For some applications we might not want curl to be compiled into the executable,
+	# so this option allows it to be disabled.
+	OPTION(BUILD_WITH_OSG_CURL_PLUGIN "Build with OSG Curl plugin")
+
+	if (BUILD_WITH_OSG_CURL_PLUGIN)
+		find_package(CURL REQUIRED)
+		list(APPEND LIBRARIES ${CURL_LIBRARIES})
+		add_compile_definitions(${LIB_NAME} PRIVATE BUILD_WITH_OSG_CURL_PLUGIN)
+	endif()
+endif()
 
 target_include_directories(${LIB_NAME} PUBLIC ${OSG_INCLUDE_DIR})
 target_link_libraries(${LIB_NAME} ${LIBRARIES})

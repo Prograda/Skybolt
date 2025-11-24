@@ -20,7 +20,9 @@
 #include <osgDB/Registry>
 // include the plugins we need
 USE_OSGPLUGIN(bmp)
-USE_OSGPLUGIN(curl)
+#ifdef BUILD_WITH_OSG_CURL_PLUGIN
+	USE_OSGPLUGIN(curl)
+#endif
 USE_OSGPLUGIN(dds)
 USE_OSGPLUGIN(freetype)
 USE_OSGPLUGIN(jpeg)
