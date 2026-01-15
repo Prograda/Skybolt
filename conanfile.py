@@ -54,6 +54,7 @@ class SkyboltConan(ConanFile):
         self.requires("earcut/2.2.3")
         self.requires("glm/0.9.9.8", transitive_headers=True)
         self.requires("nlohmann_json/3.10.5", transitive_headers=True)
+        self.requires("fontconfig/2.17.1", override=True) # Transitive dependency to resolve conflict between qt and openscenegraph
 		
         self.include_package("cxxtimer", "1.0.0")
         self.include_package("px_sched", "1.0.0", transitive_headers=True)
@@ -121,3 +122,6 @@ class SkyboltConan(ConanFile):
 		
         if self.options.enable_fft_ocean:
             self.cpp_info.libs.append("FftOcean")
+
+        if self.options.enable_qt:
+            self.cpp_info.libs.append("SkyboltEngineQt")

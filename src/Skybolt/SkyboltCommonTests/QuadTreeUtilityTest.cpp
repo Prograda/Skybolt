@@ -9,11 +9,11 @@
 #include <SkyboltCommon/NumericComparison.h>
 #include <SkyboltCommon/Math/QuadTreeUtility.h>
 
-#include <osg/Vec2>
+#include <glm/glm.hpp>
 
 using namespace skybolt;
 
-struct Tile : QuadTreeTile<osg::Vec2, Tile>
+struct Tile : QuadTreeTile<glm::dvec2, Tile>
 {
 	bool keep = true;
 };
@@ -22,8 +22,8 @@ typedef QuadTree<Tile> Tree;
 
 Tree createTree()
 {
-	Box2T<osg::Vec2> bounds(osg::Vec2(0, 0), osg::Vec2(1, 1));
-	return QuadTree<Tile>(createTileT<Tile, osg::Vec2>, QuadTreeTileKey(0, 0, 0), bounds);
+	Box2T<glm::dvec2> bounds(glm::dvec2(0, 0), glm::dvec2(1, 1));
+	return QuadTree<Tile>(createTileT<Tile, glm::dvec2>, QuadTreeTileKey(0, 0, 0), bounds);
 }
 
 TEST_CASE("visitHierarchyToKey")

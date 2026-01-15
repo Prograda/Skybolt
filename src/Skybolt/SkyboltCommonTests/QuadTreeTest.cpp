@@ -9,11 +9,11 @@
 #include <SkyboltCommon/NumericComparison.h>
 #include <SkyboltCommon/Math/QuadTreeUtility.h>
 
-#include <osg/Vec2>
+#include <glm/glm.hpp>
 
 using namespace skybolt;
 
-typedef DefaultTile<osg::Vec2> Tile;
+typedef DefaultTile<glm::dvec2> Tile;
 
 TEST_CASE("createAncestorKey")
 {
@@ -30,11 +30,11 @@ TEST_CASE("getKeyLatLonBounds")
 	key.y = 0;
 
 	float epsilon = 1e-7f;
-	auto bounds = getKeyLonLatBounds<osg::Vec2>(key);
-	CHECK(bounds.minimum.x() == Approx(-math::halfPiF()).margin(epsilon));
-	CHECK(bounds.maximum.x() == Approx(0).margin(epsilon));
-	CHECK(bounds.minimum.y() == Approx(0).margin(epsilon));
-	CHECK(bounds.maximum.y() == Approx(math::halfPiF()).margin(epsilon));
+	auto bounds = getKeyLonLatBounds<glm::dvec2>(key);
+	CHECK(bounds.minimum.x == Approx(-math::halfPiF()).margin(epsilon));
+	CHECK(bounds.maximum.x == Approx(0).margin(epsilon));
+	CHECK(bounds.minimum.y == Approx(0).margin(epsilon));
+	CHECK(bounds.maximum.y == Approx(math::halfPiF()).margin(epsilon));
 }
 
 
@@ -45,18 +45,18 @@ TEST_CASE("getKeyLonLatBounds")
 	key.x = 1;
 	key.y = 0;
 
-	auto bounds = getKeyLonLatBounds<osg::Vec2>(key);
-	auto boundsSwapped = getKeyLatLonBounds<osg::Vec2>(key);
-	CHECK(bounds.minimum.x() == boundsSwapped.minimum.y());
-	CHECK(bounds.maximum.x() == boundsSwapped.maximum.y());
-	CHECK(bounds.minimum.y() == boundsSwapped.minimum.x());
-	CHECK(bounds.maximum.y() == boundsSwapped.maximum.x());
+	auto bounds = getKeyLonLatBounds<glm::dvec2>(key);
+	auto boundsSwapped = getKeyLatLonBounds<glm::dvec2>(key);
+	CHECK(bounds.minimum.x == boundsSwapped.minimum.y);
+	CHECK(bounds.maximum.x == boundsSwapped.maximum.y);
+	CHECK(bounds.minimum.y == boundsSwapped.minimum.x);
+	CHECK(bounds.maximum.y == boundsSwapped.maximum.x);
 }
 
 TEST_CASE("getKeyAtLevelIntersectingPoint returns key that contains the point")
 {
-	osg::Vec2 point(0.234f, 0.567f);
+	glm::dvec2 point(0.234f, 0.567f);
 	QuadTreeTileKey key = getKeyAtLevelIntersectingLonLatPoint(4, point);
-	auto bounds = getKeyLonLatBounds<osg::Vec2>(key);
+	auto bounds = getKeyLonLatBounds<glm::dvec2>(key);
 	CHECK(bounds.intersects(point));
 }

@@ -48,7 +48,7 @@ void readScenario(refl::TypeRegistry& typeRegistry, Scenario& scenario, const En
 	SecondsD startTime = readOptionalOrDefault(json, "startTime", SecondsD(0));
 
 	scenario.startJulianDate = json.at("julianDate");
-	scenario.timeSource.setRange(TimeRange(startTime, startTime + json.at("duration")));
+	scenario.timeSource.setRange(TimeRange(startTime, startTime + json.at("duration").get<double>()));
 	scenario.timeSource.setTime(readOptionalOrDefault(json, "currentTime", SecondsD(0)));
 	scenario.timelineMode = readTimelineMode(readOptionalOrDefault<std::string>(json, "timelineMode", "live"));
 

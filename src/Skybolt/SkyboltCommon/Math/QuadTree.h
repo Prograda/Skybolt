@@ -201,12 +201,12 @@ struct QuadTree
 		int y = tile.key.y * 2;
 		int level = tile.key.level + 1;
 
-		typename TileT::VectorType size = tile.bounds.size() / 2;
+		typename TileT::VectorType size = tile.bounds.size() / 2.0;
 		typename TileT::VectorType center = tile.bounds.minimum + size;
-		typename TileT::VectorType centerE(tile.bounds.maximum.x(), center.y());
-		typename TileT::VectorType centerW(tile.bounds.minimum.x(), center.y());
-		typename TileT::VectorType centerN(center.x(), tile.bounds.maximum.y());
-		typename TileT::VectorType centerS(center.x(), tile.bounds.minimum.y());
+		typename TileT::VectorType centerE(tile.bounds.maximum[0], center[1]);
+		typename TileT::VectorType centerW(tile.bounds.minimum[0], center[1]);
+		typename TileT::VectorType centerN(center[0], tile.bounds.maximum[1]);
+		typename TileT::VectorType centerS(center[0], tile.bounds.minimum[1]);
 
 		tile.children[0] = mTileCreator(QuadTreeTileKey(level, x, y), Box2T<typename TileT::VectorType>(centerW, centerN)); // north west
 		tile.children[1] = mTileCreator(QuadTreeTileKey(level, x + 1, y), Box2T<typename TileT::VectorType>(center, tile.bounds.maximum)); // north east

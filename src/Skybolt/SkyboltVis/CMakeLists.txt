@@ -22,7 +22,7 @@ if (OSG_STATIC_LIBS)
 	)
 endif()
 
-find_package(OSG REQUIRED COMPONENTS osg osgDB osgGA osgText osgUtil osgViewer ${OSG_STATIC_LINK_PLUGIN_NAMES})
+find_package(OpenSceneGraph REQUIRED COMPONENTS osg osgDB osgGA osgText osgUtil osgViewer ${OSG_STATIC_LINK_PLUGIN_NAMES})
 include_directories(${OSG_INCLUDE_DIR})
 
 find_package(OpenThreads)
@@ -37,13 +37,22 @@ if (SKYBOLT_USE_DELL_XPS_RTT_FIX)
 	add_definitions(-USE_DELL_XPS_RTT_FIX)
 endif()
 
+set(OSG_STATIC_LINK_PLUGIN_TARGET_NAMES ${OSG_STATIC_LINK_PLUGIN_NAMES})
+list(TRANSFORM OSG_STATIC_LINK_PLUGIN_TARGET_NAMES PREPEND "openscenegraph-mr::")
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(LIBRARIES
 	SkyboltCommon
 	SkyboltSim
 	Boost::boost
 	Boost::log
-	${OSG_LIBRARIES}
+	openscenegraph-mr::osg
+	openscenegraph-mr::osgDB
+	openscenegraph-mr::osgGA
+	openscenegraph-mr::osgText
+	openscenegraph-mr::osgUtil
+	openscenegraph-mr::osgViewer
+	${OSG_STATIC_LINK_PLUGIN_TARGET_NAMES}
 	${OPENTHREADS_LIBRARIES}
 	${muFFT_LIBRARIES}
 	cxxtimer::cxxtimer
@@ -75,10 +84,8 @@ target_link_libraries(${LIB_NAME} ${LIBRARIES})
 
 skybolt_install(${LIB_NAME})
 
-
 # Install OSG plugins, which are not tracked by CMake runtime dependency system
-cmake_path(GET OSG_OSG_LIBRARY PARENT_PATH PACKAGE_FOLDER) # Get OSG packgae /lib folder
-cmake_path(GET PACKAGE_FOLDER PARENT_PATH PACKAGE_FOLDER) # Get OSG package folder
+cmake_path(GET OpenSceneGraph_INCLUDE_DIR PARENT_PATH PACKAGE_FOLDER) # Get OSG packgae /lib folder
 file(GLOB OSG_PLUGINS_DIR "${PACKAGE_FOLDER}/bin/osgPlugins*")
 
 if(OSG_PLUGINS_DIR)

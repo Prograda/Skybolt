@@ -1,6 +1,7 @@
 #pragma once
 
 #include <assert.h>
+#include <type_traits>
 
 namespace skybolt {
 	

@@ -15,7 +15,7 @@ def build(skybolt_source_dir: Path, skybolt_build_dir: Path):
     Build Skybolt using conan. This will also build dependencies if required.
     """
     logging.info(f"Building...")
-    sp.run(f"conan build {skybolt_source_dir} --output-folder={skybolt_build_dir}  -o openscenegraph-mr/*:shared=True -o enable_python=True -o enable_bullet=True --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True --lockfile-partial", shell=True, check=True)
+    sp.run(f"conan build {skybolt_source_dir} --output-folder={skybolt_build_dir}  -o openscenegraph-mr/*:shared=True -o qt/*:shared=True -o enable_python=True -o enable_bullet=True --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True --lockfile={skybolt_source_dir}/conan-shared.lock --lockfile-partial", shell=True, check=True)
 
 
 def copy_tree(source_dir: Path, destination_dir: Path):
@@ -64,8 +64,8 @@ BUILD_STAGES = ["build", "package", "package_docs"]
 if __name__ == "__main__":
     # Read command line arguments
     parser = argparse.ArgumentParser(description="Build and package Skybolt")
-    parser.add_argument("--skybolt_source_dir", type=str, help="Directory where skybolt source code is located")
-    parser.add_argument("--output_dir", type=str, help="Directory to output package to")
+    parser.add_argument("--skybolt-source-dir", type=str, help="Directory where skybolt source code is located")
+    parser.add_argument("--output-dir", type=str, help="Directory to output package to")
     parser.add_argument("--stage", type=str, default="package_docs", help="Name of the stage to run. Preceeding stages will also run unless --only flag is set.")
     parser.add_argument("--only", action="store_true", help="Only run the stage given in --stage, skipping preceeding stages"),
 

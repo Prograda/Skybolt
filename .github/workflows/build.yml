@@ -50,18 +50,32 @@ jobs:
       run: |
         conan profile detect
         echo "compiler.cppstd=17" >> ~/.conan2/profiles/default  # Set cppstd to 17
+        echo "qt/*:compiler.cppstd=gnu20" >> ~/.conan2/profiles/default # Work around issue https://github.com/conan-io/conan-center-index/issues/27912
+        # Options to resolve qt compilation issues
+        echo [options] >> ~/.conan2/profiles/default
+        echo "qt/*:openssl=False" >> ~/.conan2/profiles/default
+        echo "qt/*:with_pq=False" >> ~/.conan2/profiles/default
+
         export CONAN_SYSREQUIRES_MODE=enabled
     - name: Configure conan (Windows)
       if: runner.os == 'Windows'
       run: |
         conan profile detect
+    - name: Cache Conan Packages
+      if: always() # Save cache even if the build fails
+      uses: actions/cache@v4
+      with:
+        path: ~/.conan2
+        key: conan-${{ runner.os }}-${{ hashFiles('conanfile.py') }}
+        restore-keys: |
+          conan-${{ runner.os }}-
     - name: Build
       run: |
-        python3 ${{github.workspace}}/Tools/BuildScripts/build.py ${{github.workspace}} ${{env.packageDir}} --stage package
+        python3 ${{github.workspace}}/Tools/BuildScripts/build.py --skybolt-source-dir=${{github.workspace}} --output-dir=${{env.packageDir}} --stage package
     - name: Build docs
       if: inputs.build_docs
       run: |
-        python3 ${{github.workspace}}/Tools/BuildScripts/build.py ${{github.workspace}} ${{env.packageDir}} --stage package_docs --only
+        python3 ${{github.workspace}}/Tools/BuildScripts/build.py --skybolt-source-dir=${{github.workspace}} --output-dir=${{env.packageDir}} --stage package_docs --only
     - name: Cmake test
       run: |
         cd ${{env.packageDir}}/Build
