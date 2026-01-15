@@ -1,0 +1,75 @@
+{
+	"components": [
+		{"node": {
+		}},
+		{"motion": {
+		}},
+		{"controlInputs": {
+		}},
+		{"dynamicBody": {
+			"mass": 700,
+			"size": [3, 1.8, 1.0],
+			"centerOfMass": [0, 0, 0.5],
+			"momentOfInertia": [500, 3600, 3300]
+		}},
+		{"wheels": [{
+				"attachmentPoint": [1, -0.6, 0.3],
+				"wheelRadius": 0.25,
+				"maxSuspensionTravelLength": 0.2,
+				"stiffness": 20,
+				"dampingCompression": 0.25,
+				"dampingRelaxation": 0.2,
+				"steeringAngleDeg": 45,
+				"drivenByEngine": true
+			},{
+				"attachmentPoint": [1, 0.6, 0.3],
+				"wheelRadius": 0.25,
+				"maxSuspensionTravelLength": 0.2,
+				"stiffness": 20,
+				"dampingCompression": 0.25,
+				"dampingRelaxation": 0.2,
+				"steeringAngleDeg": 45,
+				"drivenByEngine": true
+			},{
+				"attachmentPoint": [-1, -0.6, 0.3],
+				"wheelRadius": 0.25,
+				"maxSuspensionTravelLength": 0.2,
+				"stiffness": 20,
+				"dampingCompression": 0.25,
+				"dampingRelaxation": 0.2
+			},{
+				"attachmentPoint": [-1, 0.6, 0.3],
+				"wheelRadius": 0.25,
+				"maxSuspensionTravelLength": 0.2,
+				"stiffness": 20,
+				"dampingCompression": 0.25,
+				"dampingRelaxation": 0.2
+			}
+		]},
+		{"drivetrain": {
+			"maxForce": 2000
+		}},
+		{"fuselage": {
+			"momentMultiplier": 1,
+			"pitchDueToAngleOfAttack": 0,
+			"yawDueToSideSlipAngle": 0,
+			"dragConstant": [1.5, 10, 10]
+		}},
+		{"visualModel": {
+			"model": "Models/Taxi/Taxi_Main.osgb",
+			"positionRelBody": [0, 0, 0],
+			"uniformSpecular": 0.03,
+			"roughness": 0.8
+		}},
+		{"attachmentPoint": {
+			"name": "cockpit",
+			"positionRelBody": [0.05, 0.3, -0.38]
+		}},
+		{"assetDescription": {
+			"description": "3d model licenced under Creative Commons Attribution (CC BY)",
+			"sourceUrl":"https://blendswap.com/blend/28524",
+			"authors": ["3d model: sudeepsingh"]
+		}}
+		
+	]
+}

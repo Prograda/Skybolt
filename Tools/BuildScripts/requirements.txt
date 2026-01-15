@@ -1,11 +1,5 @@
 # Required to build executables
 conan>=2,<3
 
-# Required to download asset packages
-# FIXME: Max version of dvc and boto restricted to versions without S3 data integrity checks as our server storage does not support it yet.
-# See https://www.backblaze.com/docs/en/cloud-storage-use-the-aws-sdk-for-python-with-backblaze-b2?highlight=x-amz-checksum-crc32
-dvc[s3]>=3,<=3.55.2
-boto3>=1.28.0,<=1.35.99
-
 # Required to build documentation
 -r ./docs/requirements.txt

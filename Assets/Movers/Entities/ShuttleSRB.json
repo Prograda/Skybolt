@@ -1,0 +1,25 @@
+{
+	"components": [
+		{"node": {
+		}},
+		{"motion": {
+		}},
+		{"dynamicBody": {
+			"mass": 91000,
+			"size": [45, 3.7, 3.7]
+		}},
+		{"fuselage": {
+			"momentMultiplier": 1000
+		}},
+		{"visualModel": {
+			"model": "Models/ShuttleSRB/ShuttleSRB.osgt",
+			"positionRelBody": [0, 0, 0],
+			"orientationRelBody" : {"angleDeg":180, "axis":[1, 0, 0]}
+		}},
+		{"assetDescription": {
+			"description": "3d model in public domain",
+			"sourceUrl":"https://nasa3d.arc.nasa.gov/detail/shuttle-c2",
+			"authors": ["3d model: NASA"]
+		}}
+	]
+}

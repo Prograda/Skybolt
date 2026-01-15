@@ -1,0 +1,19 @@
+# Images
+*.gif           filter=lfs diff=lfs merge=lfs -text
+*.png           filter=lfs diff=lfs merge=lfs -text
+*.jpg           filter=lfs diff=lfs merge=lfs -text
+*.jpeg          filter=lfs diff=lfs merge=lfs -text
+*.dds           filter=lfs diff=lfs merge=lfs -text
+*.tga           filter=lfs diff=lfs merge=lfs -text
+*.tif           filter=lfs diff=lfs merge=lfs -text
+*.tiff          filter=lfs diff=lfs merge=lfs -text
+*.bmp           filter=lfs diff=lfs merge=lfs -text
+*.exr           filter=lfs diff=lfs merge=lfs -text
+
+# 3D models
+*.osgb          filter=lfs diff=lfs merge=lfs -text
+*.ive           filter=lfs diff=lfs merge=lfs -text
+
+# Disable EOL conversion for everything. This ensures all source files are cloned the same on ALL operating systems
+# to ensure consistent Conan recipe hash calculations.
+* -text

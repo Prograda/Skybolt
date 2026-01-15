@@ -66,7 +66,7 @@ osg::StateSet* createStateSet(osg::ref_ptr<osg::Program> program, const Uniforms
 	ss->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
 
 	// TODO: get rid of static and cache the texture to share for every BillboardForest instance. Try to put the TBO part in a subgraph that's different for each page, and share the rest in a common parent. See https://github.com/openscenegraph/OpenSceneGraph/blob/master/examples/osgforest/osgforest.cpp
-	static osg::ref_ptr<osg::Texture2D> albedoTexture = createSrgbTexture(readImageWithCorrectOrientation("Environment/Forest/spruceAtlas_side_albedo.tga"));
+	static osg::ref_ptr<osg::Texture2D> albedoTexture = createSrgbTexture(readImageWithCorrectOrientation("Environment/Forest/spruceAtlas_side_albedo.png"));
 	albedoTexture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
 	albedoTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
 	ss->setTextureAttributeAndModes(0, albedoTexture, osg::StateAttribute::ON);
@@ -124,7 +124,7 @@ void BillboardForest::addGeodes(osg::Group& node, const std::vector<Tree>& trees
 	osg::Geode* topGeode = createGeode(geometry);
 	osg::StateSet* ss = new osg::StateSet(*sideGeode->getStateSet(), osg::CopyOp::SHALLOW_COPY);
 	ss->setAttributeAndModes(topProgram, osg::StateAttribute::ON);
-	static osg::ref_ptr<osg::Texture2D> albedoTexture = new osg::Texture2D(readImageWithCorrectOrientation("Environment/Forest/spruceAtlas_top_albedo.tga"));
+	static osg::ref_ptr<osg::Texture2D> albedoTexture = new osg::Texture2D(readImageWithCorrectOrientation("Environment/Forest/spruceAtlas_top_albedo.png"));
 	albedoTexture->setInternalFormat(toSrgbInternalFormat(albedoTexture->getInternalFormat()));
 	ss->setTextureAttributeAndModes(0, albedoTexture, osg::StateAttribute::ON);
 	// TODO: Modify alpha channel of mipmaps to achieve consistent coverage

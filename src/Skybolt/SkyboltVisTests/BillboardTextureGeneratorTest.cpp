@@ -151,14 +151,14 @@ TEST_CASE("Generate billboard texture")
 	if (1)
 	{
 		Atlases atlases = generateImposterAtlas(filenames, osg::Vec2i(128, 256), 8, 0, BillboardTextureFitHeight);
-		osgDB::writeImageFile(*atlases.albedoMap, "spruceAtlas_side_albedo.tga");
-		osgDB::writeImageFile(*atlases.normalMap, "spruceAtlas_side_normal.tga");
+		osgDB::writeImageFile(*atlases.albedoMap, "spruceAtlas_side_albedo.png");
+		osgDB::writeImageFile(*atlases.normalMap, "spruceAtlas_side_normal.png");
 	}
 	else
 	{
 		Atlases atlases = generateImposterAtlas(filenames, osg::Vec2i(128, 128), 1, math::halfPiF(), BillboardTextureFitWidth);
-		osgDB::writeImageFile(*atlases.albedoMap, "spruceAtlas_top_albedo.tga");
-		osgDB::writeImageFile(*atlases.normalMap, "spruceAtlas_top_normal.tga");
+		osgDB::writeImageFile(*atlases.albedoMap, "spruceAtlas_top_albedo.png");
+		osgDB::writeImageFile(*atlases.normalMap, "spruceAtlas_top_normal.png");
 	}
 	*/
 }

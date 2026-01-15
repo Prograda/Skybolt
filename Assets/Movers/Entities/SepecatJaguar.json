@@ -1,0 +1,23 @@
+{
+	"components": [
+		{"node": {
+		}},
+		{"motion": {
+		}},
+		{"controlInputs": {
+		}},
+		{"visualModel": {
+			"model": "Models/SepecatJaguar/SepecatJaguar_Fuselage.osgb",
+			"positionRelBody": [0, 0, 0]
+		}},
+		{"attachmentPoint": {
+			"name": "cockpit",
+			"positionRelBody": [4.9818, 0, -0.6165]
+		}},
+		{"assetDescription": {
+			"description": "3d model licenced under Creative Commons Attribution (CC BY)",
+			"sourceUrl":"http://helijah.free.fr",
+			"authors": ["3d model: BARANGER Emmanuel (helijah)"]
+		}}
+	]
+}

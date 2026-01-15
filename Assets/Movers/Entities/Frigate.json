@@ -1,0 +1,21 @@
+{
+	"components": [
+		{"node": {
+		}},
+		{"motion": {
+		}},
+		{"shipWake": {
+			"type": "shipWake"
+		}},
+		{"visualModel": {
+			"model": "Models/Frigate/frigate.osgt",
+			"positionRelBody": [0, 0, 0],
+			"orientationRelBody" : {"angleDeg":180, "axis":[1, 0, 0]}
+		}},
+		{"assetDescription": {
+			"description": "Frigate 3d model licenced under Creative Commons Attribution 4.0 International (CC BY 4.0)",
+			"sourceUrl":"https://sketchfab.com/3d-models/low-poly-frigate-ship-with-helicopter-e35dab813fe34035b66ac15989b1e2be",
+			"authors": ["3d model: Duane's Mind (https://duanesmind.wixsite.com/3dportfolio)"]
+		}}
+	]
+}

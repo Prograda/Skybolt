@@ -1,0 +1,49 @@
+{
+	"components": [
+		{"node": {
+		}},
+		{"planet": {
+			"radius": 3389500,
+			"ocean": false,
+			"atmosphere": {}
+		}},
+		{"planetElevationTileSource": {
+			"tileSource": {
+				"url": "Core/Tiles/Earth/Elevation/{z}/{x}/{y}.png",
+				"projection": "globalGeodetic",
+				"format": "xyz",
+				"cache": false,
+				"maxLevel": 10
+			}
+		}},
+		{"visualPlanet": {
+			"surface": {
+				"albedo": {
+					"comment": "Map obtained from https://www.openplanetary.org/opm-basemaps/global-viking-mdim2-1-colorized-mosaic",
+					"url": "http://s3-eu-west-1.amazonaws.com/whereonmars.cartodb.net/celestia_mars-shaded-16k_global/{z}/{x}/{y}.png",
+					"projection": "sphericalMercator",
+					"format": "xyz",
+					"yTileOriginAtBottom": true,
+					"cache": true,
+					"maxLevel": 4
+				}
+			},
+			"atmosphere": {
+				"reyleighScatteringCoefficientTable": {
+					"coefficients": [5.8e-6, 5.8e-6, 20.0e-6],
+					"wavelengthsNm": [440, 510, 680]
+				},
+				"rayleighScaleHeight": 11000.0,
+				"mieScaleHeight": 1200.0,
+				"mieAngstromAlpha": 0.0,
+				"mieAngstromBeta": 5.328e-3,
+				"mieSingleScatteringAlbedo": 0.9,
+				"miePhaseFunctionG": 0.8
+			}
+		}},
+		{"planetKinematicBody": {}},
+		{"scenarioMetadata": {
+			"scenarioObjectDirectory": "Celestial"
+		}}
+	]
+}

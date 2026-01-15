@@ -1,0 +1,74 @@
+{
+	"facades": [
+		{
+			"albedoTexture": "Environment/Facade/Facade001_2K_Color.jpg",
+			"storiesInTexture": 10,
+			"horizontalSectionsInTexture": 16
+		},
+		{
+			"albedoTexture": "Environment/Facade/Facade006_2K_Color.jpg",
+			"storiesInTexture": 8,
+			"horizontalSectionsInTexture": 14
+		},
+		{
+			"albedoTexture": "Environment/Facade/photos_2017_7_6_fst_building-facade-windows.jpg",
+			"storiesInTexture": 7,
+			"horizontalSectionsInTexture": 7
+		},
+		{
+			"albedoTexture": "Environment/Facade/OpenGameArt/apartment_block6.png",
+			"storiesInTexture": 5,
+			"horizontalSectionsInTexture": 6
+		},
+		{
+			"albedoTexture": "Environment/Facade/OpenGameArt/apartments1.jpg",
+			"storiesInTexture": 9,
+			"horizontalSectionsInTexture": 19
+		},
+		{
+			"albedoTexture": "Environment/Facade/OpenGameArt/apartments2_side.png",
+			"storiesInTexture": 3,
+			"horizontalSectionsInTexture": 4
+		},
+		{
+			"albedoTexture": "Environment/Facade/OpenGameArt/apartments4.png",
+			"storiesInTexture": 7,
+			"horizontalSectionsInTexture": 9
+		},
+		{
+			"albedoTexture": "Environment/Facade/OpenGameArt/building_jmu2.png",
+			"storiesInTexture": 7,
+			"horizontalSectionsInTexture": 6
+		},
+		{
+			"albedoTexture": "Environment/Facade/OpenGameArt/building_office2.png",
+			"storiesInTexture": 2,
+			"horizontalSectionsInTexture": 6
+		},
+		{	"albedoTexture": "Environment/Facade/OpenGameArt/building_office4.png",
+			"storiesInTexture": 2,
+			"horizontalSectionsInTexture": 4
+		},
+		{
+			"albedoTexture": "Environment/Facade/OpenGameArt/building_office7.png",
+			"storiesInTexture": 5,
+			"horizontalSectionsInTexture": 3
+		}, 
+		{
+			"albedoTexture": "Environment/Facade/OpenGameArt/building_office8.png",
+			"storiesInTexture": 5,
+			"horizontalSectionsInTexture": 7
+		}
+	],
+	"roofs": [
+		{
+			"albedoTexture": "Environment/Concrete/Concrete006_2K_Color_Brightened.jpg"
+		},
+		{
+			"albedoTexture": "Environment/Concrete/Concrete010_2K_Color.jpg"
+		},
+		{	
+			"albedoTexture": "Environment/Concrete/Concrete017_2K_Color.jpg"
+		}
+	]
+}

@@ -1,0 +1,47 @@
+{
+	"components": [
+		{"node": {
+		}},
+		{"motion": {
+		}},
+		{"controlInputs": {
+		}},
+		{"dynamicBody": {
+			"mass": 78000,
+			"size": [37, 6.7, 6.7]
+		}},
+		{"fuselage": {
+			"momentMultiplier": 100000
+		}},
+		{"rocketMotor": {
+			"maxThrust": 5300000
+		}},
+		{"reactionControlSystem": {
+			"torque": [50000, 50000, 50000]
+		}},
+		{"attachment": {
+			"entityTemplate": "ShuttleET",
+			"positionRelBody": [13, 0, 7]
+		}},
+		{"attachment": {
+			"entityTemplate": "ShuttleSRB",
+			"positionRelBody": [4.5, -5.5, 7]
+		}},
+		{"attachment": {
+			"entityTemplate": "ShuttleSRB",
+			"positionRelBody": [4.5, 5.5, 7]
+		}},
+		{"visualModel": {
+			"model": "Models/Shuttle/Shuttle_Main.osgb"
+		}},
+		{"attachmentPoint": {
+			"name": "cockpit",
+			"positionRelBody": [3.67, 0.6766, 0.1082]
+		}},
+		{"assetDescription": {
+			"description": "3d model in public domain",
+			"sourceUrl":"https://nasa3d.arc.nasa.gov/detail/sso-3ds",
+			"authors": ["3d model: NASA"]
+		}}
+	]
+}

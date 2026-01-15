@@ -1,0 +1,78 @@
+{
+	"components": [
+		{"node": {
+		}},
+		{"planet": {
+			"radius": 6371000,
+			"ocean": true,
+			"atmosphere": {}
+		}},
+		{"planetElevationTileSource": {
+			"tileSource": {
+				"url": "http://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token={key}",
+				"projection": "sphericalMercator",
+				"format": "mapboxElevation",
+				"cache": true,
+				"maxLevel": 14,
+				"apiKeyName": "mapbox"
+			}
+		}},
+		{"visualPlanet": {
+			"surface": {
+				"albedo": {
+				  "url": "http://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg?access_token={key}",
+				  "projection": "sphericalMercator",
+				  "format": "xyz",
+				  "cache": true,
+				  "maxLevel": 15,
+				  "apiKeyName": "mapbox"
+				},
+				"attribute": {
+					"url": "Tiles/Earth/Attributes/{z}/{x}/{y}.png",
+					"projection": "globalGeodetic",
+					"format": "xyz",
+					"cache": false,
+					"minLevel": 10,
+					"maxLevel": 12
+				},
+				"uniformDetail_disabled": {
+					"texture": "Environment/Ground/Ground026_1K_Color.jpg"
+				},
+				"albedoToDetail_disabled": {
+					"textures": [
+						"Environment/Ground/Ground026_1K_Color.jpg",
+						"Environment/Ground/TexturesCom_Grass0138_1_seamless_S-adjusted.jpg",
+						"Environment/Ground/TexturesCom_Grass0059_1_seamless_S.jpg"
+					]
+				}
+			},
+			"features": {
+				"directory": "Tiles/Earth/Features",
+				"buildingTypesFilename": "Environment/BuildingTypes.json"
+			},
+			"atmosphere": {
+				"earthReyleighScatteringCoefficient": 1.24062e-6,
+				"rayleighScaleHeight": 8000.0,
+				"mieScaleHeight": 1200.0,
+				"mieAngstromAlpha": 0.0,
+				"mieAngstromBeta": 5.328e-3,
+				"mieSingleScatteringAlbedo": 0.9,
+				"miePhaseFunctionG": 0.93,
+				"useEarthOzone": true
+			},
+			"clouds": {
+				"map": "Environment/Cloud/cloud_combined_8192.png"
+			},
+			"forest": {
+				"minLevel": 11,
+				"maxLevel": 12,
+				"treesPerLinearMeter": 0.04,
+				"treeVisibilityRangeMeters": 12000
+			}
+		}},
+		{"planetKinematicBody": {}},
+		{"scenarioMetadata": {
+			"scenarioObjectDirectory": "Celestial"
+		}}
+	]
+}

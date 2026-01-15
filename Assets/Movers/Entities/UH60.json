@@ -1,0 +1,96 @@
+{
+	"components": [
+		{"node": {
+		}},
+		{"motion": {
+		}},
+		{"controlInputs": {
+		}},
+		{"dynamicBody": {
+			"mass": 6000,
+			"size": [19.8, 4, 2.5],
+			"centerOfMass": [0.755, 0, 0],
+			"momentOfInertia": [5000, 36000, 33000]
+		}},
+		{"scenarioIdentity": {
+			"domain": "air",
+			"side": "blue"
+		}},
+		{"wheels": [{
+				"attachmentPoint": [1.92, -1.36, 1.1],
+				"wheelRadius": 0.3,
+				"maxSuspensionTravelLength": 0.25,
+				"stiffness": 25,
+				"dampingCompression": 0.25,
+				"dampingRelaxation": 0.2
+			},{
+				"attachmentPoint": [1.92, 1.36, 1.1],
+				"wheelRadius": 0.3,
+				"maxSuspensionTravelLength": 0.25,
+				"stiffness": 25,
+				"dampingCompression": 0.25,
+				"dampingRelaxation": 0.2
+			},{
+				"attachmentPoint": [-6.8, -0.2, 1.1],
+				"wheelRadius": 0.25,
+				"maxSuspensionTravelLength": 0.25,
+				"stiffness": 4,
+				"dampingCompression": 0.25,
+				"dampingRelaxation": 0.2
+			},{
+				"attachmentPoint": [-6.8, 0.2, 1.1],
+				"wheelRadius": 0.25,
+				"maxSuspensionTravelLength": 0.25,
+				"stiffness": 4,
+				"dampingCompression": 0.25,
+				"dampingRelaxation": 0.2
+			}
+		]},
+		{"fuselage": {
+			"momentMultiplier": 1000,
+			"pitchDueToAngleOfAttack": -0.002,
+			"yawDueToSideSlipAngle": -0.002,
+			"dragConstant": [1.5, 30, 30]
+		}},
+		{"mainRotor": {
+			"name": "mainRotor1",
+			"maxRpm": 324,
+			"diskRadius": 8.18,
+			"positionRelBody": [0.8346, 0, -1.5534],
+			"orientationRelBody": {"angleDeg":0, "axis":[ 0, 1, 0]}
+		}},
+		{"tailRotor": {
+			"name": "tailRotor1",
+			"rpmMultiplier": -200,
+			"positionRelBody": [-8.9844, 0.3785, -1.8014],
+			"orientationRelBody": {"angleDeg":69, "axis":[ 1, 0, 0]}
+		}},
+		{"visualModel": {
+			"model": "Models/UH60/UH60_Fuselage.osgb",
+			"positionRelBody": [0, 0, 0],
+			"uniformSpecular": 0.03,
+			"roughness": 0.8
+		}},
+		{"visualMainRotor": {
+			"model": "Models/UH60/UH60_MainRotor.osgb",
+			"simComponent": "mainRotor"
+		}},
+		{"visualTailRotor": {
+			"model": "Models/UH60/UH60_TailRotor.osgb",
+			"simComponent": "tailRotor1"
+		}},
+		{"attachmentPoint": {
+			"name": "cockpit",
+			"positionRelBody": [3.67, 0.6766, 0.1082]
+		}},
+		{"shipWake": {
+			"type": "rotorWash"
+		}},
+		{"assetDescription": {
+			"description": "3d model licenced under Creative Commons Attribution (CC BY)",
+			"sourceUrl":"http://helijah.free.fr",
+			"authors": ["3d model: BARANGER Emmanuel (helijah)"]
+		}}
+		
+	]
+}
