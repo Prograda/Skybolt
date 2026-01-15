@@ -191,7 +191,7 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 			{
 				images->attributeMapImage = getOrCreateImage(*attributeKey, size_t(CacheIndex::Attribute), [this, cancelSupplier](const QuadTreeTileKey& key) {
 					osg::ref_ptr<osg::Image> image = attributeLayer->createImage(key, cancelSupplier);
-					if (image)
+					if (image && mAttributeMapProcessing == AttributeMapProcessing::ConvertNlcdAttributeColors)
 					{
 						image = convertAttributeMap(*image, getNlcdAttributeColors());
 					}

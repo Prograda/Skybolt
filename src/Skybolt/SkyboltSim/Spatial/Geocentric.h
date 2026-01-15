@@ -29,7 +29,7 @@ Quaternion latLonToGeocentricLtpOrientation(const LatLon& latLon);
 //! @returns the north-east-down local-tangent-plane orientation for a geocentric point
 Matrix3 geocentricToLtpOrientation(const Vector3& pos);
 
-//! @returns the up direction of the local-tangent-plane at pos, or nullopt if position is inside planet
+//! @returns the up direction of the local-tangent-plane at pos, or nullopt if position is at center of planet
 std::optional<Vector3> calcLtpUpDirection(const Vector3& pos);
 
 } // namespace skybolt

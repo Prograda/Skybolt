@@ -27,6 +27,7 @@ XyzTileSource::XyzTileSource(const XyzTileSourceConfig& config) :
 	mApiKey(config.apiKey),
 	mCacheSha(skybolt::calcSha1(config.urlTemplate)),
 	mElevationRerange(config.elevationRerange),
+	mOptimizeElevationScale(config.optimizeElevationScale),
 	mImageReadOptions(new osgDB::Options())
 {
 	// Disable SSL verification CURL requests, so that we can read images from http:// tile servers.
@@ -80,7 +81,6 @@ osg::ref_ptr<osg::Image> XyzTileSource::createImage(const QuadTreeTileKey& key, 
 			}
 			image->setInternalTextureFormat(getHeightMapInternalTextureFormat());
 
-			setHeightMapElevationRerange(*image, *mElevationRerange);
 
 			HeightMapElevationBounds bounds = emptyHeightMapElevationBounds();
 			uint16_t* p = reinterpret_cast<uint16_t*>(image->data());
@@ -90,6 +90,30 @@ osg::ref_ptr<osg::Image> XyzTileSource::createImage(const QuadTreeTileKey& key, 
 				expand(bounds, getElevationForColorValue(*mElevationRerange, p[i]));
 			}
 			setHeightMapElevationBounds(*image, bounds);
+
+			// Optionally optimize scale to use full 0-65535 range.
+			// This minimizes stepping artifacts when the heightmap is sampled with bilinear filtering.
+			// Ideally this would be done when generating the heightmap tiles, rather than at load time.
+			if (mOptimizeElevationScale)
+			{
+				int minValue = getColorValueForElevation(*mElevationRerange, bounds.x());
+				int maxValue = getColorValueForElevation(*mElevationRerange, bounds.y());
+
+				// Scale to full range
+				float delta = float(maxValue - minValue);
+				float scale = 65535.f / delta;
+				for (int i = 0; i < elementCount; ++i)
+				{
+					p[i] = static_cast<uint16_t>(std::clamp(float(p[i] - minValue) * scale, 0.f, 65535.f));
+				}
+
+				// Store offset and scale as image metadata
+				setHeightMapElevationRerange(*image, rerangeElevationFromUInt16WithElevationBounds(bounds.x(), bounds.y()));
+			}
+			else
+			{
+				setHeightMapElevationRerange(*image, *mElevationRerange);
+			}
 		}
 	}
 

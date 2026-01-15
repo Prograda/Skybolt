@@ -120,6 +120,7 @@ void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)
 		ifChildExists(json, "elevationBounds", [&] (const nlohmann::json& v) {
 			xyzConfig.elevationRerange = readElevationRerange(v);
 		});
+		xyzConfig.optimizeElevationScale = readOptionalOrDefault(json, "optimizeElevationScale", false);
 
 		auto source = std::make_shared<XyzTileSource>(xyzConfig);
 		source->validate();

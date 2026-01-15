@@ -30,6 +30,7 @@ struct XyzTileSourceConfig
 
 	IntRangeInclusive levelRange;
 	std::optional<HeightMapElevationRerange> elevationRerange; //!< If provided, treat images as heightmaps storing elevation with the given rerange
+	bool optimizeElevationScale = false;
 };
 
 class XyzTileSource : public TileSourceWithMinMaxLevel
@@ -60,6 +61,7 @@ private:
 	const std::string mApiKey;
 	const std::string mCacheSha;
 	std::optional<HeightMapElevationRerange> mElevationRerange;
+	bool mOptimizeElevationScale;
 
 	osg::ref_ptr<osgDB::Options> mImageReadOptions;
 };

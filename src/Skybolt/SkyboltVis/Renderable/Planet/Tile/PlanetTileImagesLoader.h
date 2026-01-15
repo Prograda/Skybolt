@@ -23,6 +23,12 @@ struct PlanetTileImages : TileImages
 	std::optional<TileImage> attributeMapImage;
 };
 
+enum AttributeMapProcessing
+{
+	None,
+	ConvertNlcdAttributeColors
+};
+
 class PlanetTileImagesLoader : public TileImagesLoader
 {
 public:
@@ -39,13 +45,14 @@ public:
 		Attribute
 	};
 
-	PlanetTileImagesLoader(double planetRadius) : TileImagesLoader(4), mPlanetRadius(planetRadius) {}
+	PlanetTileImagesLoader(double planetRadius, AttributeMapProcessing attributeMapProcessing = AttributeMapProcessing::ConvertNlcdAttributeColors) : TileImagesLoader(4), mPlanetRadius(planetRadius), mAttributeMapProcessing(attributeMapProcessing) {}
 
 	//! May be called from multiple threads
 	TileImagesPtr load(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
 
 private:
 	const double mPlanetRadius;
+	const AttributeMapProcessing mAttributeMapProcessing;
 };
 
 } // namespace vis
