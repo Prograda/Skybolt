@@ -1,6 +1,6 @@
-import os, sys
-sys.path.extend(os.getenv("SKYBOLT_PYTHON_PATH").split(os.pathsep))
+import setup_environment
 
+setup_environment.setup_skybolt_environment() # Environment must be setup before importing skybolt
 import skybolt as sb
 
 visRoot = sb.VisRoot()
