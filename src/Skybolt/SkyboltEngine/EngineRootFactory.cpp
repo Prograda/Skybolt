@@ -31,8 +31,16 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const boost::program_optio
 {
 	std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(getAllPluginFilepathsInDirectories(getDefaultPluginDirs()));
 
-	nlohmann::json settings = readEngineSettings(params);
-	return create(enginePluginFactories, settings);
+	try
+	{
+		nlohmann::json settings = readEngineSettings(params);
+		return create(enginePluginFactories, settings);
+	}
+	catch (const std::exception& e)
+	{
+		// Catch and re-throw a copy of the exception to avoid issues with exceptions crossing shared library boundaries
+		throw std::exception(e);
+	}
 }
 
 std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFactory>& pluginFactories, const json& settings)
