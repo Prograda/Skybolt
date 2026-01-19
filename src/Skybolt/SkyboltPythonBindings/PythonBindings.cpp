@@ -27,11 +27,13 @@
 #include <SkyboltSim/CameraController/CameraController.h>
 #include <SkyboltSim/CameraController/CameraControllerSelector.h>
 #include <SkyboltSim/CameraController/EntityTargeter.h>
+#include <SkyboltSim/Components/AttacherComponent.h>
 #include <SkyboltSim/Components/CameraComponent.h>
 #include <SkyboltSim/Components/CameraControllerComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Spatial/Frustum.h>
+#include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Spatial/Orientation.h>
 #include <SkyboltSim/Spatial/Position.h>
@@ -236,6 +238,72 @@ static void loadScenarioFromJsonString(EngineRoot& engineRoot, const std::string
 	});
 }
 
+static std::string saveScenarioToJsonString(EngineRoot& engineRoot)
+{
+	nlohmann::json j;
+	j["scenario"] = writeScenario(*engineRoot.typeRegistry, *engineRoot.scenario);
+	return j.dump(4);
+}
+
+static std::optional<LatLonAlt> getPositionLla(const Entity& entity)
+{
+	std::optional<Vector3> position = getPosition(entity);
+	if (!position) { return std::nullopt; }
+
+	return toLatLonAlt(GeocentricPosition(*position)).position;
+}
+
+static void setPositionLla(Entity& entity, const LatLonAlt& lla)
+{
+	Vector3 position = toGeocentric(LatLonAltPosition(lla)).position;
+	setPosition(entity, position);
+}
+
+static std::optional<Vector3> getOrientationRpy(const Entity& entity)
+{
+	std::optional<Vector3> position = getPosition(entity);
+	if (!position) { return std::nullopt; }
+
+	std::optional<Quaternion> orientation = getOrientation(entity);
+	if (!orientation) { return std::nullopt; }
+
+	Quaternion ltpNed = toLtpNed(GeocentricOrientation(*orientation), geocentricToLatLon(*position)).orientation;
+	return math::eulerFromQuat(ltpNed);
+}
+
+static void setOrientationRpy(Entity& entity, const Vector3& rpy)
+{
+	std::optional<Vector3> position = getPosition(entity);
+	if (!position) { return; }
+
+	Quaternion orientation = toGeocentric(LtpNedOrientation(math::quatFromEuler(rpy)), geocentricToLatLon(*position)).orientation;
+	setOrientation(entity, orientation);
+}
+
+static std::optional<Vector3> getVelocityNed(const Entity& entity)
+{
+	std::optional<Vector3> velocity = getVelocity(entity);
+	if (!velocity) { return std::nullopt; }
+
+	std::optional<Vector3> position = getPosition(entity);
+	if (!position) { return std::nullopt; }
+
+	Matrix3 ltpOrientation = geocentricToLtpOrientation(*position);
+
+	return glm::transpose(ltpOrientation) * *velocity;
+}
+
+static void setVelocityNed(Entity& entity, const Vector3& velocity)
+{
+	std::optional<Vector3> position = getPosition(entity);
+	if (!position) { return; }
+
+	Matrix3 ltpOrientation = geocentricToLtpOrientation(*position);
+
+	setVelocity(entity, ltpOrientation * velocity);
+}
+
+
 PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
 
 PYBIND11_MODULE(skybolt, m) {
@@ -352,8 +420,8 @@ PYBIND11_MODULE(skybolt, m) {
 
 	py::class_<CameraComponent, std::shared_ptr<CameraComponent>, Component>(m, "CameraComponent")
 		.def_property("state",
-			[](const CameraComponent& c) { return c.getState(); },
-			[](CameraComponent& c, const CameraState& state) { CameraState& s = c.getState(); s = state; },
+			[](const CameraComponent& c) -> const CameraState& { return c.getState(); },
+			[](CameraComponent& c, const CameraState& state) { c.getState() = state; },
 			py::return_value_policy::reference_internal);
 
 	py::class_<CameraControllerSelector, std::shared_ptr<CameraControllerSelector>>(m, "CameraControllerSelector")
@@ -362,6 +430,14 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("setTargetId", &CameraControllerSelector::setTargetId);
 
 	py::class_<CameraControllerComponent, std::shared_ptr<CameraControllerComponent>, Component, CameraControllerSelector>(m, "CameraControllerComponent");
+
+	py::class_<AttacherComponent, std::shared_ptr<AttacherComponent>>(m, "AttacherComponent")
+		.def_readwrite("enabled", &AttacherComponent::enabled)
+		.def_readwrite("parentEntityId", &AttacherComponent::parentEntityId)
+		.def_readwrite("parentEntityAttachmentPoint", &AttacherComponent::parentEntityAttachmentPoint)
+		.def_readwrite("ownEntityAttachmentPoint", &AttacherComponent::ownEntityAttachmentPoint)
+		.def_readwrite("positionOffset", &AttacherComponent::positionOffset)
+		.def_readwrite("orientationOffset", &AttacherComponent::orientationOffset);
 
 	py::class_<EntityTargeter>(m, "EntityTargeter", "Interface for a class which references a target `Entity` by `EntityId`")
 		.def("getTargetId", &EntityTargeter::getTargetId)
@@ -375,20 +451,38 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("getPosition", [](Entity* entity) {
 			return *getPosition(*entity);
 		})
+		.def("getPositionLla", [](Entity* entity) {
+			return *getPositionLla(*entity);
+		})
 		.def("setPosition", [](Entity* entity, const Vector3& position) {
 			setPosition(*entity, position);
+		})
+		.def("setPositionLla", [](Entity* entity, const LatLonAlt& position) {
+			setPositionLla(*entity, position);
 		})
 		.def("getOrientation", [](Entity* entity) {
 			return *getOrientation(*entity);
 		})
+		.def("getOrientationRpy", [](Entity* entity) {
+			return *getOrientationRpy(*entity);
+		})
 		.def("setOrientation", [](Entity* entity, const Quaternion& orientation) {
 			setOrientation(*entity, orientation);
+		})
+		.def("setOrientationRpy", [](Entity* entity, const Vector3& orientation) {
+			setOrientationRpy(*entity, orientation);
 		})
 		.def("getVelocity", [](Entity* entity) {
 			return *getVelocity(*entity);
 		})
-		.def("setVelocity", [](Entity* entity, const Vector3& position) {
-			setVelocity(*entity, position);
+		.def("getVelocityNed", [](Entity* entity) {
+			return *getVelocityNed(*entity);
+		})
+		.def("setVelocity", [](Entity* entity, const Vector3& velocity) {
+			setVelocity(*entity, velocity);
+		})
+		.def("setVelocityNed", [](Entity* entity, const Vector3& velocity) {
+			setVelocityNed(*entity, velocity);
 		})
 		.def("getComponents", &Entity::getComponents)
 		.def("getComponentsOfType", &getComponentsOfTypeName)
@@ -422,7 +516,8 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_property_readonly("entityFactory", [](const EngineRoot& r) {return r.entityFactory.get(); }, py::return_value_policy::reference_internal)
 		.def_property_readonly("scenario", [](const EngineRoot& r) {return r.scenario.get(); }, py::return_value_policy::reference_internal)
 		.def("locateFile", [](const EngineRoot& r, const std::string& filename) { return value(r.fileLocator(filename)).value_or("").string(); })
-		.def("loadScenarioFromJson", loadScenarioFromJsonString);
+		.def("loadScenarioFromJson", loadScenarioFromJsonString)
+		.def("saveScenarioToJson", saveScenarioToJsonString);
 
 	py::class_<vis::Window, std::shared_ptr<vis::Window>>(m, "Window");
 
