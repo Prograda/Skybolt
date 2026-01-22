@@ -3,6 +3,7 @@ from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
 import os
 
 class SkyboltConan(ConanFile):
+	implements = ["auto_shared_fpic"]
     name = "skybolt"
     version = "1.7.0"
     settings = "os", "compiler", "arch", "build_type"
@@ -44,8 +45,8 @@ class SkyboltConan(ConanFile):
     def configure(self):
         self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
         self.options["bullet3"].double_precision = True
-        if self.settings.compiler == 'msvc':
-            del self.options.fPIC
+        if conanfile.options.get_safe("shared"):
+            conanfile.options.rm_safe("fPIC")
 
     def requirements(self):
         self.requires("boost/1.75.0", transitive_headers=True)
@@ -83,8 +84,6 @@ class SkyboltConan(ConanFile):
         tc.variables["OSG_STATIC_LIBS"] = str(not self.dependencies["openscenegraph-mr"].options.shared)
         tc.variables["SKYBOLT_PLUGINS_STATIC_BUILD"] = str(not self.options.shared_plugins)
         tc.variables["Skybolt_VERSION"] = self.version
-        if "fPIC" in self.options:
-            tc.variables["CMAKE_POSITION_INDEPENDENT_CODE"] = self.options.fPIC
 
         if self.options.enable_bullet:
             tc.variables["BUILD_BULLET_PLUGIN"] = "true"
