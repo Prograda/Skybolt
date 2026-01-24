@@ -3,7 +3,7 @@ from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
 import os
 
 class SkyboltConan(ConanFile):
-	implements = ["auto_shared_fpic"]
+    implements = ["auto_shared_fpic"]
     name = "skybolt"
     version = "1.7.0"
     settings = "os", "compiler", "arch", "build_type"
@@ -25,8 +25,7 @@ class SkyboltConan(ConanFile):
         "enable_qt": True,
         "shared": False,
         "shared_plugins": True,
-        "fPIC": True,
-        "qt/*:shared": True, # Use shared Qt to avoid Qt's LGPL viral static linking
+        "fPIC": True
     }
     generators = ["VirtualRunEnv"]
     exports = "Conan/*"
@@ -45,11 +44,11 @@ class SkyboltConan(ConanFile):
     def configure(self):
         self.options["openscenegraph-mr"].with_curl = True # Required for loading terrain tiles from http sources
         self.options["bullet3"].double_precision = True
-        if conanfile.options.get_safe("shared"):
-            conanfile.options.rm_safe("fPIC")
+        if self.options.get_safe("shared"):
+            self.options.rm_safe("fPIC")
 
     def requirements(self):
-        self.requires("boost/1.75.0", transitive_headers=True)
+        self.requires("boost/1.84.0", transitive_headers=True)
         self.requires("catch2/2.13.8")
         self.requires("cpp-httplib/0.10.1")
         self.requires("earcut/2.2.3")
@@ -75,7 +74,7 @@ class SkyboltConan(ConanFile):
             self.requires("pybind11/2.13.6")
             
         if self.options.enable_qt:
-            self.requires("qt/5.15.14", transitive_headers=True)
+            self.requires("qt/6.10.1", transitive_headers=True)
             self.include_package("skybolt-widgets", "1.0.0", transitive_headers=True)
 			
     def generate(self):

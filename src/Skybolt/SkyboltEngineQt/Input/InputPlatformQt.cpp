@@ -2,7 +2,6 @@
 #include "QtKeyCodeMapping.h"
 
 #include <QApplication>
-#include <QDesktopWidget>
 
 #include <assert.h>
 #include <boost/foreach.hpp>
@@ -197,7 +196,8 @@ protected:
 						mMouse->prevMousePosY = mouseEvent->pos().y();
 					}
 
-					QSize wrapDimensionsSize = QApplication::desktop()->size();
+					
+					QSize wrapDimensionsSize = QGuiApplication::primaryScreen()->size();;
 					QPoint wrapDimensions = QPoint(wrapDimensionsSize.width() - wrapMargin * 2, wrapDimensionsSize.height() - wrapMargin * 2);
 
 					int relX = calcWrappedDifference(*mMouse->prevMousePosX, mouseEvent->pos().x(), wrapDimensions.x());
@@ -329,7 +329,7 @@ protected:
 							mMouse->prevMousePosY = point.pos().y();
 						}
 
-						QSize wrapDimensionsSize = QApplication::desktop()->size();
+						QSize wrapDimensionsSize = QGuiApplication::primaryScreen()->size();;
 						QPoint wrapDimensions = QPoint(wrapDimensionsSize.width() - wrapMargin * 2, wrapDimensionsSize.height() - wrapMargin * 2);
 
 						int relX = calcWrappedDifference(*mMouse->prevMousePosX, point.pos().x(), wrapDimensions.x());

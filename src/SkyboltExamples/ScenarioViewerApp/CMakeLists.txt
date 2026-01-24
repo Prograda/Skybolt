@@ -6,14 +6,14 @@ FILE(GLOB UiSrc "*.ui")
 include_directories("../")
 include_directories("../../Skybolt")
 
-# Qt5
+# Qt
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
-find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Core Widgets REQUIRED)
 
-QT5_ADD_RESOURCES(SrcRccsSrc ${SrcRccs})
+QT6_ADD_RESOURCES(SrcRccsSrc ${SrcRccs})
 
-QT5_WRAP_UI(SrcUiHeaders ${UiSrc})
+QT6_WRAP_UI(SrcUiHeaders ${UiSrc})
 SET(SrcFiles ${SrcFiles} ${SrcUiHeaders} ${SrcRccsSrc})
 SOURCE_GROUP("Generated Ui Files" FILES ${SrcUiHeaders} ${SrcRccsSrc})
 

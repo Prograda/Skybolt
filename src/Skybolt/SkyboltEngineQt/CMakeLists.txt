@@ -8,22 +8,19 @@ include_directories("../../Skybolt")
 
 find_package(skybolt-widgets)
 
-# Qt5
+# Qt
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
-find_package(Qt5 COMPONENTS Core Gui Widgets OpenGL REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets OpenGL REQUIRED)
 
-QT5_ADD_RESOURCES(SrcRccsSrc ${SrcRccs})
+QT6_ADD_RESOURCES(SrcRccsSrc ${SrcRccs})
 
-QT5_WRAP_UI(SrcUiHeaders ${UiSrc})
+QT6_WRAP_UI(SrcUiHeaders ${UiSrc})
 SET(SrcFiles ${SrcFiles} ${SrcUiHeaders} ${SrcRccsSrc})
 SOURCE_GROUP("Generated Ui Files" FILES ${SrcUiHeaders} ${SrcRccsSrc})
 
 set(LIBS
-	Qt5::Core
-	Qt5::Gui
-	Qt5::OpenGL
-	Qt5::Widgets
+	qt::qt
 	SkyboltEngine
 	skybolt-widgets::skybolt-widgets
 )

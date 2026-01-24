@@ -177,7 +177,7 @@ static void displayApplicationError(const std::string &error)
 {
 	printf("Error: %s\n", error.c_str());
 	#ifdef WIN32
-	MessageBox(NULL, error.c_str(), "Exception", 0);
+	MessageBox(NULL, std::wstring(error.begin(), error.end()).c_str(), L"Exception", 0);
 	#endif
 }
 
