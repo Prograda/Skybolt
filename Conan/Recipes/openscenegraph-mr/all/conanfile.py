@@ -10,7 +10,7 @@ from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 from conan.tools.files import apply_conandata_patches, copy, export_conandata_patches, rm, rmdir, replace_in_file
 from conan.tools.scm import Git, Version
 
-required_conan_version = ">=1.53.0"
+required_conan_version = ">=2"
 
 
 class OpenSceneGraphConanFile(ConanFile):
@@ -81,7 +81,6 @@ class OpenSceneGraphConanFile(ConanFile):
         "opengl_profile": "gl2",
         "with_avfoundation": True,
     }
-    short_paths = True
 
     def export_sources(self):
         copy(self, "CMakeLists.txt", self.recipe_folder, self.export_sources_folder)
@@ -126,7 +125,7 @@ class OpenSceneGraphConanFile(ConanFile):
         self.requires("opengl/system")
 
         if self.options.use_fontconfig:
-            self.requires("fontconfig/2.15.0")
+            self.requires("fontconfig/[>=2.14.2 <3]")
 
         if self.options.get_safe("with_asio"):
             # Should these be private requires?
@@ -137,7 +136,7 @@ class OpenSceneGraphConanFile(ConanFile):
         if self.options.get_safe("with_dcmtk"):
             self.requires("dcmtk/3.6.7")
         if self.options.with_freetype:
-            self.requires("freetype/2.13.2")
+            self.requires("freetype/[>=2.13.2 <3]")
         if self.options.with_gdal:
             self.requires("gdal/3.8.3")
         if self.options.get_safe("with_gif"):
@@ -147,17 +146,17 @@ class OpenSceneGraphConanFile(ConanFile):
         if self.options.with_jasper:
             self.requires("jasper/4.2.0")
         if self.options.get_safe("with_jpeg") == "libjpeg":
-            self.requires("libjpeg/9e")
+            self.requires("libjpeg/[>=9e]")
         elif self.options.get_safe("with_jpeg") == "libjpeg-turbo":
             self.requires("libjpeg-turbo/3.0.2")
         elif self.options.get_safe("with_jpeg") == "mozjpeg":
-            self.requires("mozjpeg/4.1.5")
+            self.requires("mozjpeg/[>=4.1.5 <5]")
         if self.options.get_safe("with_openexr"):
-            self.requires("openexr/3.2.3")
+            self.requires("openexr/[>=3.2.3 <4]")
         if self.options.get_safe("with_png"):
-            self.requires("libpng/1.6.42")
+            self.requires("libpng/[>=1.6 <2]")
         if self.options.with_tiff:
-            self.requires("libtiff/4.6.0")
+            self.requires("libtiff/[>=4.6.0 <5]")
         if self.options.with_zlib:
             self.requires("zlib/[>=1.2.11 <2]")
 
@@ -246,11 +245,17 @@ class OpenSceneGraphConanFile(ConanFile):
         if is_apple_os(self):
             tc.preprocessor_definitions["GL_SILENCE_DEPRECATION"] = "1"
 
+        tc.cache_variables["CMAKE_POLICY_DEFAULT_CMP0042"] = "NEW"  # macOS: use @rpath for shared libs
+        tc.cache_variables["CMAKE_POLICY_VERSION_MINIMUM"] = "3.5" # CMake 4 support 
         tc.generate()
 
         deps = CMakeDeps(self)
         deps.set_property("freetype", "cmake_module_file_name", "Freetype")
         deps.set_property("giflib", "cmake_file_name", "GIFLIB")
+        deps.set_property("libjpeg-turbo", "cmake_file_name", "JPEG")
+        deps.set_property("libjpeg-turbo::jpeg", "cmake_target_name", "JPEG::JPEG")
+        deps.set_property("mozjpeg", "cmake_file_name", "JPEG")
+        deps.set_property("mozjpeg::libjpeg", "cmake_target_name", "JPEG::JPEG")
         deps.generate()
 
     def _patch_sources(self):
