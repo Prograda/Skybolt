@@ -521,12 +521,15 @@ static double maxSize(const LatLonBounds& box)
 	return std::max(size.x(), size.y());
 }
 
-static void addToTile(WorldFeatures::QuadTree& tree, FeatureTile& tile, const TreeCreatorParams& params, const BoundedFeature& feature)
+//! @returns true if feature was added to this tile or its children
+static bool addToTile(WorldFeatures::QuadTree& tree, FeatureTile& tile, const TreeCreatorParams& params, const BoundedFeature& feature)
 {
+	// If feature is inside tile's bounds
 	if (tile.bounds.intersects(feature.bounds.center()))
 	{
 		double minAllowedSize = maxSize(tile.bounds) * params.minFeatureSizeFraction;
 
+		// If feature is too small to put in this tile, try children
 		if (tile.key.level <= params.maxLodLevel && maxSize(feature.bounds) < minAllowedSize)
 		{
 			if (!tile.hasChildren())
@@ -535,14 +538,23 @@ static void addToTile(WorldFeatures::QuadTree& tree, FeatureTile& tile, const Tr
 			}
 			for (int i = 0; i < 4; ++i)
 			{
-				addToTile(tree, *tile.children[i], params, feature);
+				bool added = addToTile(tree, *tile.children[i], params, feature);
+				if (added)
+				{
+					// If tile as added to a child, return without trying other children to avoid duplicating the feature
+					return true;
+				}
 			}
+			return false;
 		}
 		else
 		{
+			// Put feature in this tile
 			tile.features.push_back(feature.feature);
+			return true;
 		}
 	}
+	return false;
 }
 
 WorldFeatures::WorldFeatures(WorldFeatures::QuadTree::TileCreator tileCreator) :
@@ -566,8 +578,11 @@ WorldFeatures createWorldFeatures(const TreeCreatorParams& params, const std::ve
 		BoundedFeature boundedFeature;
 		boundedFeature.feature = feature;
 		boundedFeature.bounds = feature->calcBounds();
-		addToTile(worldFeatures.tree.leftTree, worldFeatures.tree.leftTree.getRoot(), params, boundedFeature);
-		addToTile(worldFeatures.tree.rightTree, worldFeatures.tree.rightTree.getRoot(), params, boundedFeature);
+		bool added = addToTile(worldFeatures.tree.leftTree, worldFeatures.tree.leftTree.getRoot(), params, boundedFeature);
+		if (!added)
+		{
+			addToTile(worldFeatures.tree.rightTree, worldFeatures.tree.rightTree.getRoot(), params, boundedFeature);
+		}
 	}
 	
 	return worldFeatures;
