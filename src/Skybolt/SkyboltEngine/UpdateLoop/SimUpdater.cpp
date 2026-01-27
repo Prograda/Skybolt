@@ -54,9 +54,7 @@ void SimUpdater::advanceWallTime(SecondsD wallDt)
 		mAverageWallDt->addValue(wallDt);
 		double averageWallDt = mAverageWallDt->getResult();
 
-		double maxTimeRate = mActualTimeRate * maxWallDt / averageWallDt;
-		mActualTimeRate = std::min(mRequestedTimeRate, maxTimeRate);
-		simDt = std::min(averageWallDt * mActualTimeRate, mMaxSimDt);
+		simDt = std::min(averageWallDt * mRequestedTimeRate, mMaxSimDt);
 		mActualTimeRate = simDt / averageWallDt;
 	}
 	else
