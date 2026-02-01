@@ -5,7 +5,7 @@ import os
 class SkyboltConan(ConanFile):
     implements = ["auto_shared_fpic"]
     name = "skybolt"
-    version = "1.7.0"
+    version = "1.8.0"
     settings = "os", "compiler", "arch", "build_type"
     options = {
         "enable_bullet": [True, False],
