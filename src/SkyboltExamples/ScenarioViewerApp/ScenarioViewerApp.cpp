@@ -6,6 +6,7 @@
 #include <SkyboltEngine/EngineCommandLineParser.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineRootFactory.h>
+#include <SkyboltEngine/GetExecutablePath.h>
 #include <SkyboltEngine/Input/InputSystem.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
 #include <SkyboltEngine/UpdateLoop/SimUpdater.h>
@@ -366,6 +367,12 @@ int main(int argc, char** argv)
 {
 	try
 	{
+		file::Path executableDir = getExecutablePath();
+
+		QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+		QCoreApplication::setApplicationName("Skybolt Scenario Viewer");
+		QCoreApplication::addLibraryPath(QString::fromStdString((executableDir / "qtPlugins").string()));
+
 		return createAndExecuteApplication(argc, argv);
 	}
 	catch (const std::exception &e)

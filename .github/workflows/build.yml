@@ -61,6 +61,11 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         conan profile detect
+        echo "compiler.cppstd=17" >> ~/.conan2/profiles/default  # Set cppstd to 17
+        # Options to resolve qt compilation issues
+        echo [options] >> ~/.conan2/profiles/default
+        echo "qt/*:openssl=False" >> ~/.conan2/profiles/default
+        echo "qt/*:with_pq=False" >> ~/.conan2/profiles/default
     - name: Cache Conan Packages
       if: always() # Save cache even if the build fails
       uses: actions/cache@v4

@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019]
+        os: [windows-2022]
     with:
       os: ${{ matrix.os }}
       upload: true
@@ -40,12 +40,12 @@ jobs:
     steps:
     - uses: actions/download-artifact@v4
       with:
-        name: Skybolt-windows-2019
-        path: Skybolt-windows-2019
+        name: Skybolt-windows-2022
+        path: Skybolt-windows-2022
 
     - run: |
         find .
-        mv Skybolt-windows-2019/Skybolt.zip Skybolt-windows-2019.zip
+        mv Skybolt-windows-2022/Skybolt.zip Skybolt-windows-2022.zip
 
     - name: "Create release"
       uses: softprops/action-gh-release@v2
@@ -56,4 +56,4 @@ jobs:
         target_commitish: ${{ github.sha }}
         name: Skybolt ${{ inputs.version }}
         files: |
-          Skybolt-windows-2019.zip
+          Skybolt-windows-2022.zip
