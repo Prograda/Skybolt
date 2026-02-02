@@ -117,7 +117,6 @@ static osg::BoundingBoxf createBuildingRoof(const Building& building, int textur
 
 	std::vector<std::vector<osg::Vec3f>> polygon;
 	polygon.push_back(building.points);
-	std::reverse(polygon.front().begin(), polygon.front().end()); // reverse winding for earcut algorithm
 
 	// Run tessellation
 	// Returns array of indices that refer to the vertices of the input polygon.
@@ -145,8 +144,10 @@ static osg::BoundingBoxf createBuildingRoof(const Building& building, int textur
 		uvBuffer->push_back(osg::Vec4f(v0.x() * roofUvScale, v0.y() * roofUvScale, textureIndex, buildingIndex));
 	}
 
-	for (size_t i = 0; i < indices.size(); ++i)
+	for (size_t i = 0; i < indices.size(); i += 3)
 	{
+		indexBuffer->push_back(index + indices[i+2]);
+		indexBuffer->push_back(index + indices[i+1]);
 		indexBuffer->push_back(index + indices[i]);
 	}
 	return bounds;

@@ -38,31 +38,23 @@ TileT& visitHierarchyToKey(TileT& tile, const skybolt::QuadTreeTileKey& targetKe
 	return tile;
 }
 
-//! Removes parts of hierarchy that have no descendents that should be kept
-//! @returns true if the tile was pruned
+//! Visits all tiles in a hierarchy 
+//! @param shouldTraverse returns true if the children of this tile should be visited
 template <typename TileT>
-bool pruneTree(TileT& tile, std::function<bool(const TileT&)> shouldTraverse, std::function<bool(const TileT&)> shouldKeep, std::function<void(TileT&)> pruner)
+void visitHierarchy(TileT& tile, std::function<bool(const TileT&)> shouldTraverse, std::function<void(TileT&)> visitor)
 {
 	if (!shouldTraverse(tile))
-		return false;
+		return;
 
-	bool shouldPrune = !shouldKeep(tile);
+	visitor(tile);
+
 	if (tile.hasChildren())
 	{
 		for (int i = 0; i < 4; ++i)
 		{
-			if (!pruneTree(static_cast<TileT&>(*tile.children[i]), shouldTraverse, shouldKeep, pruner))
-			{
-				shouldPrune = false;
-			}
+			visitHierarchy(static_cast<TileT&>(*tile.children[i]), shouldTraverse, visitor);
 		}
 	}
-
-	if (shouldPrune)
-	{
-		pruner(tile);
-	}
-	return shouldPrune;
 }
 
 } // namespace skybolt

@@ -15,7 +15,7 @@ using namespace skybolt;
 
 struct Tile : QuadTreeTile<glm::dvec2, Tile>
 {
-	bool keep = true;
+	bool traverse = true;
 };
 
 typedef QuadTree<Tile> Tree;
@@ -41,42 +41,45 @@ TEST_CASE("visitHierarchyToKey")
 	CHECK(visitedTiles[1] == tree.getRoot().children[0].get());
 }
 
-TEST_CASE("pruneTree")
+TEST_CASE("visitHierarchy")
 {
 	Tree tree = createTree();
 	tree.subdivide(tree.getRoot());
 	tree.subdivide(*tree.getRoot().children[0]);
 	tree.subdivide(*tree.getRoot().children[2]);
 
-	std::vector<Tile*> prunedTiles;
+	std::vector<Tile*> visitedTiles;
 
-	auto shouldTraverse = [](const Tile& tile) {return true; };
-	auto shouldKeep = [](const Tile& tile) {return tile.keep; };
-	auto pruner = [&](Tile& tile) {prunedTiles.push_back(&tile); };
+	auto shouldTraverse = [](const Tile& tile) {return tile.traverse; };
+	auto visitor = [&](Tile& tile) {visitedTiles.push_back(&tile); };
 
-	// Check that no tiles are pruned when all tiles flagged as keep
-	pruneTree<Tile>(tree.getRoot(), shouldTraverse, shouldKeep, pruner);
+	SECTION("Check that all tiles are visited all tiles flagged as traverse")
+	{
+		visitHierarchy<Tile>(tree.getRoot(), shouldTraverse, visitor);
+		CHECK(visitedTiles.size() == 13);
+	}
 
-	CHECK(prunedTiles.size() == 0);
+	SECTION("Check that no tiles visited when all tiles flagged with traverse=false")
+	{
+		tree.getRoot().traverse = false;
 
-	// Check that tiles are pruned when they and their children are not flagged as keep
-	tree.getRoot().keep = false;
-	tree.getRoot().children[0]->keep = false;
-	tree.getRoot().children[0]->children[0]->keep = false;
-	tree.getRoot().children[2]->keep = false;
-	tree.getRoot().children[2]->children[0]->keep = false;
-	tree.getRoot().children[2]->children[1]->keep = false;
-	tree.getRoot().children[2]->children[2]->keep = false;
-	tree.getRoot().children[2]->children[3]->keep = false;
+		visitHierarchy<Tile>(tree.getRoot(), shouldTraverse, visitor);
+		CHECK(visitedTiles.size() == 0);
+	}
 
-	prunedTiles.clear();
-	pruneTree<Tile>(tree.getRoot(), shouldTraverse, shouldKeep, pruner);
+	SECTION("Check that subtrees not visited when flagged with traverse=false")
+	{
+		tree.getRoot().children[0]->traverse = false;
 
-	REQUIRE(prunedTiles.size() == 6);
-	CHECK(prunedTiles[0] == tree.getRoot().children[0]->children[0].get());
-	CHECK(prunedTiles[1] == tree.getRoot().children[2]->children[0].get());
-	CHECK(prunedTiles[2] == tree.getRoot().children[2]->children[1].get());
-	CHECK(prunedTiles[3] == tree.getRoot().children[2]->children[2].get());
-	CHECK(prunedTiles[4] == tree.getRoot().children[2]->children[3].get());
-	CHECK(prunedTiles[5] == tree.getRoot().children[2].get());
+		visitHierarchy<Tile>(tree.getRoot(), shouldTraverse, visitor);
+		REQUIRE(visitedTiles.size() == 8);
+		CHECK(visitedTiles[0] == &tree.getRoot());
+		CHECK(visitedTiles[1] == tree.getRoot().children[1].get());
+		CHECK(visitedTiles[2] == tree.getRoot().children[2].get());
+		CHECK(visitedTiles[3] == tree.getRoot().children[2]->children[0].get());
+		CHECK(visitedTiles[4] == tree.getRoot().children[2]->children[1].get());
+		CHECK(visitedTiles[5] == tree.getRoot().children[2]->children[2].get());
+		CHECK(visitedTiles[6] == tree.getRoot().children[2]->children[3].get());
+		CHECK(visitedTiles[7] == tree.getRoot().children[3].get());
+	}
 }

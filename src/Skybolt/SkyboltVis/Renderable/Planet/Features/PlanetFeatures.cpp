@@ -260,8 +260,7 @@ void PlanetFeatures::onSurfaceTileAdded(const QuadTreeTileKey& key)
 {
 	auto& tree = (skybolt::DiQuadTree<VisFeatureTile>&)(mFeatures.tree);
 
-	auto visiter = [this](VisFeatureTile& tile) { loadTile(tile); };
-
+	// Get tree root
 	QuadTreeTileKey rootKey = createAncestorKey(key, 0);
 	VisFeatureTile* root;
 	if (rootKey == tree.leftTree.getRoot().key)
@@ -277,15 +276,19 @@ void PlanetFeatures::onSurfaceTileAdded(const QuadTreeTileKey& key)
 		return;
 	}
 
-	VisFeatureTile& tile = visitHierarchyToKey<VisFeatureTile>(*root, key, visiter);
+	// Load all tiles up to the new leaf-most tile
+	VisFeatureTile& tile = visitHierarchyToKey<VisFeatureTile>(*root, key, [this](VisFeatureTile& tile) {
+		loadTile(tile);
+		});
 
-	// Prune descendents
+	// Unload descendants of the new leaf-most tile
 	if (tile.hasChildren())
 	{
-		auto pruner = [this](VisFeatureTile& tile) { unloadTile(tile); };
 		for (int i = 0; i < 4; ++i)
 		{
-			pruneTree<VisFeatureTile>(static_cast<VisFeatureTile&>(*tile.children[i]), shouldTraverse, shouldKeep, pruner);
+			visitHierarchy<VisFeatureTile>(static_cast<VisFeatureTile&>(*tile.children[i]), shouldTraverse, [this](VisFeatureTile& tile) {
+				unloadTile(tile);
+				});
 		}
 	}
 }
