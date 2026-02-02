@@ -6,10 +6,11 @@
 static std::map<SkyboltIcon, QIcon> createSkyboltIcons()
 {
 	std::map<SkyboltIcon, std::string> filenames {
+		{SkyboltIcon::Add, "Icons/google/add_circle.svg"},
 		{SkyboltIcon::Node, "Icons/google/brightness_1.svg"},
 		{SkyboltIcon::Pause, "Icons/google/round-pause.svg"},
 		{SkyboltIcon::Play, "Icons/google/round-play_arrow.svg"},
-		{SkyboltIcon::Sequence, "Icons/google/playlist_play.svg"},
+		{SkyboltIcon::Remove, "Icons/google/remove_circle.svg"},
 		{SkyboltIcon::SkipBackward, "Icons/google/round-skip-prev.svg"},
 		{SkyboltIcon::SkipForward, "Icons/google/round-skip-next.svg"},
 		{SkyboltIcon::Speed, "Icons/google/round-speed.svg"}

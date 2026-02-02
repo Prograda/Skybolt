@@ -13,6 +13,8 @@
 
 #include <SkyboltCommon/Math/MathUtility.h>
 
+#include <boost/log/trivial.hpp>
+
 using namespace skybolt;
 
 namespace skybolt {
@@ -38,19 +40,28 @@ bool PlanetSubdivisionPredicate::operator()(const Box2d& bounds, const QuadTreeT
 	}
 
 	const auto& tileImages = static_cast<const PlanetTileImages&>(images);
-	HeightMapElevationBounds elevationBounds = getRequiredHeightMapElevationBounds(*tileImages.heightMapImage.image);
+	std::optional<HeightMapElevationBounds> elevationBounds = getHeightMapElevationBounds(*tileImages.heightMapImage.image);
+	if (!elevationBounds)
+	{
+		if (!mHasMissingElevationBoundsError)
+		{
+			BOOST_LOG_TRIVIAL(error) << "Height map image tile {level=" << key.level << ", x=" << key.x << ", y=" << key.y << "} is missing elevation bounds";
+		}
+		mHasMissingElevationBoundsError = true;
+		return false;
+	}
 
 	Box2d latLonBounds(math::vec2SwapComponents(bounds.minimum), math::vec2SwapComponents(bounds.maximum));
 
 	osg::Vec2d latLon = nearestPointInSolidBox(observerLatLon, latLonBounds);
-	double altitude = std::clamp(observerAltitude, double(elevationBounds.x()), double(elevationBounds.y()));
+	double altitude = std::clamp(observerAltitude, double(elevationBounds->x()), double(elevationBounds->y()));
 
 	osg::Vec3d observerPosition = llaToGeocentric(observerLatLon, std::max(1.0, observerAltitude), planetRadius);
 
 	osg::Vec3d tileNearestPoint = llaToGeocentric(latLon, altitude, planetRadius);
 	double distanceToTileNearestPoint = (tileNearestPoint - observerPosition).length();
 
-	osg::Vec3d tileNearestPointAtLowestAltitude = llaToGeocentric(latLon, 0, planetRadius + elevationBounds.x());
+	osg::Vec3d tileNearestPointAtLowestAltitude = llaToGeocentric(latLon, 0, planetRadius + elevationBounds->x());
 
 	osg::Vec3d directionFromTileNearestPointAtLowestAltitudeToObserver = (observerPosition - tileNearestPointAtLowestAltitude);
 	directionFromTileNearestPointAtLowestAltitudeToObserver.normalize();

@@ -15,7 +15,7 @@
 namespace skybolt {
 
 
-StatsDisplaySystem::StatsDisplaySystem(osgViewer::ViewerBase* viewer, osgViewer::View* view, const osg::ref_ptr<osg::Camera>& camera) :
+StatsDisplaySystem::StatsDisplaySystem(osgViewer::ViewerBase* viewer, osg::ref_ptr<osgViewer::View> view, const osg::ref_ptr<osg::Camera>& camera) :
 	mCamera(camera),
 	mView(view)
 {

@@ -25,7 +25,7 @@ class StatsDisplaySystem : public sim::System
 {
 public:
 	//! Displays the viewer's stats on the given camera
-	StatsDisplaySystem(osgViewer::ViewerBase* viewer, osgViewer::View* view, const osg::ref_ptr<osg::Camera>& camera);
+	StatsDisplaySystem(osgViewer::ViewerBase* viewer, osg::ref_ptr<osgViewer::View> view, const osg::ref_ptr<osg::Camera>& camera);
 	~StatsDisplaySystem();
 
 	void setVisible(bool visible);
@@ -38,7 +38,7 @@ public:
 
 private:
 	osg::ref_ptr<osg::Camera> mCamera;
-	osgViewer::View* mView;
+	osg::ref_ptr<osgViewer::View> mView;
 	osg::Stats* mViewerStats;
 	osg::Stats* mCameraStats;
 	osg::ref_ptr<class VisHud> mStatsHud;

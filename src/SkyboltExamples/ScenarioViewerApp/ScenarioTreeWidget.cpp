@@ -40,7 +40,10 @@ ScenarioTreeWidget::ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config) :
 
 	layout()->addWidget(mView);
 
-	QObject::connect(mView->selectionModel(), &QItemSelectionModel::selectionChanged, [this, entitySelector = config.entitySelector](const QItemSelection& selected, const QItemSelection& deselected) {
+	mScenarioItem = std::make_shared<SimpleTreeItem>("Scenario", getSkyboltIcon(SkyboltIcon::Node));
+	mModel->addChildren(*mRootItem, {mScenarioItem});
+
+	QObject::connect(mView->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
 		skybolt::sim::EntityId entity = skybolt::sim::nullEntityId();
 		for (const QModelIndex& index : mView->selectionModel()->selection().indexes())
 		{
@@ -51,9 +54,13 @@ ScenarioTreeWidget::ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config) :
 					entity = entityTreeItem->entityId;
 					break;
 				}
+				else if ( item == mScenarioItem)
+				{
+					Q_EMIT scenarioSelected();
+				}
 			}
 		}
-		entitySelector(entity);
+		Q_EMIT entitySelected(entity);
 	});
 
 	addOrRemoveEntities();
@@ -115,7 +122,7 @@ void ScenarioTreeWidget::addEntities(const std::set<EntityPtr>& entities)
 		mItemsMap[entity->getId()] = item;
 		children.push_back(item);
 	}
-	mModel->addChildren(*mRootItem, children);
+	mModel->addChildren(*mScenarioItem, children);
 }
 
 void ScenarioTreeWidget::removeEntities(const std::set<EntityId>& entities)

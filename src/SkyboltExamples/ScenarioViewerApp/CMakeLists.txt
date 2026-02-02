@@ -11,8 +11,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 find_package(Qt6 COMPONENTS Core Widgets REQUIRED)
 
-QT6_ADD_RESOURCES(SrcRccsSrc ${SrcRccs})
-
 QT6_WRAP_UI(SrcUiHeaders ${UiSrc})
 SET(SrcFiles ${SrcFiles} ${SrcUiHeaders} ${SrcRccsSrc})
 SOURCE_GROUP("Generated Ui Files" FILES ${SrcUiHeaders} ${SrcRccsSrc})
@@ -22,6 +20,8 @@ set(LIBS
 )
 
 add_executable(${TARGET_NAME} ${SrcFiles})
+
+QT6_ADD_RESOURCES(${TARGET_NAME} splash_res FILES "Resources/Splash.png")
 
 target_link_libraries (${TARGET_NAME} ${LIBS})
 

@@ -8,11 +8,8 @@
 
 class QTreeView;
 
-using EntitySelector = std::function<void(const skybolt::sim::EntityId&)>;
-
 struct ScenarioTreeWidgetConfig
 {
-	EntitySelector entitySelector;
 	skybolt::sim::World* world;
 };
 
@@ -27,6 +24,9 @@ class ScenarioTreeWidget : public QWidget
 public:
 	ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config);
 	~ScenarioTreeWidget();
+
+	Q_SIGNAL void entitySelected(const skybolt::sim::EntityId&);
+	Q_SIGNAL void scenarioSelected();
 
 private:
 	void addOrRemoveEntities();
@@ -47,5 +47,6 @@ private:
 	QTreeView* mView;
 
 	skybolt::TreeItemPtr mRootItem;
+	skybolt::TreeItemPtr mScenarioItem;
 	std::map<skybolt::sim::EntityId, std::shared_ptr<EntityTreeItem>> mItemsMap;
 };

@@ -5,10 +5,11 @@
 
 enum class SkyboltIcon
 {
+	Add,
 	Node,
 	Pause,
 	Play,
-	Sequence,
+	Remove,
 	SkipBackward,
 	SkipForward,
 	Speed

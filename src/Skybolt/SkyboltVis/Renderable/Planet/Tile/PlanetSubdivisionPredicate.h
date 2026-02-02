@@ -29,6 +29,9 @@ struct PlanetSubdivisionPredicate : public QuadTreeSubdivisionPredicate
 private:
 	// TODO: handle longitude wrap around
 	osg::Vec2d nearestPointInSolidBox(const osg::Vec2d& point, const Box2d& bounds) const;
+
+private:
+	bool mHasMissingElevationBoundsError = false;
 };
 
 } // namespace vis

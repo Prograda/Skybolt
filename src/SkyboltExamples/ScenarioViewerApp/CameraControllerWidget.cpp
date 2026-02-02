@@ -87,7 +87,7 @@ CameraControllerWidget::CameraControllerWidget(sim::World* world, QWidget* paren
 	mCameraCombo->setModel(wrapModelWithSortFilter(new SyncedListModel(camerasGetter), this));
 	layout()->addWidget(mCameraCombo);
 
-	connect(mCameraCombo, &QComboBox::currentTextChanged, [this](const QString& text)
+	connect(mCameraCombo, &QComboBox::textActivated, [this](const QString& text)
 	{
 		updateModeComboSelectionFromModel();
 		updateCameraSelectionFromUi();
@@ -99,7 +99,7 @@ CameraControllerWidget::CameraControllerWidget(sim::World* world, QWidget* paren
 	mCameraModeCombo->setModel(wrapModelWithSortFilter(new SyncedListModel(cameraModesGetter), this));
 	layout()->addWidget(mCameraModeCombo);
 
-	connect(mCameraModeCombo, &QComboBox::currentTextChanged, [=](const QString& text)
+	connect(mCameraModeCombo, &QComboBox::textActivated, [=](const QString& text)
 	{
 		if (auto component = getSelectedCameraControllerComponent(); component)
 		{
@@ -116,7 +116,7 @@ CameraControllerWidget::CameraControllerWidget(sim::World* world, QWidget* paren
 	layout()->addWidget(mCameraTargetCombo);
 
 	// Set camera controller target if the user changed the QComboBox selection
-	connect(mCameraTargetCombo, &QComboBox::currentTextChanged, this, [=](const QString& text) {
+	connect(mCameraTargetCombo, &QComboBox::textActivated, this, [=](const QString& text) {
 		updateTargetSelectionFromUi();
 	});
 
@@ -151,7 +151,6 @@ void CameraControllerWidget::updateModeComboSelectionFromModel()
 	const std::string& currentControllerName = cameraController->getSelectedControllerName();
 	mCameraModeCombo->setCurrentText(QString::fromStdString(currentControllerName));
 	updateTargetFilterForControllerName(*camera, currentControllerName);
-
 	updateTargetComboSelectionFromModel();
 }
 
