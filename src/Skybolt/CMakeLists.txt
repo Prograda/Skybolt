@@ -9,7 +9,6 @@ add_subdirectory (SkyboltCommon)
 add_subdirectory (SkyboltCommonTests)
 add_subdirectory (SkyboltEngine)
 
-OPTION(BUILD_PYTHON_BINDINGS "Build Python Bindings")
 if (BUILD_PYTHON_BINDINGS)
 	add_subdirectory (SkyboltPythonBindings)
 endif()

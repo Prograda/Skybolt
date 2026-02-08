@@ -10,6 +10,7 @@
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/GetExecutablePath.h>
+#include <SkyboltEngine/FindPython.h>
 #include <SkyboltEngine/Input/InputSystem.h>
 #include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
 #include <SkyboltEngine/UpdateLoop/SimUpdater.h>
@@ -293,6 +294,16 @@ static int createAndExecuteApplication(int argc, char** argv)
 	// Create model for logging application warnings and errors
 	ErrorLogModel errorLogModel;
 	connectToBoostLogger(&errorLogModel);
+
+	// Check if python is available
+#ifdef PYTHON_VERSION_MAJOR
+		// Warn user if python is not available
+		if (!isPythonOnPath(PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR))
+		{
+			BOOST_LOG_TRIVIAL(warning) << QString("Python %1.%2 not found in PATH environment variable. Python functionality will be disabled.")
+				.arg(PYTHON_VERSION_MAJOR).arg(PYTHON_VERSION_MINOR).toStdString();
+		}
+#endif
 
 	// Create engine
 	auto params = EngineCommandLineParser::parse(argc, argv);

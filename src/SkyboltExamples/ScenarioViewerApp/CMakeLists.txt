@@ -15,6 +15,18 @@ QT6_WRAP_UI(SrcUiHeaders ${UiSrc})
 SET(SrcFiles ${SrcFiles} ${SrcUiHeaders} ${SrcRccsSrc})
 SOURCE_GROUP("Generated Ui Files" FILES ${SrcUiHeaders} ${SrcRccsSrc})
 
+# If python is found, define the python version in C++ so that the application
+# can determine whether python is available at runtime.
+if (BUILD_PYTHON_BINDINGS)
+	find_package(Python3 REQUIRED COMPONENTS Interpreter)
+	if (Python3_FOUND)
+		# Parse the major and minor version numbers
+		string(REGEX MATCH "^([0-9]+)\\.([0-9]+)" _ ${Python3_VERSION})
+		add_compile_definitions(PYTHON_VERSION_MAJOR=${CMAKE_MATCH_1})
+		add_compile_definitions(PYTHON_VERSION_MINOR=${CMAKE_MATCH_2})
+	endif()
+endif()
+
 set(LIBS
 	SkyboltEngineQt
 )
