@@ -4,7 +4,8 @@ At runtime, Skybolt uses assets such as meshes, textures, and shaders. These ass
 Skybolt searches for asset packages in these locations:
 
 1. `<CurrentWorkingDirectory>/Assets`
-2. Paths in the `SKYBOLT_ASSETS_PATH` environment variable
+2. `<CurrentWorkingDirectory>/../Assets`
+3. Paths in the `SKYBOLT_ASSETS_PATH` environment variable
 
 ## Core Packages
 Core packages required for running Skybolt example applications are located in the `Assets` folder of the Skybolt repository.

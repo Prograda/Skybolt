@@ -1,12 +1,12 @@
-# Overview
-Skybolt is a 3D geospatial engine for simulating and visualizing dynamic entities in planetary environments.
+# Skybolt Engine
+A C++/Python-based engine for simulating and visualizing dynamic objects such as aircraft, ships and spacecraft, in a 3D planetary environment.
 
-With Skybolt you can:
-
-* **Simulate scenarios** featuring dynamic 3D objects with modular components and properties.
-* **Visualize complex 3D environments** featuring terrain, ocean, buildings, roads, vegetation, and clouds.
-* **Control simulation execution** from Python.
-* **Integrate external systems** and **extend fuctionality** with C++ and Python plugins.
+## Features
+* **Dynamic Simulation:** Real-time 3D object simulation within a geospatial coordinate system.
+* **Modular Architecture**: Model dynamic objects using a composition-based entity-component system (ECS) with a configurable property framework.
+* **Photoreal Rendering**: Visualize photorealistic environments, including terrain, ocean, urban infrastructure, and atmospheric conditions.
+* **Extensible Framework**: Add custom functionality through C++ and Python-based plugins. 
+* **Scenario Viewer App**: Interactive 3D application for visualizing scenarios.
 
 ## Getting Started
 Continue to the [Getting Started](getting_started.md) guide.

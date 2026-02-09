@@ -9,11 +9,11 @@ Install with [pip](https://pypi.org/project/pip): ```pip3 install conan```.
 ## 2. Build Skybolt
 Use conan to build Skybolt. Under the hood this will execute CMake to generate project files for your IDE and compile the project.
 ```
-conan build %SKYBOLT_SOURCE% --output-folder=%SKYBOLT_BUILD% --lockfile-partial
+conan build %SKYBOLT_SOURCE% --output-folder=%SKYBOLT_BUILD%
 ```
 Custom configuration options may be supplied with the `-o` argument, for example:
 ```
-conan build %SKYBOLT_SOURCE% --output-folder=%SKYBOLT_BUILD%  --lockfile-partial -o openscenegraph-mr:shared=True -o enable_bullet=True
+conan build %SKYBOLT_SOURCE% --output-folder=%SKYBOLT_BUILD% -o openscenegraph-mr:shared=True -o enable_bullet=True
 ```
 Please refer to `conanfile.py` for a full list of available configuration options.
 

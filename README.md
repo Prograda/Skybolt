@@ -1,16 +1,17 @@
 
-# Skybolt
-A C++/Python-based 3D geospatial application for simulating and visualizing dynamic objects in planetary environments.
+# Skybolt Engine
+A C++/Python-based engine for simulating and visualizing dynamic objects such as aircraft, ships and spacecraft, in a 3D planetary environment.
 
 ![Skybolt UI](https://prograda.com/wp-content/uploads/2024/10/MainUi-small.jpg)
 
 ![Shuttle in space](https://prograda.com/wp-content/uploads/2024/10/Shuttle5-300x170-1.jpg) !["Ship on ocean"](https://prograda.com/wp-content/uploads/2020/11/ShipHeloShot1-300x169.jpg)
 
 ## Features
-* **Create scenarios** featuring dynamic 3D objects with modular components and properties.
-* **Interact with objects** via 3D geospatial user interface.
-* **Render photoreal environments** featuring terrain, ocean, buildings, roads, vegetation, and clouds.
-* **Extend functionality** with C++ and Python plugins.
+* **Dynamic Simulation:** Real-time 3D object simulation within a geospatial coordinate system.
+* **Modular Architecture**: Model dynamic objects using a composition-based entity-component system (ECS) with a configurable property framework.
+* **Photoreal Rendering**: Visualize photorealistic environments, including terrain, ocean, urban infrastructure, and atmospheric conditions.
+* **Extensible Framework**: Add custom functionality through C++ and Python-based plugins. 
+* **Scenario Viewer App**: Interactive 3D application for visualizing scenarios.
 
 ## Getting Started
 Please refer to the [Getting Started](https://prograda.github.io/Skybolt/getting_started.html) guide in the [Skybolt documentation](https://prograda.github.io/Skybolt/index.html).
