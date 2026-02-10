@@ -15,6 +15,8 @@ target_link_libraries (${APP_NAME} ${LIBS})
 
 set_target_properties(${APP_NAME} PROPERTIES FOLDER Examples)
 
+skybolt_install(${APP_NAME})
+
 if(WIN32)
     set_target_properties(${APP_NAME} PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
 	set_target_properties(${APP_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:CONSOLE")
