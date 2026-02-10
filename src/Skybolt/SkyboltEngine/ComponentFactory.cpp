@@ -84,7 +84,7 @@ static sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryCont
 	if (inputs && hasControlSurfaces)
 	{
 		config.stickInput = inputs->createOrGet("stick", glm::vec2(0), posNegUnitRange<glm::vec2>());
-		config.rudderInput = inputs->createOrGet("rudder", 0.0f, posNegUnitRange<float>());
+		config.rudderInput = inputs->createOrGet("pedal", 0.0f, posNegUnitRange<float>());
 
 	}
 	return std::make_shared<FuselageComponent>(config);

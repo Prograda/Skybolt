@@ -150,6 +150,12 @@ static void drawControlInputs(VisHud& hud, const glm::vec2& position, const Cont
 	{
 		drawVSlider(hud, position - glm::vec2(size * 0.5f + margin, 0.0f), size, collective->value);
 	}
+
+	auto throttle = controlInputsComponents.get<float>("throttle");
+	if (throttle)
+	{
+		drawVSlider(hud, position - glm::vec2(size * 0.5f + margin, 0.0f), size, throttle->value);
+	}
 }
 
 void HudSystem::updateState()

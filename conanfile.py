@@ -10,6 +10,7 @@ class SkyboltConan(ConanFile):
     options = {
         "enable_bullet": [True, False],
         "enable_fft_ocean": [True, False],
+        "enable_jsbsim": [True, False],
         "enable_map_features_converter": [True, False],
         "enable_python": [True, False],
         "enable_qt": [True, False],
@@ -20,6 +21,7 @@ class SkyboltConan(ConanFile):
     default_options = {
         "enable_bullet": False,
         "enable_fft_ocean": True,
+		"enable_jsbsim": False,
         "enable_map_features_converter": True,
         "enable_python": True,
         "enable_qt": True,
@@ -68,6 +70,9 @@ class SkyboltConan(ConanFile):
             self.include_package("mufft", "1.0.0")
             self.include_package("xsimd", "7.4.10", transitive_headers=True)
 
+        if self.options.enable_jsbsim:
+            self.requires("jsbsim/1.1.13")
+
         if self.options.enable_map_features_converter:
             self.requires("readosm/1.1.0a")
 
@@ -84,6 +89,9 @@ class SkyboltConan(ConanFile):
         tc.variables["OSG_STATIC_LIBS"] = str(not self.dependencies["openscenegraph-mr"].options.shared)
         tc.variables["SKYBOLT_PLUGINS_STATIC_BUILD"] = str(not self.options.shared_plugins)
         tc.variables["Skybolt_VERSION"] = self.version
+
+        if self.options.enable_bullet:
+            tc.variables["BUILD_JSBSIM_PLUGIN"] = "true"
 
         if self.options.enable_bullet:
             tc.variables["BUILD_BULLET_PLUGIN"] = "true"

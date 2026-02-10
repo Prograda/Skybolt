@@ -15,7 +15,7 @@ def build(skybolt_source_dir: Path, skybolt_build_dir: Path):
     Build Skybolt using conan. This will also build dependencies if required.
     """
     logging.info(f"Building...")
-    sp.run(f"conan build {skybolt_source_dir} --output-folder={skybolt_build_dir}  -o openscenegraph-mr/*:shared=True -o qt/*:shared=True -o enable_python=True -o enable_bullet=True --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True --lockfile={skybolt_source_dir}/conan-shared.lock --lockfile-partial", shell=True, check=True)
+    sp.run(f"conan build {skybolt_source_dir} --output-folder={skybolt_build_dir}  -o openscenegraph-mr/*:shared=True -o qt/*:shared=True -o enable_python=True -o enable_bullet=True -o enable_jsbsim=True --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True --lockfile={skybolt_source_dir}/conan-shared.lock --lockfile-partial", shell=True, check=True)
 
 
 def copy_tree(source_dir: Path, destination_dir: Path):

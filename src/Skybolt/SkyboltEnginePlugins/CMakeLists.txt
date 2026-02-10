@@ -9,6 +9,11 @@ if (BUILD_FFT_OCEAN_PLUGIN)
 	add_subdirectory(FftOceanTests)
 endif()
 
+OPTION(BUILD_JSBSIM_PLUGIN "Build JSBSim Component Plugin")
+if (BUILD_JSBSIM_PLUGIN)
+	add_subdirectory(JsbSim)
+endif()
+
 OPTION(BUILD_PYTHON_PLUGIN "Build Python Plugin")
 if (BUILD_PYTHON_PLUGIN)
 	add_subdirectory(Python)

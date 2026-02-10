@@ -24,7 +24,16 @@ void EntityInputSystem::updateState()
 		if (inputs)
 		{
 			inputs->setIfPresent("stick", glm::vec2(mAxes[1]->getState(), -mAxes[0]->getState()));
-			inputs->setIfPresent("collective", mAxes[2]->getState());
+			
+			if (inputs->controls.contains("collective"))
+			{
+				inputs->setIfPresent("collective", mAxes[2]->getState());
+			}
+			else
+			{
+				inputs->setIfPresent("throttle", mAxes[2]->getState());
+			}
+
 			inputs->setIfPresent("pedal", mAxes[3]->getState());
 		}
 	}

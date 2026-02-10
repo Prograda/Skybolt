@@ -58,7 +58,7 @@ static void createEnvironmentEntities(const EntityFactory& entityFactory, World&
 	world.addEntity(entityFactory.createEntity("PlanetEarth"));
 }
 
-static std::vector<LogicalAxisPtr> createHelicopterInputAxesKeyboard(const InputPlatform& inputPlatform)
+static std::vector<LogicalAxisPtr> createAircraftInputAxesKeyboard(const InputPlatform& inputPlatform)
 {
 	InputDevicePtr keyboard = inputPlatform.getInputDevicesOfType(InputDeviceTypeKeyboard)[0];
 	float rate = 10;
@@ -122,14 +122,14 @@ static osg::ref_ptr<HelpDisplayRenderOperation> createHelpDisplay()
 {
 	std::string helpMessage =
 R"(= Controls =
-W: Collective up
-S: Collective down
-A: Pedel Left
-D: Pedel Right
-Up arrow: Cyclic forward
-Down arrow: Cyclic aft
-Left arrow: Cyclic left
-Right arrow: Cyclic right
+W: Collective/Throttle up
+S: Collective/Throttle down
+A: Pedal Left
+D: Pedal Right
+Up arrow: Stick forward
+Down arrow: Stick aft
+Left arrow: Stick left
+Right arrow: Stick right
 F1: Cockpit view
 F2: External view
 H: Toggle help message
@@ -149,8 +149,13 @@ int main(int argc, char *argv[])
 		// Parse commandline arguments
 		boost::program_options::options_description desc;
 		desc.add_options()("multiwindow", "demonstrate rendering to multiple display windows");
+		desc.add_options()("aircraft-type", boost::program_options::value<std::string>()->default_value("UH60"), "The name of the entity type to spawn");
+		desc.add_options()("aircraft-speed", boost::program_options::value<double>()->default_value(50.0), "The initial speed of the spawned aircraft");
 		EngineCommandLineParser::addOptions(desc);
 		auto params = EngineCommandLineParser::parse(argc, argv, desc);
+
+		std::string aircraftTemplateName = params["aircraft-type"].as<std::string>();
+		double aircraftSpeed = params["aircraft-speed"].as<double>();
 
 		// Create engine
 		std::unique_ptr<EngineRoot> engineRoot = EngineRootFactory::create(params);
@@ -192,7 +197,7 @@ int main(int argc, char *argv[])
 
 		// Create input
 		auto inputPlatform = std::make_shared<InputPlatformOsg>(window->getView());
-		std::vector<LogicalAxisPtr> axes = createHelicopterInputAxesKeyboard(*inputPlatform);
+		std::vector<LogicalAxisPtr> axes = createAircraftInputAxesKeyboard(*inputPlatform);
 
 		// Create systems
 		engineRoot->systemRegistry->push_back(std::make_shared<InputSystem>(inputPlatform, axes));
@@ -232,12 +237,14 @@ int main(int argc, char *argv[])
 		// Create entities
 		createEnvironmentEntities(*engineRoot->entityFactory, engineRoot->scenario->world);
 		
-		EntityPtr aircraft = engineRoot->entityFactory->createEntity("UH60");
+		EntityPtr aircraft = engineRoot->entityFactory->createEntity(aircraftTemplateName);
 		engineRoot->scenario->world.addEntity(aircraft);
 
 		sim::LatLonAlt boeingFieldPosition(47.537 * math::degToRadD(), -122.307 * math::degToRadD(), 500);
+		Quaternion aircraftOrientation = toGeocentric(sim::LtpNedOrientation(math::quatIdentity()), sim::toLatLon(boeingFieldPosition)).orientation;
 		setPosition(*aircraft, toGeocentric(sim::LatLonAltPosition(boeingFieldPosition)).position);
-		setOrientation(*aircraft, toGeocentric(sim::LtpNedOrientation(math::quatIdentity()), sim::toLatLon(boeingFieldPosition)).orientation);
+		setOrientation(*aircraft, aircraftOrientation);
+		setVelocity(*aircraft, aircraftOrientation * Vector3(aircraftSpeed,0,0));
 
 		// Configure systems for player's aircraft
 		entityInputSystem->setEntity(aircraft);
