@@ -90,7 +90,7 @@ class SkyboltConan(ConanFile):
         tc.variables["SKYBOLT_PLUGINS_STATIC_BUILD"] = str(not self.options.shared_plugins)
         tc.variables["Skybolt_VERSION"] = self.version
 
-        if self.options.enable_bullet:
+        if self.options.enable_jsbsim:
             tc.variables["BUILD_JSBSIM_PLUGIN"] = "true"
 
         if self.options.enable_bullet:
