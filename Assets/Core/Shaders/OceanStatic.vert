@@ -18,7 +18,7 @@ out float logZ;
 out vec2 wrappedNoiseCoord;
 out AtmosphericScattering scattering;
 
-uniform sampler2D heightSamplers[NUM_OCEAN_CASCADES];
+uniform sampler2D heightSamplers[OCEAN_CASCADE_COUNT];
 uniform sampler2D cloudSampler;
 uniform mat4 viewProjectionMatrix;
 uniform vec3 cameraPosition;
@@ -27,7 +27,7 @@ uniform mat4 modelMatrix;
 uniform sampler2D heightSampler;
 uniform vec2 heightMapTexCoordScale;
 uniform float displacementHeight;
-uniform vec2 heightMapTexCoordScales[NUM_OCEAN_CASCADES];
+uniform vec2 heightMapTexCoordScales[OCEAN_CASCADE_COUNT];
 
 void main()
 {
@@ -40,7 +40,7 @@ void main()
 	float lod = length(positionWS) / 200; // TODO: should be based on texture-space size of projected quad onto ocean
 	
 	vec3 offset = vec3(0);
-	for (int i = 0; i < NUM_OCEAN_CASCADES; ++i)
+	for (int i = 0; i < OCEAN_CASCADE_COUNT; ++i)
 	{
 		vec2 texCoord = wrappedNoiseCoord * heightMapTexCoordScales[i];
 		offset += textureLod(heightSamplers[i], texCoord, lod).xyz;

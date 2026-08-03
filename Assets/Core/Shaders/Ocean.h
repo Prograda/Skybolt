@@ -7,9 +7,6 @@
 #ifndef OCEAN_H
 #define OCEAN_H
 
-// FIXME: We should use #pragma import_defines(OCEAN_CASCADE_COUNT) to set this macro,
-// but it cause a GLSL compilation error. Therefore we set  it manually here.
-// This value needs to match CascadedWaveHeightTextureGenerator::numCascades
 #pragma import_defines(OCEAN_CASCADE_COUNT)
 #ifndef OCEAN_CASCADE_COUNT
 	#define OCEAN_CASCADE_COUNT 1
