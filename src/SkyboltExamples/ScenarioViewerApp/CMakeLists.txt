@@ -3,6 +3,10 @@ add_source_group_tree(. SrcFiles)
 
 FILE(GLOB UiSrc "*.ui")
 
+set(SrcResources
+    "Resources/Splash.png"
+)
+
 include_directories("../")
 include_directories("../../Skybolt")
 
@@ -12,8 +16,9 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt6 COMPONENTS Core Widgets REQUIRED)
 
 QT6_WRAP_UI(SrcUiHeaders ${UiSrc})
-SET(SrcFiles ${SrcFiles} ${SrcUiHeaders} ${SrcRccsSrc})
-SOURCE_GROUP("Generated Ui Files" FILES ${SrcUiHeaders} ${SrcRccsSrc})
+
+SET(SrcFiles ${SrcFiles} ${SrcUiHeaders} ${SrcResources})
+SOURCE_GROUP("Generated Ui Files" FILES ${SrcUiHeaders})
 
 # If python is found, define the python version in C++ so that the application
 # can determine whether python is available at runtime.
@@ -33,7 +38,11 @@ set(LIBS
 
 add_executable(${TARGET_NAME} ${SrcFiles})
 
-QT6_ADD_RESOURCES(${TARGET_NAME} splash_res FILES "Resources/Splash.png")
+if(WIN32)
+    target_sources(${TARGET_NAME} PRIVATE ScenarioViewerApp.manifest)
+endif()
+
+QT6_ADD_RESOURCES(${TARGET_NAME} app_resources FILES ${SrcResources})
 
 target_link_libraries (${TARGET_NAME} ${LIBS})
 
