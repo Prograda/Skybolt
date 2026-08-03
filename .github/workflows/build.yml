@@ -3,7 +3,7 @@ on:
   workflow_call:
     inputs:
       os:
-        default: ubuntu-22.04
+        default: ubuntu-24.04
         type: string
       python-version:
         default: "3.11.x"
