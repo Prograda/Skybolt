@@ -23,6 +23,8 @@ public:
 	void updateTimeStep(const UpdateTimeStepArgs& args) override;
 	void setInput(const Input& input) override { mInput = input; }
 
+	void setActive(bool active) override;
+
 	double getZoom() const;
 	void setZoom(double zoom);
 

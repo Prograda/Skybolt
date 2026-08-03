@@ -78,6 +78,25 @@ void FreeCameraController::updateTimeStep(const UpdateTimeStepArgs& args)
 	mPreviousNodePosition = finalPosition;
 }
 
+void FreeCameraController::setActive(bool active)
+{
+	CameraController::setActive(active);
+
+	// When the free camera controller is activated, update the controller's state variables to match the current camera state.
+	if (active)
+	{
+		mBasePosition = mNodeComponent->getPosition();
+		mPreviousNodePosition = mBasePosition;
+
+		sim::Quaternion ltpOrientationQuat(geocentricToLtpOrientation(mBasePosition));
+		Quaternion localOrientation = glm::inverse(ltpOrientationQuat) * mNodeComponent->getOrientation();
+
+		Vector3 rpy = math::eulerFromQuat(localOrientation);
+		mPitch = rpy.y;
+		mYaw = (std::abs(rpy.x) > math::halfPiD()) ? rpy.z + math::piD() : rpy.z;
+	}
+}
+
 double FreeCameraController::getZoom() const
 {
 	// Minimum FOV when zoom is 1, maximum FOV when zoom is 0
