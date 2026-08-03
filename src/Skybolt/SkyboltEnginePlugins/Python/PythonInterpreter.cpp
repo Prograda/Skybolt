@@ -22,7 +22,28 @@ PythonInterpreter::PythonInterpreter(EngineRoot* engineRoot)
 	{
 		if (!Py_IsInitialized()) // If interpreter not already managed externally
 		{
-			mPyInterpreter = std::make_unique<py::scoped_interpreter>();
+			// Configure interpreter with optional SKYBOLT_PYTHON_HOME environment variable
+			PyConfig config;
+			PyConfig_InitPythonConfig(&config);
+			config.install_signal_handlers = 1;
+
+			if (const char* pythonHome = std::getenv("SKYBOLT_PYTHON_HOME"); pythonHome)
+			{
+				wchar_t* wpath = Py_DecodeLocale(pythonHome, nullptr);
+				if (!wpath)
+				{
+    				throw std::runtime_error("Failed to convert path to wide string");
+				}
+				PyConfig_SetString(
+					&config,
+					&config.executable,
+					wpath);
+
+				PyMem_RawFree(wpath);
+			}
+
+			// Create the interpreter
+			mPyInterpreter = std::make_unique<py::scoped_interpreter>(&config);
 		}
 
 		py::list sysPath = py::module::import("sys").attr("path").cast<py::list>();

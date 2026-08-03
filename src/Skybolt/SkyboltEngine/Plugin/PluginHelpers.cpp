@@ -36,7 +36,7 @@ static std::vector<fs::path> getAllFilesWithExtensions(const fs::path& root, con
 
 std::vector<fs::path> getAllPluginFilepathsInDirectory(const std::string& directory)
 {
-	std::vector<fs::path> files = getAllFilesWithExtensions(directory, { ".dll", ".dylib", ".dso" });
+	std::vector<fs::path> files = getAllFilesWithExtensions(directory, { ".dll", ".dylib", ".dso", ".so" });
 
 	// Ensure plugins load in a deterministic order
 	std::sort(files.begin(), files.end());

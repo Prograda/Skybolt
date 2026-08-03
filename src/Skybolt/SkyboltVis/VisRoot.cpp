@@ -54,7 +54,7 @@ VisRoot::VisRoot(const DisplaySettings& settings) :
 	{
 		SKYBOLT_LOG(warning) << std::format("Texture pool size '{}' is too large for Open Scene Graph. Up to 4GB is supported.", settings.texturePoolSizeBytes);
 	}
-	unsigned int texturePoolSizeBytesUnsignedInt = unsigned int(std::min(settings.texturePoolSizeBytes, std::size_t(std::numeric_limits<unsigned int>::max())));
+	unsigned int texturePoolSizeBytesUnsignedInt = (unsigned int)(std::min(settings.texturePoolSizeBytes, std::size_t(std::numeric_limits<unsigned int>::max())));
 	osg::DisplaySettings::instance()->setMaxTexturePoolSize(texturePoolSizeBytesUnsignedInt);
 
 	osg::setNotifyLevel(osg::WARN);

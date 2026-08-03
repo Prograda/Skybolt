@@ -7,6 +7,7 @@
 #pragma once
 
 #include <assert.h>
+#include <cstddef>
 
 namespace skybolt {
 namespace sim {

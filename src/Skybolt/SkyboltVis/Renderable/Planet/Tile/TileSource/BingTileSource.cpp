@@ -10,7 +10,7 @@
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltCommon/ShaUtility.h>
 
-#include <httplib/httplib.h>
+#include <httplib.h>
 #include <osg/Vec2i>
 
 #include <boost/algorithm/string/replace.hpp>
