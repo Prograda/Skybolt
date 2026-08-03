@@ -32,7 +32,7 @@ class SkybolyWidgetsConan(ConanFile):
 	def source(self):
 		git = Git(self, folder=self.name)
 		git.clone('https://github.com/prograda/skybolt-widgets', target=".")
-		git.checkout("bd459070a3f556ce0a4f8fab3d4c511111747d77")
+		git.checkout("3f93445f2c82bcb9197e201b89bcd26bd3508d1c")
 
 	def generate(self):
 		tc = CMakeToolchain(self)
