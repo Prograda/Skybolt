@@ -73,6 +73,14 @@ endif()
 
 OPTION(BUILD_PYTHON_BINDINGS "Build Python Bindings")
 
+# This option is provided to allow the application to opt-out of using boost as the logging backend,
+# in cases where we want to minimize the number of dependencies. If this option is disabled, the application will
+# fall back to a simple logging backend that writes to stdout.
+OPTION(BUILD_WITH_BOOST_LOG "Use Boost as the logging backend" ON)
+if (BUILD_WITH_BOOST_LOG)
+	add_definitions(-DUSE_BOOST_LOG)
+endif()
+
 #-------------------------------------------------------------
 # Build tree
 #-------------------------------------------------------------

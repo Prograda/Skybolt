@@ -8,6 +8,7 @@ class SkyboltConan(ConanFile):
     version = "1.8.0"
     settings = "os", "compiler", "arch", "build_type"
     options = {
+        "enable_boost_log": [True, False],
         "enable_bullet": [True, False],
         "enable_fft_ocean": [True, False],
         "enable_jsbsim": [True, False],
@@ -20,6 +21,7 @@ class SkyboltConan(ConanFile):
         "fPIC": [True, False]
     }
     default_options = {
+        "enable_boost_log": True,
         "enable_bullet": False,
         "enable_osg_curl_plugin": True,
         "enable_fft_ocean": True,
@@ -84,7 +86,7 @@ class SkyboltConan(ConanFile):
         if self.options.enable_qt:
             self.requires("qt/6.10.1", transitive_headers=True)
             self.include_package("skybolt-widgets", "1.0.0", transitive_headers=True)
-			
+
     def generate(self):
         tc = CMakeToolchain(self)
         tc.variables["Boost_STATIC_LIBS"] = bool(not self.dependencies["boost"].options.shared)
@@ -97,6 +99,7 @@ class SkyboltConan(ConanFile):
         tc.variables["BUILD_MAP_FEATURES_CONVERTER"] = bool(self.options.enable_map_features_converter)
         tc.variables["BUILD_PYTHON_BINDINGS"] = bool(self.options.enable_python)
         tc.variables["BUILD_PYTHON_PLUGIN"] = bool(self.options.enable_python)
+        tc.variables["BUILD_WITH_BOOST_LOG"] = bool(self.options.enable_boost_log)
         tc.variables["BUILD_WITH_QT"] = bool(self.options.enable_qt)
         tc.variables["BUILD_WITH_OSG_CURL_PLUGIN"] = bool(self.options.enable_osg_curl_plugin)
 

@@ -13,7 +13,6 @@ add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 
 set(LIBRARIES
 	Boost::boost
-	#Boost::log
 	SkyboltCommon
 	skybolt-reflect::skybolt-reflect
 )

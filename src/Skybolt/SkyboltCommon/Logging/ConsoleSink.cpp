@@ -15,7 +15,7 @@
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/trivial.hpp>
 
-//namespace bl = boost::log;
+namespace bl = boost::log;
 #endif
 
 namespace skybolt {
