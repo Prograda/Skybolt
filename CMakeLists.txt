@@ -2,7 +2,8 @@ cmake_minimum_required (VERSION 3.26.0)
 
 project(Skybolt)
 
-enable_testing()
+include(CTest)
+include(GNUInstallDirs)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -90,26 +91,53 @@ include(Catch)
 include(SkyboltInstall)
 
 add_subdirectory(src/Skybolt)
+
+option(SKYBOLT_BUILD_EXAMPLES "Build Skybolt Examples" ON)
 add_subdirectory(src/SkyboltExamples)
+
+function(_skybolt_configure_conan_init_script)
+	# TODO: Document this
+	set(_runtime_lib_path ${CMAKE_INSTALL_LIBDIR})
+	if (WIN32)
+		set(_runtime_lib_path ${CMAKE_INSTALL_BINDIR})
+	endif()
+
+	# FIXME: This'll probably fail on Windows with a multi-generator
+	set(Skybolt_PLUGIN_DIRS "\"${CMAKE_BINARY_DIR}/${_runtime_lib_path}/plugins\"")
+	configure_file(
+		"CMake/conan-skybolt-init.cmake.in" 
+		"${CMAKE_BINARY_DIR}/conan-skybolt-init-buildtree.cmake"
+		@ONLY
+	)	
+
+	set(Skybolt_PLUGIN_DIRS "\"\${CMAKE_CURRENT_LIST_DIR}/../${_runtime_lib_path}/plugins\"")
+	configure_file("CMake/conan-skybolt-init.cmake.in" "${CMAKE_BINARY_DIR}/conan-skybolt-init-installtree.cmake" @ONLY)
+	install(FILES ${CMAKE_BINARY_DIR}/cmake-conan-skybolt-init-installtree.cmake
+		DESTINATION CMake
+		COMPONENT Development
+		EXCLUDE_FROM_ALL
+	)
+endfunction()
+
+_skybolt_configure_conan_init_script()
 
 #-------------------------------------------------------------
 # Installation
 #-------------------------------------------------------------
-# Install conan files (required by 'conan editable' feature. See https://docs.conan.io/en/latest/developing_packages/editable_packages.html)
-if (EXISTS ${CMAKE_SOURCE_DIR}/conanfile.py) # File might not exist during conan build. See https://github.com/conan-io/conan/issues/5415.
-	install(FILES ${CMAKE_SOURCE_DIR}/conanfile.py DESTINATION .)
-endif()
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/Conan	DESTINATION .)
-
 # Install CMake scripts
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/CMake	DESTINATION .)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/CMake	
+	DESTINATION .
+	COMPONENT Development
+	EXCLUDE_FROM_ALL
+)
 
 # Install headers
 install(
 	DIRECTORY ${CMAKE_SOURCE_DIR}/src/Skybolt
 	DESTINATION include
-	FILES_MATCHING
-	PATTERN "*.h*"
+	COMPONENT Development
+	EXCLUDE_FROM_ALL
+	FILES_MATCHING PATTERN "*.h*"
 )
 
 # Install runtime dependencies
@@ -123,4 +151,17 @@ install(RUNTIME_DEPENDENCY_SET SkyboltDependencies
 		[=[.*system32\/.*\.dll]=] # Windows system DLLs
 		[=[^\/(lib|usr\/lib|usr\/local\/lib)]=] # Unix system libraries
 	DIRECTORIES ${CONAN_RUNTIME_LIB_DIRS}
+	RUNTIME 
+		COMPONENT SkyboltDependencies
+		EXCLUDE_FROM_ALL
+	LIBRARY
+		COMPONENT SkyboltDependencies
+		EXCLUDE_FROM_ALL
+)
+
+# Install assets
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/Assets	
+	DESTINATION .
+	COMPONENT Assets
+	EXCLUDE_FROM_ALL
 )

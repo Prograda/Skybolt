@@ -6,21 +6,45 @@
 
 #include "OsgWindow.h"
 #include <SkyboltVis/VisRoot.h>
-#include <SkyboltVis/Window/EmbeddedWindow.h>
+#include <SkyboltVis/Window/StandaloneWindow.h>
+
+// This must be included before GraphicsWindowX11
+#include <QKeyEvent>
 
 #include <osgViewer/ViewerBase>
 
-#ifdef WIN32
-#include <osgViewer/api/win32/GraphicsWindowWin32>
+#ifdef Q_OS_WIN
+#	include <osgViewer/api/win32/GraphicsWindowWin32>
+#elif Q_OS_LINUX
+#	include <osgViewer/api/X11/GraphicsWindowX11>
+#else
+#	error "Operating system not supported"
 #endif
-
-#include <QKeyEvent>
 
 using namespace skybolt;
 using namespace skybolt::vis;
 
-static osg::ref_ptr<osgViewer::View> createView(int width, int height, std::size_t hwnd, bool vsync)
+static osg::ref_ptr<osg::Referenced> createWindowData(WId hwnd)
 {
+#ifdef Q_OS_WIN
+	return new osgViewer::GraphicsWindowWin32::WindowData(HWND(hwnd));
+#elif Q_OS_LINUX
+	auto platform = QGuiApplication::platformName();
+	if (platform == "xcb")
+	{
+		return new osgViewer::GraphicsWindowX11::WindowData(hwnd);
+	}
+#endif
+	qFatal("SkyboltWEngineQt::OsgWindow - unsupported platform: '%s'", qPrintable(QGuiApplication::platformName()));
+	return {};
+}
+
+static osg::ref_ptr<osgViewer::View> createView(int width, int height, osg::ref_ptr<osg::Referenced> windowData, bool vsync)
+{
+	if (!windowData)
+	{
+		qFatal() << "Invalid windowData provided";
+	}
 	osg::ref_ptr<osg::GraphicsContext::Traits> traits(new osg::GraphicsContext::Traits);
 	traits->x = 0;
 	traits->y = 0;
@@ -29,32 +53,38 @@ static osg::ref_ptr<osgViewer::View> createView(int width, int height, std::size
 	traits->red = 8;
 	traits->green = 8;
 	traits->blue = 8;
-	traits->alpha = 8;
+	//traits->alpha = 8; // Intentially left unset because Qt window does not support alpha by default
 	traits->depth = 24;
 	traits->windowDecoration = false;
 	traits->doubleBuffer = true;
-	traits->sharedContext = 0x0;
-#ifdef WIN32
-	traits->inheritedWindowData = new osgViewer::GraphicsWindowWin32::WindowData(HWND(hwnd));
-#endif
+	traits->inheritedWindowData = windowData;
+
 	// FIXME: There's a bug in OSG where vsync is left at OS default when vsync=false, not actually set to false.
 	// See https://github.com/openscenegraph/OpenSceneGraph/blob/master/src/osgViewer/GraphicsWindowWin32.cpp#L1978
 	traits->vsync = vsync;
 
-	osg::ref_ptr<osg::GraphicsContext> context = osg::GraphicsContext::createGraphicsContext(traits.get());
-	configureGraphicsState(*context);
+	traits->readDISPLAY();
+	traits->setUndefinedScreenDetailsToDefaultScreen();
 
+	osg::ref_ptr<osg::GraphicsContext> context = osg::GraphicsContext::createGraphicsContext(traits.get());
+	if (!context) 
+	{
+		qFatal() << "Failed to initialise osg::GraphicsContext";
+	}
+
+	configureGraphicsState(*context);
+	
 	osg::ref_ptr<osgViewer::View> view = new osgViewer::View;
 	view->getCamera()->setViewport(new osg::Viewport(0, 0, width, height));
 	view->getCamera()->setGraphicsContext(context);
 	return view;
 }
 
-class OsgViewWindow : public Window
+class OsgViewWindow : public skybolt::vis::Window
 {
 public:
 	OsgViewWindow(const osg::ref_ptr<osgViewer::View>& view) :
-		Window(view)
+		skybolt::vis::Window(view)
 	{
 	}
 
@@ -85,13 +115,14 @@ OsgWindow::OsgWindow(const VisRootPtr& visRoot) :
 {
 	setFlags(Qt::FramelessWindowHint);
 
-	// TODO: we should take the devicePixelRatio() into account
+	show(); // On X11 we must show the window before creating the window, otherwise window appears empty.
 
-	mWindow = std::make_shared<OsgViewWindow>(createView(width(), height(), std::size_t(winId()), visRoot->getDisplaySettings().vsync));
+	auto window = std::make_shared<OsgViewWindow>(createView(width(), height(), createWindowData(winId()), visRoot->getDisplaySettings().vsync));
+	window->getGraphicsWindow().useCursor(true);
+	window->getGraphicsWindow().setCursor(osgViewer::GraphicsWindow::MouseCursor::InheritCursor); // Inherit the Qt cursor
+	mWindow = window;
+
 	mVisRoot->addWindow(mWindow);
-
-	mWindow->getGraphicsWindow().useCursor(true);
-	mWindow->getGraphicsWindow().setCursor(osgViewer::GraphicsWindow::MouseCursor::InheritCursor); // Inherit the Qt cursor
 }
 
 OsgWindow::~OsgWindow() = default;
@@ -172,7 +203,25 @@ bool OsgWindow::event(QEvent* event)
 		event->accept();
 		break;
 	}
-
+#ifdef Q_OS_LINUX
+	// The QEvent::Resize event needs specific handling on linux.
+	case QEvent::Resize: {
+        QResizeEvent* resizeEvent = static_cast<QResizeEvent*>(event);
+        
+		if (auto osgViewWindow = dynamic_cast<OsgViewWindow*>(mWindow.get()); osgViewWindow)
+		{
+			osgViewer::GraphicsWindow& graphicsWindow = osgViewWindow->getGraphicsWindow();
+			if (auto x11Window = dynamic_cast<osgViewer::GraphicsWindowX11*>(&graphicsWindow); x11Window)
+			{
+				int width = resizeEvent->size().width();
+				int height = resizeEvent->size().height();
+				x11Window->resized(0, 0, width, height);
+				x11Window->getEventQueue()->windowResize(0, 0, width, height);
+			}
+        }
+		break;
+    }
+#endif
     default:
         break;
     }

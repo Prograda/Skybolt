@@ -35,6 +35,6 @@ protected:
 
 private:
 	skybolt::vis::VisRootPtr mVisRoot;
-	std::shared_ptr<class OsgViewWindow> mWindow;
+	std::shared_ptr<skybolt::vis::Window> mWindow;
 	osg::ref_ptr<osg::Camera::DrawCallback> mDrawCallback;
 };

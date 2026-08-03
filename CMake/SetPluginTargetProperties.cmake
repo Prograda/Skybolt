@@ -1,22 +1,15 @@
-macro(set_plugin_output_directory target directoryType baseDirectoryPath)
-	set_target_properties( ${target}
-	  PROPERTIES
-	  ${directoryType}_DEBUG "${baseDirectoryPath}/Debug/plugins"
-	  ${directoryType}_RELEASE "${baseDirectoryPath}/Release/plugins"
-	  ${directoryType}_MINSIZEREL "${baseDirectoryPath}/MinSizeRel/plugins"
-	  ${directoryType}_RELWITHDEBINFO "${baseDirectoryPath}/RelWithDebInfo/plugins"
+function(set_plugin_target_properties target folder)
+	# In single config, the $<CONFIG> variable is built into the ${CMAKE_BINARY_DIR}, whereas in 
+	# multi-config generators, it isn't - and needs to be added to the path
+	get_property(_is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+	set_target_properties(${target} PROPERTIES 
+		FOLDER ${folder}
+		ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib$<$<BOOL:${_is_multi_config}>:/$<CONFIG>>/plugins"
+		LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib$<$<BOOL:${_is_multi_config}>:/$<CONFIG>>/plugins"
+		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin$<$<BOOL:${_is_multi_config}>:/$<CONFIG>>/plugins"
 	)
-endmacro()
+endfunction()
 
-macro(set_plugin_target_properties target folder)
-
-	set_target_properties(${target} PROPERTIES FOLDER ${folder})
-	set_plugin_output_directory(${target} ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-	set_plugin_output_directory(${target} LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-	set_plugin_output_directory(${target} RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-
-endmacro()
-
-macro(set_engine_plugin_target_properties target)
+function(set_engine_plugin_target_properties target)
 	set_plugin_target_properties(${target} SkyboltPlugins)
-endmacro()
+endfunction()

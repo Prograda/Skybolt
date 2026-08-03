@@ -1,0 +1,4 @@
+# Provide access to Skybolt's cmake files to any consumers of our Conan package
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+
+set(Skybolt_PLUGIN_DIRS @Skybolt_PLUGIN_DIRS@)

@@ -1,3 +1,7 @@
+# FIXME: According to the cmake documentation, file(GLOB ...) should not be used to collect a list of
+#   source files from your source tree. If no CMakeLists.txt file changes when a source is added or 
+#   removed then the generated build system cannot know when to ask CMake to regenerate.
+#   See comment in https://cmake.org/cmake/help/latest/command/file.html#glob.
 macro(add_source_group path list)
 
 	STRING(REPLACE "./" "Source Files/" GROUP_NAME ${path})

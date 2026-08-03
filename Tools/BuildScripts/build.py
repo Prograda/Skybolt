@@ -15,7 +15,7 @@ def build(skybolt_source_dir: Path, skybolt_build_dir: Path):
     Build Skybolt using conan. This will also build dependencies if required.
     """
     logging.info(f"Building...")
-    sp.run(f"conan build {skybolt_source_dir} --output-folder={skybolt_build_dir}  -pr:a=default {skybolt_source_dir}/Conan/Profiles/BuildEverythingWithPlugins.ini --build=missing --lockfile-partial", shell=True, check=True)
+    sp.run(f"conan build {skybolt_source_dir} --output-folder={skybolt_build_dir}  -pr:a=default -pr:a {skybolt_source_dir}/Conan/Profiles/BuildEverythingWithPlugins.ini --build=missing --lockfile-partial", shell=True, check=True)
 
 
 def copy_tree(source_dir: Path, destination_dir: Path):

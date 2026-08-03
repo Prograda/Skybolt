@@ -18,7 +18,7 @@ set(LIBRARIES
 	nlohmann_json::nlohmann_json
 )
 
-if (SKYBOLT_USE_BOOST_LOG)
+if (BUILD_WITH_BOOST_LOG) #SKYBOLT_USE_BOOST_LOG
 	list(APPEND LIBRARIES Boost::log)
 endif()
 

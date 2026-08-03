@@ -304,7 +304,7 @@ nlohmann::json writeReflectedObjectProperties(refl::TypeRegistry& registry, cons
 				{
 					// NaN values can't be represented in JSON, so represent them as 0.0 and log an error.
 					json[property->getName()] = 0.0;
-					SKYBOLT_LOG(ERROR) << std::format("Property \"{}\" of type \"{}\" has NaN value which can't be serialized to JSON. Representing it as 0.0 in JSON.", property->getName(), property->getType()->getName());
+					SKYBOLT_LOG(error) << std::format("Property \"{}\" of type \"{}\" has NaN value which can't be serialized to JSON. Representing it as 0.0 in JSON.", property->getName(), property->getType()->getName());
 				}
 				else
 				{

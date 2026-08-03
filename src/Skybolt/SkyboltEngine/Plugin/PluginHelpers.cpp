@@ -51,6 +51,12 @@ std::vector<std::filesystem::path> getAllPluginFilepathsInDirectories(const std:
 		auto plugins = getAllPluginFilepathsInDirectory(path);
 		result.insert(result.begin(), plugins.begin(), plugins.end());
 	}
+
+	// Ensure plugins load in a deterministic order based on filename
+	std::sort(result.begin(), result.end(), [](const std::filesystem::path& a, std::filesystem::path& b) {
+		return a.filename() < b.filename();
+	});
+
 	return result;
 }
 

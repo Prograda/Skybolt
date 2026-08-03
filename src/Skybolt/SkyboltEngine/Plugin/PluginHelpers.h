@@ -57,7 +57,12 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 				loadedPluginNames.insert(pluginName);
 				SKYBOLT_LOG(info) << "Loaded plugin: " << pluginName;
 
-				result.push_back([=](const PluginConfigT& config) { return creator(config); });
+				result.push_back([=](const PluginConfigT& config) { 
+					SKYBOLT_LOG(info) << "Initializing plugin: " << pluginName;
+					auto result = creator(config); 
+					SKYBOLT_LOG(info) << "Plugin initialised: " << pluginName;
+					return result;
+				});
 			}
 		}
 		catch (const std::exception& e)

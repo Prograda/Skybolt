@@ -27,38 +27,16 @@ set(LIBS
 
 add_library(${TARGET_NAME} STATIC ${SrcFiles})
 
+if (UNIX)
+	# On Linux when using the X11 Qt backend, OsgWindow fails to acquire a GL context 
+	# correctly and causes a crash.  This hack launches the GL view in a separate 
+	# window (which looks crap, but works) to workaround the issue.
+	target_compile_definitions(${TARGET_NAME} PRIVATE SKYBOLT_QT_OSG_WINDOW_HACK)
+endif()
+
 target_link_libraries (${TARGET_NAME} ${LIBS})
 
 skybolt_install(${TARGET_NAME})
 
-# Install Qt plugins, which are not tracked by CMake runtime dependency system
-function(install_qt_plugins plugin_folder_name)
-	install(
-		DIRECTORY ${qt_PACKAGE_FOLDER_RELEASE}/plugins/${plugin_folder_name}
-		CONFIGURATIONS Release
-		DESTINATION bin/qtPlugins
-		FILES_MATCHING PATTERN "*"
-	)
-	install(
-		DIRECTORY ${qt_PACKAGE_FOLDER_RELWITHDEBINFO}/plugins/${plugin_folder_name}
-		CONFIGURATIONS RelWithDebInfo
-		DESTINATION bin/qtPlugins
-		FILES_MATCHING PATTERN "*"
-	)
-	install(
-		DIRECTORY ${qt_PACKAGE_FOLDER_MINSIZEREL}/plugins/${plugin_folder_name}
-		CONFIGURATIONS MinSizeRel
-		DESTINATION bin/qtPlugins
-		FILES_MATCHING PATTERN "*"
-	)
-	install(
-		DIRECTORY ${qt_PACKAGE_FOLDER_DEBUG}/plugins/${plugin_folder_name}
-		CONFIGURATIONS Debug
-		DESTINATION bin/qtPlugins
-		FILES_MATCHING PATTERN "*"
-	)
-endfunction()
+skybolt_install_qt_plugins(COMPONENT QtPlugins EXCLUDE_FROM_ALL)
 
-install_qt_plugins(generic)
-install_qt_plugins(imageformats)
-install_qt_plugins(platforms)

@@ -1,2 +1,5 @@
 __pycache__/
 CMakeUserPresets.json
+package/
+build/
+install/
