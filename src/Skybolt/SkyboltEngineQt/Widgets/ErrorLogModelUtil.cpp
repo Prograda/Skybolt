@@ -10,10 +10,12 @@
 #ifdef USE_BOOST_LOG
 
 #include <assert.h>
+#include <boost/core/null_deleter.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace bl = boost::log;
 using namespace skybolt;
@@ -52,6 +54,7 @@ static ErrorLogModel::Severity toErrorLogModelSeverity(bl::trivial::severity_lev
 
 void connectToBoostLogger(QPointer<ErrorLogModel> model)
 {
+	// Output to the error log model
 	auto sink = boost::make_shared<LabelLogSink>([model = std::move(model)] (bl::trivial::severity_level level, const QString& message) {
 		if (model)
 		{
@@ -67,6 +70,13 @@ void connectToBoostLogger(QPointer<ErrorLogModel> model)
 	auto sinkWrapper = boost::make_shared<sink_t>(sink);
 	sinkWrapper->set_filter(bl::trivial::severity >= bl::trivial::warning);
     bl::core::get()->add_sink(sinkWrapper);
+
+	// Output to the shell
+    using console_sink_t = bl::sinks::synchronous_sink<bl::sinks::text_ostream_backend>;
+    auto consoleSink = boost::make_shared<console_sink_t>();
+    consoleSink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
+    
+    bl::core::get()->add_sink(consoleSink);
 }
 
 #endif
