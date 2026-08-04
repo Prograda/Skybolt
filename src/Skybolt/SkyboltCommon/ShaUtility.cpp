@@ -15,15 +15,24 @@ std::string calcSha1(const std::string& p_arg)
 {
 	boost::uuids::detail::sha1 sha1;
 	sha1.process_bytes(p_arg.data(), p_arg.size());
-	unsigned hash[5] = { 0 };
+	unsigned int hash[5] = { 0 };
 	sha1.get_digest(hash);
 
 	// Back to string
 	char buf[41] = { 0 };
 
-	for (int i = 0; i < 5; i++)
+	std::size_t pos = 0;
+	for (unsigned int word : hash)
 	{
-		snprintf(buf + (i << 3), 41, "%08x", hash[i]);
+		// Extract each byte independently to bypass any endianess issues
+		snprintf(buf + pos, sizeof(buf) - pos,
+				"%02x%02x%02x%02x",
+				(word >> 24) & 0xff,
+				(word >> 16) & 0xff,
+				(word >>  8) & 0xff,
+				word & 0xff
+		);
+		pos += 8;		
 	}
 
 	return std::string(buf);

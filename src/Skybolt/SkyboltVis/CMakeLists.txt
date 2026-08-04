@@ -52,7 +52,7 @@ set(LIBRARIES
 	openscenegraph-mr::osgUtil
 	openscenegraph-mr::osgViewer
 	${OSG_STATIC_LINK_PLUGIN_TARGET_NAMES}
-	${OPENTHREADS_LIBRARIES}
+	OpenThreads::OpenThreads
 	${muFFT_LIBRARIES}
 	cxxtimer::cxxtimer
 	earcut_hpp::earcut_hpp
