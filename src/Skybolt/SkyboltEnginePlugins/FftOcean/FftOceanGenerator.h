@@ -9,7 +9,6 @@
 #include <SkyboltCommon/Math/MathUtility.h>
 #include "WaveSpectrumWindow.h"
 
-#include <complex>
 #include <vector>
 
 #include <xsimd/xsimd.hpp>
@@ -39,6 +38,7 @@ struct FftOceanGeneratorConfig
 	bool useMultipleCores = false;
 };
 
+// Define a custom Complex type that can be used with SIMD types. This is necessary because std::complex is only compatible with saclar types according to the standard.
 template <typename T>
 struct Complex
 {
@@ -47,7 +47,21 @@ struct Complex
 
 	Complex() {}
 	Complex(T real, T img) : real(real), img(img) {}
+
+	template <typename U>
+	inline Complex& operator*=(const U& scalar)
+	{
+		real *= scalar;
+		img  *= scalar;
+		return *this;
+	}
 };
+
+template <typename T>
+inline Complex<T> operator+(const Complex<T>& a, const Complex<T>& b)
+{
+	return Complex<T>(a.real + b.real, a.img + b.img);
+}
 
 template <typename T>
 inline Complex<T> operator*(const Complex<T>& a, const Complex<T>& b)
@@ -55,8 +69,8 @@ inline Complex<T> operator*(const Complex<T>& a, const Complex<T>& b)
 	return Complex<T>(a.real * b.real - a.img * b.img, a.real * b.img + b.real * a.img);
 }
 
-typedef xsimd::batch<float, 4> Simd4;
-typedef std::complex<Simd4> complex_type_simd4;
+using Simd4 = xsimd::batch<float, 4>;
+using complex_type_simd4 = Complex<Simd4>;
 
 class FftOceanGenerator
 {
@@ -85,7 +99,7 @@ public:
 	glm::ivec2 getTextureSizePixels() const { return glm::ivec2(mTextureSizePixels, mTextureSizePixels); }
 	glm::dvec2 getTextureWorldSize() const { return glm::dvec2(mTextureWorldSize, mTextureWorldSize); }
 
-	typedef std::complex<float> complex_type;
+	using complex_type = std::complex<float> ;
 	const std::vector<complex_type>& getHt0Image() const { return mHt0; } //!< Image has dimensions of (mTextureSizePixels, mTextureSizePixels)
 
 private:

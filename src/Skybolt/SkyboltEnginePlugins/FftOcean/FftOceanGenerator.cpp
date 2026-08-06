@@ -11,6 +11,7 @@
 
 #include <muFFT/fft.h>
 #include <execution>
+#include <numeric>
 
 using namespace skybolt;
 
@@ -317,7 +318,7 @@ inline Simd4 fromScalar(float v) { return Simd4(v, v, v, v); }
 
 FftOceanGenerator::complex_type toSingle(complex_type_simd4 v, int i)
 {
-	return FftOceanGenerator::complex_type(v.real()[i], v.imag()[i]);
+	return FftOceanGenerator::complex_type(v.real[i], v.img[i]);
 }
 
 static float filterNan(float v, float valueIfNan)

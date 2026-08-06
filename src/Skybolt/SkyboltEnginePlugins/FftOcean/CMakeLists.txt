@@ -25,6 +25,12 @@ add_library(${TARGET_NAME} ${SKYBOLT_PLUGINS_LIBRARY_TYPE} ${SrcFiles})
 
 target_link_libraries (${TARGET_NAME} ${LIBS})
 
+# If using clang compiler, enable experimental library to allow std::execution::par and std::execution_seq to compile.
+# Note that as of 2026, clang does not fully support these and may fall back to sequential execution.
+target_compile_options(${TARGET_NAME} PRIVATE
+    $<$<CXX_COMPILER_ID:Clang,AppleClang>:-fexperimental-library>
+)
+
 set_target_properties(${TARGET_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE) #Export symbols for tests
 set_engine_plugin_target_properties(${TARGET_NAME})
 skybolt_plugin_install(${TARGET_NAME})

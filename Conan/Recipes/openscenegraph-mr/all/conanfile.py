@@ -247,6 +247,9 @@ class OpenSceneGraphConanFile(ConanFile):
 
         tc.cache_variables["CMAKE_POLICY_DEFAULT_CMP0042"] = "NEW"  # macOS: use @rpath for shared libs
         tc.cache_variables["CMAKE_POLICY_VERSION_MINIMUM"] = "3.5" # CMake 4 support 
+        
+        if self.settings.compiler in ["clang", "apple-clang", "gcc"]:
+            tc.extra_cxxflags.append("-Wno-register")
         tc.generate()
 
         deps = CMakeDeps(self)
