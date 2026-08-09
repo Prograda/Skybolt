@@ -33,7 +33,7 @@ osg::ref_ptr<osg::StateSet> createTransparentTextStateSet(const osg::ref_ptr<osg
 
 osg::ref_ptr<osgText::Font> getDefaultFont()
 {
-	static osg::ref_ptr<osgText::Font> font = osgText::readRefFontFile("fonts/verdana.ttf"); // static so we only load the font once
+	static osg::ref_ptr<osgText::Font> font = osgText::readRefFontFile("Fonts/DejaVuSans.ttf"); // static so we only load the font once
 	return font;
 }
 
