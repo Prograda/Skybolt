@@ -25,7 +25,7 @@ void UpdateLoop::exec(Updatable updatable, ShouldExit shouldExit)
 {
 	// We must use double precision because time_since_epoch can exceed float precision
 	typedef std::chrono::duration<double> seconds;
-	double prevElapsedTime = 0;
+	double prevElapsedTime = seconds(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
 	while (!shouldExit())
 	{
