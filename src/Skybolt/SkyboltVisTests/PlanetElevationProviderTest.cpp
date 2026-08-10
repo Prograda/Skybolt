@@ -10,9 +10,11 @@
 #include <px_sched/px_sched.h>
 
 #include <SkyboltCommon/MapUtility.h>
+#include <SkyboltVis/Image/SimpleImageFactory.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/TileSource.h>
-#include <SkyboltVis/ElevationProvider/HeightMapElevationProvider.h>
-#include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
+#include <SkyboltVis/Elevation/ElevationImageMetadata.h>
+#include <SkyboltVis/Elevation/HeightMapElevationProvider.h>
+#include <SkyboltVis/Elevation/TilePlanetAltitudeProvider.h>
 #include <SkyboltCommon/Eventually.h>
 #include <SkyboltCommon/NumericComparison.h>
 
@@ -24,7 +26,7 @@ using namespace skybolt::vis;
 class DummyTileSource : public TileSource
 {
 public:
-	osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override
+	ImagePtr createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override
 	{
 		std::scoped_lock<std::mutex> lock(requestsMutex);
 		requests.push_back(key);
@@ -47,23 +49,27 @@ public:
 	//! @returns the highest key with source data in the given key's ancestral hierarchy
 	std::optional<skybolt::QuadTreeTileKey> getHighestAvailableLevel(const skybolt::QuadTreeTileKey& key) const { return key; }
 
-	std::map<skybolt::QuadTreeTileKey, osg::ref_ptr<osg::Image>> images;
+	std::map<skybolt::QuadTreeTileKey, ImagePtr> images;
 	mutable std::vector<skybolt::QuadTreeTileKey> requests;
 	mutable std::mutex requestsMutex;
 };
 
 constexpr double altitude = 234;
 
-static osg::ref_ptr<osg::Image> createDummyImage()
+static ImagePtr createDummyImage()
 {
-	HeightMapElevationRerange rerange = rerangeElevationFromUInt16WithElevationBounds(0, 65535);
+	SimpleImageFactory factory;
 
-	auto image = new osg::Image;
-	image->allocateImage(1, 1, 1, GL_LUMINANCE, GL_UNSIGNED_SHORT);
-	uint16_t* p = reinterpret_cast<uint16_t*>(image->data());
+	ElevationRerange rerange = rerangeElevationFromUInt16WithElevationBounds(0, 65535);
+
+	auto image = valueOrThrowException(factory.createImage(1, 1, Image::Format::R16, Image::ColorSpace::Linear));
+	uint16_t* p = reinterpret_cast<uint16_t*>(image->getRawData());
 	*p = getColorValueForElevation(rerange, altitude);
 
-	setHeightMapElevationRerange(*image, rerange);
+	ElevationImageMetadata metadata{};
+	metadata.rerange = rerange;
+
+	setElevationImageMetadata(*image, metadata);
 
 	return image;
 }

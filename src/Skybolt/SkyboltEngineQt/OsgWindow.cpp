@@ -5,8 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "OsgWindow.h"
-#include <SkyboltVis/VisRoot.h>
-#include <SkyboltVis/Window/StandaloneWindow.h>
+#include <SkyboltVisOsg/VisRoot.h>
+#include <SkyboltVisOsg/Window/StandaloneWindow.h>
 
 // This must be included before GraphicsWindowX11
 #include <QKeyEvent>

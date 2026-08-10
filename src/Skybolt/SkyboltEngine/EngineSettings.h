@@ -8,7 +8,7 @@
 
 #include <SkyboltVis/DisplaySettings.h>
 #include <SkyboltVis/Renderable/Clouds/CloudRenderingParams.h>
-#include <SkyboltVis/Shadow/ShadowParams.h>
+#include <SkyboltVis/ShadowParams.h>
 #include <boost/program_options/variables_map.hpp>
 
 #include <nlohmann/json.hpp>

@@ -5,24 +5,31 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TileKeyHelpers.h"
-#include <osg/Vec2i>
 
 namespace skybolt {
 namespace vis {
 
-void getTileTransformInParentSpace(const QuadTreeTileKey& key, int parentLod, osg::Vec2f& scale, osg::Vec2f& offset)
+void getTileTransformInParentSpace(const QuadTreeTileKey& key, int parentLod, glm::vec2& scale, glm::vec2& offset, bool flipV)
 {
 	int reductions = key.level - parentLod;
 	assert(reductions >= 0);
 
 	int scaleInt = 1 << reductions;
 
-	osg::Vec2i reducedIndex(key.x / scaleInt, key.y / scaleInt);
-	osg::Vec2i v = reducedIndex * scaleInt;
+	glm::ivec2 reducedIndex(key.x / scaleInt, key.y / scaleInt);
+	glm::ivec2 v = reducedIndex * scaleInt;
 
 	float rcpScale = 1.0f / (float)scaleInt;
-	scale = osg::Vec2f(rcpScale, rcpScale);
-	offset = osg::Vec2f(key.x - v.x(), (scaleInt - 1) - (key.y - v.y())) * rcpScale;
+	scale = glm::vec2(rcpScale, rcpScale);
+
+	if (flipV)
+	{
+		offset = glm::vec2(key.x - v.x, (scaleInt - 1) - (key.y - v.y)) * rcpScale;
+	}
+	else
+	{
+		offset = glm::vec2(key.x - v.x, key.y - v.y) * rcpScale;
+	}
 }
 
 } // namespace vis

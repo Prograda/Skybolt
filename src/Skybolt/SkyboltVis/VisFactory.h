@@ -6,9 +6,11 @@
 
 #pragma once
 
+#include <SkyboltCommon/Exception.h>
 #include <SkyboltCommon/Registry.h>
+#include <SkyboltCommon/TypedItemContainer.h>
 
-#include <memory>
+#include <functional>
 
 namespace skybolt {
 namespace vis {
@@ -16,19 +18,59 @@ namespace vis {
 class VisFactory
 {
 public:
-	virtual ~VisFactory() {}
+	virtual ~VisFactory() = default;
+
+	virtual std::vector<std::type_index> getExposedTypes() const = 0;
 };
 
-enum class VisFactoryType
+template <class DerivedT>
+class VisFactoryT : public VisFactory
 {
-	WaveHeightTextureGenerator
+public:
+	~VisFactoryT() override = default;
+
+	std::vector<std::type_index> getExposedTypes() const override
+	{
+		return { typeid(DerivedT), typeid(VisFactory) };
+	}
 };
 
-typedef std::shared_ptr<VisFactory> VisFactoryPtr;
-typedef RegistryT<VisFactoryType, VisFactoryPtr> VisFactoryRegistry;
-typedef std::shared_ptr<VisFactoryRegistry> VisFactoryRegistryPtr;
+template <class ResultT, typename... CreationArgsT>
+class VisFactoryFunction : public VisFactoryT<VisFactoryFunction<ResultT, CreationArgsT...>>
+{
+public:
+	using Fn = std::function<std::unique_ptr<ResultT>(CreationArgsT...)>;
+	VisFactoryFunction(Fn fn) : mFn(std::move(fn)) {}
+	~VisFactoryFunction() override = default;
 
-void addDefaultFactories(VisFactoryRegistry& registry);
+	std::unique_ptr<ResultT> create(CreationArgsT... args)
+	{
+		return mFn(args...);
+	}
+
+private:
+	Fn mFn;
+};
+
+struct VisFactoryRegistry : TypedItemContainer<VisFactory>, Registry {};
+using VisFactoryRegistryPtr = std::shared_ptr<VisFactoryRegistry>;
+
+template <typename T>
+std::shared_ptr<T> findFactoryRequired(const VisFactoryRegistry& registry)
+{
+	if (const auto& factory = registry.getFirstItemOfType<T>(); factory)
+	{
+		return factory;
+	}
+	throw Exception("Could not find factory of type '" + std::string(typeid(T).name()) + "'");
+}
 
 } // namespace vis
+
+template<>
+inline std::vector<std::type_index> getExposedTypes<vis::VisFactory>(const vis::VisFactory& factory)
+{
+	return factory.getExposedTypes();
+}
+
 } // namespace skybolt

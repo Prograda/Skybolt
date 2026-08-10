@@ -9,6 +9,7 @@
 #include <SkyboltWidgets/SkyboltWidgetsFwd.h>
 #include <SkyboltWidgets/Tree/TreeItemModel.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
+#include <SkyboltCommon/File/FileLocator.h>
 
 #include <QWidget>
 
@@ -17,6 +18,7 @@ class QTreeView;
 struct ScenarioTreeWidgetConfig
 {
 	skybolt::sim::World* world;
+	skybolt::file::FileLocator fileLocator;
 };
 
 struct EntityTreeItem;
@@ -47,6 +49,7 @@ private:
 
 protected:
 	skybolt::sim::World* mWorld;
+	skybolt::file::FileLocator mFileLocator;
 
 private:
 	skybolt::TreeItemModel* mModel;

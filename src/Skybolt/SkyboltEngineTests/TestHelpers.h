@@ -6,18 +6,18 @@
 
 #pragma once
 
+#include <glm/glm.hpp>
 #include <catch2/catch.hpp>
-#include <osg/Vec3d>
 
-inline void check(const osg::Vec2d& a, const osg::Vec2d& b, double eps)
+inline void check(const glm::dvec2& a, const glm::dvec2& b, double eps)
 {
-	CHECK(a.x() == Approx(b.x()).margin(eps));
-	CHECK(a.y() == Approx(b.y()).margin(eps));
+	CHECK(a.x == Approx(b.x).margin(eps));
+	CHECK(a.y == Approx(b.y).margin(eps));
 }
 
-inline void check(const osg::Vec3d& a, const osg::Vec3d& b, double eps)
+inline void check(const glm::dvec3& a, const glm::dvec3& b, double eps)
 {
-	CHECK(a.x() == Approx(b.x()).margin(eps));
-	CHECK(a.y() == Approx(b.y()).margin(eps));
-	CHECK(a.z() == Approx(b.z()).margin(eps));
+	CHECK(a.x == Approx(b.x).margin(eps));
+	CHECK(a.y == Approx(b.y).margin(eps));
+	CHECK(a.z == Approx(b.z).margin(eps));
 }

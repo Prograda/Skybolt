@@ -5,68 +5,77 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "HeightmapLeveler.h"
-#include <SkyboltVis/OsgBox2.h>
-#include <SkyboltVis/GeoImageHelpers.h>
+#include <SkyboltCommon/Math/Box2.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
+#include <SkyboltVis/GeoImageHelpers.h>
+#include <SkyboltVis/Image/SimpleImageFactory.h>
 
 #include <filesystem>
-#include <osgDB/ReadFile>
-#include <osgDB/WriteFile>
+
 
 namespace skybolt {
 namespace mapfeatures {
 
+using vis::Image;
+using vis::ImagePtr;
+using vis::ImageFactory;
+
 //! @return inclusive bounds
-static vis::Box2i toIntBounds(const osg::Image& image, const vis::Box2f& bounds)
+static Box2i toIntBounds(const Image& image, const Box2d& bounds)
 {
-	vis::Box2i r;
-	r.minimum.x() = std::min((int)bounds.minimum.x(), image.s() - 1);
-	r.maximum.x() = std::min((int)bounds.maximum.x(), image.s() - 1);
-	r.minimum.y() = std::min((int)bounds.minimum.y(), image.t() - 1);
-	r.maximum.y() = std::min((int)bounds.maximum.y(), image.t() - 1);
+	Box2i r;
+	r.minimum.x = std::min((int)bounds.minimum.x, image.getWidth() - 1);
+	r.maximum.x = std::min((int)bounds.maximum.x, image.getWidth() - 1);
+	r.minimum.y = std::min((int)bounds.minimum.y, image.getHeight() - 1);
+	r.maximum.y = std::min((int)bounds.maximum.y, image.getHeight() - 1);
 	return r;
 }
 
-static vis::Box2f toBox2f(const LatLonBounds& b)
+static Box2f toBox2f(const LatLonBounds& b)
 {
-	return vis::Box2f(osg::Vec2f(b.minimum.x(), b.minimum.y()), osg::Vec2f(b.maximum.x(), b.maximum.y()));
+	return Box2f(glm::vec2(b.minimum.x(), b.minimum.y()), glm::vec2(b.maximum.x(), b.maximum.y()));
 }
 
-static void fillSubImage(osg::Image& image, const vis::Box2i& bounds, uint16_t v)
+static void fillSubImage(Image& image, const Box2i& bounds, uint16_t v)
 {
-	uint16_t* p = reinterpret_cast<uint16_t*>(image.data());
-	for (int y = bounds.minimum.y(); y <= bounds.maximum.y(); ++y)
+	uint16_t* p = reinterpret_cast<uint16_t*>(image.getRawData());
+	for (int y = bounds.minimum.y; y <= bounds.maximum.y; ++y)
 	{
-		for (int x = bounds.minimum.x(); x <= bounds.maximum.x(); ++x)
+		for (int x = bounds.minimum.x; x <= bounds.maximum.x; ++x)
 		{
-			p[x + image.s() * y] = v;
+			p[x + image.getWidth() * y] = v;
 		}
 	}
 }
 
-static uint16_t calcMeanHeight(const osg::Image& image, const vis::Box2i& bounds)
+static uint16_t calcMeanHeight(const Image& image, const Box2i& bounds)
 {
-	const uint16_t* p = reinterpret_cast<const uint16_t*>(image.getDataPointer());
+	const uint16_t* p = reinterpret_cast<const uint16_t*>(image.getRawData());
 	double mean = 0;
 
-	for (int y = bounds.minimum.y(); y <= bounds.maximum.y(); ++y)
+	for (int y = bounds.minimum.y; y <= bounds.maximum.y; ++y)
 	{
-		for (int x = bounds.minimum.x(); x <= bounds.maximum.x(); ++x)
+		for (int x = bounds.minimum.x; x <= bounds.maximum.x; ++x)
 		{
-			mean += p[x + image.s() * y];
+			mean += p[x + image.getWidth() * y];
 		}
 	}
 
-	mean /= (bounds.maximum.x() - bounds.minimum.x() + 1) * (bounds.maximum.y() - bounds.minimum.y() + 1);
+	mean /= (bounds.maximum.x - bounds.minimum.x + 1) * (bounds.maximum.y - bounds.minimum.y + 1);
 	return (uint16_t)mean;
 }
 
-static vis::Box2i getSubImageBounds(const osg::Image& image, const LatLonBounds& imageWorldBounds, const LatLonBounds& featureBounds)
+static Box2d toBox2d(const LatLonBounds& boudns)
 {
-	vis::Box2f subImageBoundsF = vis::getSubImageBounds(toBox2f(imageWorldBounds), toBox2f(featureBounds), image.s(), image.t());
-	vis::Box2f flippedSubImageBoundsF(
-		osg::Vec2f(subImageBoundsF.minimum.y(), subImageBoundsF.minimum.x()),
-		osg::Vec2f(subImageBoundsF.maximum.y(), subImageBoundsF.maximum.x())
+	return Box2d(glm::dvec2(boudns.minimum.x(), boudns.minimum.y()), glm::dvec2(boudns.maximum.x(), boudns.maximum.y()));
+}
+
+static Box2i getSubImageBounds(const Image& image, const LatLonBounds& imageWorldBounds, const LatLonBounds& featureBounds)
+{
+	Box2d subImageBoundsF = vis::getSubImageBounds(toBox2d(imageWorldBounds), toBox2d(featureBounds), image.getWidth(), image.getHeight());
+	Box2d flippedSubImageBoundsF(
+		glm::dvec2(subImageBoundsF.minimum.y, subImageBoundsF.minimum.x),
+		glm::dvec2(subImageBoundsF.maximum.y, subImageBoundsF.maximum.x)
 	);
 
 	return toIntBounds(image, flippedSubImageBoundsF);
@@ -140,12 +149,12 @@ struct FeatureInfo
 	LatLonBounds worldBounds;
 };
 
-void levelHeightmapUnderFeatures(const skybolt::QuadTreeTileKey& key, const TileInfo& tileInfo, osg::Image& image, std::map<Feature*, FeatureInfo>& featureInfoMap)
+void levelHeightmapUnderFeatures(const skybolt::QuadTreeTileKey& key, const TileInfo& tileInfo, Image& image, std::map<Feature*, FeatureInfo>& featureInfoMap)
 {
 	for (Feature* feature : tileInfo.features)
 	{
 		FeatureInfo& info = featureInfoMap.find(feature)->second;
-		vis::Box2i subImageBounds = getSubImageBounds(image, tileInfo.worldBounds, info.worldBounds);
+		Box2i subImageBounds = getSubImageBounds(image, tileInfo.worldBounds, info.worldBounds);
 
 		// Cache elevations by tile level to ensure all tiles use the same elevation so that edges match up
 		uint16_t elevation;
@@ -166,7 +175,7 @@ void levelHeightmapUnderFeatures(const skybolt::QuadTreeTileKey& key, const Tile
 
 typedef std::map<skybolt::QuadTreeTileKey, TileInfo> TileInfoForKeys;
 
-void levelHeightmapsUnderFeatures(const std::string& heightmapSourceDirectory, const std::string& heightmapDestinationDirectory, const std::vector<Feature*>& features, double borderMeters)
+void levelHeightmapsUnderFeatures(const ImageFactory& imageFactory, const std::string& heightmapSourceDirectory, const std::string& heightmapDestinationDirectory, const std::vector<Feature*>& features, double borderMeters)
 {
 	// For each tile, find the intersecting features
 	TileInfoForKeys tiles;
@@ -192,12 +201,12 @@ void levelHeightmapsUnderFeatures(const std::string& heightmapSourceDirectory, c
 	{
 		std::string filename = getFilename(v.first);
 		std::string sourceFilepath = heightmapSourceDirectory + "/" + filename;
-		osg::ref_ptr<osg::Image> image = osgDB::readImageFile(sourceFilepath);
+		ImagePtr image = valueOrThrowException(imageFactory.readImage(sourceFilepath));
 
 		levelHeightmapUnderFeatures(v.first, v.second, *image, featureInfoMap);
 
 		std::filesystem::create_directories(heightmapDestinationDirectory + "/" + getDir(v.first));
-		osgDB::writeImageFile(*image, heightmapDestinationDirectory + "/" + filename);
+		valueOrThrowException(imageFactory.writeImage(*image, heightmapDestinationDirectory + "/" + filename));
 	}
 }
 
@@ -207,7 +216,7 @@ static float heightmapValueToFloatAltitude(float value)
 	return value;
 }
 
-double getAltitudeAtPosition(const std::string& heightmapSourceDirectory, const sim::LatLon& position)
+double getAltitudeAtPosition(const ImageFactory& imageFactory, const std::string& heightmapSourceDirectory, const sim::LatLon& position)
 {
 	LatLonBounds positionBounds(position, position);
 	KeyBounds keyBounds = findTilesIntersectingBounds(heightmapSourceDirectory, positionBounds);
@@ -234,9 +243,9 @@ double getAltitudeAtPosition(const std::string& heightmapSourceDirectory, const 
 
 	std::string filename = getFilename(key);
 	std::string sourceFilepath = heightmapSourceDirectory + "/" + filename;
-	osg::ref_ptr<osg::Image> image = osgDB::readImageFile(sourceFilepath);
+	ImagePtr image = valueOrThrowException(imageFactory.readImage(sourceFilepath));
 
-	vis::Box2i subImageBounds = getSubImageBounds(*image, tileBounds, positionBounds);
+	Box2i subImageBounds = getSubImageBounds(*image, tileBounds, positionBounds);
 	uint16_t height = calcMeanHeight(*image, subImageBounds);
 	return heightmapValueToFloatAltitude(height);
 }

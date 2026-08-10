@@ -8,7 +8,7 @@
 #include <catch2/catch.hpp>
 #include <SkyboltEngine/Sequence/Interpolator/CubicBSplineInterpolator.h>
 #include <SkyboltCommon/Math/MathUtility.h>
-#include <osg/Vec3d>
+
 
 using namespace skybolt;
 

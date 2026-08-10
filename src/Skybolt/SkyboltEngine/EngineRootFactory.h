@@ -7,6 +7,7 @@
 #pragma once
 
 #include "EngineRoot.h"
+#include <SkyboltVis/SkyboltVisFwd.h>
 #include <boost/program_options/variables_map.hpp>
 
 namespace skybolt {
@@ -14,10 +15,12 @@ namespace skybolt {
 class EngineRootFactory
 {
 public:
-	static std::unique_ptr<EngineRoot> create(const boost::program_options::variables_map& params);
-	static std::unique_ptr<EngineRoot> create(const std::vector<PluginFactory>& pluginFactories, const nlohmann::json& settings);
+	static std::unique_ptr<EngineRoot> create(const boost::program_options::variables_map& params, const vis::ImageFactoryPtr& imageFactory = createDefaultImageFactory());
+	static std::unique_ptr<EngineRoot> create(const std::vector<PluginFactory>& pluginFactories, const nlohmann::json& settings, const vis::ImageFactoryPtr& imageFactory = createDefaultImageFactory());
 
 	static std::vector<std::string> getDefaultPluginDirs();
+
+	static vis::ImageFactoryPtr createDefaultImageFactory();
 };
 
 } // namespace skybolt

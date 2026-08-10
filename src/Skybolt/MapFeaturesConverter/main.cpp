@@ -15,7 +15,7 @@
 #define PX_SCHED_IMPLEMENTATION 1
 #include <px_sched/px_sched.h>
 
-#include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
+#include <SkyboltVis/Elevation/TilePlanetAltitudeProvider.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/CachedTileSource.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/MapboxElevationTileSource.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/SphericalMercatorToPlateCarreeTileSource.h>

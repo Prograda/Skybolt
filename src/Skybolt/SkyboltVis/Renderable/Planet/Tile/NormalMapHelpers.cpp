@@ -5,25 +5,24 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "NormalMapHelpers.h"
-#include <osg/Texture> // included for GL_R16
+#include "SkyboltVis/Image/ImageFactory.h"
+
 #include <algorithm>
 #include <assert.h>
 
 namespace skybolt {
 namespace vis {
 
-osg::ref_ptr<osg::Image> createNormalMapFromHeightMap(const osg::Image& heightmap, const HeightMapElevationRerange& rerange, const osg::Vec2f& texelWorldSize, int filterWidth)
+ImagePtr createNormalMapFromHeightMap(const ImageFactory& imageFactory, const Image& heightmap, const ElevationRerange& rerange, const glm::vec2& texelWorldSize, int filterWidth)
 {
-	assert(heightmap.getInternalTextureFormat() == GL_R16);
-	const int width = heightmap.s();
-	const int height = heightmap.t();
+	assert(heightmap.getFormat() == Image::Format::R16);
+	const int width = heightmap.getWidth();
+	const int height = heightmap.getHeight();
 
-	osg::Image* image = new osg::Image;
-	image->allocateImage(width, height, 1, GL_RGB, GL_UNSIGNED_BYTE);
-	image->setInternalTextureFormat(GL_RGB8);
+	ImagePtr image = valueOrThrowException(imageFactory.createImage(width, height, Image::Format::RGB8, Image::ColorSpace::Linear));
 
-	unsigned char* p = image->data();
-	const uint16_t* src = reinterpret_cast<const uint16_t*>(heightmap.data());
+	unsigned char* p = image->getRawData();
+	const uint16_t* src = reinterpret_cast<const uint16_t*>(heightmap.getRawData());
 
 	float filterWidthF = filterWidth;
 	int lowerOffset = -(filterWidth / 2);
@@ -43,16 +42,19 @@ osg::ref_ptr<osg::Image> createNormalMapFromHeightMap(const osg::Image& heightma
 			uint16_t h01 = src[x0 + width * y1];
 			uint16_t h11 = src[x1 + width * y1];
 
-			const float elevationScale = rerange.x();
+			const float elevationScale = rerange.x;
 			float dhx = elevationScale * 0.5f * float((h10 + h11) - (h00 + h01));
 			float dhy = elevationScale * 0.5f * float((h01 + h11) - (h00 + h10));
 
-			osg::Vec3f normal = osg::Vec3f(texelWorldSize.x() * filterWidthF, 0, dhx) ^ osg::Vec3f(0, texelWorldSize.y() * filterWidthF, dhy);
-			normal.normalize();
+			glm::dvec3 normal = glm::cross(
+				glm::dvec3(texelWorldSize.x * filterWidthF, 0, dhx),
+				glm::dvec3(0, texelWorldSize.y * filterWidthF, dhy)
+				);
+			normal = glm::normalize(normal);
 
-			*p++ = std::clamp(int(normal.x() * 128.0f + 128.0f), 0, 255);
-			*p++ = std::clamp(int(normal.y() * 128.0f + 128.0f), 0, 255);
-			*p++ = std::clamp(int(normal.z() * 128.0f + 128.0f), 0, 255);
+			*p++ = std::clamp(int(normal.x * 128.0f + 128.0f), 0, 255);
+			*p++ = std::clamp(int(normal.y * 128.0f + 128.0f), 0, 255);
+			*p++ = std::clamp(int(normal.z * 128.0f + 128.0f), 0, 255);
 		}
 	}
 	return image;

@@ -25,10 +25,13 @@ struct ComponentFactoryContext
 	px_sched::Scheduler* scheduler;
 	sim::World* simWorld;
 	EntityFactory const* entityFactory;
+	vis::ImageFactoryPtr imageFactory;
 	JulianDateProvider julianDateProvider;
 	EngineStats* stats;
 	vis::JsonTileSourceFactoryRegistryPtr tileSourceFactoryRegistry;
 	file::FileLocator fileLocator;
+	std::vector<std::string> assetPackagePaths;
+	nlohmann::json engineSettings;
 	NonNullPtr<FactoryRegistries> factoryRegistries;
 	NonNullPtr<refl::TypeRegistry> typeRegistry;
 };
@@ -38,7 +41,7 @@ class ComponentFactory
 public:
 	virtual ~ComponentFactory() {}
 
-	//! @return nullptr if component could not be created
+	//! @return nullptr if component was not be created.
 	virtual sim::ComponentPtr create(sim::Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) = 0;
 };
 

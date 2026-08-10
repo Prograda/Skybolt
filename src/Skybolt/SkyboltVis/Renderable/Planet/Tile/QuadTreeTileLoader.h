@@ -6,12 +6,10 @@
 
 #pragma once
 
-#include "SkyboltVis/OsgBox2.h"
 #include "SkyboltVis/SkyboltVisFwd.h"
 #include <SkyboltCommon/Listenable.h>
+#include "SkyboltCommon/Math/Box2.h"
 #include <SkyboltCommon/Math/QuadTree.h>
-
-#include <osg/Vec2d>
 
 #include <assert.h>
 #include <set>
@@ -78,7 +76,7 @@ public:
 
 	bool isLoading() const { return !mLoadQueue.empty(); }
 
-	struct LoadedTile : public skybolt::QuadTreeTile<osg::Vec2d, LoadedTile>
+	struct LoadedTile : public skybolt::QuadTreeTile<glm::dvec2, LoadedTile>
 	{
 		TileImagesPtr images;
 	};

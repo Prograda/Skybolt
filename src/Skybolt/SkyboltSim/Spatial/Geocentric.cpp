@@ -38,7 +38,7 @@ sim::LatLon geocentricToLatLon(const sim::Vector3& pos)
 
 sim::Quaternion latLonToGeocentricLtpOrientation(const sim::LatLon& latLon)
 {
-	return glm::angleAxis(latLon.lon, sim::Vector3(0, 0, 1)) * glm::angleAxis(latLon.lat + skybolt::math::halfPiD(), sim::Vector3(0, -1, 0)); // Note: sim::Quaternion rotation order is different to OSG::Quat
+	return glm::angleAxis(latLon.lon, sim::Vector3(0, 0, 1)) * glm::angleAxis(latLon.lat + skybolt::math::halfPiD(), sim::Vector3(0, -1, 0)); // Note: sim::Quaternion rotation order is different to glm::dquat
 }
 
 sim::Matrix3 geocentricToLtpOrientation(const sim::Vector3& pos)

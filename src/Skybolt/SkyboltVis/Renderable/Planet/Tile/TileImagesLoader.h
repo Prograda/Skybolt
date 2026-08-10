@@ -8,6 +8,7 @@
 
 #include "TileImage.h"
 #include <SkyboltVis/SkyboltVisFwd.h>
+#include <SkyboltVis/Image/Image.h>
 
 namespace skybolt {
 namespace vis {
@@ -45,10 +46,9 @@ protected:
 
 	typedef std::shared_ptr<CacheEntry> CacheEntryPtr;
 	typedef std::map<skybolt::QuadTreeTileKey, CacheEntryPtr> TileCache; //!< Maps a requested tile key to an image. The image may be at a lower key level than the request e.g if no high res image is available.
-	typedef std::function<osg::ref_ptr<osg::Image>(const skybolt::QuadTreeTileKey& key)> Factory;
+	typedef std::function<ImagePtr(const skybolt::QuadTreeTileKey& key)> Factory;
 
-	//! @param fallbackToAncestorKey If true, will return an image for an ancestor key if no image is available for the requested key. If false, returns a nullptr image if not available.
-	TileImage getOrCreateImage(const skybolt::QuadTreeTileKey& requestedKey, size_t cacheIndex, Factory factory, bool fallbackToAncestorKey = true) const;
+	TileImage getOrCreateImage(const skybolt::QuadTreeTileKey& requestedKey, size_t cacheIndex, Factory factory) const;
 
 
 private:

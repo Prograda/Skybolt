@@ -158,12 +158,12 @@ nlohmann::json readEngineSettingsFromCommandLine(const po::variables_map& vm)
 	return nlohmann::json::object();
 }
 
-std::unique_ptr<EngineRoot> createEngineRoot(bool enableVis, const po::variables_map& vm)
+std::unique_ptr<EngineRoot> createEngineRoot(const po::variables_map& vm)
 {
 	EngineRootConfig config;
-	config.enableVis = enableVis;
 	config.assetSearchPaths = getDefaultAssetSearchPaths();
 	config.engineSettings = readEngineSettingsFromCommandLine(vm);
+	config.imageFactory = EngineRootFactory::createDefaultImageFactory();
 
 	auto engineRoot = std::make_unique<EngineRoot>(config);
 	engineRoot->loadPlugins(loadDefaultPluginFactories());
@@ -178,7 +178,7 @@ int runScenario(const po::variables_map& vm)
 	}
 
 	ScopedSignalHandler signalHandler;
-	auto engineRoot = createEngineRoot(false, vm);
+	auto engineRoot = createEngineRoot(vm);
 	engineRoot->scenario->timeSource->setState(sim::TimeSource::StatePlaying);
 
 	const std::string scenarioFilename = vm["scenario"].as<std::string>();
@@ -240,7 +240,7 @@ int runScenario(const po::variables_map& vm)
 
 int validateAssets(const po::variables_map& vm)
 {
-	auto engineRoot = createEngineRoot(true, vm);
+	auto engineRoot = createEngineRoot(vm);
 
 	int validatedCount = 0;
 	for (const auto& templateName : engineRoot->entityFactory->getTemplateNames())

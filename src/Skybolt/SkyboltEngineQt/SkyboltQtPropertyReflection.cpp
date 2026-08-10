@@ -9,13 +9,13 @@
 
 #include <SkyboltCommon/Units.h>
 #include <SkyboltCommon/Math/MathUtility.h>
-#include <SkyboltEngine/Components/VisObjectsComponent.h>
-#include <SkyboltWidgets/Util/QtTypeConversions.h>
-#include <SkyboltWidgets/Property/QtPropertyReflectionConversion.h>
 #include <SkyboltReflect/Reflection.h>
 #include <SkyboltSim/CameraController/CameraModifier.h>
 #include <SkyboltSim/PropertyMetadata.h>
 #include <SkyboltSim/Spatial/LatLon.h>
+#include <SkyboltVisOsg/Components/VisObjectsComponent.h>
+#include <SkyboltWidgets/Util/QtTypeConversions.h>
+#include <SkyboltWidgets/Property/QtPropertyReflectionConversion.h>
 
 #include <QVector3D>
 

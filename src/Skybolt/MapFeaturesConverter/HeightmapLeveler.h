@@ -8,7 +8,6 @@
 
 #include <SkyboltVis/Renderable/Planet/Features/PlanetFeaturesSource.h>
 
-#include <osg/Image>
 
 namespace skybolt {
 namespace mapfeatures {

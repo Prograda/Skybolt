@@ -7,6 +7,7 @@
 #include "FeaturesConverter.h"
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltVis/Renderable/Planet/Features/PlanetFeaturesHelpers.h>
+#include <SkyboltVis/Renderable/Planet/Features/PlanetFeaturesSource.h>
 #include <SkyboltCommon/Exception.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <readosm.h>
@@ -413,7 +414,7 @@ static int parseWay(const void* user_data, const readosm_way* way)
 		{
 			// Estimate height from building size
 			LatLonBounds bounds = calcPointBounds(points);
-			vis::LatLonVec2Adapter boundsSize = bounds.size();
+			mapfeatures::LatLonVec2Adapter boundsSize = bounds.size();
 			double sizeMeters = std::max(boundsSize.x(), boundsSize.y()) * earthRadius;
 			int levels = skybolt::math::clamp(int(std::pow(sizeMeters, 0.8) / 10.0f) + 1, 1, 5); // not based on anything, but looks ok
 			building.height = calcBuildingHeightFromLevelCount(levels);

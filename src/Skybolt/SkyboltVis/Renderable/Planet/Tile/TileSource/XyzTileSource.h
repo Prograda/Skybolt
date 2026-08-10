@@ -6,14 +6,17 @@
 
 #pragma once
 #include "TileSourceWithMinMaxLevel.h"
-#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h"
-#include <osgDB/Options>
+#include <SkyboltCommon/File/FileLocator.h>
+#include "SkyboltVis/Elevation/ElevationRerange.h"
 
 namespace skybolt {
 namespace vis {
 
 struct XyzTileSourceConfig
 {
+	ImageFactoryPtr imageFactory;
+	file::FileLocator fileLocator; //!< May be null, in which case files must be absolute paths, or located relative to current working directory
+
 	//! URL must be templated with variables x, y, z, key in curley braces
 	//! E.g "https://test.com/image/{z}/{x}/{y}.png?{key}"
 	std::string urlTemplate;
@@ -29,7 +32,7 @@ struct XyzTileSourceConfig
 	YOrigin yOrigin = YOrigin::Top;
 
 	IntRangeInclusive levelRange;
-	std::optional<HeightMapElevationRerange> elevationRerange; //!< If provided, treat images as heightmaps storing elevation with the given rerange
+	std::optional<ElevationRerange> elevationRerange; //!< If provided, treat images as heightmaps storing elevation with the given rerange
 	bool optimizeElevationScale = false;
 };
 
@@ -41,7 +44,7 @@ public:
 	//! @return true if images can be loaded from URL
 	bool validate() const;
 
-	osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
+	ImagePtr createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
 
 	const std::string& getCacheSha() const override { return mCacheSha; }
 
@@ -56,14 +59,14 @@ private:
 	std::string toUrl(const skybolt::QuadTreeTileKey& key) const;
 
 private:
+	ImageFactoryPtr mImageFactory;
+	file::FileLocator mFileLocator; //!< May be null, in which case files must be absolute paths, or located relative to current working directory
 	const std::string mUrlTemplate;
 	const XyzTileSourceConfig::YOrigin mYOrigin;
 	const std::string mApiKey;
 	const std::string mCacheSha;
-	std::optional<HeightMapElevationRerange> mElevationRerange;
+	std::optional<ElevationRerange> mElevationRerange;
 	bool mOptimizeElevationScale;
-
-	osg::ref_ptr<osgDB::Options> mImageReadOptions;
 };
 
 } // namespace vis

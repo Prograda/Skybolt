@@ -7,13 +7,12 @@
 #include "UpdateLoopUtility.h"
 #include <SkyboltSim/System/SimStepper.h>
 #include <SkyboltSim/System/System.h>
-#include <SkyboltVis/VisRoot.h>
 
 namespace skybolt {
 
 using namespace sim;
 
-void runMainLoop(vis::VisRoot& visRoot, EngineRoot& engineRoot, UpdateLoop::ShouldExit shouldExit, SimPausedPredicate paused)
+void runMainLoop(EngineRoot& engineRoot, UpdateLoop::Updatable updatable, UpdateLoop::ShouldExit shouldExit, SimPausedPredicate paused)
 {
 	// Run main loop
 	auto systemRegistry = engineRoot.systemRegistry;
@@ -33,7 +32,7 @@ void runMainLoop(vis::VisRoot& visRoot, EngineRoot& engineRoot, UpdateLoop::Shou
 		}
 		currentWallTime += dtWallClock;
 
-		return visRoot.render();
+		return updatable(dtWallClock);
 	}, shouldExit);
 }
 

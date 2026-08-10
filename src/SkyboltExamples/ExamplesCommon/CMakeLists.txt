@@ -10,6 +10,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(LIBRARIES
 	AircraftHud
 	SkyboltEngine
+	SkyboltVisOsg
 )
 
 add_library(${LIB_NAME} STATIC ${SOURCE_FILES} ${HEADER_FILES})

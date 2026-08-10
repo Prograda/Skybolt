@@ -7,15 +7,12 @@
 #include "EngineRoot.h"
 #include "AssetPackage.h"
 #include "ComponentFactory.h"
-#include "SimVisBinding/SimVisSystem.h"
 #include <SkyboltSim/CameraController/CameraModifierStack.h>
 #include <SkyboltSim/System/EntitySystem.h>
 #include <SkyboltSim/System/SimStepper.h>
 #include <SkyboltSim/World.h>
-#include <SkyboltVis/OsgStateSetHelpers.h>
-#include <SkyboltVis/Scene.h>
-#include <SkyboltVis/TextureCache.h>
-#include <SkyboltVis/Renderable/Model/ModelFactory.h>
+#include <SkyboltVis/VisFactory.h>
+#include <SkyboltVis/Image/ImageFactory.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 #include <SkyboltCommon/File/FileUtility.h>
 #include <SkyboltCommon/File/OsDirectories.h>
@@ -25,42 +22,40 @@
 #define PX_SCHED_IMPLEMENTATION 1
 #include <px_sched/px_sched.h>
 
-#include <osgDB/Registry>
 #include <boost/algorithm/string.hpp>
 #include <SkyboltCommon/Logging/Logging.h>
+#include <algorithm>
 #include <optional>
+#include <vector>
 
 namespace skybolt {
 
-Expected<file::Path> locateFile(const std::string& filename)
+Expected<file::Path> locateFile(AssetPackageRegistry& registry, const std::string& filename)
 {
-	auto resolvedFilename = osgDB::Registry::instance()->findDataFile(filename, nullptr, osgDB::CASE_SENSITIVE);
-	if (resolvedFilename.empty())
+	auto requestedPath = std::filesystem::path(filename);
+	if (requestedPath.is_absolute() && std::filesystem::exists(requestedPath))
 	{
-		return UnexpectedMessage{ "Could not locate file: " + filename };
+		return requestedPath.lexically_normal();
 	}
-	return resolvedFilename;
+
+	for (const auto& basePath : registry)
+	{
+		auto candidatePath = (basePath / requestedPath).lexically_normal();
+		if (std::filesystem::exists(candidatePath))
+		{
+			return candidatePath;
+		}
+	}
+
+	if (std::filesystem::exists(requestedPath))
+	{
+		return requestedPath.lexically_normal();
+	}
+
+	return UnexpectedMessage{ "Could not locate file: " + filename };
 };
 
 static std::vector<std::string> transparentMaterialNames() { return { "transparentExt", "transparent" }; } //@deprecated. Set osg::Material diffuse alpha < 1 instead to treat geometry as transparent.
-
-static vis::ModelFactoryPtr createModelFactory(const vis::ShaderPrograms& programs)
-{
-	osg::ref_ptr<osg::Program> glassProgram = programs.getRequiredProgram("glass");
-
-	vis::ModelFactoryConfig config;
-	config.defaultProgram = programs.getRequiredProgram("model");
-	config.glassProgram = glassProgram;
-	for (const std::string& name : transparentMaterialNames())
-	{
-		config.stateSetModifiers[name] = [=](osg::StateSet& stateSet, const osg::Material& material) {
-			stateSet.setAttribute(glassProgram);
-			vis::makeStateSetTransparent(stateSet, vis::TransparencyMode::PremultipliedAlpha);
-		};
-	}
-
-	return std::make_shared<vis::ModelFactory>(config);
-}
 
 const std::string maxCoresEnvironmentVariable = "SKYBOLT_MAX_CORES";
 
@@ -138,12 +133,21 @@ std::vector<std::string> getDefaultAssetSearchPaths()
 
 EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	scheduler(new px_sched::Scheduler),
-	fileLocator(locateFile),
 	systemRegistry(std::make_shared<sim::SystemRegistry>()),
 	typeRegistry(std::make_unique<refl::TypeRegistry>()),
 	factoryRegistries(std::make_unique<FactoryRegistries>()),
 	engineSettings(config.engineSettings)
 {
+	auto assetPackageRegistry = std::make_shared<AssetPackageRegistry>();
+	fileLocator = [assetPackageRegistry] (const std::string& filename) {
+		return locateFile(*assetPackageRegistry, filename);
+		};
+
+	if (!config.imageFactory)
+	{
+		throw std::runtime_error("Attempted to create EngineRoot without an ImageFactory");
+	}
+
 	auto simStepper = std::make_unique<sim::SimStepper>(systemRegistry, sim::TimeRange(0, 100));
 	scenario = std::make_unique<Scenario>(std::move(simStepper));
 
@@ -158,7 +162,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	AssetPackageFilepaths assetPackageFilepaths;
 	for (const auto& assetSearchPath : config.assetSearchPaths)
 	{
-		AssetPackageFilepaths newFilepaths = loadAssetPackagesInPath(assetSearchPath);
+		AssetPackageFilepaths newFilepaths = loadAssetPackagesInPath(*assetPackageRegistry, assetSearchPath);
 		assetPackageFilepaths.insert(newFilepaths.begin(), newFilepaths.end());
 	}
 
@@ -177,23 +181,13 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 			"Please refer to Skybolt documentation for information about finding assets.");
 	}
 
-	if (config.enableVis)
-	{
-		programs = vis::createShaderPrograms();
-	}
-	scene.reset(new vis::Scene(new osg::StateSet()));
-
 	auto julianDateProvider = [scenario = scenario.get()]() {
 		return getCurrentJulianDate(*scenario);
 	};
 
-	auto componentFactoryRegistry = std::make_shared<ComponentFactoryRegistry>();
+	componentFactoryRegistry = std::make_shared<ComponentFactoryRegistry>();
 	addDefaultFactories(*componentFactoryRegistry);
 	factoryRegistries->addItem(componentFactoryRegistry);
-
-	auto visFactoryRegistry = std::make_shared<vis::VisFactoryRegistry>();
-	vis::addDefaultFactories(*visFactoryRegistry);
-	factoryRegistries->addItem(visFactoryRegistry);
 
 	factoryRegistries->addItem(std::make_shared<sim::CameraModifierFactoryRegistry>());
 
@@ -203,44 +197,36 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 		vis::JsonTileSourceFactoryRegistryConfig c;
 		c.apiKeys = readNameMap<std::string>(config.engineSettings, "tileApiKeys");
 		c.cacheDirectory = cacheDir.string();
+		c.imageFactory = config.imageFactory;
+		c.fileLocator = fileLocator;
 		return c;
 	}());
-	vis::addDefaultFactories(*tileSourceFactoryRegistry);
+	tileSourceFactoryRegistry->addDefaultFactories();
+	factoryRegistries->addItem(tileSourceFactoryRegistry);
+
+	factoryRegistries->addItem(std::make_shared<vis::VisFactoryRegistry>());
 
 	// Create entity factory
 	EntityFactory::Context context{
 	.scheduler = scheduler.get(),
 	.simWorld = &scenario->world,
+	.imageFactory = config.imageFactory,
 	.julianDateProvider = julianDateProvider,
 	.componentFactoryRegistry = componentFactoryRegistry,
 	.tileSourceFactoryRegistry = tileSourceFactoryRegistry,
 	.stats = &stats,
-	.fileLocator = locateFile,
+	.fileLocator = fileLocator,
 	.assetPackagePaths = mAssetPackagePaths,
 	.engineSettings = engineSettings,
 	.factoryRegistries = factoryRegistries.get(),
 	.typeRegistry = typeRegistry.get()
 	};
 
-	if (config.enableVis)
-	{
-		context.visContext = [&] {
-			EntityFactory::VisContext c;
-			c.scene = scene.get();
-			c.programs = &programs;
-			c.visFactoryRegistry = visFactoryRegistry;
-			c.modelFactory = createModelFactory(programs);
-			c.textureCache = std::make_shared<vis::TextureCache>();
-			return c;
-		}();
-	}
-
 	file::Paths paths = getFilesWithExtensionInDirectoryInAssetPackagesRecursive(mAssetPackagePaths, "Entities", std::string(EntityFactory::entityTemplateFileExtension));
 	entityFactory.reset(new EntityFactory(context, paths));
 
 	// Create default systems
 	systemRegistry->push_back(std::make_shared<sim::EntitySystem>(&scenario->world));
-	systemRegistry->push_back(std::make_shared<SimVisSystem>(&scenario->world, scene));
 }
 
 EngineRoot::~EngineRoot()

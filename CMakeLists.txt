@@ -72,6 +72,11 @@ endif()
 # Build options
 #-------------------------------------------------------------
 
+OPTION(BUILD_WITH_OSG "Use OpenSceneGraph" ON)
+if (BUILD_WITH_OSG)
+	add_definitions(-DBUILD_WITH_OSG)
+endif()
+
 OPTION(BUILD_PYTHON_BINDINGS "Build Python Bindings")
 
 # This option is provided to allow the application to opt-out of using boost as the logging backend,
@@ -93,7 +98,9 @@ include(SkyboltInstall)
 add_subdirectory(src/Skybolt)
 
 option(SKYBOLT_BUILD_EXAMPLES "Build Skybolt Examples" ON)
-add_subdirectory(src/SkyboltExamples)
+if (BUILD_WITH_OSG)
+	add_subdirectory(src/SkyboltExamples)
+endif()
 
 function(_skybolt_configure_conan_init_script)
 	# TODO: Document this

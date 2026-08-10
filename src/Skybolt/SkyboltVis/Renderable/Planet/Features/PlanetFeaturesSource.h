@@ -6,11 +6,9 @@
 
 #pragma once
 
-#include "SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h"
+#include "SkyboltVis/Elevation/TilePlanetAltitudeProvider.h"
 #include <SkyboltSim/Spatial/LatLonAlt.h>
 #include <SkyboltCommon/Math/QuadTree.h>
-
-#include <osg/Vec2d>
 
 #include <assert.h>
 #include <algorithm>
@@ -22,7 +20,61 @@
 namespace skybolt {
 namespace mapfeatures {
 
-typedef skybolt::Box2T<vis::LatLonVec2Adapter> LatLonBounds;
+// Vec2 order is lon, lat
+struct LatLonVec2Adapter : public sim::LatLon
+{
+	typedef double value_type;
+
+	LatLonVec2Adapter() {}
+
+	LatLonVec2Adapter(double lon, double lat) : sim::LatLon(lat, lon) {}
+	LatLonVec2Adapter(const sim::LatLon& latLon) : sim::LatLon(latLon) {}
+
+	const double& x() const
+	{
+		return lon;
+	}
+
+	const double& y() const
+	{
+		return lat;
+	}
+
+	double& x()
+	{
+		return lon;
+	}
+
+	double& y()
+	{
+		return lat;
+	}
+
+	double operator[] (int i) const { return (i == 0) ? lon : lat; }
+	double& operator[] (int i) { return (i == 0) ? lon : lat; }
+
+	LatLonVec2Adapter operator+(const LatLonVec2Adapter& latLon) const
+	{
+		return LatLonVec2Adapter(lon + latLon.lon, lat + latLon.lat);
+	}
+
+	LatLonVec2Adapter operator-(const LatLonVec2Adapter& latLon) const
+	{
+		return LatLonVec2Adapter(lon - latLon.lon, lat - latLon.lat);
+	}
+
+	LatLonVec2Adapter operator*(double s) const
+	{
+		return LatLonVec2Adapter(lon * s, lat * s);
+	}
+
+	LatLonVec2Adapter operator/(double s) const
+	{
+		return LatLonVec2Adapter(lon / s, lat / s);
+	}
+};
+
+typedef skybolt::Box2T<LatLonVec2Adapter> LatLonBounds;
 
 LatLonBounds calcPointBounds(const std::vector<sim::LatLon>& points);
 
@@ -127,7 +179,7 @@ struct Airport : public Feature
 typedef std::shared_ptr<Feature> FeaturePtr;
 typedef std::shared_ptr<Airport> AirportPtr;
 
-struct FeatureTile : public skybolt::QuadTreeTile<vis::LatLonVec2Adapter, FeatureTile>
+struct FeatureTile : public skybolt::QuadTreeTile<LatLonVec2Adapter, FeatureTile>
 {
 	std::vector<FeaturePtr> features;
 	size_t featureCountInFile = 0;

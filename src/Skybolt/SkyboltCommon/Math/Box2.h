@@ -75,7 +75,10 @@ struct Box2T
 	T maximum;
 };
 
-using Box2 = Box2T<glm::vec2>;
+using Box2 = Box2T<glm::vec2>; //!@ deprecated, use Box2f instead
+using Box2f = Box2T<glm::vec2>;
+using Box2d = Box2T<glm::dvec2>;
+using Box2d = Box2T<glm::dvec2>;
 using Box2i = Box2T<glm::ivec2>;
 
 } // namespace skybolt

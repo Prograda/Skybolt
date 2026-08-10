@@ -7,8 +7,8 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 #include <FftOcean/FftOceanGenerator.h>
+#include <SkyboltVis/Image/SimpleImageFactory.h>
 
-#include <osgDB/WriteFile>
 
 using namespace skybolt::vis;
 
@@ -44,11 +44,12 @@ TEST_CASE("Generate FFT ocean texture")
 
 	if (0)
 	{
-		osg::Image* image = new osg::Image();
-		image->allocateImage(config.textureSizePixels, config.textureSizePixels, 1, GL_RGB, GL_BYTE);
-		memcpy(image->data(), resultChar.data(), elementCount * 3);
-		osgDB::writeImageFile(*image, "C:/Users/Public/test.tga");
+		SimpleImageFactory factory;
+		ImagePtr image = valueOrThrowException(factory.createImage(config.textureSizePixels, config.textureSizePixels, Image::Format::RGB8, Image::ColorSpace::Linear));
+		memcpy(image->getRawData(), resultChar.data(), elementCount * 3);
+		factory.writeImage(*image, "C:/Users/Public/test.png");
 	}
+
 }
 
 //! Calculates the maximum wave height based on trough to crest

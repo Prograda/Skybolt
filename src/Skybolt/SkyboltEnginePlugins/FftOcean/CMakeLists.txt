@@ -19,6 +19,10 @@ set(LIBS
 	xsimd::xsimd
 )
 
+if (BUILD_WITH_OSG)
+	list(APPEND LIBS SkyboltVisOsg)
+endif()
+
 add_definitions(-D_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING) # disable deprecation warning for xsimd
 
 add_library(${TARGET_NAME} ${SKYBOLT_PLUGINS_LIBRARY_TYPE} ${SrcFiles})

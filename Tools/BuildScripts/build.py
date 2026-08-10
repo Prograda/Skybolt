@@ -10,12 +10,12 @@ from docs import build_docs
 logging.basicConfig(level=logging.INFO)
 
 
-def build(skybolt_source_dir: Path, skybolt_build_dir: Path):
+def build(skybolt_source_dir: Path, skybolt_build_dir: Path, profile_filepath: Path):
     """
     Build Skybolt using conan. This will also build dependencies if required.
     """
     logging.info(f"Building...")
-    sp.run(f"conan build {skybolt_source_dir} --output-folder={skybolt_build_dir}  -pr:a=default -pr:a {skybolt_source_dir}/Conan/Profiles/BuildEverythingWithPlugins.ini --build=missing --lockfile-partial", shell=True, check=True)
+    sp.run(f"conan build {skybolt_source_dir} --output-folder={skybolt_build_dir}  -pr:a=default -pr:a={profile_filepath} --build=missing --lockfile-partial", shell=True, check=True)
 
 
 def copy_tree(source_dir: Path, destination_dir: Path):
@@ -66,6 +66,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build and package Skybolt")
     parser.add_argument("--skybolt-source-dir", type=str, help="Directory where skybolt source code is located")
     parser.add_argument("--output-dir", type=str, help="Directory to output package to")
+    parser.add_argument("--profile-filepath", type=str, default=None, help="Optional filepath to a conan profile to use")
     parser.add_argument("--stage", type=str, default="package_docs", help="Name of the stage to run. Preceeding stages will also run unless --only flag is set.")
     parser.add_argument("--only", action="store_true", help="Only run the stage given in --stage, skipping preceeding stages"),
 
@@ -75,6 +76,7 @@ if __name__ == "__main__":
     output_dir = Path(args.output_dir)
     skybolt_build_dir = output_dir / "Build"
     package_dir = output_dir / "Package"
+    profile_filepath = args.profile_filepath or Path({args.skybolt_source_dir}/Conan/Profiles/BuildEverythingWithPlugins.ini)
 
     if args.stage not in BUILD_STAGES:
         raise RuntimeError(f"No build stage named {args.stage}. Valid options are: {BUILD_STAGES}")
@@ -90,7 +92,7 @@ if __name__ == "__main__":
 
     # Run build stages
     if should_run_stage("build"):
-        build(skybolt_source_dir, skybolt_build_dir)
+        build(skybolt_source_dir, skybolt_build_dir, profile_filepath)
     if should_run_stage("package"):
         package(skybolt_source_dir, skybolt_build_dir, package_dir)
     if should_run_stage("package_docs"):

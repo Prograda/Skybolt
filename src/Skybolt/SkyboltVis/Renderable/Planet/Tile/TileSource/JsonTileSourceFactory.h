@@ -7,6 +7,8 @@
 #pragma once
 
 #include "SkyboltVis/SkyboltVisFwd.h"
+#include <SkyboltCommon/Registry.h>
+#include <SkyboltCommon/File/FileLocator.h>
 
 #include <nlohmann/json.hpp>
 #include <string>
@@ -16,6 +18,8 @@ namespace vis {
 
 struct JsonTileSourceFactoryRegistryConfig
 {
+	ImageFactoryPtr imageFactory;
+	file::FileLocator fileLocator;
 	std::string cacheDirectory;
 	std::map<std::string, std::string> apiKeys;
 };
@@ -25,10 +29,13 @@ using JsonTileSourceFactory = std::function<TileSourcePtr(const nlohmann::json& 
 using ApiKeys = std::map<std::string, std::string>;
 const std::string& getApiKey(const ApiKeys& keys, const std::string& name);
 
-class JsonTileSourceFactoryRegistry
+class JsonTileSourceFactoryRegistry : public Registry
 {
 public:
 	JsonTileSourceFactoryRegistry(const JsonTileSourceFactoryRegistryConfig& config);
+	~JsonTileSourceFactoryRegistry() = default;
+
+	void addDefaultFactories();
 
 	void addFactory(const std::string& name, JsonTileSourceFactory factory);
 	const JsonTileSourceFactory& getFactory(const std::string& name) const;
@@ -40,12 +47,13 @@ public:
 	ApiKeys getApiKeys() const { return mApiKeys; }
 
 private:
+	ImageFactoryPtr mImageFactory;
+	file::FileLocator mFileLocator;
 	const std::string mCacheDirectory;
 	ApiKeys mApiKeys;
 	std::map<std::string, JsonTileSourceFactory> mFactories;
 };
 
-void addDefaultFactories(JsonTileSourceFactoryRegistry& registry);
 
 } // namespace vis
 } // namespace skybolt

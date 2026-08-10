@@ -7,15 +7,14 @@
 #pragma once
 
 #include <SkyboltCommon/Math/QuadTree.h>
-
-#include <osg/Image>
+#include <SkyboltVis/SkyboltVisFwd.h>
 
 namespace skybolt {
 namespace vis {
 
 struct TileImage
 {
-	osg::ref_ptr<osg::Image> image;
+	ImagePtr image; //!< Never null
 	skybolt::QuadTreeTileKey key;
 };
 

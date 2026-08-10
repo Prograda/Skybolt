@@ -6,8 +6,8 @@
 
 #include "WindowUtil.h"
 
-#include <SkyboltVis/Rect.h>
-#include <SkyboltVis/Window/StandaloneWindow.h>
+#include <SkyboltVisOsg/Rect.h>
+#include <SkyboltVisOsg/Window/StandaloneWindow.h>
 #include <osgViewer/Viewer>
 
 namespace skybolt {

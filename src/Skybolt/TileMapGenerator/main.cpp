@@ -5,19 +5,20 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TileMapGenerator.h"
-#include <SkyboltVis/OsgImageHelpers.h>
-#include <SkyboltVis/OsgMathHelpers.h>
+#include <SkyboltVisOsg/OsgBox2.h>
+#include <SkyboltVisOsg/OsgImageHelpers.h>
+#include <SkyboltVisOsg/OsgMathHelpers.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <osgDB/ReadFile>
 
 using namespace skybolt::vis;
 using namespace skybolt;
 
-static Box2d getTileBounds(int x, int y, int numTilesX, int numTilesY)
+static vis::OsgBox2d getTileBounds(int x, int y, int numTilesX, int numTilesY)
 {
-	static Box2d planetLonLatBounds(osg::Vec2d(-math::piD(), -math::halfPiD()), osg::Vec2d(math::piD(), math::halfPiD()));
+	static vis::OsgBox2d planetLonLatBounds(osg::Vec2d(-math::piD(), -math::halfPiD()), osg::Vec2d(math::piD(), math::halfPiD()));
 
-	Box2d bounds(osg::Vec2d(double(x) / double(numTilesX), double(y) / double(numTilesY)),
+	vis::OsgBox2d bounds(osg::Vec2d(double(x) / double(numTilesX), double(y) / double(numTilesY)),
 		osg::Vec2d(double(x + 1) / double(numTilesX), double(y + 1) / double(numTilesY)));
 
 	osg::Vec2d size = planetLonLatBounds.size();
@@ -35,7 +36,7 @@ static osg::ref_ptr<osg::Image> loadRawImage16bit(const std::string& filename, i
 	if (!f.is_open())
 		throw skybolt::Exception("Unable to open file: " + filename);
 
-	osg::Image* image = new osg::Image;
+	osg::ref_ptr<osg::Image> image = new osg::Image;
 	image->allocateImage(width, height, 1, GL_LUMINANCE, GL_UNSIGNED_SHORT);
 	image->setInternalTextureFormat(GL_R16);
 
@@ -95,7 +96,7 @@ static int main_blueMarble()
 
 			TileMapGeneratorLayer layer;
 			layer.image = osgDB::readImageFile("BlueMarble/world.200411.3x21600x21600." + std::string{letter} + std::to_string(y+1) + ".png");
-			layer.bounds = Box2d(osg::Vec2d(minBoundX, minBoundY), osg::Vec2d(minBoundX + math::halfPiD(), minBoundY + math::halfPiD()));
+			layer.bounds = vis::OsgBox2d(osg::Vec2d(minBoundX, minBoundY), osg::Vec2d(minBoundX + math::halfPiD(), minBoundY + math::halfPiD()));
 			layers.push_back(layer);
 		}
 	}
@@ -103,7 +104,7 @@ static int main_blueMarble()
 	{
 		TileMapGeneratorLayer layer;
 		layer.image = osgDB::readImageFile("D:/dev/tiles/combined_geodesic.jpg");
-		layer.bounds = Box2d(
+		layer.bounds = vis::OsgBox2d(
 			osg::Vec2d(-122.80517578125 * math::degToRadD(), 47.08508535995384 * math::degToRadD()),
 			osg::Vec2d(-121.28906250000001 * math::degToRadD(), 47.90161354142076 * math::degToRadD()));
 		layers.push_back(layer);
@@ -133,7 +134,7 @@ static int main_nlcd()
 	// Add NLCD Seattle tile
 	TileMapGeneratorLayer layer;
 	layer.image = osgDB::readImageFile("nlcd_2011_landcover_2011_edition_2014_10_10/nlcd_2011_landcover_seattle.tif");
-	layer.bounds = Box2d(osg::Vec2d(osg::DegreesToRadians(-124.0), osg::DegreesToRadians(45.0)), osg::Vec2d(osg::DegreesToRadians(-120.0), osg::DegreesToRadians(50.0)));
+	layer.bounds = vis::OsgBox2d(osg::Vec2d(osg::DegreesToRadians(-124.0), osg::DegreesToRadians(45.0)), osg::Vec2d(osg::DegreesToRadians(-120.0), osg::DegreesToRadians(50.0)));
 	layers.push_back(layer);
 
 	std::cout << "Inputs loaded" << std::endl;
@@ -197,14 +198,14 @@ static int main_dem()
 		TileMapGeneratorLayer layer;
 		layer.image = osgDB::readImageFile("DEM/STRM_90m_DEM4/srtm_12_03.tif");
 		postProcessStrm(*layer.image);
-		layer.bounds = Box2d(osg::Vec2d(osg::DegreesToRadians(-125.0), osg::DegreesToRadians(45.0)), osg::Vec2d(osg::DegreesToRadians(-120.0), osg::DegreesToRadians(50.0)));
+		layer.bounds = vis::OsgBox2d(osg::Vec2d(osg::DegreesToRadians(-125.0), osg::DegreesToRadians(45.0)), osg::Vec2d(osg::DegreesToRadians(-120.0), osg::DegreesToRadians(50.0)));
 		layers.push_back(layer);
 	}
 	{
 		TileMapGeneratorLayer layer;
 		layer.image = osgDB::readImageFile("DEM/STRM_90m_DEM4/srtm_14_06.tif");
 		postProcessStrm(*layer.image);
-		layer.bounds = Box2d(osg::Vec2d(osg::DegreesToRadians(-115.0), osg::DegreesToRadians(30.0)), osg::Vec2d(osg::DegreesToRadians(-110.0), osg::DegreesToRadians(35.0)));
+		layer.bounds = vis::OsgBox2d(osg::Vec2d(osg::DegreesToRadians(-115.0), osg::DegreesToRadians(30.0)), osg::Vec2d(osg::DegreesToRadians(-110.0), osg::DegreesToRadians(35.0)));
 		layers.push_back(layer);
 	}
 

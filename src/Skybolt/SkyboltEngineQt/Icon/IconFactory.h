@@ -6,7 +6,8 @@
 
 #pragma once
 
+#include <SkyboltCommon/File/FileLocator.h>
 #include <optional>
 #include <QIcon>
 
-std::optional<QIcon> createIcon(const std::string& filename);
+std::optional<QIcon> createIcon(const std::string& filename, const skybolt::file::FileLocator& fileLocator);

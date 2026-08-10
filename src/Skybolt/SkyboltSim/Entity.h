@@ -68,13 +68,13 @@ public:
 		return component;
 	}
 
-	template <class DerivedT>
-	std::shared_ptr<DerivedT> getOrCreateComponent()
+	template <class DerivedT, typename... Args>
+	std::shared_ptr<DerivedT> getOrCreateComponent(Args&&... args)
 	{
 		auto c = getFirstComponent<DerivedT>();
 		if (!c)
 		{
-			c = std::make_shared<DerivedT>();
+			c = std::make_shared<DerivedT>(std::forward<Args>(args)...);
 			addComponent(c);
 		}
 		return c;

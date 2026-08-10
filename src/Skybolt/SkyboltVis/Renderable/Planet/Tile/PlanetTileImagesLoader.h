@@ -7,6 +7,7 @@
 #pragma once
 
 #include "TileImagesLoader.h"
+#include "SkyboltVis/SkyboltVisFwd.h"
 
 namespace skybolt {
 namespace vis {
@@ -16,8 +17,8 @@ struct PlanetTileImages : TileImages
 	~PlanetTileImages() override = default;
 
 	TileImage heightMapImage;
-	osg::ref_ptr<osg::Image> normalMapImage; //!< Same tile key as heightMapImage
-	osg::ref_ptr<osg::Image> landMaskImage; //!< Same tile key as heightMapImage
+	ImagePtr normalMapImage; //!< Same tile key as heightMapImage
+	ImagePtr landMaskImage; //!< Same tile key as heightMapImage
 
 	TileImage albedoMapImage;
 
@@ -34,27 +35,31 @@ enum AttributeMapProcessing
 class PlanetTileImagesLoader : public TileImagesLoader
 {
 public:
-	TileSourcePtr elevationLayer; //!< never null
-	TileSourcePtr landMaskLayer; //!< if null and generateLandMaskFromElevation = true, land mask is auto generated from elevation, otherwise attributes are not used
-	TileSourcePtr albedoLayer; //!< never null
-
-	struct AttributeLayer
+	struct Layers
 	{
-		TileSourcePtr source; //!< never null
-		AttributeMapProcessing processing = AttributeMapProcessing::None;
-	};
+		TileSourcePtr elevation; //!< never null
+		TileSourcePtr landMask; //!< if null and generateLandMaskFromElevation = true, land mask is auto generated from elevation, otherwise attributes are not used
+		TileSourcePtr albedo; //!< never null
 
-	std::vector<AttributeLayer> attributeLayers; //!< if empty, attributes are not used. Items must be non-null.
+		struct AttributeLayer
+		{
+			TileSourcePtr source; //!< never null
+			AttributeMapProcessing processing = AttributeMapProcessing::None;
+		};
+
+		std::vector<AttributeLayer> attributes; //!< if empty, attributes are not used. Items must be non-null.
+	};
+	const Layers layers;
 
 	//! If true, land mask is generated from elevation if landMaskLayer is null.
 	bool generateLandMaskFromElevation = true;
 
-	explicit PlanetTileImagesLoader(double planetRadius) : TileImagesLoader(5), mPlanetRadius(planetRadius) {}
-
+	PlanetTileImagesLoader(const ImageFactoryPtr& imageFactory, double planetRadius, Layers layers);
 	//! May be called from multiple threads
 	TileImagesPtr load(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
 
 private:
+	ImageFactoryPtr mImageFactory;
 	const double mPlanetRadius;
 };
 

@@ -85,9 +85,9 @@ static std::optional<QPixmap> loadSvgWithNanoSvg(const file::Path& filename)
 	return std::nullopt;
 }
 
-std::optional<QIcon> createIcon(const std::string& filename)
+std::optional<QIcon> createIcon(const std::string& filename, const file::FileLocator& fileLocator)
 {
-	std::optional<file::Path> locatedFile = valueOrLogError(locateFile(filename));
+	std::optional<file::Path> locatedFile = valueOrLogError(fileLocator(filename));
 	if (!locatedFile)
 	{
 		return std::nullopt;

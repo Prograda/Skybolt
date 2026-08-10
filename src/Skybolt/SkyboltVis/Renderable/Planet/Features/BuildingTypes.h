@@ -7,7 +7,6 @@
 #pragma once
 
 #include "SkyboltVis/SkyboltVisFwd.h"
-#include <osg/Texture2DArray>
 
 #include <vector>
 #include <nlohmann/json.hpp>
@@ -21,21 +20,19 @@ struct BuildingTypes
 	{
 		int buildingLevelsInTexture;
 		int horizontalSectionsInTexture;
+		std::string albedoTextureFilename;
 	};
 
-	//! Texture array containing facades, then roofs
-	osg::ref_ptr<osg::Texture2DArray> texture;
+	struct Roof
+	{
+		std::string albedoTextureFilename;
+	};
 
 	std::vector<Facade> facades;
-	int roofCount;
+	std::vector<Roof> roofs;
 };
 
-struct BuildingTypesFromJsonOptions
-{
-	bool loadTextures = true;
-};
-
-BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j, const BuildingTypesFromJsonOptions& options = BuildingTypesFromJsonOptions());
+BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j);
 
 } // namespace vis
 } // namespace skybolt

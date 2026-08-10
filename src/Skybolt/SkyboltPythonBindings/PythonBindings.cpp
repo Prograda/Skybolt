@@ -14,14 +14,10 @@
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineRootFactory.h>
 #include <SkyboltEngine/EngineSettings.h>
-#include <SkyboltEngine/WindowUtil.h>
 #include <SkyboltEngine/Components/TemplateNameComponent.h>
-#include <SkyboltEngine/Components/VisObjectsComponent.h>
 #include <SkyboltEngine/Plugin/PluginHelpers.h>
 #include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
 #include <SkyboltEngine/Scenario/ScenarioSerialization.h>
-#include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
-#include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/World.h>
 #include <SkyboltSim/CameraController/CameraController.h>
@@ -41,15 +37,20 @@
 #include <SkyboltSim/Spatial/Position.h>
 #include <SkyboltSim/System/SimStepper.h>
 
-#include <SkyboltVis/Rect.h>
-#include <SkyboltVis/VisRoot.h>
-#include <SkyboltVis/Renderable/Planet/Planet.h>
-#include <SkyboltVis/Renderable/Water/WaterMaterial.h>
-#include <SkyboltVis/RenderOperation/DefaultRenderCameraViewport.h>
-#include <SkyboltVis/RenderOperation/RenderOperationSequence.h>
-#include <SkyboltVis/Window/CaptureScreenshot.h>
-#include <SkyboltVis/Window/OffscreenWindow.h>
-#include <SkyboltVis/Window/StandaloneWindow.h>
+#include <SkyboltVisOsg/OsgImage.h>
+#include <SkyboltVisOsg/Rect.h>
+#include <SkyboltVisOsg/VisRoot.h>
+#include <SkyboltVisOsg/VisRootUtil.h>
+#include <SkyboltVisOsg/Components/VisObjectsComponent.h>
+#include <SkyboltVisOsg/SimVisBinding/CameraSimVisBinding.h>
+#include <SkyboltVisOsg/Renderable/Planet/Planet.h>
+#include <SkyboltVisOsg/Renderable/Water/WaterMaterial.h>
+#include <SkyboltVisOsg/RenderOperation/DefaultRenderCameraViewport.h>
+#include <SkyboltVisOsg/RenderOperation/RenderOperationSequence.h>
+#include <SkyboltVisOsg/Window/CaptureScreenshot.h>
+#include <SkyboltVisOsg/Window/OffscreenWindow.h>
+#include <SkyboltVisOsg/Window/StandaloneWindow.h>
+#include <SkyboltVisOsg/Window/WindowUtil.h>
 
 #include <osg/Image>
 #include <pybind11/numpy.h>
@@ -78,7 +79,7 @@ static std::unique_ptr<EngineRoot> createEngineRootWithDefaults() {
 	return EngineRootFactory::create({});
 }
 
-static std::unique_ptr<EngineRoot> createEngineRoot(bool enableVis = true, bool loadPlugins = true)
+static std::unique_ptr<EngineRoot> createEngineRoot(bool loadPlugins = true)
 {
 	nlohmann::json settings = readEngineSettings({});
 
@@ -92,7 +93,7 @@ static std::unique_ptr<EngineRoot> createEngineRoot(bool enableVis = true, bool 
 	EngineRootConfig config;
 	config.engineSettings = settings;
 	config.assetSearchPaths = getDefaultAssetSearchPaths();
-	config.enableVis = enableVis;
+	config.imageFactory = std::make_shared<vis::OsgImageFactory>();
 	auto engineRoot = std::make_unique<EngineRoot>(config);
 	engineRoot->loadPlugins(pluginFactories);
 	return engineRoot;
@@ -193,12 +194,12 @@ static void setWaveHeight(sim::Entity& entity, double height)
 	}
 }
 
-static bool attachCameraToWindowWithEngine(sim::Entity& camera, vis::Window& window, EngineRoot& engineRoot)
+static bool attachCameraToWindowWithEngine(sim::Entity& camera, vis::Window& window, vis::VisRoot& visRoot, EngineRoot& engineRoot)
 {
 	vis::CameraPtr visCamera = getVisCamera(camera);
 	if (visCamera)
 	{
-		const auto& viewport = createAndAddViewportToWindowWithEngine(window, engineRoot);
+		const auto& viewport = createAndAddViewportToWindow(window, createVisContext(visRoot, engineRoot));
 		viewport->setCamera(visCamera);
 		return true;
 	}
@@ -587,7 +588,6 @@ PYBIND11_MODULE(skybolt, m) {
     .export_values();
 
 	py::class_<vis::VisRoot>(m, "VisRoot")
-		.def(py::init())
 		.def("addWindow", &vis::VisRoot::addWindow)
 		.def("removeWindow", &vis::VisRoot::removeWindow)
 		.def("setLoadTimingPolicy", &vis::VisRoot::setLoadTimingPolicy);
@@ -595,7 +595,8 @@ PYBIND11_MODULE(skybolt, m) {
 	m.def("getGlobalEngineRoot", &getGlobalEngineRoot, "Get global EngineRoot", py::return_value_policy::reference);
 	m.def("setGlobalEngineRoot", &setGlobalEngineRoot, "Set global EngineRoot");
 	m.def("createEngineRootWithDefaults", &createEngineRootWithDefaults, "Create an EngineRoot with default values"); //@deprecated
-	m.def("createEngineRoot", &createEngineRoot, py::arg("enableVis"), py::arg("loadPlugins"), "Create an EngineRoot");
+	m.def("createEngineRoot", &createEngineRoot, py::arg("loadPlugins"), "Create an EngineRoot");
+	m.def("createVisRoot", &createVisRoot, "Create a VisRoot");
 	m.def("attachCameraToWindowWithEngine", &attachCameraToWindowWithEngine);
 	m.def("registerComponent", &registerComponent);
 	m.def("advanceSimTime", &advanceSimTime);

@@ -6,11 +6,12 @@
 
 #include "XyzTileSource.h"
 
-#include "SkyboltVis/OsgImageHelpers.h"
-#include "SkyboltVis/OsgTextureHelpers.h"
-#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationBounds.h"
-#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h"
-#include <osgDB/ReadFile>
+#include "SkyboltVis/Elevation/ElevationBounds.h"
+#include "SkyboltVis/Elevation/ElevationImageMetadata.h"
+#include "SkyboltVis/Elevation/ElevationRerange.h"
+#include "SkyboltVis/Image/ImageFactory.h"
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMapHelpers.h"
+
 #include <boost/algorithm/string/replace.hpp>
 #include <SkyboltCommon/Logging/Logging.h>
 #include <SkyboltCommon/ShaUtility.h>
@@ -22,58 +23,45 @@ namespace vis {
 
 XyzTileSource::XyzTileSource(const XyzTileSourceConfig& config) :
 	TileSourceWithMinMaxLevel(config.levelRange),
+	mImageFactory(config.imageFactory),
+	mFileLocator(config.fileLocator),
 	mUrlTemplate(config.urlTemplate),
 	mYOrigin(config.yOrigin),
 	mApiKey(config.apiKey),
 	mCacheSha(skybolt::calcSha1(config.urlTemplate)),
 	mElevationRerange(config.elevationRerange),
-	mOptimizeElevationScale(config.optimizeElevationScale),
-	mImageReadOptions(new osgDB::Options())
+	mOptimizeElevationScale(config.optimizeElevationScale)
 {
-	// Disable SSL verification CURL requests, so that we can read images from http:// tile servers.
-	// FIXME: Ideally we would allow the user keep verification on and provide a certificate.
-	mImageReadOptions->setOptionString("OSG_CURL_SSL_VERIFYPEER=0");
-}
-
-static osg::ref_ptr<osg::Image> readImage(const std::string& filename, const osgDB::Options& imageReadOptions)
-{
-	osg::ref_ptr<osg::Image> image;
-
-	bool supportUserData = filename.ends_with(".pngx");
-	if (supportUserData)
-	{
-		std::ifstream f(filename.c_str(), std::ios::binary);
-		image = readImageWithUserData(f, "png");
-		f.close();
-	}
-	else
-	{
-		image = readImageWithoutWarnings(filename, &imageReadOptions);
-	}
-	return image;
+	assert(mImageFactory);
 }
 
 bool XyzTileSource::validate() const
 {
 	// Validate the loader by loading level 0 image
-	osg::ref_ptr<osg::Image> image = readImage(toUrl(QuadTreeTileKey()), *mImageReadOptions);
-	if (!image)
+	std::string url = toUrl(QuadTreeTileKey());
+	if (mFileLocator)
 	{
-		SKYBOLT_LOG(error) << "Could not load image from XyzTileSource with URL template '" << mUrlTemplate << ".";
+		auto result = mFileLocator(url);
+		if (!has_value(result))
+		{
+			SKYBOLT_LOG(error) << "Could not locate file for XyzTileSource with URL template '" << mUrlTemplate << "'";
+			return false;
+		}
+		url = value(result)->string();
+	}
+
+	auto result = mImageFactory->readImage(url); // MTODO: support reading files over http in all relavent TileSource classes.
+	if (!has_value(result))
+	{
+		SKYBOLT_LOG(error) << "Could not load image from XyzTileSource with URL template '" << mUrlTemplate << ". Reason: " << std::get<UnexpectedMessage>(result).str;
 		return false;
 	}
 
 	if (mElevationRerange)
 	{
-		if (image->getPixelFormat() != GL_LUMINANCE)
+		if (!isHeightMapDataFormat(**value(result)))
 		{
-			SKYBOLT_LOG(error) << "Elevation image with URL template '" << mUrlTemplate << "' is in wrong format: "
-				<< image->getPixelFormat() << ". It should be GL_LUMINANCE.'";
-		}
-		if (image->getDataType() != GL_UNSIGNED_SHORT)
-		{
-			SKYBOLT_LOG(error) << "Elevation image with URL template '" << mUrlTemplate << "' is in wrong format: "
-				<< image->getPixelFormat() << ". It should be GL_UNSIGNED_SHORT.'";
+			SKYBOLT_LOG(error) << "Elevation image with URL template '" << mUrlTemplate << "' is not a supported heightmap format.";
 		}
 		return false;
 	}
@@ -86,36 +74,44 @@ static int flipY(int y, int level)
 	return (1 << level) - y - 1;
 }
 
-osg::ref_ptr<osg::Image> XyzTileSource::createImage(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
+ImagePtr XyzTileSource::createImage(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
 {
-	osg::ref_ptr<osg::Image> image = readImage(toUrl(key), *mImageReadOptions);
-	if (image)
+	std::string url = toUrl(key);
+	if (mFileLocator)
 	{
+		auto result = mFileLocator(url);
+		if (!has_value(result))
+		{
+			return nullptr;
+		}
+		url = value(result)->string();
+	}
+
+	ImagePtr image = value(mImageFactory->readImage(url)).value_or(nullptr);
+	if (image && isHeightMapDataFormat(*image))
+	{
+		image->setColorSpace(Image::ColorSpace::Linear);
+
 		if (mElevationRerange)
 		{
-			if (!isHeightMapDataFormat(*image))
-			{
-				return nullptr;
-			}
-			image->setInternalTextureFormat(getHeightMapInternalTextureFormat());
+			ElevationRerange elevationRerange = *mElevationRerange;
 
-
-			HeightMapElevationBounds bounds = emptyHeightMapElevationBounds();
-			uint16_t* p = reinterpret_cast<uint16_t*>(image->data());
-			int elementCount = image->s() * image->t();
+			// Calculate elevation bounds
+			ElevationBounds bounds = emptyElevationBounds();
+			uint16_t* p = reinterpret_cast<uint16_t*>(image->getRawData());
+			int elementCount = image->getWidth() * image->getHeight();
 			for (int i = 0; i < elementCount; ++i)
 			{
-				expand(bounds, getElevationForColorValue(*mElevationRerange, p[i]));
+				expand(bounds, getElevationForColorValue(elevationRerange, p[i]));
 			}
-			setHeightMapElevationBounds(*image, bounds);
 
 			// Optionally optimize scale to use full 0-65535 range.
 			// This minimizes stepping artifacts when the heightmap is sampled with bilinear filtering.
 			// Ideally this would be done when generating the heightmap tiles, rather than at load time.
 			if (mOptimizeElevationScale)
 			{
-				int minValue = getColorValueForElevation(*mElevationRerange, bounds.x());
-				int maxValue = getColorValueForElevation(*mElevationRerange, bounds.y());
+				int minValue = getColorValueForElevation(elevationRerange, bounds.x);
+				int maxValue = getColorValueForElevation(elevationRerange, bounds.y);
 
 				// Scale to full range
 				float delta = float(maxValue - minValue);
@@ -125,13 +121,15 @@ osg::ref_ptr<osg::Image> XyzTileSource::createImage(const QuadTreeTileKey& key, 
 					p[i] = static_cast<uint16_t>(std::clamp(float(p[i] - minValue) * scale, 0.f, 65535.f));
 				}
 
-				// Store offset and scale as image metadata
-				setHeightMapElevationRerange(*image, rerangeElevationFromUInt16WithElevationBounds(bounds.x(), bounds.y()));
+				// Update elevation rerange to match the new scale
+				elevationRerange = rerangeElevationFromUInt16WithElevationBounds(bounds.x, bounds.y);
 			}
-			else
-			{
-				setHeightMapElevationRerange(*image, *mElevationRerange);
-			}
+
+			// Set image metadata
+			ElevationImageMetadata metadata;
+			metadata.elevationBounds = bounds;
+			metadata.rerange = elevationRerange;
+			setElevationImageMetadata(*image, metadata);
 		}
 	}
 

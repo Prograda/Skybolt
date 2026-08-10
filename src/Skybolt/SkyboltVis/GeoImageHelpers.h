@@ -6,23 +6,22 @@
 
 #pragma once
 
-#include "OsgBox2.h"
-#include <osg/Math>
+#include <SkyboltCommon/Math/Box2.h>
 
 namespace skybolt {
 namespace vis {
 
-inline Box2f getSubImageBounds(const Box2f& imageWorldBounds, const Box2f& subRegionWorldBounds, int imageWidth, int imageHeight)
+inline Box2d getSubImageBounds(const Box2d& imageWorldBounds, const Box2d& subRegionWorldBounds, int imageWidth, int imageHeight)
 {
-	osg::Vec2f size = imageWorldBounds.maximum - imageWorldBounds.minimum;
-	float widthF = float(imageWidth);
-	float heightF = float(imageHeight);
+	glm::dvec2 size = imageWorldBounds.maximum - imageWorldBounds.minimum;
+	double widthF = double(imageWidth);
+	double heightF = double(imageHeight);
 
-	Box2f imageBounds;
-	imageBounds.minimum.x() = osg::clampBetween(widthF * (subRegionWorldBounds.minimum.y() - imageWorldBounds.minimum.y()) / size.y(), 0.f, widthF);
-	imageBounds.minimum.y() = osg::clampBetween(heightF * (subRegionWorldBounds.minimum.x() - imageWorldBounds.minimum.x()) / size.x(), 0.f, heightF);
-	imageBounds.maximum.x() = osg::clampBetween(widthF * (subRegionWorldBounds.maximum.y() - imageWorldBounds.minimum.y()) / size.y(), 0.f, widthF);
-	imageBounds.maximum.y() = osg::clampBetween(heightF * (subRegionWorldBounds.maximum.x() - imageWorldBounds.minimum.x()) / size.x(), 0.f, heightF);
+	Box2d imageBounds;
+	imageBounds.minimum.x = glm::clamp(widthF * (subRegionWorldBounds.minimum.y - imageWorldBounds.minimum.y) / size.y, 0.0, widthF);
+	imageBounds.minimum.y = glm::clamp(heightF * (subRegionWorldBounds.minimum.x - imageWorldBounds.minimum.x) / size.x, 0.0, heightF);
+	imageBounds.maximum.x = glm::clamp(widthF * (subRegionWorldBounds.maximum.y - imageWorldBounds.minimum.y) / size.y, 0.0, widthF);
+	imageBounds.maximum.y = glm::clamp(heightF * (subRegionWorldBounds.maximum.x - imageWorldBounds.minimum.x) / size.x, 0.0, heightF);
 
 	return imageBounds;
 }

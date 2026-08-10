@@ -5,10 +5,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "HelpDisplayRenderOperation.h"
-#include "SkyboltEngine/VisHud.h"
-#include <SkyboltVis/Scene.h>
-#include <SkyboltVis/RenderOperation/RenderTarget.h>
-#include <SkyboltVis/Window/Window.h>
+#include <SkyboltVisOsg/Scene.h>
+#include <SkyboltVisOsg/Renderable/VisHud.h>
+#include <SkyboltVisOsg/RenderOperation/RenderTarget.h>
+#include <SkyboltVisOsg/Window/Window.h>
 
 namespace skybolt {
 

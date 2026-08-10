@@ -12,7 +12,7 @@
 namespace skybolt {
 namespace sim {
 
-inline double earthRadius() {return 6371000.0;}
+constexpr double earthRadius() {return 6371000.0;}
 
 double calcDistance(const sim::LatLon& p1, const sim::LatLon& p2);
 

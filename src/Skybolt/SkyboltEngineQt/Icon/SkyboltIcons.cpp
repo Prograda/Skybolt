@@ -9,7 +9,7 @@
 
 #include <stdexcept>
 
-static std::map<SkyboltIcon, QIcon> createSkyboltIcons()
+static std::map<SkyboltIcon, QIcon> createSkyboltIcons(const skybolt::file::FileLocator& fileLocator)
 {
 	std::map<SkyboltIcon, std::string> filenames {
 		{SkyboltIcon::Add, "Icons/google/add_circle.svg"},
@@ -25,14 +25,14 @@ static std::map<SkyboltIcon, QIcon> createSkyboltIcons()
 	std::map<SkyboltIcon, QIcon> icons;
 	for (const auto& [icon, filename] : filenames)
 	{
-		icons[icon] = createIcon(filename).value_or(QIcon());
+		icons[icon] = createIcon(filename, fileLocator).value_or(QIcon());
 	}
 	return icons;
 }
 
-const QIcon& getSkyboltIcon(SkyboltIcon icon)
+const QIcon& getSkyboltIcon(SkyboltIcon icon, const skybolt::file::FileLocator& fileLocator)
 {
-	static std::map<SkyboltIcon, QIcon> icons = createSkyboltIcons();
+	static std::map<SkyboltIcon, QIcon> icons = createSkyboltIcons(fileLocator);
 	auto i = icons.find(icon);
 	if (i == icons.end())
 	{

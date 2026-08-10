@@ -17,9 +17,13 @@ namespace skybolt {
 namespace vis {
 
 JsonTileSourceFactoryRegistry::JsonTileSourceFactoryRegistry(const JsonTileSourceFactoryRegistryConfig& config) :
+	mImageFactory(config.imageFactory),
+	mFileLocator(config.fileLocator),
 	mCacheDirectory(config.cacheDirectory),
 	mApiKeys(config.apiKeys)
 {
+	assert(mImageFactory);
+	assert(mFileLocator);
 }
 
 void JsonTileSourceFactoryRegistry::addFactory(const std::string& name, JsonTileSourceFactory factory)
@@ -49,7 +53,7 @@ JsonTileSourceFactory JsonTileSourceFactoryRegistry::wrapWithCacheSupport(JsonTi
 			{
 				std::string url = json.at("url");
 				std::string directory = mCacheDirectory + "/" + tileSource->getCacheSha();
-				return std::make_shared<CachedTileSource>(tileSource, directory);
+				return std::make_shared<CachedTileSource>(mImageFactory, tileSource, directory);
 			}
 		}
 		return tileSource;
@@ -62,7 +66,7 @@ JsonTileSourceFactory JsonTileSourceFactoryRegistry::wrapWithProjectionSupport(J
 		auto tileSource = factory(json);
 		if (json.at("projection") == "sphericalMercator")
 		{
-			return std::make_shared<SphericalMercatorToPlateCarreeTileSource>(tileSource);
+			return std::make_shared<SphericalMercatorToPlateCarreeTileSource>(mImageFactory, tileSource);
 		}
 		return tileSource;
 	};
@@ -91,7 +95,7 @@ static IntRangeInclusive readLevelRange(const nlohmann::json& json)
 	return IntRangeInclusive(minLevel, maxLevel);
 }
 
-static HeightMapElevationRerange readElevationRerange(const nlohmann::json& json)
+static ElevationRerange readElevationRerange(const nlohmann::json& json)
 {
 	if (!json.is_array() || json.size() != 2)
 	{
@@ -100,10 +104,10 @@ static HeightMapElevationRerange readElevationRerange(const nlohmann::json& json
 	return rerangeElevationFromUInt16WithElevationBounds(json[0], json[1]);
 }
 
-void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)
+void JsonTileSourceFactoryRegistry::addDefaultFactories()
 {
-	ApiKeys keys = registry.getApiKeys();
-	registry.addFactory("xyz", wrapAll(registry, [keys] (const nlohmann::json& json) {
+	ApiKeys keys = getApiKeys();
+	addFactory("xyz", wrapAll(*this, [keys, this] (const nlohmann::json& json) {
 		std::string apiKey;
 		auto i = json.find("apiKeyName");
 		if (i != json.end())
@@ -112,6 +116,8 @@ void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)
 		}
 
 		XyzTileSourceConfig xyzConfig;
+		xyzConfig.imageFactory = mImageFactory;
+		xyzConfig.fileLocator = mFileLocator;
 		xyzConfig.urlTemplate = json.at("url");
 		xyzConfig.yOrigin = readOptionalOrDefault(json, "yTileOriginAtBottom", false) ? XyzTileSourceConfig::YOrigin::Bottom : XyzTileSourceConfig::YOrigin::Top;
 		xyzConfig.apiKey = apiKey;
@@ -127,16 +133,18 @@ void addDefaultFactories(JsonTileSourceFactoryRegistry& registry)
 		return source;
 	}));
 
-	registry.addFactory("bing", wrapAll(registry, [keys] (const nlohmann::json& json) {
+	addFactory("bing", wrapAll(*this, [keys, this] (const nlohmann::json& json) {
 		BingTileSourceConfig bingConfig;
+		bingConfig.imageFactory = mImageFactory;
 		bingConfig.url = json.at("url");
 		bingConfig.apiKey = getApiKey(keys, "bing");
 		bingConfig.levelRange = readLevelRange(json);
 		return std::make_shared<BingTileSource>(bingConfig);
 	}));
 
-	registry.addFactory("mapboxElevation", wrapAll(registry, [keys] (const nlohmann::json& json) {
+	addFactory("mapboxElevation", wrapAll(*this, [keys, this] (const nlohmann::json& json) {
 		MapboxElevationTileSourceConfig config;
+		config.imageFactory = mImageFactory;
 		config.urlTemplate = json.at("url");
 		config.apiKey = getApiKey(keys, "mapbox");
 		config.levelRange = readLevelRange(json);

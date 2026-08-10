@@ -8,6 +8,7 @@
 #include "PlanetFeaturesSource.h"
 #include <SkyboltSim/Spatial/GreatCircle.h>
 
+#include <set>
 #include <boost/range/algorithm_ext/erase.hpp>
 
 using namespace skybolt::math;

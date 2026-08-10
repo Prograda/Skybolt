@@ -204,8 +204,6 @@ function(skybolt_install_osg_plugins)
 		list(APPEND _install_args EXCLUDE_FROM_ALL)
 	endif()
 
-	cmake_path(GET openscenegraph-mr_PACKAGE_FOLDER_RELWITHDEBINFO PARENT_PATH _osg_package_folder) # Get OSG package folder
-
 	# dlls go into 'bin', whereas sos go into 'lib' by default
 	set(_runtime_lib_path ${CMAKE_INSTALL_LIBDIR})
 	if (WIN32)
@@ -218,16 +216,25 @@ function(skybolt_install_osg_plugins)
 	foreach(_config ${_config_types})
 		string(TOUPPER ${_config} _config_upper)
 
+		if (NOT "${openscenegraph-mr_PACKAGE_FOLDER_${_config_upper}}")
+			message(WARNING "OpenSceneGraph package folder not found for config ${_config}. Skipping installation for this config.")
+			continue()
+		endif()
+
 		set(_osg_plugins_dir "${openscenegraph-mr_PACKAGE_FOLDER_${_config_upper}}/${_runtime_lib_path}/osgPlugins-${OpenSceneGraph_VERSION_STRING}")
 
 		file(GLOB_RECURSE _plugins "${_osg_plugins_dir}/*${CMAKE_SHARED_LIBRARY_SUFFIX}*")
+		
+		if (NOT _plugins)
+			message(FATAL_ERROR "OpenSceneGraph plugins were not found in ${_osg_plugins_dir}/*${CMAKE_SHARED_LIBRARY_SUFFIX}*")
+		endif()
+		
 		install(
 			FILES ${_plugins}
 			CONFIGURATIONS "${_config}"
 			DESTINATION "${_runtime_lib_path}/osgPlugins-${OpenSceneGraph_VERSION_STRING}"
 			${_install_args}
 		)
-
 		# Install the dependencies of the plugins
 		skybolt_install_deps(
 			LIBRARIES "${_plugins}" 

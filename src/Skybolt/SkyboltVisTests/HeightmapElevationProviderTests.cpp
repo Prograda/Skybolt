@@ -5,7 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <catch2/catch.hpp>
-#include <SkyboltVis/ElevationProvider/HeightMapElevationProvider.h>
+#include <SkyboltVis/Elevation/HeightMapElevationProvider.h>
+#include <SkyboltVis/Image/SimpleImageFactory.h>
 #include <SkyboltCommon/NumericComparison.h>
 
 using namespace skybolt;
@@ -18,12 +19,12 @@ static float heightFunction(float x, float y)
 
 TEST_CASE("Test HeightMapElevationProvider returns correct elevations")
 {
-	HeightMapElevationRerange rerange = rerangeElevationFromUInt16WithElevationBounds(-100, 100);
+	ElevationRerange rerange = rerangeElevationFromUInt16WithElevationBounds(-100, 100);
 
-	osg::ref_ptr<osg::Image> image = new osg::Image;
-	image->allocateImage(4, 4, 1, GL_LUMINANCE, GL_UNSIGNED_SHORT);
+	SimpleImageFactory factory;
+	ImagePtr image = valueOrThrowException(factory.createImage(4, 4, Image::Format::R16, Image::ColorSpace::Linear));
 	
-	uint16_t* p = reinterpret_cast<uint16_t*>(image->data());
+	uint16_t* p = reinterpret_cast<uint16_t*>(image->getRawData());
 	for (int y = 0; y < 4; ++y)
 	{
 		for (int x = 0; x < 4; ++x)
@@ -33,7 +34,7 @@ TEST_CASE("Test HeightMapElevationProvider returns correct elevations")
 		}
 	}
 
-	Box2f bounds(osg::Vec2f(1, 2), osg::Vec2f(1+2, 2+4));
+	Box2d bounds(glm::dvec2(1, 2), glm::dvec2(1+2, 2+4));
 
 	HeightMapElevationProvider provider(image, rerange, bounds);
 

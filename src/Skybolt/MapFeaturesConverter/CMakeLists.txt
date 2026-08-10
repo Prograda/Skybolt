@@ -8,6 +8,6 @@ include_directories(${readosm_INCLUDE_DIR})
 
 find_package(ZLIB REQUIRED)
 
-add_executable(MapFeaturesConverter ${SOURCE})
+add_library(MapFeaturesConverter ${SOURCE})
 
 target_link_libraries (MapFeaturesConverter ${readosm_LIBRARIES} ${ZLIB_LIBRARIES} SkyboltEngine SkyboltVis)

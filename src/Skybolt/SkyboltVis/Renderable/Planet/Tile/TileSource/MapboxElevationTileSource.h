@@ -12,6 +12,8 @@ namespace vis {
 
 struct MapboxElevationTileSourceConfig
 {
+	ImageFactoryPtr imageFactory;
+
 	//! URL must be templated with variables x, y, z, key in curley braces
 	//! E.g http://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token={key}
 	std::string urlTemplate;
@@ -24,7 +26,7 @@ class MapboxElevationTileSource : public TileSourceWithMinMaxLevel
 public:
 	MapboxElevationTileSource(const MapboxElevationTileSourceConfig& config);
 
-	osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
+	ImagePtr createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
 
 	const std::string& getCacheSha() const override { return mCacheSha; }
 
@@ -35,6 +37,7 @@ public:
 	}
 
 private:
+	ImageFactoryPtr mImageFactory;
 	const std::string mCacheSha;
 	std::unique_ptr<XyzTileSource> mSource;
 };

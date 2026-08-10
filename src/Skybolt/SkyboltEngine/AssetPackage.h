@@ -7,14 +7,17 @@
 #pragma once
 
 #include <SkyboltCommon/File/FileUtility.h>
+#include <optional>
 #include <map>
 #include <vector>
 
 namespace skybolt {
 
+using AssetPackageRegistry = std::vector<std::filesystem::path>;
+
 using AssetPackageName = std::string;
 using AssetPackageFilepaths = std::map<AssetPackageName, file::Path>;
-AssetPackageFilepaths loadAssetPackagesInPath(const file::Path& assetSearchPath);
+AssetPackageFilepaths loadAssetPackagesInPath(AssetPackageRegistry& registry, const file::Path& assetSearchPath);
 
 file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativePath);
 

@@ -50,7 +50,7 @@ TEST_CASE("hashCoords produces deterministic output")
     CHECK(hashCoords(1, 2, 0) != hashCoords(1, 2, 1)); // Different seed
 }
 
-TEST_CASE("hashToUniform produces values in (0, 1]")
+TEST_CASE("hashToUniform produces values between 0 and 1")
 {
     uint32_t h = hashCoords(1, 2, 0);
     float u = hashToUniform(h);

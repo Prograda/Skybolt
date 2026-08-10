@@ -5,71 +5,49 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "CachedTileSource.h"
-#include "SkyboltVis/OsgImageHelpers.h"
-#include "SkyboltVis/OsgTextureHelpers.h"
-
-#include <osgDB/WriteFile>
+#include "SkyboltVis/Renderable/Planet/Tile/HeightMapHelpers.h"
+#include "Image/Image.h"
+#include "Image/ImageFactory.h"
 
 #include <filesystem>
 
 namespace skybolt {
 namespace vis {
 
-CachedTileSource::CachedTileSource(const TileSourcePtr& tileSource, const std::string& cacheDirectory) :
+CachedTileSource::CachedTileSource(const ImageFactoryPtr& imageFactory, const TileSourcePtr& tileSource, const std::string& cacheDirectory) :
+	mImageFactory(imageFactory),
 	mTileSource(tileSource),
 	mCacheDirectory(cacheDirectory)
 {
+	assert(mImageFactory);
 	assert(mTileSource);
 }
 
-osg::ref_ptr<osg::Image> CachedTileSource::createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
+ImagePtr CachedTileSource::createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
 {
 	std::string imageDirectory = mCacheDirectory + "/" + std::to_string(key.level) + "/" + std::to_string(key.x) + "/";
 	std::string filename = imageDirectory + std::to_string(key.y) + "." + mTileSource->getCacheFileFormat();
 
-	const bool supportUserData = (mTileSource->getCacheFileFormat() == "pngx");
-
 	if (std::filesystem::exists(filename))
 	{
-		osg::ref_ptr<osg::Image> image;
-		if (supportUserData)
-		{
-			std::ifstream f(filename.c_str(), std::ios::binary);
-			image = readImageWithUserData(f, "png");
-			f.close();
-		}
-		else
-		{
-			image = readImageWithoutWarnings(filename);
-		}
+		auto image = value(mImageFactory->readImage(filename)).value_or(nullptr);
 		if (image && isHeightMapDataFormat(*image))
 		{
-			image->setInternalTextureFormat(getHeightMapInternalTextureFormat());
+			image->setColorSpace(Image::ColorSpace::Linear);
 		}
 		return image;
 	}
 	else
 	{
-		osg::ref_ptr<osg::Image> image = mTileSource->createImage(key, cancelSupplier);
+		ImagePtr image = mTileSource->createImage(key, cancelSupplier);
 		if (image)
 		{
 			std::filesystem::create_directories(imageDirectory);
 
-			if (supportUserData)
+			auto result = mImageFactory->writeImage(*image, filename);
+			if (!has_value(result))
 			{
-				std::ofstream f(filename.c_str(), std::ios::binary);
-				if (!writeImageWithUserData(*image, f, "png"))
-				{
-					throw std::runtime_error("Could not write cached tile image to: " + filename);
-				}
-				f.close();
-			}
-			else
-			{
-				if (!osgDB::writeImageFile(*image, filename))
-				{
-					throw std::runtime_error("Could not write cached tile image to: " + filename);
-				}
+				throw std::runtime_error("Could not write cached tile image to: " + filename + ". Reason: " + std::get<UnexpectedMessage>(result).str);
 			}
 		}
 		return image;

@@ -8,6 +8,7 @@
 
 #include <SkyboltCommon/NonNullPtr.h>
 #include <SkyboltCommon/ObservableValue.h>
+#include <SkyboltCommon/File/FileLocator.h>
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 #include <SkyboltSim/EntityId.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
@@ -22,6 +23,7 @@ struct EntityCreationToolBarConfig
 	skybolt::NonNullPtr<skybolt::sim::World> world;
 	skybolt::NonNullPtr<skybolt::EntityFactory> entityFactory;
 	std::function<void(skybolt::sim::Entity&)> onEntityCreated = nullptr;
+	skybolt::file::FileLocator fileLocator;
 	QWidget* parent = nullptr;
 };
 

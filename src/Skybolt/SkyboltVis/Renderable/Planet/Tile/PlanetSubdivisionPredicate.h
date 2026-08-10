@@ -8,9 +8,7 @@
 
 #include "QuadTreeTileLoader.h"
 #include "SkyboltVis/SkyboltVisFwd.h"
-#include "SkyboltVis/OsgBox2.h"
 #include <SkyboltCommon/Math/QuadTree.h>
-#include <osg/Vec2d>
 
 namespace skybolt {
 namespace vis {
@@ -22,16 +20,13 @@ struct PlanetSubdivisionPredicate : public QuadTreeSubdivisionPredicate
 	bool operator()(const Box2d& bounds, const skybolt::QuadTreeTileKey& key, const TileImages* images) override;
 
 	std::vector<TileSourcePtr> tileSources; //!< tileSources are queried to see if children exist at each level
-	osg::Vec2d observerLatLon;
+	glm::dvec2 observerLatLon;
 	double observerAltitude;
 	double planetRadius;
 
 private:
 	// TODO: handle longitude wrap around
-	osg::Vec2d nearestPointInSolidBox(const osg::Vec2d& point, const Box2d& bounds) const;
-
-private:
-	bool mHasMissingElevationBoundsError = false;
+	glm::dvec2 nearestPointInSolidBox(const glm::dvec2& point, const Box2d& bounds) const;
 };
 
 } // namespace vis

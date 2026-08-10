@@ -13,8 +13,8 @@ namespace sim {
 class CollisionGroupMasks
 {
 public:
-	static const int terrain = 1;
-	static const int simBody = 1 << 1;
+	static constexpr int terrain = 1;
+	static constexpr int simBody = 1 << 1;
 };
 
 } // namespace sim

@@ -5,11 +5,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "FftOceanPlugin.h"
-#include "FftOceanWaveHeightTextureGenerator.h"
 
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltEngine/EngineRoot.h>
-#include <SkyboltVis/Renderable/Water/SimpleWaveHeightTextureGenerator.h>
+
+#ifdef BUILD_WITH_OSG
+#include "FftOceanWaveHeightTextureGenerator.h"
+#include <SkyboltVisOsg/Renderable/Water/SimpleWaveHeightTextureGenerator.h>
+#endif
 
 #include <boost/config.hpp>
 #include <boost/dll/alias.hpp>
@@ -17,6 +20,7 @@
 
 namespace skybolt {
 
+#ifdef BUILD_WITH_OSG
 class FftOceanWaveHeightTextureGeneratorFactory : public vis::WaveHeightTextureGeneratorFactory
 {
 public:
@@ -30,23 +34,29 @@ public:
 			}());
 	}
 };
+#endif
 
 FftOceanPlugin::FftOceanPlugin(const PluginConfig& config)
 {
 	mVisFactoryRegistry = valueOrThrowException(getExpectedRegistry<vis::VisFactoryRegistry>(*config.engineRoot->factoryRegistries));
-
+#ifdef BUILD_WITH_OSG
 	// If using the default SimpleWaveHeightTextureGeneratorFactory, or no factory, then use this plugin instead.
 	// Otherwise anothe plugin is already being used and it should take precedent, so do nothing.
-	auto currentFactory = (*mVisFactoryRegistry)[vis::VisFactoryType::WaveHeightTextureGenerator];
+	auto currentFactory = mVisFactoryRegistry->getFirstItemOfType<vis::WaveHeightTextureGeneratorFactory>();
 	if (!currentFactory || dynamic_cast<vis::SimpleWaveHeightTextureGeneratorFactory*>(currentFactory.get()))
 	{
-		(*mVisFactoryRegistry)[vis::VisFactoryType::WaveHeightTextureGenerator] = std::make_shared<FftOceanWaveHeightTextureGeneratorFactory>();
+		mVisFactoryRegistry->removeItem(currentFactory);
+		mFactory = std::make_shared<FftOceanWaveHeightTextureGeneratorFactory>();
+		mVisFactoryRegistry->addItem(mFactory);
 	}
+#endif
 }
 
 FftOceanPlugin::~FftOceanPlugin()
 {
-	mVisFactoryRegistry->erase(vis::VisFactoryType::WaveHeightTextureGenerator);
+#ifdef BUILD_WITH_OSG
+	mVisFactoryRegistry->removeItem(mFactory);
+#endif
 }
 
 namespace plugins {

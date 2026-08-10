@@ -40,7 +40,7 @@
 #include <SkyboltSim/Components/RocketMotorComponent.h>
 #include <SkyboltSim/Components/ShipWakeComponent.h>
 #include <SkyboltSim/Serialization/Serialization.h>
-#include <SkyboltVis/ElevationProvider/TilePlanetAltitudeProvider.h>
+#include <SkyboltVis/Elevation/TilePlanetAltitudeProvider.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/JsonTileSourceFactory.h>
 
 namespace skybolt {

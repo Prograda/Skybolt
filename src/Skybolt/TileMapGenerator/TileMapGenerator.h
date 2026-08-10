@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <SkyboltVis/OsgBox2.h>
+#include <SkyboltVisOsg/OsgBox2.h>
 #include <osg/Image>
 #include <osg/Vec2i>
 
 struct TileMapGeneratorLayer
 {
 	osg::ref_ptr<osg::Image> image;
-	skybolt::vis::Box2d bounds; //!< Bounds are (longitude, latitude), in radians
+	skybolt::vis::OsgBox2d bounds; //!< Bounds are (longitude, latitude), in radians
 };
 
 enum class Filtering

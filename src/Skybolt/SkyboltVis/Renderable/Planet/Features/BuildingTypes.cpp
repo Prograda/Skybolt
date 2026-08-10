@@ -5,30 +5,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "BuildingTypes.h"
-#include "OsgImageHelpers.h"
 
 namespace skybolt {
 namespace vis {
 
-osg::ref_ptr<osg::Texture2DArray> createTextureArray()
-{
-	osg::ref_ptr<osg::Texture2DArray> texture = new osg::Texture2DArray;
-	texture->setInternalFormat(GL_SRGB8);
-	texture->setSourceFormat(GL_RGB);
-	texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
-	texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
-	texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR_MIPMAP_LINEAR);
-	texture->setUseHardwareMipMapGeneration(true);
-	return texture;
-}
-
-BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j, const BuildingTypesFromJsonOptions& options)
+BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j)
 {
 	auto types = std::make_shared<BuildingTypes>();
-	types->texture = createTextureArray();
-	types->roofCount = 0;
-
-	int textureIndex = 0;
 
 	auto facades = j.at("facades");
 
@@ -36,19 +19,12 @@ BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j, const Buil
 	{
 		const auto& jsonFacade = item.value();
 
-		if (options.loadTextures)
-		{
-			osg::Image* image = readImageWithCorrectOrientation(jsonFacade.at("albedoTexture"));
-			image->setInternalTextureFormat(toSrgbInternalFormat(image->getInternalTextureFormat()));
-			types->texture->setImage(textureIndex, image);
-		}
-
 		BuildingTypes::Facade facade;
 		facade.buildingLevelsInTexture = jsonFacade.at("storiesInTexture");
 		facade.horizontalSectionsInTexture = jsonFacade.at("horizontalSectionsInTexture");
+		facade.albedoTextureFilename = jsonFacade.at("albedoTexture");
 
 		types->facades.push_back(facade);
-		++textureIndex;
 	}
 
 	auto roofs = j.at("roofs");
@@ -57,15 +33,9 @@ BuildingTypesPtr createBuildingTypesFromJson(const nlohmann::json& j, const Buil
 	{
 		const auto& jsonRoof = item.value();
 
-		if (options.loadTextures)
-		{
-			osg::Image* image = readImageWithCorrectOrientation(jsonRoof.at("albedoTexture"));
-			image->setInternalTextureFormat(toSrgbInternalFormat(image->getInternalTextureFormat()));
-			types->texture->setImage(textureIndex, image);
-		}
-
-		++types->roofCount;
-		++textureIndex;
+		BuildingTypes::Roof roof;
+		roof.albedoTextureFilename = jsonRoof.at("albedoTexture");
+		types->roofs.push_back(roof);
 	}
 
 	return types;

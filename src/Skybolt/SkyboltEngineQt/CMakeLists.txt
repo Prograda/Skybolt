@@ -22,6 +22,7 @@ SOURCE_GROUP("Generated Ui Files" FILES ${SrcUiHeaders} ${SrcRccsSrc})
 set(LIBS
 	qt::qt
 	SkyboltEngine
+	SkyboltVisOsg
 	skybolt-widgets::skybolt-widgets
 )
 

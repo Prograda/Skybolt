@@ -7,7 +7,6 @@
 #include "QuadTreeTileLoader.h"
 #include "AsyncTileLoader.h"
 #include "PlanetSubdivisionPredicate.h"
-#include "SkyboltVis/OsgMathHelpers.h"
 
 #include <SkyboltCommon/Listenable.h>
 #include <SkyboltCommon/Math/MathUtility.h>
@@ -20,15 +19,15 @@ using namespace skybolt;
 namespace skybolt {
 namespace vis {
 
-std::ostream& operator<<(std::ostream& s, const osg::Vec3f& v)
+std::ostream& operator<<(std::ostream& s, const glm::dvec3& v)
 {
-	s << "(" << v.x() << " " << v.y() << " " << v.z() << ")";
+	s << "(" << v.x << " " << v.y << " " << v.z << ")";
 	return s;
 }
 
 int maxHeightMapTileLevel = 10;
 
-struct AsyncQuadTreeTile : public skybolt::QuadTreeTile<osg::Vec2d, AsyncQuadTreeTile>
+struct AsyncQuadTreeTile : public skybolt::QuadTreeTile<glm::dvec2, AsyncQuadTreeTile>
 {
 	AsyncQuadTreeTile();
 
@@ -112,8 +111,8 @@ QuadTreeTileLoader::QuadTreeTileLoader(AsyncTileLoaderPtr asyncTileLoader, QuadT
 	assert(mSubdivisionPredicate);
 	assert(mTileLoadPredicate);
 
-	Box2d leftBounds(osg::Vec2d(-math::piD(), -math::halfPiD()), osg::Vec2d(0, math::halfPiD()));
-	Box2d rightBounds(osg::Vec2d(0, -math::halfPiD()), osg::Vec2d(math::piD(), math::halfPiD()));
+	Box2d leftBounds(glm::dvec2(-math::piD(), -math::halfPiD()), glm::dvec2(0, math::halfPiD()));
+	Box2d rightBounds(glm::dvec2(0, -math::halfPiD()), glm::dvec2(math::piD(), math::halfPiD()));
 	mAsyncTree = std::make_shared<AsyncQuadTree>(createTileT<AsyncQuadTreeTile, AsyncQuadTreeTile::VectorType>, QuadTreeTileKey(0, 0, 0), leftBounds, QuadTreeTileKey(0, 1, 0), rightBounds);
 	mLoadedTree = std::make_shared<LoadedTileTree>(createTileT<LoadedTile, LoadedTile::VectorType>, QuadTreeTileKey(0, 0, 0), leftBounds, QuadTreeTileKey(0, 1, 0), rightBounds);
 }

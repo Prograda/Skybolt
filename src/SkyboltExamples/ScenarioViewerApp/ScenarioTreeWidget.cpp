@@ -23,8 +23,8 @@ using namespace skybolt::sim;
 
 struct EntityTreeItem : public SimpleTreeItem
 {
-	EntityTreeItem(const QString& name, const EntityId& entityId) :
-		SimpleTreeItem(name, getSkyboltIcon(SkyboltIcon::Node)),
+	EntityTreeItem(const QString& name, const QIcon& icon, const EntityId& entityId) :
+		SimpleTreeItem(name, icon),
 		entityId(entityId)
 	{}
 
@@ -32,7 +32,8 @@ struct EntityTreeItem : public SimpleTreeItem
 };
 
 ScenarioTreeWidget::ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config) :
-	mWorld(config.world)
+	mWorld(config.world),
+	mFileLocator(config.fileLocator)
 {
 	setLayout(new QVBoxLayout(this));
 	layout()->setContentsMargins(0, 0, 0, 0);
@@ -46,7 +47,7 @@ ScenarioTreeWidget::ScenarioTreeWidget(const ScenarioTreeWidgetConfig& config) :
 
 	layout()->addWidget(mView);
 
-	mScenarioItem = std::make_shared<SimpleTreeItem>("Scenario", getSkyboltIcon(SkyboltIcon::Node));
+	mScenarioItem = std::make_shared<SimpleTreeItem>("Scenario", getSkyboltIcon(SkyboltIcon::Node, config.fileLocator));
 	mModel->addChildren(*mRootItem, {mScenarioItem});
 
 	QObject::connect(mView->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const QItemSelection& selected, const QItemSelection& deselected) {
@@ -124,7 +125,7 @@ void ScenarioTreeWidget::addEntities(const std::set<EntityPtr>& entities)
 	for (const auto& entity : entities)
 	{
 		QString name = QString::fromStdString(getName(*entity));
-		auto item = std::make_shared<EntityTreeItem>(name, entity->getId());
+		auto item = std::make_shared<EntityTreeItem>(name, getSkyboltIcon(SkyboltIcon::Node, mFileLocator), entity->getId());
 		mItemsMap[entity->getId()] = item;
 		children.push_back(item);
 	}
@@ -147,7 +148,7 @@ std::vector<TreeItem*> ScenarioTreeWidget::getCurrentSelection() const
 {
 	QModelIndexList selected = mView->selectionModel()->selectedIndexes();
 	std::vector<TreeItem*> r;
-	for (auto i : selected)
+	for (const QModelIndex& i : selected)
 	{
 		if (TreeItemPtr item = mModel->getTreeItem(i); item)
 		{

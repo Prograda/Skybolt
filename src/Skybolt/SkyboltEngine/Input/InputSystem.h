@@ -10,7 +10,6 @@
 #include "SkyboltSim/System/System.h"
 #include "SkyboltVis/SkyboltVisFwd.h"
 
-#include <osg/Vec2f>
 #include <vector>
 
 namespace skybolt {

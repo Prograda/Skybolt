@@ -33,6 +33,12 @@ std::optional<T> value(const Expected<T>& expected)
 	return std::nullopt;
 }
 
+template <typename T>
+bool has_value(const Expected<T>& expected)
+{
+	return expected.index() == 0;
+}
+
 template <typename T, typename FunctionT>
 std::optional<T> valueOrElse(const Expected<T>& expected, const FunctionT& f)
 {

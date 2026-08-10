@@ -11,7 +11,6 @@
 #include "ScenarioWorkspace.h"
 
 #include <SkyboltCommon/MapUtility.h>
-#include <SkyboltEngine/Diagnostics/StatsDisplaySystem.h>
 #include <SkyboltEngine/EngineCommandLineParser.h>
 #include <SkyboltEngine/EntityFactory.h>
 #include <SkyboltEngine/EngineRoot.h>
@@ -19,13 +18,9 @@
 #include <SkyboltEngine/GetExecutableFilepath.h>
 #include <SkyboltEngine/FindPython.h>
 #include <SkyboltEngine/Input/InputSystem.h>
-#include <SkyboltEngine/SimVisBinding/SimVisSystem.h>
 #include <SkyboltEngine/UpdateLoop/SimUpdater.h>
-#include <SkyboltEngine/WindowUtil.h>
 #include <SkyboltEngine/Scenario/ScenarioSerialization.h>
 #include <SkyboltEngine/Scenario/SimSnapshotRegistry.h>
-#include <SkyboltEngine/SimVisBinding/CameraSimVisBinding.h>
-#include <SkyboltEngine/SimVisBinding/VisNameLabels.h>
 #include <SkyboltEngineQt/OsgWindow.h>
 #include <SkyboltEngineQt/SkyboltQtPropertyReflection.h>
 #include <SkyboltEngineQt/Icon/SkyboltIcons.h>
@@ -44,13 +39,20 @@
 #include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
 #include <SkyboltSim/Spatial/LatLon.h>
-#include <SkyboltVis/Scene.h>
-#include <SkyboltVis/VisRoot.h>
-#include <SkyboltVis/Window/Window.h>
-#include <SkyboltVis/RenderOperation/RenderCameraViewport.h>
-#include <SkyboltVis/RenderOperation/RenderOperationUtil.h>
-#include <SkyboltVis/RenderOperation/RenderTarget.h>
-#include <SkyboltVis/Shader/ShaderSourceFileChangeMonitor.h>
+#include <SkyboltVisOsg/Scene.h>
+#include <SkyboltVisOsg/OsgImage.h>
+#include <SkyboltVisOsg/VisRoot.h>
+#include <SkyboltVisOsg/VisRootUtil.h>
+#include <SkyboltVisOsg/Diagnostics/StatsDisplaySystem.h>
+#include <SkyboltVisOsg/SimVisBinding/SimVisSystem.h>
+#include <SkyboltVisOsg/SimVisBinding/CameraSimVisBinding.h>
+#include <SkyboltVisOsg/SimVisBinding/VisNameLabels.h>
+#include <SkyboltVisOsg/Window/Window.h>
+#include <SkyboltVisOsg/Window/WindowUtil.h>
+#include <SkyboltVisOsg/RenderOperation/RenderCameraViewport.h>
+#include <SkyboltVisOsg/RenderOperation/RenderOperationUtil.h>
+#include <SkyboltVisOsg/RenderOperation/RenderTarget.h>
+#include <SkyboltVisOsg/Shader/ShaderSourceFileChangeMonitor.h>
 #include <SkyboltWidgets/CollapsiblePanel/CollapsiblePanelWidget.h>
 #include <SkyboltWidgets/List/ListEditorWidget.h>
 #include <SkyboltWidgets/ErrorLog/ErrorLogModel.h>
@@ -89,15 +91,15 @@
 using namespace skybolt;
 using namespace skybolt::sim;
 
-static TimeControlWidgetIcons createSkyboltTimeControlWidgetIcons()
+static TimeControlWidgetIcons createSkyboltTimeControlWidgetIcons(const file::FileLocator& fileLocator)
 {
 	QStyle* style = QApplication::style();
 
 	TimeControlWidgetIcons icons;
-	icons.play = getSkyboltIcon(SkyboltIcon::Play);
-	icons.pause = getSkyboltIcon(SkyboltIcon::Pause);
-	icons.forward = getSkyboltIcon(SkyboltIcon::SkipForward);
-	icons.backward = getSkyboltIcon(SkyboltIcon::SkipBackward);
+	icons.play = getSkyboltIcon(SkyboltIcon::Play, fileLocator);
+	icons.pause = getSkyboltIcon(SkyboltIcon::Pause, fileLocator);
+	icons.forward = getSkyboltIcon(SkyboltIcon::SkipForward, fileLocator);
+	icons.backward = getSkyboltIcon(SkyboltIcon::SkipBackward, fileLocator);
 
 	return icons;
 }
@@ -108,12 +110,12 @@ static QString toTimeText(double time)
 	return str;
 }
 
-static QWidget* createTimeControlWidgetPanel(NonNullPtr<EngineRoot> engineRoot, NonNullPtr<SimUpdater> simUpdater, QWidget* parent)
+static QWidget* createTimeControlWidgetPanel(NonNullPtr<EngineRoot> engineRoot, NonNullPtr<SimUpdater> simUpdater, const file::FileLocator& fileLocator, QWidget* parent)
 {
 	auto widget = new QWidget(parent);
 	auto layout = new QVBoxLayout(widget);
 
-	auto timeControl = new TimeControlWidget(createSkyboltTimeControlWidgetIcons(), parent);
+	auto timeControl = new TimeControlWidget(createSkyboltTimeControlWidgetIcons(fileLocator), parent);
 	layout->addWidget(timeControl);
 
 	auto timeline = new TimelineWidget(widget);
@@ -146,7 +148,7 @@ static QWidget* createTimeControlWidgetPanel(NonNullPtr<EngineRoot> engineRoot, 
 	});
 
 	auto timeRateDialog = new TimeRateDialog(simUpdater->getRequestedTimeRate(), widget);
-	addTimeRateDialogToToolBar(timeRateDialog, timeControl->getToolBar(), getSkyboltIcon(SkyboltIcon::Speed));
+	addTimeRateDialogToToolBar(timeRateDialog, timeControl->getToolBar(), getSkyboltIcon(SkyboltIcon::Speed, fileLocator));
 
 	QObject::connect(timeRateDialog, &TimeRateDialog::rateChanged, widget, [simUpdater](double timeRate) {
 		simUpdater->setRequestedTimeRate(timeRate);
@@ -229,6 +231,16 @@ public:
 
 	bool notify(QObject* receiver, QEvent* event) override
     {
+		// Shield notify from event pumps occurring mid-unwind.
+		// FIXME: This is a workaround for a Qt design limitation where Qt objects that have been deleted by going out of scope in a stack unwind
+		// are still referred to by the event queue, causing a crash. We could avoid this by not managing the lifetime of any Qt objects in a stack scope,
+		// but the alternative for top level windows (e.g QMainWindow) is to memory leak on exception, which is arguably worse.
+		if (std::uncaught_exceptions() > 0)
+		{
+			return false;
+		}
+
+		// Prevent event dispatch if the application or object is shutting down
 		try
 		{
 			return QApplication::notify(receiver, event);
@@ -322,7 +334,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 
 	// Create engine
 	auto params = EngineCommandLineParser::parse(argc, argv);
-	std::unique_ptr<EngineRoot> engineRoot = EngineRootFactory::create(params);
+	std::unique_ptr<EngineRoot> engineRoot = EngineRootFactory::create(params, std::make_shared<vis::OsgImageFactory>());
 
 	SimUpdater simUpdater(engineRoot.get());
 
@@ -347,9 +359,10 @@ static int createAndExecuteApplication(int argc, char** argv)
 	mainLayout->addWidget(cameraControllerWidget);
 
 	// Create 3D viewport
-	auto visRoot = std::make_shared<skybolt::vis::VisRoot>();
+	vis::VisRootPtr visRoot = createVisRoot(*engineRoot);
+
 	std::unique_ptr<OsgWindow> osgWindow = std::make_unique<OsgWindow>(visRoot);
-	osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindowWithEngine(*osgWindow->getWindow(), *engineRoot);
+	osg::ref_ptr<vis::RenderCameraViewport> viewport = createAndAddViewportToWindow(*osgWindow->getWindow(), createVisContext(*visRoot, *engineRoot));
 	{
 		QWidget* osgContainer = QWidget::createWindowContainer(osgWindow.get(), &mainWindow);
 		mainLayout->addWidget(osgContainer, 1);
@@ -388,7 +401,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 
 	// Create time control panel
 	{
-		QWidget* timelinePanel = createTimeControlWidgetPanel(engineRoot.get(), &simUpdater, central);
+		QWidget* timelinePanel = createTimeControlWidgetPanel(engineRoot.get(), &simUpdater, engineRoot->fileLocator, central);
 		mainLayout->addWidget(timelinePanel);
 	}
 
@@ -432,6 +445,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 			.world = &engineRoot->scenario->world,
 			.entityFactory = engineRoot->entityFactory.get(),
 			.onEntityCreated = poseEntityInFrontOfCamera,
+			.fileLocator = engineRoot->fileLocator,
 			.parent = &mainWindow
 			});
 	}
@@ -439,7 +453,8 @@ static int createAndExecuteApplication(int argc, char** argv)
 	// Create scenario tree widget
 	{
 		auto scenarioTree = new ScenarioTreeWidget(ScenarioTreeWidgetConfig{
-			.world = &engineRoot->scenario->world
+			.world = &engineRoot->scenario->world,
+			.fileLocator = engineRoot->fileLocator
 			});
 
 		auto scenarioPanelWidget = new QWidget(&mainWindow);
@@ -470,8 +485,8 @@ static int createAndExecuteApplication(int argc, char** argv)
 	// Create entity name labels
 	std::shared_ptr<VisNameLabels> visNameLabels;
 	{
-		auto hudGroup = engineRoot->scene->getBucketGroup(vis::Scene::Bucket::Hud);
-		visNameLabels = std::make_shared<VisNameLabels>(&engineRoot->scenario->world, hudGroup, engineRoot->programs);
+		auto hudGroup = visRoot->getScene()->getBucketGroup(vis::Scene::Bucket::Hud);
+		visNameLabels = std::make_shared<VisNameLabels>(&engineRoot->scenario->world, hudGroup, visRoot->getShaderPrograms());
 		auto simVisSystem = sim::findSystem<SimVisSystem>(*engineRoot->systemRegistry);
 		simVisSystem->addBinding(visNameLabels);
 	}
@@ -541,7 +556,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 		// Save
 		{
 			auto saveAsFn = [&mainWindow, recentFileMenuPopulator, &scenarioWorkspace]() {
-				QString filename = QFileDialog::getSaveFileName(&mainWindow, "Save Scenario", QString(), "Scenario Files (*.scenario.json)");
+				QString filename = QFileDialog::getSaveFileName(&mainWindow, "Save Scenario", QString(), "Scenario Files (*.scenaro.json)");
 				if (!filename.isEmpty())
 				{
 					if (auto error = scenarioWorkspace.saveScenario(filename); error)
@@ -622,14 +637,14 @@ static int createAndExecuteApplication(int argc, char** argv)
 
 			QObject::connect(action, &QAction::toggled, &mainWindow, [
 				renderOperationVisualization = osg::ref_ptr<skybolt::vis::RenderOperation>(),
-				engineRoot = engineRoot.get(), viewport,
+				visRoot = visRoot.get(), viewport,
 				window = osgWindow->getWindow()
 			] (bool checked) mutable {
 				if (checked)
 				{
 					if (!renderOperationVisualization)
 					{
-						renderOperationVisualization = vis::createRenderOperationVisualization(viewport, engineRoot->programs);
+						renderOperationVisualization = vis::createRenderOperationVisualization(viewport, visRoot->getShaderPrograms());
 					}
 					window->getRenderOperationSequence().addOperation(renderOperationVisualization);
 				}
@@ -647,11 +662,11 @@ static int createAndExecuteApplication(int argc, char** argv)
 			action->setChecked(false);
 			viewMenu->addAction(action);
 
-			QObject::connect(action, &QAction::toggled, &mainWindow, [shaderSourceFileChangeMonitor = std::unique_ptr<skybolt::vis::ShaderSourceFileChangeMonitor>(), engineRoot = engineRoot.get()] (bool checked) mutable {
+			QObject::connect(action, &QAction::toggled, &mainWindow, [shaderSourceFileChangeMonitor = std::unique_ptr<skybolt::vis::ShaderSourceFileChangeMonitor>(), visRoot = visRoot.get()] (bool checked) mutable {
 				shaderSourceFileChangeMonitor.reset();
 				if (checked)
 				{
-					shaderSourceFileChangeMonitor = std::make_unique<vis::ShaderSourceFileChangeMonitor>(engineRoot->programs);
+					shaderSourceFileChangeMonitor = std::make_unique<vis::ShaderSourceFileChangeMonitor>(visRoot->getShaderPrograms());
 				}
 			});
 		}

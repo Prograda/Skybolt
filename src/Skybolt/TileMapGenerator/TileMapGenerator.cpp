@@ -5,8 +5,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "TileMapGenerator.h"
-#include <SkyboltVis/OsgImageHelpers.h>
-#include <SkyboltVis/OsgMathHelpers.h>
+#include <SkyboltVisOsg/OsgImageHelpers.h>
+#include <SkyboltVisOsg/OsgMathHelpers.h>
 #include <SkyboltCommon/Exception.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltCommon/Math/QuadTree.h>
@@ -21,7 +21,7 @@
 using namespace skybolt;
 using namespace vis;
 
-static osg::Vec4f sampleImage(const osg::Image& image, const osg::Vec2d& point, Filtering filtering)
+static osg::Vec4f sampleImage(const osg::Image& image, const osg::Vec2f& point, Filtering filtering)
 {
 	switch (filtering)
 	{
@@ -102,7 +102,7 @@ struct TileGenerator : public boost::noncopyable
 	}
 
 	// @ThreadSafe
-	void generateImage(const vis::Box2d& tileBounds, const QuadTreeTileKey& tileKey) const
+	void generateImage(const OsgBox2d& tileBounds, const QuadTreeTileKey& tileKey) const
 	{
 		osg::Image* srcImage = mLayers.back().image;
 
@@ -113,7 +113,7 @@ struct TileGenerator : public boost::noncopyable
 		{
 			for (int x = 0; x < mTileDimensions.x(); ++x)
 			{
-				Box2d destPixelBounds(osg::Vec2d(double(x) / double(mTileDimensions.x()), double(y) / double(mTileDimensions.y())),
+				OsgBox2d destPixelBounds(osg::Vec2d(double(x) / double(mTileDimensions.x()), double(y) / double(mTileDimensions.y())),
 								  osg::Vec2d(double(x+1) / double(mTileDimensions.x()), double(y+1) / double(mTileDimensions.y())));
 
 				osg::Vec2d size = tileBounds.size();
@@ -127,7 +127,7 @@ struct TileGenerator : public boost::noncopyable
 					const TileMapGeneratorLayer& layer = mLayers[i];
 					if (layer.bounds.intersects(destPixelBounds))
 					{
-						vis::Box2d layerPixelBounds(
+						OsgBox2d layerPixelBounds(
 							math::componentWiseDivide(destPixelBounds.minimum - layer.bounds.minimum, layer.bounds.size()),
 							math::componentWiseDivide(destPixelBounds.maximum - layer.bounds.minimum, layer.bounds.size())
 						);
@@ -212,10 +212,10 @@ void generateTileMap(const std::string& outputDirectory, const osg::Vec2i& tileD
 		}
 	}
 
-	Box2d bounds(osg::Vec2d(-math::piD(), -math::halfPiD()), osg::Vec2d(0, math::halfPiD()));
+	OsgBox2d bounds(osg::Vec2d(-math::piD(), -math::halfPiD()), osg::Vec2d(0, math::halfPiD()));
 	QuadTree<DefaultTile<osg::Vec2d>> treeLeft(createDefaultTile<osg::Vec2d>, QuadTreeTileKey(0, 0, 0), bounds);
 	
-	bounds = Box2d(osg::Vec2d(0, -math::halfPiD()), osg::Vec2d(math::piD(), math::halfPiD()));
+	bounds = OsgBox2d(osg::Vec2d(0, -math::halfPiD()), osg::Vec2d(math::piD(), math::halfPiD()));
 	QuadTree<DefaultTile<osg::Vec2d>> treeRight(createDefaultTile<osg::Vec2d>, QuadTreeTileKey(0, 1, 0), bounds);
 
 	auto scheduler = std::make_unique<px_sched::Scheduler>();

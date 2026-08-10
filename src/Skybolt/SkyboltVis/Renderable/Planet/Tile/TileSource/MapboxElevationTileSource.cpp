@@ -6,14 +6,14 @@
 
 #include "MapboxElevationTileSource.h"
 
-#include "SkyboltVis/OsgImageHelpers.h"
-#include "SkyboltVis/OsgTextureHelpers.h"
-#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationBounds.h"
-#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h"
+#include "SkyboltVis/Elevation/ElevationBounds.h"
+#include "SkyboltVis/Elevation/ElevationImageMetadata.h"
+#include "SkyboltVis/Elevation/ElevationRerange.h"
+#include "SkyboltVis/Image/ImageFactory.h"
+
 #include <SkyboltCommon/ShaUtility.h>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <osg/Texture>
 
 using namespace skybolt;
 
@@ -22,36 +22,36 @@ namespace vis {
 
 MapboxElevationTileSource::MapboxElevationTileSource(const MapboxElevationTileSourceConfig& config) :
 	TileSourceWithMinMaxLevel(config.levelRange),
+	mImageFactory(config.imageFactory),
 	mCacheSha(skybolt::calcSha1(config.urlTemplate + "__mapbox"))
 {
+	assert(mImageFactory);
 
 	XyzTileSourceConfig xyzConfig;
 	xyzConfig.urlTemplate = config.urlTemplate;
 	xyzConfig.yOrigin = XyzTileSourceConfig::YOrigin::Top;
 	xyzConfig.apiKey = config.apiKey;
+	xyzConfig.imageFactory = mImageFactory;
 	mSource = std::make_unique<XyzTileSource>(xyzConfig);
 	mSource->validate();
 }
 
-osg::ref_ptr<osg::Image> MapboxElevationTileSource::createImage(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
+ImagePtr MapboxElevationTileSource::createImage(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
 {
-	osg::ref_ptr<osg::Image> image = mSource->createImage(key, cancelSupplier);
+	ImagePtr image = mSource->createImage(key, cancelSupplier);
 
 	if (image)
 	{
-		osg::ref_ptr<osg::Image> dest = new osg::Image();
-		dest->allocateImage(image->s(), image->t(), 1, GL_LUMINANCE, GL_UNSIGNED_SHORT);
-		dest->setInternalTextureFormat(getHeightMapInternalTextureFormat());
+		ImagePtr dest = valueOrThrowException(mImageFactory->createImage(image->getWidth(), image->getHeight(), Image::Format::R16, Image::ColorSpace::Linear));
 
-		const HeightMapElevationRerange& earthElevationRerange = getDefaultEarthRerange();
-		setHeightMapElevationRerange(*dest, earthElevationRerange);
+		// Fill image with converted elevation data
+		const uint8_t* s = reinterpret_cast<uint8_t*>(image->getRawData());
+		uint16_t* d = reinterpret_cast<uint16_t*>(dest->getRawData());
 
-		const uint8_t* s = reinterpret_cast<uint8_t*>(image->data());
-		uint16_t* d = reinterpret_cast<uint16_t*>(dest->data());
+		ElevationBounds bounds = emptyElevationBounds();
+		const ElevationRerange& earthElevationRerange = getDefaultEarthRerange();
 
-		HeightMapElevationBounds bounds = emptyHeightMapElevationBounds();
-
-		size_t size = image->s() * image->t();
+		size_t size = image->getWidth() * image->getHeight();
 		for (size_t i = 0; i < size; ++i)
 		{
 			int r = *s++;
@@ -68,7 +68,11 @@ osg::ref_ptr<osg::Image> MapboxElevationTileSource::createImage(const QuadTreeTi
 			// Expand elevation bounds
 			expand(bounds, elevation);
 		}
-		setHeightMapElevationBounds(*dest, bounds);
+
+		ElevationImageMetadata metadata;
+		metadata.elevationBounds = bounds;
+		metadata.rerange = earthElevationRerange;
+		setElevationImageMetadata(*image, metadata);
 
 		return dest;
 	}

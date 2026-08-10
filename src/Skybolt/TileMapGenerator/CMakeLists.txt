@@ -5,4 +5,4 @@ include_directories("../")
 
 add_executable(TileMapGenerator ${SOURCE})
 
-target_link_libraries (TileMapGenerator SkyboltEngine)
+target_link_libraries (TileMapGenerator SkyboltEngine SkyboltVisOsg)

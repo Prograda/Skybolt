@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <SkyboltVis/SkyboltVisFwd.h>
+#include <SkyboltVisOsg/SkyboltVisOsgFwd.h>
 
 namespace skybolt {
 

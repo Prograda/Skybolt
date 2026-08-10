@@ -6,10 +6,7 @@
 
 #include "UpdateLoop.h"
 
-#include <SkyboltEngine/SimVisBinding/SimVisBinding.h>
 #include <SkyboltCommon/Exception.h>
-
-#include <osg/Stats>
 
 #include <chrono>
 #include <thread>

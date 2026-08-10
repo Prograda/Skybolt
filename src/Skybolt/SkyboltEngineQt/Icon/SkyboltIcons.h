@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <SkyboltCommon/File/FileLocator.h>
 #include <map>
 #include <QIcon>
 
@@ -21,4 +22,4 @@ enum class SkyboltIcon
 	Speed
 };
 
-const QIcon& getSkyboltIcon(SkyboltIcon icon);
+const QIcon& getSkyboltIcon(SkyboltIcon icon, const skybolt::file::FileLocator& fileLocator);

@@ -9,7 +9,7 @@
 namespace skybolt {
 namespace vis {
 
-TileImage TileImagesLoader::getOrCreateImage(const QuadTreeTileKey& requestedKey, size_t cacheIndex, Factory factory, bool fallbackToAncestorKey) const
+TileImage TileImagesLoader::getOrCreateImage(const QuadTreeTileKey& requestedKey, size_t cacheIndex, Factory factory) const
 {
 	TileCache& cache = mImageCache[cacheIndex];
 

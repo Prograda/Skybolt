@@ -5,14 +5,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "PlanetSubdivisionPredicate.h"
-#include "SkyboltVis/OsgGeocentric.h"
-#include "SkyboltVis/OsgMathHelpers.h"
-#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationBounds.h"
+#include "SkyboltVis/Elevation/ElevationBounds.h"
+#include "SkyboltVis/Elevation/ElevationImageMetadata.h"
 #include "SkyboltVis/Renderable/Planet/Tile/PlanetTileImagesLoader.h"
 #include "SkyboltVis/Renderable/Planet/Tile/TileSource/TileSource.h"
 
-#include <SkyboltCommon/Logging/Logging.h>
 #include <SkyboltCommon/Math/MathUtility.h>
+#include <SkyboltSim/Spatial/Geocentric.h>
 
 using namespace skybolt;
 
@@ -45,71 +44,59 @@ bool PlanetSubdivisionPredicate::operator()(const Box2d& bounds, const QuadTreeT
 		return false;
 	}
 
-	// Get tile elevation bounds
-	auto tileImages = static_cast<const PlanetTileImages*>(images);
-	std::optional<HeightMapElevationBounds> elevationBounds = getHeightMapElevationBounds(*tileImages->heightMapImage.image);
-	if (!elevationBounds)
-	{
-		if (!mHasMissingElevationBoundsError)
-		{
-			SKYBOLT_LOG(error) << "Height map image tile {level=" << key.level << ", x=" << key.x << ", y=" << key.y << "} is missing elevation bounds";
-		}
-		mHasMissingElevationBoundsError = true;
-		return false;
-	}
+	const auto& tileImages = static_cast<const PlanetTileImages&>(*images);
+	auto metadata = getElevationImageMetadataRequired(*tileImages.heightMapImage.image);
+	const ElevationBounds& elevationBounds = metadata.elevationBounds;
 
-	// Subdivide if projected size of the tile at the observer position is above a threshold.
 	Box2d latLonBounds(math::vec2SwapComponents(bounds.minimum), math::vec2SwapComponents(bounds.maximum));
 
-	osg::Vec2d latLon = nearestPointInSolidBox(observerLatLon, latLonBounds);
-	double altitude = std::clamp(observerAltitude, double(elevationBounds->x()), double(elevationBounds->y()));
+	glm::dvec2 latLon = nearestPointInSolidBox(observerLatLon, latLonBounds);
+	double altitude = std::clamp(observerAltitude, double(elevationBounds.x), double(elevationBounds.y));
 
-	osg::Vec3d observerPosition = llaToGeocentric(observerLatLon, std::max(1.0, observerAltitude), planetRadius);
+	glm::dvec3 observerPosition = llaToGeocentric(sim::LatLonAlt(observerLatLon.x, observerLatLon.y, std::max(1.0, observerAltitude)), planetRadius);
 
-	osg::Vec3d tileNearestPoint = llaToGeocentric(latLon, altitude, planetRadius);
-	double distanceToTileNearestPoint = (tileNearestPoint - observerPosition).length();
+	glm::dvec3 tileNearestPoint = llaToGeocentric(sim::LatLonAlt(latLon.x, latLon.y, altitude), planetRadius);
+	double distanceToTileNearestPoint = glm::distance(observerPosition, tileNearestPoint);
 
-	osg::Vec3d tileNearestPointAtLowestAltitude = llaToGeocentric(latLon, 0, planetRadius + elevationBounds->x());
+	glm::dvec3 tileNearestPointAtLowestAltitude = llaToGeocentric(sim::LatLonAlt(latLon.x, latLon.y, 0), planetRadius + elevationBounds.x);
 
-	osg::Vec3d directionFromTileNearestPointAtLowestAltitudeToObserver = (observerPosition - tileNearestPointAtLowestAltitude);
-	directionFromTileNearestPointAtLowestAltitudeToObserver.normalize();
+	glm::dvec3 directionFromTileNearestPointAtLowestAltitudeToObserver = glm::normalize(observerPosition - tileNearestPointAtLowestAltitude);
 
-	tileNearestPointAtLowestAltitude.normalize();
-	float cosElevation = directionFromTileNearestPointAtLowestAltitudeToObserver * tileNearestPointAtLowestAltitude;
+	double cosElevation = glm::dot(directionFromTileNearestPointAtLowestAltitudeToObserver, glm::normalize(tileNearestPointAtLowestAltitude));
 	bool visible = (cosElevation > 0.0f);
 
 	if (visible)
 	{
 		double tileSize = planetRadius / std::pow(2, key.level);
 		double projectedSize = tileSize / std::max(0.01, distanceToTileNearestPoint);
-		return projectedSize > glm::mix(0.4f, 0.1f, cosElevation); // TODO: tune
+		return projectedSize > glm::mix(0.4, 0.1, cosElevation); // TODO: tune
 	}
 
 	return false;
 }
 
-osg::Vec2d PlanetSubdivisionPredicate::nearestPointInSolidBox(const osg::Vec2d& point, const Box2d& bounds) const
+glm::dvec2 PlanetSubdivisionPredicate::nearestPointInSolidBox(const glm::dvec2& point, const Box2d& bounds) const
 {
 	// Handle longitude wrap around
-	osg::Vec2d wrappedPoint = point;
-	double centerLon = bounds.center().y();
+	glm::dvec2 wrappedPoint = point;
+	double centerLon = bounds.center().y;
 
-	double dist = std::abs(point.y() - centerLon);
-	double candidateDist = std::abs(point.y() - math::twoPiD() - centerLon);
+	double dist = std::abs(point.y - centerLon);
+	double candidateDist = std::abs(point.y - math::twoPiD() - centerLon);
 	if (candidateDist < dist)
 	{
-		wrappedPoint.y() -= math::twoPiD();
+		wrappedPoint.y -= math::twoPiD();
 		dist = candidateDist;
 	}
-	candidateDist = std::abs(point.y() + math::twoPiD() - centerLon);
+	candidateDist = std::abs(point.y + math::twoPiD() - centerLon);
 	if (candidateDist < dist)
 	{
-		wrappedPoint.y() += math::twoPiD();
+		wrappedPoint.y += math::twoPiD();
 	}
 
 	// Now find nearest point
-	return osg::Vec2d(math::clamp(wrappedPoint.x(), bounds.minimum.x(), bounds.maximum.x()),
-		math::clamp(wrappedPoint.y(), bounds.minimum.y(), bounds.maximum.y()));
+	return glm::dvec2(math::clamp(wrappedPoint.x, bounds.minimum.x, bounds.maximum.x),
+		math::clamp(wrappedPoint.y, bounds.minimum.y, bounds.maximum.y));
 }
 
 } // namespace vis

@@ -15,9 +15,9 @@ namespace vis {
 class CachedTileSource : public TileSource
 {
 public:
-	CachedTileSource(const TileSourcePtr& tileSource, const std::string& cacheDirectory);
+	CachedTileSource(const ImageFactoryPtr& imageFactory, const TileSourcePtr& tileSource, const std::string& cacheDirectory);
 
-	osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
+	ImagePtr createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
 
 	bool hasAnyChildren(const skybolt::QuadTreeTileKey& key) const override
 	{
@@ -32,6 +32,7 @@ public:
 	const std::string& getCacheSha() const override { throw std::runtime_error("Cached tile source cann't be cached"); }
 
 private:
+	ImageFactoryPtr mImageFactory;
 	TileSourcePtr mTileSource;
 	std::string mCacheDirectory;
 };

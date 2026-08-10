@@ -9,7 +9,7 @@
 #include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
 
-#include <osgDB/Registry>
+#include <set>
 
 namespace skybolt {
 
@@ -30,13 +30,13 @@ static AssetPackageDefinition readAssetPackageDefinition(const nlohmann::json& j
 	};
 } 
 
-static void registerAssetPackage(const AssetPackageDefinition& definition)
+static void registerAssetPackage(AssetPackageRegistry& registry, const AssetPackageDefinition& definition)
 {
-	osgDB::Registry::instance()->getDataFilePathList().push_back(definition.filepath.string() + "/");
+	registry.push_back(definition.filepath.string() + "/");
 	SKYBOLT_LOG(info) << "Registered asset package: " << definition.name;
 }
 
-AssetPackageFilepaths loadAssetPackagesInPath(const file::Path& assetSearchPath)
+AssetPackageFilepaths loadAssetPackagesInPath(AssetPackageRegistry& registry, const file::Path& assetSearchPath)
 {
 	// Find packages
 	std::vector<AssetPackageDefinition> definitions;
@@ -68,7 +68,7 @@ AssetPackageFilepaths loadAssetPackagesInPath(const file::Path& assetSearchPath)
 	AssetPackageFilepaths loadedPackagePaths;
 	for (const AssetPackageDefinition& definition : definitions)
 	{
-		registerAssetPackage(definition);
+		registerAssetPackage(registry, definition);
 		loadedPackagePaths[definition.name] = definition.filepath;
 
 	}

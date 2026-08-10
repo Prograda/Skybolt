@@ -12,6 +12,7 @@ include_directories(${pybind11_INCLUDE_DIRS})
 
 set(LIBS
 	SkyboltEngine
+	SkyboltVisOsg
 	${Python3_LIBRARIES}
 	pybind11::headers
 )

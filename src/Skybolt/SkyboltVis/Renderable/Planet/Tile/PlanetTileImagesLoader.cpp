@@ -6,13 +6,12 @@
 
 #include "PlanetTileImagesLoader.h"
 #include "TileSource/TileSource.h"
-#include "SkyboltVis/Renderable/Planet/AttributeMapHelpers.h"
-#include "SkyboltVis/Renderable/Planet/Tile/HeightMapElevationBounds.h"
+#include "SkyboltVis/Elevation/ElevationImageMetadata.h"
+#include "SkyboltVis/Image/ImageFactory.h"
+#include "SkyboltVis/Renderable/Planet/Tile/AttributeMapHelpers.h"
 #include "SkyboltVis/Renderable/Planet/Tile/NormalMapHelpers.h"
-#include "SkyboltVis/OsgImageHelpers.h"
-#include "SkyboltVis/OsgTextureHelpers.h"
+#include "SkyboltVis/Elevation/ElevationBounds.h"
 #include <algorithm>
-#include <osg/Texture>
 
 //#define ENABLE_TILE_IMAGE_LOADER_PROFILING
 #ifdef ENABLE_TILE_IMAGE_LOADER_PROFILING
@@ -25,45 +24,41 @@ using namespace skybolt;
 namespace skybolt {
 namespace vis {
 
-static osg::Image* createDefaultHeightImage(const HeightMapElevationRerange& rerange)
+static ImagePtr createDefaultHeightImage(const ImageFactory& imageFactory, const ElevationRerange& rerange)
 {
 	const int oceanHeight = getColorValueForElevation(rerange, 0.f);
 
-	osg::Image* image = new osg::Image();
-	image->allocateImage(256, 256, 1, GL_LUMINANCE, GL_UNSIGNED_SHORT);
-	image->setInternalTextureFormat(GL_R16);
-	uint16_t* ptr = (uint16_t*)image->getDataPointer();
+	ImagePtr image = valueOrThrowException(imageFactory.createImage(256, 256, Image::Format::R16, Image::ColorSpace::Linear));
+	uint16_t* ptr = (uint16_t*)image->getRawData();
 	for (int i = 0; i < 256 * 256; ++i)
 	{
 		ptr[i] = oceanHeight;
 	}
 
-	setHeightMapElevationBounds(*image, {0,0});
-	setHeightMapElevationRerange(*image, rerange);
+	ElevationImageMetadata metadata;
+	metadata.elevationBounds = {0,0};
+	metadata.rerange = rerange;
+	setElevationImageMetadata(*image, metadata);
 
 	return image;
 }
 
-static osg::Image* createDefaultAlbedoImage()
+static ImagePtr createDefaultAlbedoImage(const ImageFactory& imageFactory)
 {
-	osg::Image* image = new osg::Image();
-	image->allocateImage(256, 256, 1, GL_RGB, GL_BYTE);
-	image->setInternalTextureFormat(GL_RGB8);
-	memset((char*)(image->getDataPointer()), 0, 3 * 256 * 256);
+	ImagePtr image = valueOrThrowException(imageFactory.createImage(256, 256, Image::Format::RGB8, Image::ColorSpace::Srgb));
+	memset((char*)(image->getRawData()), 0, 3 * 256 * 256);
 	return image;
 }
 
-static osg::Image* convertHeightmapToLandMask(const osg::Image& src, const HeightMapElevationRerange& rerange)
+static ImagePtr convertHeightmapToLandMask(const ImageFactory& imageFactory, const Image& src, const ElevationRerange& rerange)
 {
 	const int oceanHeight = getColorValueForElevation(rerange, 0.f);
 
-	osg::Image* dst = new osg::Image;
-	dst->allocateImage(src.s(), src.t(), 1, GL_ALPHA, GL_UNSIGNED_BYTE);
-	dst->setInternalTextureFormat(GL_ALPHA8);
+	ImagePtr dst = valueOrThrowException(imageFactory.createImage(src.getWidth(), src.getHeight(), Image::Format::R8, Image::ColorSpace::Linear));
 
-	uint16_t* pSrc = (uint16_t*)src.data();
-	unsigned char* pDst = (unsigned char*)dst->data();
-	size_t size = src.s() * src.t();
+	uint16_t* pSrc = (uint16_t*)src.getRawData();
+	unsigned char* pDst = dst->getRawData();
+	size_t size = src.getWidth() * src.getHeight();
 	for (size_t i = 0; i < size; ++i)
 	{
 		pDst[i] = (pSrc[i] <= oceanHeight) ? 0 : 255;
@@ -81,6 +76,14 @@ enum class CacheIndex
 	// Attribute1...AttributeN
 };
 
+PlanetTileImagesLoader::PlanetTileImagesLoader(const ImageFactoryPtr& imageFactory, double planetRadius, Layers layers) :
+	TileImagesLoader(3 + layers.attributes.size()), // Count should be total number of CacheIndex values available
+	mImageFactory(imageFactory),
+	mPlanetRadius(planetRadius),
+	layers(std::move(layers))
+{
+}
+
 //! May be called from multiple threads
 TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
 {
@@ -95,32 +98,39 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 #endif
 	auto images = std::make_shared<PlanetTileImages>();
 
-	static HeightMapElevationRerange defaultRerange = {1, 0};
-	static osg::ref_ptr<osg::Image> defaultHeightImage = createDefaultHeightImage(defaultRerange);
-	static osg::ref_ptr<osg::Image> defaultNormalMap = createNormalMapFromHeightMap(*defaultHeightImage, defaultRerange, osg::Vec2(1,1));
-	static osg::ref_ptr<osg::Image> defaultLandMask = convertHeightmapToLandMask(*defaultHeightImage, defaultRerange);
+	static ElevationRerange defaultRerange = {1, 0};
+	static ImagePtr defaultHeightImage = createDefaultHeightImage(*mImageFactory, defaultRerange);
+	static ImagePtr defaultNormalMap = createNormalMapFromHeightMap(*mImageFactory, *defaultHeightImage, defaultRerange, glm::vec2(1,1));
+	static ImagePtr defaultLandMask = convertHeightmapToLandMask(*mImageFactory, *defaultHeightImage, defaultRerange);
 
 	// Height map
 	{
-		std::optional<QuadTreeTileKey> elevationKey = elevationLayer->getHighestAvailableLevel(key);
+		std::optional<QuadTreeTileKey> elevationKey = layers.elevation->getHighestAvailableLevel(key);
 		if (elevationKey)
 		{
 			images->heightMapImage = getOrCreateImage(*elevationKey, size_t(CacheIndex::Elevation), [this, cancelSupplier](const QuadTreeTileKey& key) {
-				return elevationLayer->createImage(key, cancelSupplier);
+				ImagePtr image = layers.elevation->createImage(key, cancelSupplier);
+				if (image)
+				{
+					image->setColorSpace(Image::ColorSpace::Linear);
+				}
+				return image;
 			});
 		}
 
 		if (images->heightMapImage.image)
 		{
-			osg::ref_ptr<osg::Image> heightImage = images->heightMapImage.image;
-			auto bounds = getKeyLonLatBounds<osg::Vec2>(images->heightMapImage.key);
-			osg::Vec2 heightImageLonLatDelta = bounds.size();
-			osg::Vec2 texelWorldSize = osg::Vec2f(
-				heightImageLonLatDelta.x() * mPlanetRadius * std::cos(bounds.center().y()) / heightImage->s(),
-				heightImageLonLatDelta.y() * mPlanetRadius / heightImage->t()
+			ImagePtr heightImage = images->heightMapImage.image;
+			auto bounds = getKeyLonLatBounds<glm::vec2>(images->heightMapImage.key);
+			glm::vec2 heightImageLonLatDelta = bounds.size();
+			double latitude = std::cos(bounds.center().y);
+			glm::vec2 texelWorldSize = glm::vec2(
+				heightImageLonLatDelta.x * mPlanetRadius * latitude / heightImage->getWidth(), // East
+				heightImageLonLatDelta.y * mPlanetRadius / heightImage->getHeight() // North
 			);
 			int filterWidth = 5;
-			images->normalMapImage = createNormalMapFromHeightMap(*heightImage, getRequiredHeightMapElevationRerange(*heightImage), texelWorldSize, filterWidth);
+			auto metadata = getElevationImageMetadataRequired(*heightImage);
+			images->normalMapImage = createNormalMapFromHeightMap(*mImageFactory, *heightImage, metadata.rerange, texelWorldSize, filterWidth);
 		}
 		else
 		{
@@ -136,13 +146,17 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 	}
 
 	// Land mask
-	if (landMaskLayer || generateLandMaskFromElevation)
 	{
-		osg::ref_ptr<osg::Image> heightImage = images->heightMapImage.image;
+		ImagePtr heightImage = images->heightMapImage.image;
 		images->landMaskImage = getOrCreateImage(images->heightMapImage.key, size_t(CacheIndex::LandMask), [this, heightImage, cancelSupplier](const QuadTreeTileKey& key) {
-			if (landMaskLayer)
+			if (layers.landMask)
 			{
-				return landMaskLayer->createImage(key, cancelSupplier);
+				ImagePtr image = layers.landMask->createImage(key, cancelSupplier);
+				if (image)
+				{
+					image->setColorSpace(Image::ColorSpace::Linear);
+				}
+				return image;
 			}
 			else
 			{
@@ -150,7 +164,8 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 				{
 					return defaultLandMask;
 				}
-				osg::ref_ptr<osg::Image> image = convertHeightmapToLandMask(*heightImage, getRequiredHeightMapElevationRerange(*heightImage));
+				auto metadata = getElevationImageMetadataRequired(*heightImage);
+				ImagePtr image = convertHeightmapToLandMask(*mImageFactory, *heightImage, metadata.rerange);
 				return image;
 			}
 		}).image;
@@ -169,14 +184,13 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 
 	// Albedo map
 	{
-		static osg::ref_ptr<osg::Image> defaultAlbedoImage = createDefaultAlbedoImage();
+		static ImagePtr defaultAlbedoImage = createDefaultAlbedoImage(*mImageFactory);
 
-		std::optional<QuadTreeTileKey> albedoKey = albedoLayer->getHighestAvailableLevel(key);
+		std::optional<QuadTreeTileKey> albedoKey = layers.albedo->getHighestAvailableLevel(key);
 		if (albedoKey)
 		{
 			images->albedoMapImage = getOrCreateImage(*albedoKey, size_t(CacheIndex::Albedo), [this, cancelSupplier](const QuadTreeTileKey& key) {
-				osg::ref_ptr<osg::Image> image = albedoLayer->createImage(key, cancelSupplier);
-				return image;
+				return layers.albedo->createImage(key, cancelSupplier);
 			});
 		}
 
@@ -195,8 +209,8 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 	// Attribute map
 	{
 		std::size_t attributeIndex = 0;
-		images->attributeMapImages.resize(attributeLayers.size());
-		for (const auto& attributeLayer : attributeLayers)
+		images->attributeMapImages.resize(layers.attributes.size());
+		for (const auto& attributeLayer : layers.attributes)
 		{
 			assert(attributeLayer.source);
 
@@ -204,10 +218,15 @@ TileImagesPtr PlanetTileImagesLoader::load(const QuadTreeTileKey& key, std::func
 			if (attributeKey)
 			{
 				TileImage tileImage = getOrCreateImage(*attributeKey, size_t(CacheIndex::Attribute0) + attributeIndex, [this, attributeLayer, cancelSupplier](const QuadTreeTileKey& key) {
-					osg::ref_ptr<osg::Image> image = attributeLayer.source->createImage(key, cancelSupplier);
-					if (image && attributeLayer.processing == AttributeMapProcessing::ConvertNlcdAttributeColors)
+					ImagePtr image = attributeLayer.source->createImage(key, cancelSupplier);
+					if (!image)
 					{
-						image = convertAttributeMap(*image, getNlcdAttributeColors());
+						return image;
+					}
+					image->setColorSpace(Image::ColorSpace::Linear);
+					if (attributeLayer.processing == AttributeMapProcessing::ConvertNlcdAttributeColors)
+					{
+						image = convertAttributeMap(*mImageFactory, *image, getNlcdAttributeColors());
 					}
 					return image;
 				});

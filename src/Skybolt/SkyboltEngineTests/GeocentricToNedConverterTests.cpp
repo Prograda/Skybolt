@@ -7,10 +7,10 @@
 #define CATCH_CONFIG_MAIN
 #include "TestHelpers.h"
 #include <catch2/catch.hpp>
-#include <SkyboltEngine/SimVisBinding/GeocentricToNedConverter.h>
+#include <SkyboltSim/Spatial/GeocentricToNedConverter.h>
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltCommon/NumericComparison.h>
-#include <osg/Vec3d>
+
 
 using namespace skybolt;
 
@@ -34,9 +34,9 @@ TEST_CASE("NED position is zero at origin")
 	GeocentricToNedConverter converter;
 	converter.setOrigin(origin, pose);
 
-	osg::Vec3d ned = converter.convertPosition(origin);
+	glm::dvec3 ned = converter.convertPosition(origin);
 
-	check(osg::Vec3d(0, 0, 0), ned, epsilon);
+	check(glm::dvec3(0, 0, 0), ned, epsilon);
 }
 
 TEST_CASE("NED position is +X when north of origin")
@@ -44,9 +44,9 @@ TEST_CASE("NED position is +X when north of origin")
 	GeocentricToNedConverter converter;
 	converter.setOrigin(sim::Vector3(10,0,0), identityPlanetPose);
 
-	osg::Vec3d ned = converter.convertPosition(sim::Vector3(10, 0, 2));
+	glm::dvec3 ned = converter.convertPosition(sim::Vector3(10, 0, 2));
 
-	check(osg::Vec3d(2,0,0), ned, epsilon);
+	check(glm::dvec3(2,0,0), ned, epsilon);
 }
 
 TEST_CASE("NED position is +Y when east of origin")
@@ -54,9 +54,9 @@ TEST_CASE("NED position is +Y when east of origin")
 	GeocentricToNedConverter converter;
 	converter.setOrigin(sim::Vector3(10, 0, 0), identityPlanetPose);
 
-	osg::Vec3d ned = converter.convertPosition(sim::Vector3(10, 2, 0));
+	glm::dvec3 ned = converter.convertPosition(sim::Vector3(10, 2, 0));
 
-	check(osg::Vec3d(0, 2, 0), ned, epsilon);
+	check(glm::dvec3(0, 2, 0), ned, epsilon);
 }
 
 TEST_CASE("NED position is +Z when below origin")
@@ -64,9 +64,9 @@ TEST_CASE("NED position is +Z when below origin")
 	GeocentricToNedConverter converter;
 	converter.setOrigin(sim::Vector3(10, 0, 0), identityPlanetPose);
 
-	osg::Vec3d ned = converter.convertPosition(sim::Vector3(8, 0, 0));
+	glm::dvec3 ned = converter.convertPosition(sim::Vector3(8, 0, 0));
 
-	check(osg::Vec3d(0, 0, 2), ned, epsilon);
+	check(glm::dvec3(0, 0, 2), ned, epsilon);
 }
 
 TEST_CASE("Geocentric up vector converts to NED down vector")
@@ -74,9 +74,9 @@ TEST_CASE("Geocentric up vector converts to NED down vector")
 	GeocentricToNedConverter converter;
 	converter.setOrigin(sim::Vector3(10, 10, 10), identityPlanetPose);
 
-	osg::Vec3d ned = converter.convertLocalPosition(sim::Vector3(1, 1, 1));
+	glm::dvec3 ned = converter.convertLocalPosition(sim::Vector3(1, 1, 1));
 
-	check(osg::Vec3d(0, 0, -std::sqrt(3)), ned, epsilon);
+	check(glm::dvec3(0, 0, -std::sqrt(3)), ned, epsilon);
 }
 
 TEST_CASE("Conversion accounts for planet position")
@@ -88,8 +88,8 @@ TEST_CASE("Conversion accounts for planet position")
 	converter.setOrigin(sim::Vector3(10, 0, 0), pose);
 
 	// Test that a point to the east of a planet at (0,0,0) is now to the west
-	osg::Vec3d ned = converter.convertPosition(sim::Vector3(10, 2, 0));
-	check(osg::Vec3d(0,-2,0), ned, epsilon);
+	glm::dvec3 ned = converter.convertPosition(sim::Vector3(10, 2, 0));
+	check(glm::dvec3(0,-2,0), ned, epsilon);
 }
 
 TEST_CASE("Conversion accounts for planet orientation")
@@ -101,6 +101,6 @@ TEST_CASE("Conversion accounts for planet orientation")
 	converter.setOrigin(sim::Vector3(10, 0, 0), pose);
 
 	// Test that a point to the east of the unrotated planet is now to the west
-	osg::Vec3d ned = converter.convertPosition(sim::Vector3(10, 2, 0));
-	check(osg::Vec3d(0,-2,0), ned, epsilon);
+	glm::dvec3 ned = converter.convertPosition(sim::Vector3(10, 2, 0));
+	check(glm::dvec3(0,-2,0), ned, epsilon);
 }

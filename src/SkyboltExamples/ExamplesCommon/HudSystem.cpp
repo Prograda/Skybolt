@@ -12,13 +12,13 @@
 #include <AircraftHud/AltitudeBarModel.h>
 #include <AircraftHud/RollAngleRibbonModel.h>
 
+#include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltSim/Components/ControlInputsComponent.h>
 #include <SkyboltSim/Components/Motion.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Spatial/Orientation.h>
 #include <SkyboltSim/Spatial/Position.h>
-#include <SkyboltEngine/VisHud.h>
-#include <SkyboltCommon/Math/MathUtility.h>
+#include <SkyboltVisOsg/Renderable/VisHud.h>
 
 using namespace skybolt;
 using namespace skybolt::sim;

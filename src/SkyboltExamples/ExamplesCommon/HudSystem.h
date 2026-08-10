@@ -10,8 +10,8 @@
 #include <SkyboltSim/Entity.h>
 #include <SkyboltSim/System/System.h>
 
-#include <SkyboltVis/Scene.h>
-#include <SkyboltVis/Window/Window.h>
+#include <SkyboltVisOsg/Scene.h>
+#include <SkyboltVisOsg/Window/Window.h>
 
 namespace skybolt {
 

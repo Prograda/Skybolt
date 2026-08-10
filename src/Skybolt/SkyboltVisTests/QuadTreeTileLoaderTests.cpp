@@ -202,10 +202,10 @@ TEST_CASE("QuadTreeTileLoader loads tiles when tile load predicate later allows 
 
 static std::shared_ptr<QuadTreeTileLoader::LoadedTileTree> createTree()
 {
-	Box2d leftBounds(osg::Vec2d(-math::piD(), -math::halfPiD()), osg::Vec2d(0, math::halfPiD()));
-	Box2d rightBounds(osg::Vec2d(0, -math::halfPiD()), osg::Vec2d(math::piD(), math::halfPiD()));
+	Box2d leftBounds(glm::dvec2(-math::piD(), -math::halfPiD()), glm::dvec2(0, math::halfPiD()));
+	Box2d rightBounds(glm::dvec2(0, -math::halfPiD()), glm::dvec2(math::piD(), math::halfPiD()));
 	return std::make_shared<QuadTreeTileLoader::LoadedTileTree>(
-		[](const QuadTreeTileKey& key, const Box2T<osg::Vec2d>& bounds) {
+		[](const QuadTreeTileKey& key, const Box2T<glm::dvec2>& bounds) {
 		auto tile = std::make_unique<QuadTreeTileLoader::LoadedTile>();
 		tile->key = key;
 		tile->bounds = bounds;

@@ -7,8 +7,7 @@
 #pragma once
 
 #include <SkyboltCommon/Math/QuadTree.h>
-
-#include <osg/Image>
+#include "SkyboltVis/SkyboltVisFwd.h"
 
 #include <atomic>
 #include <string>
@@ -22,9 +21,9 @@ public:
 	virtual ~TileSource() {}
 
 	//! May be called concurrently from different threads to create different images.
-	//! Images representing height maps are expected to have HeightMapElevationBounds and HeightMapElevationRerange user data.
+	//! Images representing height maps are expected to have ElevationBounds and ElevationRerange user data.
 	//!@ThreadSafe
-	virtual osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const = 0;
+	virtual ImagePtr createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const = 0;
 
 	//! @returns true if tile source data exists for the children of the tile with the given key
 	virtual bool hasAnyChildren(const skybolt::QuadTreeTileKey& key) const = 0;

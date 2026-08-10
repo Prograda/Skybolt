@@ -5,12 +5,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include <catch2/catch.hpp>
+#include <SkyboltVis/Elevation/ElevationBounds.h>
+#include <SkyboltVis/Elevation/ElevationImageMetadata.h>
+#include <SkyboltVis/Elevation/ElevationRerange.h>
+#include <SkyboltVis/Image/SimpleImageFactory.h>
 #include <SkyboltVis/Renderable/Planet/Tile/TileSource/XyzTileSource.h>
-#include <SkyboltVis/Renderable/Planet/Tile/HeightMapElevationBounds.h>
-#include <SkyboltVis/Renderable/Planet/Tile/HeightMapElevationRerange.h>
 
-#include <osg/Image>
-#include <osgDB/WriteFile>
 #include <filesystem>
 
 using namespace skybolt;
@@ -23,7 +23,7 @@ static fs::path getTemporaryDirectory()
 	return fs::temp_directory_path() / "SkyboltTests";
 }
 
-static XyzTileSource createXyzTileSource(std::optional<HeightMapElevationRerange> elevationRerange = {})
+static XyzTileSource createXyzTileSource(std::optional<ElevationRerange> elevationRerange = {})
 {
 	fs::create_directories(getTemporaryDirectory());
 
@@ -32,23 +32,24 @@ static XyzTileSource createXyzTileSource(std::optional<HeightMapElevationRerange
 	config.apiKey = "testKey";
 	config.levelRange = IntRangeInclusive(0, 2);
 	config.elevationRerange = std::move(elevationRerange);
+	config.imageFactory = std::make_shared<SimpleImageFactory>();
 
 	return XyzTileSource(config);
 }
 
-static void writeTestColorImage(const fs::path& filename)
+static Expected<std::monostate> writeTestColorImage(const fs::path& filename)
 {
-	osg::ref_ptr<osg::Image> image = new osg::Image();
-	image->allocateImage(1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE);
-	osgDB::writeImageFile(*image, filename.string());
+	SimpleImageFactory factory;
+	ImagePtr image = valueOrThrowException(factory.createImage(1, 1, Image::Format::RGBA8, Image::ColorSpace::Linear));
+	return factory.writeImage(*image, filename.string());
 }
 
-static void writeTestElevationImage(const fs::path& filename, std::uint16_t elevationValue)
+static Expected<std::monostate> writeTestElevationImage(const fs::path& filename, std::uint16_t elevationValue)
 {
-	osg::ref_ptr<osg::Image> image = new osg::Image();
-	image->allocateImage(1, 1, 1, GL_LUMINANCE, GL_UNSIGNED_SHORT);
-	*reinterpret_cast<std::uint16_t*>(image->data()) = elevationValue;
-	osgDB::writeImageFile(*image, filename.string());
+	SimpleImageFactory factory;
+	ImagePtr image = valueOrThrowException(factory.createImage(1, 1, Image::Format::R16, Image::ColorSpace::Linear));
+	image->getRawData()[0] = elevationValue;
+	return factory.writeImage(*image, filename.string());
 }
 
 TEST_CASE("Test tile loaded from XYZ tile source")
@@ -56,7 +57,7 @@ TEST_CASE("Test tile loaded from XYZ tile source")
 	XyzTileSource source = createXyzTileSource();
 
 	// Load existing image succeeds
-	writeTestColorImage(getTemporaryDirectory() / "testKey_2_1_3.png");
+	valueOrThrowException(writeTestColorImage(getTemporaryDirectory() / "testKey_2_1_3.png"));
 	CHECK(source.createImage(QuadTreeTileKey(2,1,3), [] { return false;}));
 
 	// Load non-existing image fails
@@ -69,19 +70,16 @@ TEST_CASE("Test height map tile loaded from XYZ elevation tile source")
 
 	// Load existing image succeeds
 	int elevationValue = 23;
-	writeTestElevationImage(getTemporaryDirectory() / "testKey_2_1_3.png", elevationValue);
+	valueOrThrowException(writeTestElevationImage(getTemporaryDirectory() / "testKey_2_1_3.png", elevationValue));
 
-	osg::ref_ptr<osg::Image> image = source.createImage(QuadTreeTileKey(2,1,3), [] { return false;});
+	ImagePtr image = source.createImage(QuadTreeTileKey(2,1,3), [] { return false;});
 	REQUIRE(image);
 
-	auto rerange = getHeightMapElevationRerange(*image);
-	REQUIRE(rerange);
-	CHECK(rerange == getDefaultEarthRerange());
-
-	auto bounds = getHeightMapElevationBounds(*image);
-	REQUIRE(bounds);
-	CHECK(getColorValueForElevation(*rerange, bounds->x()) == elevationValue);
-	CHECK(getColorValueForElevation(*rerange, bounds->y()) == elevationValue);
+	auto metadata = getElevationImageMetadata(*image);
+	REQUIRE(metadata);
+	CHECK(metadata->rerange == getDefaultEarthRerange());
+	CHECK(getColorValueForElevation(metadata->rerange, metadata->elevationBounds.x) == elevationValue);
+	CHECK(getColorValueForElevation(metadata->rerange, metadata->elevationBounds.y) == elevationValue);
 
 }
 

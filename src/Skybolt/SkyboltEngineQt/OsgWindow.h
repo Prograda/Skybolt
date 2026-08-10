@@ -7,7 +7,7 @@
 #pragma once
 
 #include <SkyboltEngine/SkyboltEngineFwd.h>
-#include <SkyboltVis/SkyboltVisFwd.h>
+#include <SkyboltVisOsg/SkyboltVisOsgFwd.h>
 
 #include <QWindow>
 #include <osg/Camera>

@@ -36,7 +36,7 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 	for (const std::filesystem::path& path : pluginFilepaths)
 	{
 		boost::filesystem::path boostPath(path.string());
-		std::string pluginName = boostPath.leaf().string();
+		std::string pluginName = boostPath.filename().string();
 		if (loadedPluginNames.find(pluginName) != loadedPluginNames.end())
 		{
 			SKYBOLT_LOG(warning) << "Found plugin with same name as already loaded plugin '" << pluginName << "' in directory '" << boostPath.string() << "'. Ignoring the duplicate plugin.";

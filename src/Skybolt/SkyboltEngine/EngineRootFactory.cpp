@@ -9,6 +9,7 @@
 #include "GetExecutableFilepath.h"
 #include "Plugin/PluginHelpers.h"
 
+#include <SkyboltVis/Image/SimpleImageFactory.h>
 #include <SkyboltCommon/Logging/Logging.h>
 
 using namespace nlohmann;
@@ -27,14 +28,14 @@ T getOptionalNodeOrDefaultWithWarning(const json& j, const std::string& name, co
 	return defaultValue;
 }
 
-std::unique_ptr<EngineRoot> EngineRootFactory::create(const boost::program_options::variables_map& params)
+std::unique_ptr<EngineRoot> EngineRootFactory::create(const boost::program_options::variables_map& params, const vis::ImageFactoryPtr& imageFactory)
 {
 	std::vector<PluginFactory> enginePluginFactories = loadPluginFactories<Plugin, PluginConfig>(getAllPluginFilepathsInDirectories(getDefaultPluginDirs()));
 
 	try
 	{
 		nlohmann::json settings = readEngineSettings(params);
-		return create(enginePluginFactories, settings);
+		return create(enginePluginFactories, settings, imageFactory);
 	}
 	catch (const std::exception& e)
 	{
@@ -44,11 +45,12 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const boost::program_optio
 	}
 }
 
-std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFactory>& pluginFactories, const json& settings)
+std::unique_ptr<EngineRoot> EngineRootFactory::create(const std::vector<PluginFactory>& pluginFactories, const json& settings, const vis::ImageFactoryPtr& imageFactory)
 {
 	EngineRootConfig config;
 	config.engineSettings = settings;
 	config.assetSearchPaths = getDefaultAssetSearchPaths();
+	config.imageFactory = imageFactory;
 	auto engineRoot = std::make_unique<EngineRoot>(config);
 	engineRoot->loadPlugins(pluginFactories);
 	return engineRoot;
@@ -63,6 +65,11 @@ std::vector<std::string> EngineRootFactory::getDefaultPluginDirs()
 		pluginDirs.insert(pluginDirs.begin(), paths.begin(), paths.end());
 	}
 	return pluginDirs;
+}
+
+vis::ImageFactoryPtr EngineRootFactory::createDefaultImageFactory()
+{
+	return std::make_shared<vis::SimpleImageFactory>();
 }
 
 } // namespace skybolt

@@ -80,13 +80,13 @@ EntityCreationToolBar::EntityCreationToolBar(const EntityCreationToolBarConfig& 
 	QToolButton* createButton = new QToolButton(config.parent);
 	createButton->setToolTip("Add item");
 	createButton->setText("+");
-	createButton->setIcon(getSkyboltIcon(SkyboltIcon::Add));
+	createButton->setIcon(getSkyboltIcon(SkyboltIcon::Add, config.fileLocator));
 	addWidget(createButton);
 
 	mDeleteButton = new QToolButton(config.parent);
 	mDeleteButton->setToolTip("Remove item");
 	mDeleteButton->setText("-");
-	mDeleteButton->setIcon(getSkyboltIcon(SkyboltIcon::Remove));
+	mDeleteButton->setIcon(getSkyboltIcon(SkyboltIcon::Remove, config.fileLocator));
 	mDeleteButton->setEnabled(false);
 	addWidget(mDeleteButton);
 

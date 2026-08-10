@@ -5,13 +5,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "BingTileSource.h"
-#include "SkyboltVis/OsgBox2.h"
-#include "SkyboltVis/OsgImageHelpers.h"
+#include "Image/ImageFactory.h"
 #include <SkyboltCommon/Math/MathUtility.h>
 #include <SkyboltCommon/ShaUtility.h>
 
 #include <httplib.h>
-#include <osg/Vec2i>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <SkyboltCommon/Logging/Logging.h>
@@ -52,8 +50,10 @@ static std::string tileXYToQuadKey(int tileX, int tileY, int levelOfDetail)
 
 BingTileSource::BingTileSource(const BingTileSourceConfig& config) :
 	TileSourceWithMinMaxLevel(config.levelRange),
+	mImageFactory(config.imageFactory),
 	mCacheSha(skybolt::calcSha1(config.url))
 {
+	assert(mImageFactory);
 
 	httplib::Client cli(config.url.c_str());
 
@@ -81,7 +81,7 @@ BingTileSource::BingTileSource(const BingTileSourceConfig& config) :
 	}
 }
 
-osg::ref_ptr<osg::Image> BingTileSource::createImage(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
+ImagePtr BingTileSource::createImage(const QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const
 {
 	if (mUrlPartBeforeTileKey.empty())
 	{
@@ -89,7 +89,7 @@ osg::ref_ptr<osg::Image> BingTileSource::createImage(const QuadTreeTileKey& key,
 	}
 
 	std::string url = mUrlPartBeforeTileKey + tileXYToQuadKey(key.x, key.y, key.level) + mUrlPartAfterTileKey;
-	return readImageWithoutWarnings(url);
+	return value(mImageFactory->readImage(url)).value_or(nullptr);
 }
 
 } // namespace vis

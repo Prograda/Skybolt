@@ -15,9 +15,9 @@ namespace vis {
 class SphericalMercatorToPlateCarreeTileSource : public TileSource
 {
 public:
-	SphericalMercatorToPlateCarreeTileSource(const TileSourcePtr& source);
+	SphericalMercatorToPlateCarreeTileSource(const ImageFactoryPtr& imageFactory, const TileSourcePtr& source);
 
-	osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
+	ImagePtr createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
 
 	bool hasAnyChildren(const skybolt::QuadTreeTileKey& key) const override
 	{
@@ -33,6 +33,7 @@ public:
 	const std::string& getCacheFileFormat() const override { return mTileSource->getCacheFileFormat(); }
 
 private:
+	ImageFactoryPtr mImageFactory;
 	TileSourcePtr mTileSource;
 };
 

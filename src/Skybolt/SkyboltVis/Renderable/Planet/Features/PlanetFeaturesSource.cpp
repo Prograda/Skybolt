@@ -517,7 +517,7 @@ struct BoundedFeature
 
 static double maxSize(const LatLonBounds& box)
 {
-	vis::LatLonVec2Adapter size = box.size();
+	LatLonVec2Adapter size = box.size();
 	return std::max(size.x(), size.y());
 }
 

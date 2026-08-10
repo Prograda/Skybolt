@@ -12,6 +12,7 @@ namespace vis {
 
 struct BingTileSourceConfig
 {
+	ImageFactoryPtr imageFactory;
 	std::string url;
 	std::string apiKey;
 	IntRangeInclusive levelRange;
@@ -22,10 +23,11 @@ class BingTileSource : public TileSourceWithMinMaxLevel
 public:
 	BingTileSource(const BingTileSourceConfig& config);
 
-	osg::ref_ptr<osg::Image> createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
+	ImagePtr createImage(const skybolt::QuadTreeTileKey& key, std::function<bool()> cancelSupplier) const override;
 	const std::string& getCacheSha() const override { return mCacheSha; }
 
 private:
+	ImageFactoryPtr mImageFactory;
 	const std::string mCacheSha;
 	std::string mUrlPartBeforeTileKey;
 	std::string mUrlPartAfterTileKey;
