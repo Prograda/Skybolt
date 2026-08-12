@@ -64,7 +64,5 @@ public:
 };
 
 Expected<file::Path> locateFile(const std::string& filename);
-file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativePath);
-file::Paths getFilesWithExtensionInDirectoryInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativeDirectory, const std::string& extension);
 
 } // namespace skybolt

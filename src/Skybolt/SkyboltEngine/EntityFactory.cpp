@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "EntityFactory.h"
+#include "AssetPackage.h"
 #include "EngineRoot.h"
 #include "EngineSettings.h"
 #include "EngineStats.h"

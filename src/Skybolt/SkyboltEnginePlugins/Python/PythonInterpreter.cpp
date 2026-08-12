@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "PythonInterpreter.h"
+#include <SkyboltEngine/AssetPackage.h>
 #include <SkyboltEngine/EngineRoot.h>
 
 #pragma push_macro("slots")

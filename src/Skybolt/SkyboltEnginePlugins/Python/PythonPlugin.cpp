@@ -6,6 +6,7 @@
 
 #include "PythonInterpreter.h"
 #include "PythonPluginUtil.h"
+#include <SkyboltEngine/AssetPackage.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/Plugin/Plugin.h>
 

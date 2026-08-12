@@ -5,6 +5,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "EngineRoot.h"
+#include "AssetPackage.h"
 #include "ComponentFactory.h"
 #include "SimVisBinding/SimVisSystem.h"
 #include <SkyboltSim/CameraController/CameraModifierStack.h>
@@ -30,11 +31,6 @@
 #include <optional>
 
 namespace skybolt {
-
-static void registerAssetPackage(const std::string& folderPath)
-{
-	osgDB::Registry::instance()->getDataFilePathList().push_back(folderPath + "/");
-}
 
 Expected<file::Path> locateFile(const std::string& filename)
 {
@@ -157,25 +153,26 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 	schedulerParams.max_running_threads = threadCount;
 	schedulerParams.num_threads = threadCount;
 	scheduler->init(schedulerParams);
-
-	std::set<std::string> requiredPackages = {"Core", "Globe"};
+	
+	// Load all asset packages
+	AssetPackageFilepaths assetPackageFilepaths;
 	for (const auto& assetSearchPath : config.assetSearchPaths)
 	{
-		file::Paths folders = file::findFoldersInDirectory(assetSearchPath);
-		for (const auto& folder : folders)
-		{
-			std::string folderName = folder.stem().string();
-			mAssetPackagePaths.push_back(folder.string());
-			registerAssetPackage(folder.string());
-			SKYBOLT_LOG(info) << "Registered asset package: " << folderName;
-
-			requiredPackages.erase(folderName);
-		}
+		AssetPackageFilepaths newFilepaths = loadAssetPackagesInPath(assetSearchPath);
+		assetPackageFilepaths.insert(newFilepaths.begin(), newFilepaths.end());
 	}
 
-	if (!requiredPackages.empty())
+	// Ensure the required asset packages were found
+	std::set<std::string> missingRequiredPackages = {"Core", "Globe"};
+	for (const auto& [name, path] : assetPackageFilepaths)
 	{
-		std::string packagesString = boost::algorithm::join(requiredPackages, ", ");
+		missingRequiredPackages.erase(name);
+		mAssetPackagePaths.push_back(path.string());
+	}
+
+	if (!missingRequiredPackages.empty())
+	{
+		std::string packagesString = boost::algorithm::join(missingRequiredPackages, ", ");
 		throw std::runtime_error("Could not find asset packages: {" + packagesString + "}. Ensure working directory and/or SKYBOLT_ASSETS_PATH is set correctly. "
 			"Please refer to Skybolt documentation for information about finding assets.");
 	}
@@ -276,35 +273,6 @@ void EngineRoot::loadPlugins(const std::vector<PluginFactory>& pluginFactories)
 
 	// We need to store the factories as well to ensure the plugin symbols do not get unloaded.
 	mPluginFactories = pluginFactories;
-}
-
-file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativePath)
-{
-	file::Paths result;
-	for (const auto& packagePath : assetPackagePaths)
-	{
-		std::string path = packagePath + "/" + relativePath;
-		if (std::filesystem::exists(path))
-		{
-			result.push_back(path);
-		}
-	}
-	return result;
-}
-
-file::Paths getFilesWithExtensionInDirectoryInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativeDirectory, const std::string& extension)
-{
-	file::Paths result;
-	for (const auto& packagePath : assetPackagePaths)
-	{
-		std::string path = packagePath + "/" + relativeDirectory;
-		if (std::filesystem::exists(path))
-		{
-			auto paths = file::findFilenamesInDirectory(path, extension);
-			result.insert(result.end(), paths.begin(), paths.end());
-		}
-	}
-	return result;
 }
 
 } // namespace skybolt
