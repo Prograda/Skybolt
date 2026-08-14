@@ -15,7 +15,7 @@
 
 #ifdef Q_OS_WIN
 #	include <osgViewer/api/win32/GraphicsWindowWin32>
-#elif Q_OS_LINUX
+#elif defined(Q_OS_LINUX)
 #	include <osgViewer/api/X11/GraphicsWindowX11>
 #else
 #	error "Operating system not supported"
@@ -28,7 +28,7 @@ static osg::ref_ptr<osg::Referenced> createWindowData(WId hwnd)
 {
 #ifdef Q_OS_WIN
 	return new osgViewer::GraphicsWindowWin32::WindowData(HWND(hwnd));
-#elif Q_OS_LINUX
+#elif defined(Q_OS_LINUX)
 	auto platform = QGuiApplication::platformName();
 	if (platform == "xcb")
 	{
@@ -125,7 +125,14 @@ OsgWindow::OsgWindow(const VisRootPtr& visRoot) :
 	mVisRoot->addWindow(mWindow);
 }
 
-OsgWindow::~OsgWindow() = default;
+OsgWindow::~OsgWindow()
+{
+	// Qt might destroy OsgWindow without sending a SurfaceAboutToBeDestroyed event, so we need to remove the OSG window here as well.
+	if (mWindow)
+	{
+		mVisRoot->removeWindow(mWindow);
+	}
+}
 
 skybolt::vis::Window* OsgWindow::getWindow() const
 {
@@ -191,7 +198,6 @@ bool OsgWindow::event(QEvent* event)
 		event->accept();
 		break;
 	}
-
 	case QEvent::TouchUpdate: {
 		auto touchEvent = dynamic_cast<QTouchEvent*>(event);
 		QList<QTouchEvent::TouchPoint> points = touchEvent->touchPoints();
