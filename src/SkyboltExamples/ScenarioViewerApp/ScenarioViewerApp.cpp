@@ -336,6 +336,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 	// Build main window
 	QSettings settings(QApplication::applicationName());
 	MainWindow mainWindow(&settings);
+	mainWindow.show();
 	auto central = new QWidget(&mainWindow);
 	mainWindow.setCentralWidget(central);
 	enableDarkTitleBar(mainWindow.winId());
@@ -684,6 +685,14 @@ static int createAndExecuteApplication(int argc, char** argv)
 		scenarioWorkspace.newScenario();
 	}
 
+	splashScreen->finish(&mainWindow);
+
+	mainWindow.show();
+
+	splashScreen.reset();
+
+	SKYBOLT_LOG(info) << "About to start update loop";
+
 	// Start update loop
 	createAndStartIntervalDtTimer(10, &mainWindow, [
 		statusBar = mainWindow.statusBar(),
@@ -700,12 +709,6 @@ static int createAndExecuteApplication(int argc, char** argv)
 		viewportInputSystem->setViewportHeight(osgWindow->height());
 		statusBar->showMessage(getStatusBarText(*engineRoot));
 	});
-
-	splashScreen->finish(&mainWindow);
-
-	mainWindow.show();
-
-	splashScreen.reset();
 
 	return app.exec();
 }

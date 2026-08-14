@@ -109,9 +109,9 @@ export SKYBOLT_ASSETS_PATH='/workspaces/Skybolt/Assets:/workspaces/Archon/Assets
   * Add DISCOVERY_MODE PRE_TEST to catch_discover_tests to run it in host context just before tests are run.
 	* See https://github.com/catchorg/Catch2/issues/2493
 * Backup conan dependency sources somewhere (see https://docs.conan.io/2/devops/backup_sources/sources_backup.html)
-* Remove `include_package` functionality from conanfile and replace with https://docs.conan.io/2/devops/devops_local_recipes_index.html (potentially)
-* Add top-level submodule to capture child packages
-* Allow assets to sit in sibling directories
+* DONE - Remove `include_package` functionality from conanfile and replace with https://docs.conan.io/2/devops/devops_local_recipes_index.html (potentially)
+* DONE - Add top-level submodule to capture child packages
+* Allow assets to sit in sibling directories; Skybolt Assets directory should only contain minimal set of required files needed to launch system; assets required by examples could be split out.
 * .gitattributes in SkyboltUnreal is broken.  Need to update and rewrite history
 * *.ttf files checked into skybolt need to be added to lfs.  Also remove fonts that we don't have a license for
 * "package" now fails in Skybolt; fix it up
@@ -125,3 +125,4 @@ export SKYBOLT_ASSETS_PATH='/workspaces/Skybolt/Assets:/workspaces/Archon/Assets
 		throw std::exception(e);```
 * On Linux, plugins are in the lib/plugins directory, not bin/plugins... EngineRootFactory::getDefaultPluginDirs needs to be updated
 * In EngineRoot::EngineRoot, the children of each asset path are registered as asset packages; which means `<AssetPath/Icon>` is added as a path, leading to a bunch of errors like `Could not locate file: Icons/google/settings.svg`; Icons has already been sucked up into the search path...
+* Update repositories to use LF only for text (and renormalize)

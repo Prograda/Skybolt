@@ -97,16 +97,6 @@ void VisRoot::addWindow(const WindowPtr& window)
 	if (!mViewer->isRealized())
 	{
 		mViewer->realize();
-		auto context = window->getView()->getCamera()->getGraphicsContext();
-
-		context->makeCurrent();
-		SKYBOLT_LOG(info) << "valid:" << context->valid();
-		SKYBOLT_LOG(info) << "GraphicsContext ID:" << context->getState()->getContextID();
-		SKYBOLT_LOG(info) << "Extensions:" << context->getState()->get<osg::GLExtensions>();
-
-		unsigned contextID = context->getState()->getContextID();
-    	osg::GLExtensions* extensions = osg::GLExtensions::Get( contextID, true );
-		SKYBOLT_LOG(info) << "Extensions (from contextID):" << extensions;
 	}
 
 	// FIXME: Workaround for OSG bug where maxTexturePoolSize is not set for graphics contexts created after viewer realize,

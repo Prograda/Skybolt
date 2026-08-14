@@ -33,6 +33,7 @@ protected:
 	void keyPressEvent(QKeyEvent* event) override;
 	bool event(QEvent* event);
 
+	void exposeEvent(QExposeEvent* event) override;
 private:
 	skybolt::vis::VisRootPtr mVisRoot;
 	std::shared_ptr<skybolt::vis::Window> mWindow;

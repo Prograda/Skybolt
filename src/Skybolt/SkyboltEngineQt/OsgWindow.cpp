@@ -160,6 +160,30 @@ void OsgWindow::keyPressEvent(QKeyEvent* event)
 	event->ignore();
 }
 
+void OsgWindow::exposeEvent(QExposeEvent* event)
+{
+	QWindow::exposeEvent(event);
+
+    if (!isExposed())
+        return;
+
+	
+    // qInfo() << "Qt exposed";	
+
+	// auto context = mWindow->getView()->getCamera()->getGraphicsContext();
+
+	// context->makeCurrent();
+	// qInfo() << "valid:" << context->valid();
+    // qInfo() << "GL_VERSION:" << reinterpret_cast<const char*>(glGetString(GL_VERSION));	
+	// qInfo() << "GraphicsContext ID:" << context->getState()->getContextID();
+	// qInfo() << "Extensions:" << context->getState()->get<osg::GLExtensions>();
+
+	// unsigned contextID = context->getState()->getContextID();
+	// osg::GLExtensions* extensions = osg::GLExtensions::Get( contextID, true );
+	// qInfo() << "Extensions (from contextID):" << extensions;
+}
+
+
 bool OsgWindow::event(QEvent* event)
 {
     switch (event->type())
