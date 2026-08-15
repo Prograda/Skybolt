@@ -25,6 +25,8 @@ struct TimeRange
 		return std::make_tuple(start, end) != std::make_tuple(rhs.start, rhs.end);
 	}
 
+	SecondsD getDuration() const { return end - start; }
+
 	SecondsD start;
 	SecondsD end;
 };
