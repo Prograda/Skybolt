@@ -524,7 +524,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 				});
 
 			QObject::connect(openAction, &QAction::triggered, &mainWindow, [&mainWindow, recentFileMenuPopulator, &scenarioWorkspace]() {
-				QString filename = QFileDialog::getOpenFileName(&mainWindow, "Open Scenario", QString(), "Scenario Files (*.scn);;All Files (*)"); // NOTE: separator in Qt filter list must be `;;`, not `;`
+				QString filename = QFileDialog::getOpenFileName(&mainWindow, "Open Scenario", QString(), "Scenario Files (*.scenario.json);;Scenario Files (*.scn);;All Files (*)"); // NOTE: separator in Qt filter list must be `;;`, not `;`
 				if (!filename.isEmpty())
 				{
 					if (auto error = scenarioWorkspace.loadScenario(filename); error)
@@ -541,7 +541,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 		// Save
 		{
 			auto saveAsFn = [&mainWindow, recentFileMenuPopulator, &scenarioWorkspace]() {
-				QString filename = QFileDialog::getSaveFileName(&mainWindow, "Save Scenario", QString(), "Scenario Files (*.scn)");
+				QString filename = QFileDialog::getSaveFileName(&mainWindow, "Save Scenario", QString(), "Scenario Files (*.scenario.json)");
 				if (!filename.isEmpty())
 				{
 					if (auto error = scenarioWorkspace.saveScenario(filename); error)

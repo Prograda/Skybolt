@@ -65,18 +65,16 @@
 		{"aircraftTrimmer": {
 		}},
 		{"visualModel": {
-			"model": "Models/UH60/UH60_Fuselage.osgb",
+			"model": "Entities/Platform/Aircraft/UH60/UH60_Fuselage.osgb",
 			"positionRelBody": [0, 0, 0],
 			"uniformSpecular": 0.03,
 			"roughness": 0.8
 		}},
 		{"visualMainRotor": {
-			"model": "Models/UH60/UH60_MainRotor.osgb",
-			"simComponent": "mainRotor"
+			"model": "Entities/Platform/Aircraft/UH60/UH60_MainRotor.osgb"
 		}},
 		{"visualTailRotor": {
-			"model": "Models/UH60/UH60_TailRotor.osgb",
-			"simComponent": "tailRotor1"
+			"model": "Entities/Platform/Aircraft/UH60/UH60_TailRotor.osgb"
 		}},
 		{"attachmentPoint": {
 			"name": "cockpit",

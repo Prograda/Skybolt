@@ -659,7 +659,7 @@ using VisComponentLoader = std::function<void(Entity*, const EntityFactory::Cont
 
 const ScenarioObjectPath& skybolt::getDefaultEntityScenarioObjectDirectory()
 {
-	static ScenarioObjectPath d = {"Platforms"};
+	static ScenarioObjectPath d = {};
 	return d;
 }
 
@@ -765,10 +765,13 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 	}
 
 	// Add default ScenarioMetadataComponent if one wasn't in the json file
-	if (!entity->getFirstComponent<ScenarioMetadataComponent>())
+	auto metadata = entity->getFirstComponent<ScenarioMetadataComponent>();
+	if (!metadata)
 	{
-		entity->addComponent(createDefaultEntityScenarioMetadataComponent());
+		metadata = createDefaultEntityScenarioMetadataComponent();
+		entity->addComponent(metadata);
 	}
+	metadata->directory = getScenarioObjectDirectoryForTemplate(templateName);
 
 	// Initialise entity pose
 	if (Node* node = entity->getFirstComponent<Node>().get(); node)
@@ -780,22 +783,45 @@ EntityPtr EntityFactory::createEntityFromJson(const nlohmann::json& json, const 
 	return entity;
 }
 
-static ScenarioObjectPath readScenarioObjectDirectory(const nlohmann::json& json)
+static std::optional<ScenarioObjectPath> readScenarioObjectDirectory(const nlohmann::json& json)
 {
-	ScenarioObjectPath result;
+	std::optional<ScenarioObjectPath> result;
 	ifChildExists(json, "components", [&](const nlohmann::json& components) {
 		for (const auto& component : components)
 		{
 			ifChildExists(component, "scenarioMetadata", [&] (const nlohmann::json& c) {
-				result = parseStringList(c.at("scenarioObjectDirectory").get<std::string>(), "/");
+				if (c.contains("scenarioObjectDirectory"))
+				{
+					result = parseStringList(c.at("scenarioObjectDirectory").get<std::string>(), "/");
+				}
 			});
 		}
 	});
-	if (result.empty())
-	{
-		return getDefaultEntityScenarioObjectDirectory();
-	}
 	return result;
+}
+
+static std::optional<std::string> getEntityName(const std::filesystem::path& filepath)
+{
+	std::string filename = filepath.filename().string();
+	if (filename.ends_with(EntityFactory::entityTemplateFileExtension))
+	{
+		return std::string(filename.substr(0, filename.size() - EntityFactory::entityTemplateFileExtension.size()));
+	}
+	return std::nullopt;
+}
+
+static std::optional<std::string> getDirectoryRelativeToFolder(const std::filesystem::path& filepath, const std::string& folderInPath)
+{
+	std::string pathStr = filepath.parent_path().generic_string();
+	std::string target = "/" + folderInPath + "/";
+
+	size_t pos = pathStr.find(target);
+	if (pos != std::string::npos)
+	{
+		return pathStr.substr(pos + target.length());
+	}
+
+	return std::nullopt;
 }
 
 EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::vector<std::filesystem::path>& entityFilenames) :
@@ -810,11 +836,33 @@ EntityFactory::EntityFactory(const EntityFactory::Context& context, const std::v
 
 	for (const std::filesystem::path& filename : entityFilenames)
 	{
-		std::string name = filename.stem().string();
+		auto name = getEntityName(filename.string());
+		if (!name)
+		{
+			SKYBOLT_LOG(error) << "Entity filename has invalid extension: " << filename;
+			continue;
+		}
+
 		nlohmann::json json = readJsonFile(filename.string());
-		mTemplateJsonMap[name] = json;
-		mTemplateNames.push_back(name);
-		mTemplateDirectories[name] = readScenarioObjectDirectory(json);
+		mTemplateJsonMap[*name] = json;
+		mTemplateNames.push_back(*name);
+
+		std::optional<ScenarioObjectPath> directory = readScenarioObjectDirectory(json);
+		if (!directory)
+		{
+			if (auto path = getDirectoryRelativeToFolder(filename, "Entities"); path)
+			{
+				directory = parseStringList(*path, "/");
+
+				// If the directory is the same as the template name, remove it from the path
+				if (directory->back() == name)
+				{
+					directory->pop_back();
+				}
+			}
+		}
+		mTemplateDirectories[*name] = directory.value_or(getDefaultEntityScenarioObjectDirectory());
+
 	}
 }
 

@@ -52,7 +52,7 @@ public: // CollisionBody interface
 public: // Component interface
 	std::vector<std::type_index> getExposedTypes() const override
 	{
-		return {typeid(DynamicBodyComponent), typeid(SimpleDynamicBodyComponent)};
+		return {typeid(CollisionBody), typeid(DynamicBodyComponent), typeid(SimpleDynamicBodyComponent)};
 	}
 
 	void advanceSimTime(SecondsD newTime, SecondsD dt) override;

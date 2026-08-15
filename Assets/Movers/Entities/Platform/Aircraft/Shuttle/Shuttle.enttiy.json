@@ -31,7 +31,7 @@
 			"positionRelBody": [4.5, 5.5, 7]
 		}},
 		{"visualModel": {
-			"model": "Models/Shuttle/Shuttle_Main.osgb"
+			"model": "Entities/Platform/Aircraft/Shuttle/Shuttle_Main.osgb"
 		}},
 		{"attachmentPoint": {
 			"name": "cockpit",

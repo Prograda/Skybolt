@@ -235,7 +235,7 @@ EngineRoot::EngineRoot(const EngineRootConfig& config) :
 		}();
 	}
 
-	file::Paths paths = getFilesWithExtensionInDirectoryInAssetPackages(mAssetPackagePaths, "Entities", ".json");
+	file::Paths paths = getFilesWithExtensionInDirectoryInAssetPackagesRecursive(mAssetPackagePaths, "Entities", std::string(EntityFactory::entityTemplateFileExtension));
 	entityFactory.reset(new EntityFactory(context, paths));
 
 	// Create default systems

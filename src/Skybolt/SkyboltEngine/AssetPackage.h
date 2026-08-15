@@ -1,3 +1,9 @@
+/* Copyright Matthew Reid
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
 #pragma once
 
 #include <SkyboltCommon/File/FileUtility.h>
@@ -15,6 +21,6 @@ file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackage
 file::Paths getFilesWithExtensionInDirectoryInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativeDirectory, const std::string& extension);
 
 //! @param depth specifies number of levels to search recurisvely. A depth of 1 will search down one level below the given directory. If unspecified, recursion is effectivly infinite, or some large number.
-file::Paths getFilesWithExtensionInDirectoryInAssetPackagesRecursive(const std::vector<std::string>& assetPackagePaths, const std::string& relativeDirectory, const std::string& extension, std::optional<int> depth);
+file::Paths getFilesWithExtensionInDirectoryInAssetPackagesRecursive(const std::vector<std::string>& assetPackagePaths, const std::string& relativeDirectory, const std::string& extension, std::optional<int> depth = std::nullopt);
 
 } // namespace skybolt

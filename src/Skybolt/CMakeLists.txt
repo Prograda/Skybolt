@@ -5,6 +5,7 @@ if (BUILD_MAP_FEATURES_CONVERTER)
 	add_subdirectory (MapFeaturesConverter)
 endif()
 
+add_subdirectory (SkyboltApp)
 add_subdirectory (SkyboltCommon)
 if (BUILD_TESTING)
 	add_subdirectory (SkyboltCommonTests)

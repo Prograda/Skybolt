@@ -39,7 +39,7 @@ Paths findFilenamesInDirectory(const std::string &dir, const std::string &extens
 
 			if (isRegularFile(file))
 			{
-				if (file.extension() == extension)
+				if (file.string().ends_with(extension))
 				{
 					result.push_back(file);
 				}
@@ -61,7 +61,7 @@ static void findFilenamesInDirectoryRecursive(Paths& out, const fs::path &dirPat
 
 		if (isRegularFile(file))
 		{
-			if (file.extension() == extension)
+			if (file.string().ends_with(extension))
 			{
 				out.push_back(file);
 			}

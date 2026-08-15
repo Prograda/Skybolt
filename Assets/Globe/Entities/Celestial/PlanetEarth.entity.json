@@ -70,9 +70,6 @@
 				"treeVisibilityRangeMeters": 12000
 			}
 		}},
-		{"planetKinematicBody": {}},
-		{"scenarioMetadata": {
-			"scenarioObjectDirectory": "Celestial"
-		}}
+		{"planetKinematicBody": {}}
 	]
 }

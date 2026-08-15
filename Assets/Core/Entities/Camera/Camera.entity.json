@@ -7,9 +7,6 @@
 	{"attacher": {
 	}},
     {"cameraController": {
-    }},
-	{"scenarioMetadata": {
-		"scenarioObjectDirectory": "Cameras"
-	}}
+    }}
 	]
 }

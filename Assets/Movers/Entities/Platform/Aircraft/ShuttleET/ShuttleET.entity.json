@@ -11,7 +11,7 @@
 		{"fuselage": {
 		}},
 		{"visualModel": {
-			"model": "Models/ShuttleET/ShuttleET.osgt",
+			"model": "Entities/Platform/Aircraft/ShuttleET/ShuttleET.osgt",
 			"positionRelBody": [0, 0, 0],
 			"orientationRelBody" : {"angleDeg":180, "axis":[1, 0, 0]}
 		}},

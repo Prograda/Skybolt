@@ -56,7 +56,7 @@
 			"dragConstant": [1.5, 10, 10]
 		}},
 		{"visualModel": {
-			"model": "Models/Taxi/Taxi_Main.osgb",
+			"model": "Entities/Platform/Ground/Taxi/Taxi_Main.osgb",
 			"positionRelBody": [0, 0, 0],
 			"uniformSpecular": 0.03,
 			"roughness": 0.8

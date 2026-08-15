@@ -343,7 +343,15 @@ static sim::ComponentPtr loadAssetDescription(Entity* entity, const ComponentFac
 static sim::ComponentPtr loadScenarioMetadata(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	auto component = std::make_shared<ScenarioMetadataComponent>();
-	component->directory = parseStringList(json.at("scenarioObjectDirectory").get<std::string>(), "/");
+
+	ifChildExists(json, "scenarioObjectDirectory", [&](const nlohmann::json& dirJson) {
+		if (!dirJson.is_string())
+		{
+			throw Exception("scenarioObjectDirectory must be a string");
+		}
+		component->directory = parseStringList(dirJson.get<std::string>(), "/");
+	});
+
 	component->userDeletable = readOptionalOrDefault(json, "userDeletable", true);
 	component->persistAcrossLoad = readOptionalOrDefault(json, "persistAcrossLoad", false);
 	component->replicatable = readOptionalOrDefault(json, "replicatable", true);

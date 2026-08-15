@@ -84,6 +84,8 @@ public:
 
 	sim::EntityId generateNextEntityId() const;
 
+	constexpr static std::string_view entityTemplateFileExtension = ".entity.json";
+
 private:
 	Strings mTemplateNames;
 	std::map<std::string, skybolt::ScenarioObjectPath> mTemplateDirectories;

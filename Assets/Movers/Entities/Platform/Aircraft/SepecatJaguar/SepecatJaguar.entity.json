@@ -6,14 +6,8 @@
 		}},
 		{"controlInputs": {
 		}},
-		{"kinematicBody": {
-			"size": [19.8, 4, 2.5]
-		}},
-		{"jsbSimAircraft": {
-			"model": "F80C"
-		}},
 		{"visualModel": {
-			"model": "Models/SepecatJaguar/SepecatJaguar_Fuselage.osgb",
+			"model": "Entities/Platform/Aircraft/SepecatJaguar/SepecatJaguar_Fuselage.osgb",
 			"positionRelBody": [0, 0, 0]
 		}},
 		{"attachmentPoint": {

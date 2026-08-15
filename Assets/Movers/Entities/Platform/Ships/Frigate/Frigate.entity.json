@@ -8,7 +8,7 @@
 			"type": "shipWake"
 		}},
 		{"visualModel": {
-			"model": "Models/Frigate/frigate.osgt",
+			"model": "Entities/Platform/Ships/Frigate/frigate.osgt",
 			"positionRelBody": [0, 0, 0],
 			"orientationRelBody" : {"angleDeg":180, "axis":[1, 0, 0]}
 		}},

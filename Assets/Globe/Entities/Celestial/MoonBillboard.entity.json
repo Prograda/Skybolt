@@ -1,10 +1,9 @@
 {
 	"components": [
-		{"visualStars": {
+		{"visualMoon": {
 		}},
 		{"scenarioMetadata": {
 			"persistAcrossLoad": true,
-			"scenarioObjectDirectory": "Celestial",
 			"userDeletable": false
 		}}
 	]

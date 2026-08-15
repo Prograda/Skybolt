@@ -1,3 +1,9 @@
+/* Copyright Matthew Reid
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
 #include "AssetPackage.h"
 #include <SkyboltCommon/Logging/Logging.h>
 #include <SkyboltCommon/Json/JsonHelpers.h>
@@ -85,8 +91,14 @@ file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackage
 
 file::Paths getFilesWithExtensionInDirectoryInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativeDirectory, const std::string& extension)
 {
-	int levels = 10;
+	int levels = 0; // Do not recurse into subdirectories
 	return getFilesWithExtensionInDirectoryInAssetPackagesRecursive(assetPackagePaths, relativeDirectory, extension, levels);
+}
+
+static file::Paths removeDuplicates(const file::Paths& paths)
+{
+	std::set<file::Path> uniquePaths(paths.begin(), paths.end());
+	return {uniquePaths.begin(), uniquePaths.end()};
 }
 
 file::Paths getFilesWithExtensionInDirectoryInAssetPackagesRecursive(const std::vector<std::string>& assetPackagePaths, const std::string& relativeDirectory, const std::string& extension, std::optional<int> depth)
@@ -101,6 +113,7 @@ file::Paths getFilesWithExtensionInDirectoryInAssetPackagesRecursive(const std::
 			result.insert(result.end(), paths.begin(), paths.end());
 		}
 	}
+	result = removeDuplicates(result);
 	return result;
 }
 
