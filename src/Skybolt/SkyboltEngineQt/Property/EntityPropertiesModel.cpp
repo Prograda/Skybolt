@@ -46,7 +46,7 @@ EntityPropertiesModel::~EntityPropertiesModel()
 
 void EntityPropertiesModel::setEntity(sim::Entity* entity)
 {
-	mProperties.clear();
+	clearProperties();
 
 	if (mEntity)
 		mEntity->removeListener(this);
@@ -101,5 +101,5 @@ void EntityPropertiesModel::setEntity(sim::Entity* entity)
 
 void EntityPropertiesModel::onDestroy(sim::Entity* entity)
 {
-	mEntity = nullptr;
+	setEntity(nullptr);
 }
