@@ -27,13 +27,16 @@ def copy_file(source_filename: Path, destination_dir: Path):
     shutil.copy(source_filename, destination_dir)
 
 
-def package(skybolt_source_dir: Path, skybolt_build_dir: Path, package_dir: Path):
+def package(skybolt_source_dir: Path, skybolt_build_dir: Path, package_dir: Path, build_config_name: str):
     """
     Copy the build artifacts, dependency binaries, and required runtime resources to a stand-alone package folder.
     """
     logging.info(f"Packaging build...")
 
-    sp.run(f"cmake --install {skybolt_build_dir} --prefix {skybolt_build_dir}/install", shell=True, check=True)
+    sp.run(f"cmake --install {skybolt_build_dir} --prefix {skybolt_build_dir}/install --config={build_config_name}", shell=True, check=True)
+    sp.run(f"cmake --install {skybolt_build_dir} --prefix {skybolt_build_dir}/install --config={build_config_name} --component QtPlugins", shell=True, check=True)
+    sp.run(f"cmake --install {skybolt_build_dir} --prefix {skybolt_build_dir}/install --config={build_config_name} --component OsgPlugins", shell=True, check=True)
+    sp.run(f"cmake --install {skybolt_build_dir} --prefix {skybolt_build_dir}/install --config={build_config_name} --component SkyboltDependencies", shell=True, check=True)
 
     copy_tree(skybolt_build_dir / "install/bin", package_dir / "bin")
 
@@ -64,19 +67,17 @@ BUILD_STAGES = ["build", "package", "package_docs"]
 if __name__ == "__main__":
     # Read command line arguments
     parser = argparse.ArgumentParser(description="Build and package Skybolt")
-    parser.add_argument("--skybolt-source-dir", type=str, help="Directory where skybolt source code is located")
-    parser.add_argument("--output-dir", type=str, help="Directory to output package to")
+    parser.add_argument("--source-dir", type=str, help="Directory where skybolt source code is located")
+    parser.add_argument("--build-dir", type=str, help="Directory to build to")
+    parser.add_argument("--package-dir", type=str, help="Directory to output package to")
+    parser.add_argument("--build-config-name", type=str, default="Release", help="Name of the build config to package")
     parser.add_argument("--profile-filepath", type=str, default=None, help="Optional filepath to a conan profile to use")
     parser.add_argument("--stage", type=str, default="package_docs", help="Name of the stage to run. Preceeding stages will also run unless --only flag is set.")
     parser.add_argument("--only", action="store_true", help="Only run the stage given in --stage, skipping preceeding stages"),
 
     args = parser.parse_args()
 
-    skybolt_source_dir = Path(args.skybolt_source_dir)
-    output_dir = Path(args.output_dir)
-    skybolt_build_dir = output_dir / "Build"
-    package_dir = output_dir / "Package"
-    profile_filepath = args.profile_filepath or Path({args.skybolt_source_dir}/Conan/Profiles/BuildEverythingWithPlugins.ini)
+    profile_filepath = args.profile_filepath or Path(f"{args.source_dir}/Conan/Profiles/BuildEverythingWithPlugins.ini")
 
     if args.stage not in BUILD_STAGES:
         raise RuntimeError(f"No build stage named {args.stage}. Valid options are: {BUILD_STAGES}")
@@ -87,13 +88,12 @@ if __name__ == "__main__":
         else:
             return BUILD_STAGES.index(name) <= BUILD_STAGES.index(args.stage)
 
-    # Create output directory
-    output_dir.mkdir(exist_ok=True)
+    conan_build_dir = Path(args.build_dir) / "build"
 
     # Run build stages
     if should_run_stage("build"):
-        build(skybolt_source_dir, skybolt_build_dir, profile_filepath)
+        build(Path(args.source_dir), Path(args.build_dir), profile_filepath)
     if should_run_stage("package"):
-        package(skybolt_source_dir, skybolt_build_dir, package_dir)
+        package(Path(args.source_dir), conan_build_dir, Path(args.package_dir), args.build_config_name)
     if should_run_stage("package_docs"):
-        package_docs(skybolt_source_dir, package_dir)
+        package_docs(Path(args.source_dir), Path(args.package_dir))
