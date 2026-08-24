@@ -52,6 +52,13 @@ const SimSnapshotRegistry::Snapshot* SimSnapshotRegistry::findSnapshotAtTime(sim
 	return (foundIt != mSnapshots.end()) ? &foundIt->second : nullptr;
 }
 
+const SimSnapshotRegistry::Snapshot* SimSnapshotRegistry::findEarliestSnapshot() const
+{
+	if (mSnapshots.empty()) { return nullptr; }
+	// Assumes snapshots are sorted by time, which is guaranteed by saveSnapshotAtCurrentTime()
+	return &mSnapshots.front().second;
+}
+
 SimSnapshotRegistry::SnapshotVector::const_iterator SimSnapshotRegistry::findSnapshotIteratorAtTime(sim::SecondsD simTime, sim::SecondsD epsilon) const
 {
 	auto foundIt = std::lower_bound(mSnapshots.begin(), mSnapshots.end(), simTime,
@@ -105,8 +112,8 @@ void useSnapshotsToResetSimulationStateAtTimelineStart(const std::shared_ptr<Sim
 		bool isAtStart = deltaEquals(simTime, startTime);
 		if (isAtStart)
 		{
-			// Load snapshot for the current time if available.
-			if (const SimSnapshotRegistry::Snapshot* snapshot = snapshotRegistry->findSnapshotAtTime(startTime); snapshot)
+			// Load snapshot for the earliest time.
+			if (const SimSnapshotRegistry::Snapshot* snapshot = snapshotRegistry->findEarliestSnapshot(); snapshot)
 			{
 				snapshotRegistry->loadSnapshot(*snapshot);
 			}

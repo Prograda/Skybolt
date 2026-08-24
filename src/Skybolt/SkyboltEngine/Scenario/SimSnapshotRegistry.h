@@ -35,6 +35,9 @@ public:
 	//! @returns snapshot within epsilon of time, otherwise null
 	const Snapshot* findSnapshotAtTime(sim::SecondsD simTime, sim::SecondsD epsilon = 0.001) const;
 
+	//! @returns earliest snapshot, or nullopt if no snapshots exist
+	const Snapshot* findEarliestSnapshot() const;
+
 private:
 	using SnapshotVector = std::vector<std::pair<sim::SecondsD, Snapshot>>;
 	SnapshotVector::const_iterator findSnapshotIteratorAtTime(sim::SecondsD simTime, sim::SecondsD epsilon = 0.001) const;
