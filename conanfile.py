@@ -17,6 +17,7 @@ class SkyboltConan(ConanFile):
         "enable_osg_curl_plugin": [True, False], # Whether to link the OSG curl plugin into the static build. Only relavent if shared = False.
         "enable_python": [True, False],
         "enable_qt": [True, False],
+        "enable_tests": [True, False],
         "shared": [True, False],
         "shared_plugins": [True, False], # Build plugins as shared libraries.
         "fPIC": [True, False]
@@ -31,6 +32,7 @@ class SkyboltConan(ConanFile):
         "enable_map_features_converter": True,
         "enable_python": True,
         "enable_qt": True,
+        "enable_tests": True,
         "shared": False,
         "shared_plugins": True,
         "fPIC": True
@@ -136,8 +138,7 @@ class SkyboltConan(ConanFile):
         tc.variables["BUILD_WITH_QT"] = bool(self.options.enable_qt)
         tc.variables["BUILD_WITH_OSG"] = bool(self.options.enable_osg)
         tc.variables["BUILD_WITH_OSG_CURL_PLUGIN"] = bool(self.options.enable_osg_curl_plugin)
-
-        tc.variables["BUILD_TESTING"] = False
+        tc.variables["BUILD_TESTING"] = bool(self.options.enable_tests)
 
         tc.variables["SKYBOLT_BUILD_EXAMPLES"] = False
         tc.variables["SKYBOLT_INSTALL_DEPENDENCIES"] = False
