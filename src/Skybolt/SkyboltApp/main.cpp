@@ -197,36 +197,44 @@ int runScenario(const po::variables_map& vm)
 	}
 	catch (const std::exception& e)
 	{
-		throw std::runtime_error("Failed to read scenario '" + scenarioFilename + "': " + std::string(e.what()));
+		throw std::runtime_error("Failed to read scenario '" + scenarioFilename + "' Reason: " + std::string(e.what()));
 	}
 
-	const auto& timeSource = engineRoot->scenario->timeSource;
-	timeSource->setState(sim::TimeSource::StatePlaying);
-	SimUpdater updater(engineRoot.get());
-	updater.setRequestedTimeRate(realTime ? 1.0 : 1000000.0);
-
-	const sim::SecondsD simDuration = timeSource->getRange().getDuration();
-
-	std::atomic<size_t> elapsedSeconds{0};
-	auto bar =
-		barkeep::ProgressBar(&elapsedSeconds, {
-		  .total = std::size_t(std::ceil(simDuration)),
-		  .message = "Simulating",
-		  .speed = 1.,
-		  .speed_unit = "x real time",
-		  .interval = noTty ? 10.0 : 1.0,
-		  .no_tty = noTty});
-	bar->show();
-
-	auto previousTime = std::chrono::steady_clock::now();
-	while (!gStopRequested.load() && timeSource->getTime() + 1e-9 < timeSource->getRange().end)
+	try
 	{
-		auto currentTime = std::chrono::steady_clock::now();
-		double wallDt = std::chrono::duration<double>(currentTime - previousTime).count();
-		previousTime = currentTime;
-		updater.update(wallDt);
+		const auto& timeSource = engineRoot->scenario->timeSource;
+		timeSource->setState(sim::TimeSource::StatePlaying);
+		SimUpdater updater(engineRoot.get());
+		updater.setRequestedTimeRate(realTime ? 1.0 : 1000000.0);
 
-		elapsedSeconds = size_t(timeSource->getTime() - timeSource->getRange().start);
+		const sim::SecondsD simDuration = timeSource->getRange().getDuration();
+
+		std::atomic<size_t> elapsedSeconds{0};
+		auto bar =
+			barkeep::ProgressBar(&elapsedSeconds, {
+			  .total = std::size_t(std::ceil(simDuration)),
+			  .message = "Simulating",
+			  .speed = 1.,
+			  .speed_unit = "x real time",
+			  .interval = noTty ? 10.0 : 1.0,
+			  .no_tty = noTty});
+		bar->show();
+
+		auto previousTime = std::chrono::steady_clock::now();
+		while (!gStopRequested.load() && timeSource->getTime() + 1e-9 < timeSource->getRange().end)
+		{
+			auto currentTime = std::chrono::steady_clock::now();
+			double wallDt = std::chrono::duration<double>(currentTime - previousTime).count();
+			previousTime = currentTime;
+			updater.update(wallDt);
+
+			elapsedSeconds = size_t(timeSource->getTime() - timeSource->getRange().start);
+		}
+	}
+	catch (const std::exception& e)
+	{
+		// Coppy and rethrow the exception to avoid it being destroyed when the engineRoot is destroyed.
+		throw std::runtime_error("Error running scenario: " + std::string(e.what()));
 	}
 
 	if (gStopRequested.load())
