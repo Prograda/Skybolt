@@ -54,6 +54,9 @@ static ErrorLogModel::Severity toErrorLogModelSeverity(bl::trivial::severity_lev
 
 void connectToBoostLogger(QPointer<ErrorLogModel> model)
 {
+	// Remove existing sinks to avoid duplicate logging sinks with whatever default sinks boost has set up
+	bl::core::get()->remove_all_sinks();
+
 	// Output to the error log model
 	auto sink = boost::make_shared<LabelLogSink>([model = std::move(model)] (bl::trivial::severity_level level, const QString& message) {
 		if (model)
