@@ -601,6 +601,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 	}
 
 	// Create View menu
+	std::unique_ptr<skybolt::vis::ShaderSourceFileChangeMonitor> shaderSourceFileChangeMonitor;
 	{
 		QMenu* viewMenu = mainWindow.menuBar()->addMenu("&View");
 
@@ -662,7 +663,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 			action->setChecked(false);
 			viewMenu->addAction(action);
 
-			QObject::connect(action, &QAction::toggled, &mainWindow, [shaderSourceFileChangeMonitor = std::unique_ptr<skybolt::vis::ShaderSourceFileChangeMonitor>(), visRoot = visRoot.get()] (bool checked) mutable {
+			QObject::connect(action, &QAction::toggled, &mainWindow, [&shaderSourceFileChangeMonitor, visRoot = visRoot.get()] (bool checked) mutable {
 				shaderSourceFileChangeMonitor.reset();
 				if (checked)
 				{
@@ -695,11 +696,13 @@ static int createAndExecuteApplication(int argc, char** argv)
 		entityPropertiesModel,
 		visRoot,
 		viewportInputSystem,
+		&shaderSourceFileChangeMonitor,
 		osgWindow = osgWindow.get()
 	] (sim::SecondsD wallDt){
 		simUpdater->update(wallDt);
 		entityPropertiesModel->update();
 		visRoot->render();
+		if (shaderSourceFileChangeMonitor) { shaderSourceFileChangeMonitor->update(); }
 		viewportInputSystem->setViewportHeight(osgWindow->height());
 		statusBar->showMessage(getStatusBarText(*engineRoot));
 	});
