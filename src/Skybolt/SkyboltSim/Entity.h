@@ -10,6 +10,7 @@
 #include "Component.h"
 #include "EntityId.h"
 #include "SimUpdatable.h"
+#include "SkyboltSim/Spatial/LatLonAlt.h"
 #include <SkyboltCommon/Exception.h>
 #include <SkyboltCommon/Listenable.h>
 #include <SkyboltCommon/TypedItemContainer.h>
@@ -95,15 +96,21 @@ private:
 };
 
 std::optional<Vector3> getPosition(const Entity& entity);
+std::optional<LatLonAlt> getPositionLla(const Entity& entity);
 std::optional<Quaternion> getOrientation(const Entity& entity);
+std::optional<Vector3> getOrientationRpy(const Entity& entity);
 std::optional<Vector3> getVelocity(const Entity& entity);
+std::optional<Vector3> getVelocityNed(const Entity& entity);
 std::optional<Vector3> getAngularVelocityGeocentricAxes(const Entity& entity); //! Gets angular velocity in geocentric axes (Earth-centered, Earth-fixed)
 std::optional<Vector3> getAngularVelocityBodyAxes(const Entity& entity); //! Gets angular velocity in body axes (local to the entity)
 std::optional<glm::dmat4> getTransform(const sim::Entity& entity);
 
 void setPosition(Entity& entity, const Vector3& position);
+void setPositionLla(Entity& entity, const LatLonAlt& lla);
 void setOrientation(Entity& entity, const Quaternion& orientation);
+void setOrientationRpy(Entity& entity, const Vector3& rpy);
 void setVelocity(Entity& entity, const Vector3& velocity);
+void setVelocityNed(Entity& entity, const Vector3& velocity);
 void setAngularVelocityGeocentricAxes(const Entity& entity, const Vector3& angularVelocity); //! Gets angular velocity in geocentric axes (Earth-centered, Earth-fixed)
 void setAngularVelocityBodyAxes(const Entity& entity, const Vector3& angularVelocity); //! Sets angular velocity in body axes (local to the entity)
 

@@ -283,65 +283,6 @@ static std::string saveScenarioToJsonString(EngineRoot& engineRoot)
 	return j.dump(4);
 }
 
-static std::optional<LatLonAlt> getPositionLla(const Entity& entity)
-{
-	std::optional<Vector3> position = getPosition(entity);
-	if (!position) { return std::nullopt; }
-
-	return toLatLonAlt(GeocentricPosition(*position)).position;
-}
-
-static void setPositionLla(Entity& entity, const LatLonAlt& lla)
-{
-	Vector3 position = toGeocentric(LatLonAltPosition(lla)).position;
-	setPosition(entity, position);
-}
-
-static std::optional<Vector3> getOrientationRpy(const Entity& entity)
-{
-	std::optional<Vector3> position = getPosition(entity);
-	if (!position) { return std::nullopt; }
-
-	std::optional<Quaternion> orientation = getOrientation(entity);
-	if (!orientation) { return std::nullopt; }
-
-	Quaternion ltpNed = toLtpNed(GeocentricOrientation(*orientation), geocentricToLatLon(*position)).orientation;
-	return math::eulerFromQuat(ltpNed);
-}
-
-static void setOrientationRpy(Entity& entity, const Vector3& rpy)
-{
-	std::optional<Vector3> position = getPosition(entity);
-	if (!position) { return; }
-
-	Quaternion orientation = toGeocentric(LtpNedOrientation(math::quatFromEuler(rpy)), geocentricToLatLon(*position)).orientation;
-	setOrientation(entity, orientation);
-}
-
-static std::optional<Vector3> getVelocityNed(const Entity& entity)
-{
-	std::optional<Vector3> velocity = getVelocity(entity);
-	if (!velocity) { return std::nullopt; }
-
-	std::optional<Vector3> position = getPosition(entity);
-	if (!position) { return std::nullopt; }
-
-	Matrix3 ltpOrientation = geocentricToLtpOrientation(*position);
-
-	return glm::transpose(ltpOrientation) * *velocity;
-}
-
-static void setVelocityNed(Entity& entity, const Vector3& velocity)
-{
-	std::optional<Vector3> position = getPosition(entity);
-	if (!position) { return; }
-
-	Matrix3 ltpOrientation = geocentricToLtpOrientation(*position);
-
-	setVelocity(entity, ltpOrientation * velocity);
-}
-
-
 PYBIND11_MAKE_OPAQUE(std::vector<std::string>);
 
 PYBIND11_MODULE(skybolt, m) {

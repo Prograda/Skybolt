@@ -22,12 +22,13 @@ SimStepper::~SimStepper() = default;
 
 void SimStepper::setTime(SecondsD t)
 {
-	if (mTime != t)
+	SecondsD prevTime = mTime;
+	TimeSource::setTime(t);
+	if (mTime != prevTime)
 	{
-		TimeSource::setTime(t);
 		for (const SystemPtr& system : *mSystems)
 		{
-			system->setSimTime(t);
+			system->setSimTime(mTime);
 		}
 	}
 }
@@ -89,7 +90,14 @@ void SimStepper::advanceTimeByDynamicsSubSteps(const std::vector<SystemPtr>& sys
 	// Perform substeps
 	for (int i = 0; i < requiredSteps; i++)
 	{
+		SecondsD prevTime = mTime;
 		TimeSource::advanceTime(mDynamicsStepSize);
+
+		if (mTime == prevTime)
+		{
+			// Time did not advance, so we are at the end of the time range. Stop stepping.
+			break;
+		}
 
 		updateSystem(systems, UpdateStage::PreDynamicsSubStep);
 
