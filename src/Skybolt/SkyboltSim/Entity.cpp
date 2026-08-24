@@ -119,6 +119,27 @@ std::optional<Vector3> getVelocity(const Entity& entity)
 	return std::nullopt;
 }
 
+std::optional<Vector3> getAngularVelocityGeocentricAxes(const Entity& entity)
+{
+	auto* component = entity.getFirstComponent<Motion>().get();
+	if (component)
+	{
+		return component->angularVelocity;
+	}
+	return std::nullopt;
+}
+
+std::optional<Vector3> getAngularVelocityBodyAxes(const Entity& entity)
+{
+	auto orientation = getOrientation(entity);
+	if (!orientation) { return std::nullopt; }
+
+	auto angularVelocityGeocentric = getAngularVelocityGeocentricAxes(entity);
+	if (!angularVelocityGeocentric) { return std::nullopt; }
+
+	return glm::inverse(*orientation) * *angularVelocityGeocentric;
+}
+
 std::optional<glm::dmat4> getTransform(const sim::Entity& entity)
 {
 	Positionable* positionable = getPositionable(entity);
@@ -156,6 +177,22 @@ void setVelocity(Entity& entity, const Vector3& velocity)
 	{
 		component->linearVelocity = velocity;
 	}
+}
+
+void setAngularVelocityGeocentricAxes(const Entity& entity, const Vector3& angularVelocity)
+{
+	if (auto* component = entity.getFirstComponent<Motion>().get())
+	{
+		component->angularVelocity = angularVelocity;
+	}
+}
+
+void setAngularVelocityBodyAxes(const Entity& entity, const Vector3& angularVelocity)
+{
+	auto orientation = getOrientation(entity);
+	if (!orientation) { return; }
+
+	setAngularVelocityGeocentricAxes(entity, *orientation * angularVelocity);
 }
 
 } // namespace skybolt

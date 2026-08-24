@@ -97,11 +97,15 @@ private:
 std::optional<Vector3> getPosition(const Entity& entity);
 std::optional<Quaternion> getOrientation(const Entity& entity);
 std::optional<Vector3> getVelocity(const Entity& entity);
+std::optional<Vector3> getAngularVelocityGeocentricAxes(const Entity& entity); //! Gets angular velocity in geocentric axes (Earth-centered, Earth-fixed)
+std::optional<Vector3> getAngularVelocityBodyAxes(const Entity& entity); //! Gets angular velocity in body axes (local to the entity)
 std::optional<glm::dmat4> getTransform(const sim::Entity& entity);
 
 void setPosition(Entity& entity, const Vector3& position);
 void setOrientation(Entity& entity, const Quaternion& orientation);
 void setVelocity(Entity& entity, const Vector3& velocity);
+void setAngularVelocityGeocentricAxes(const Entity& entity, const Vector3& angularVelocity); //! Gets angular velocity in geocentric axes (Earth-centered, Earth-fixed)
+void setAngularVelocityBodyAxes(const Entity& entity, const Vector3& angularVelocity); //! Sets angular velocity in body axes (local to the entity)
 
 } // namespace sim
 } // namespace skybolt

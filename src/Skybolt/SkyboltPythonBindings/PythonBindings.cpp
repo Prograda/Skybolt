@@ -539,6 +539,12 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("setVelocityNed", [](Entity* entity, const Vector3& velocity) {
 			setVelocityNed(*entity, velocity);
 		})
+		.def("getAngularVelocityBodyAxes", [](Entity* entity) {
+			return getAngularVelocityBodyAxes(*entity);
+		})
+		.def("setAngularVelocityBodyAxes", [](Entity* entity, const Vector3& angularRate) {
+			return setAngularVelocityBodyAxes(*entity, angularRate);
+		})
 		.def("getComponents", &Entity::getComponents)
 		.def("getComponentsOfType", &getComponentsOfTypeName)
 		.def("getFirstComponentOfType", &getFirstComponentOfTypeName)
