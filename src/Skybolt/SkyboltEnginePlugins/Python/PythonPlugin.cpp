@@ -65,14 +65,7 @@ public:
 			}
 		}
 
-		try
-		{
-			loadPythonPluginModules(moduleNames);
-		}
-		catch (const std::exception& e)
-		{
-			SKYBOLT_LOG(error) << e.what();
-		}
+		loadPythonPluginModules(moduleNames);
 	}
 
 	~PythonComponentPlugin() override = default;

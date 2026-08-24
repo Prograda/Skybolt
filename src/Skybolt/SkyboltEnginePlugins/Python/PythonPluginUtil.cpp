@@ -18,21 +18,28 @@ std::vector<pybind11::module> loadPythonPluginModules(const std::vector<std::str
 
 	for (const std::string& moduleName : moduleNames)
 	{
-		pybind11::module module = py::module::import(moduleName.c_str());
+		try
+		{
+			pybind11::module module = py::module::import(moduleName.c_str());
 		
-		if (py::hasattr(module, "skybolt_register"))
-		{
-			// Module found
-			module.attr("skybolt_register")();
-			SKYBOLT_LOG(info) << "Registered python plugin module: " << moduleName;
-		}
-		else
-		{
-			std::string filename = module.attr("__file__")().cast<std::string>();
-			throw std::runtime_error("Python plugin '" + filename + "' does not have 'register' function");
-		}
+			if (py::hasattr(module, "skybolt_register"))
+			{
+				// Module found
+				module.attr("skybolt_register")();
+				SKYBOLT_LOG(info) << "Registered python plugin module: " << moduleName;
+			}
+			else
+			{
+				std::string filename = module.attr("__file__")().cast<std::string>();
+				throw std::runtime_error("Python plugin '" + filename + "' does not have 'register' function");
+			}
 
-		result.push_back(module);
+			result.push_back(module);
+		}
+		catch (const std::exception& e)
+		{
+			SKYBOLT_LOG(error) << "Failed to load python module '" + moduleName + "'. Reason: " + e.what();
+		}
 	}
 	return result;
 }
