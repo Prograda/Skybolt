@@ -674,7 +674,7 @@ static int createAndExecuteApplication(int argc, char** argv)
 
 	// Create status bar
 	mainWindow.setStatusBar(new QStatusBar(&mainWindow));
-	mainWindow.statusBar()->addPermanentWidget(new LatestErrorWidget(&errorLogModel));
+	mainWindow.statusBar()->addPermanentWidget(new LatestErrorWidget(&errorLogModel, getSkyboltIcon(SkyboltIcon::List, engineRoot->fileLocator)));
 
 	// Handle command line arguments
 	if (argc >= 2)

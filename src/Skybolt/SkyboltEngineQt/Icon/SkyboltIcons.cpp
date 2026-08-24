@@ -13,6 +13,7 @@ static std::map<SkyboltIcon, QIcon> createSkyboltIcons(const skybolt::file::File
 {
 	std::map<SkyboltIcon, std::string> filenames {
 		{SkyboltIcon::Add, "Icons/google/add_circle.svg"},
+		{SkyboltIcon::List, "Icons/google/list.svg"},
 		{SkyboltIcon::Node, "Icons/google/brightness_1.svg"},
 		{SkyboltIcon::Pause, "Icons/google/round-pause.svg"},
 		{SkyboltIcon::Play, "Icons/google/round-play_arrow.svg"},

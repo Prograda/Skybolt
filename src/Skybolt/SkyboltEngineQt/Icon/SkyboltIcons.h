@@ -13,6 +13,7 @@
 enum class SkyboltIcon
 {
 	Add,
+	List,
 	Node,
 	Pause,
 	Play,
