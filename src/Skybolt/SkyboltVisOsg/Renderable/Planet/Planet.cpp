@@ -340,7 +340,7 @@ Planet::Planet(const PlanetConfig& config) :
 			texture->setWrap(osg::Texture::WRAP_S, osg::Texture::REPEAT);
 			texture->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
 			ss->setTextureAttributeAndModes((int)GlobalSamplerUnit::CloudDetail2d, texture);
-			ss->addUniform(createUniformSampler2d("coverageDetailSampler2", (int)GlobalSamplerUnit::CloudDetail2d));
+			ss->addUniform(createUniformSampler2d("coverageDetailSampler", (int)GlobalSamplerUnit::CloudDetail2d));
 		}
 	}
 }

@@ -34,7 +34,6 @@ struct CloudComponent : public skybolt::sim::Component
 {
 public:
 	std::vector<CloudLayer> layers;
-	bool planetaryCoverageEnabled;
 };
 
 
@@ -42,8 +41,7 @@ SKYBOLT_REFLECT(CloudComponent)
 {
 	registry.type<CloudComponent>("CloudsComponent")
 		.superType<Component>()
-		.property("layers", &CloudComponent::layers)
-		.property("planetaryCoverageEnabled", &CloudComponent::planetaryCoverageEnabled);
+		.property("layers", &CloudComponent::layers);
 };
 
 } // namespace skybolt::sim

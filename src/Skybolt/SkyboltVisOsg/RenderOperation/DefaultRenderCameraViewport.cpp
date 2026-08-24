@@ -237,6 +237,7 @@ void DefaultRenderCameraViewport::updatePreRender(const RenderContext& renderCon
 	// TODO: we should clear all non-persistant defines before merging.
 	// We should probably be using the scene node hierarchy to implicly merge state rather than explicitly calling merge.
 	mViewportStateSet->removeDefine("ENABLE_CLOUDS");
+	mViewportStateSet->removeDefine("USE_CLOUD_COVERAGE_MAP");
 	mViewportStateSet->update(*mCamera);
 	mViewportStateSet->merge(*mScene->getStateSet());
 
