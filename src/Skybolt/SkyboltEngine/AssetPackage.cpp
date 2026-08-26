@@ -18,22 +18,22 @@ struct AssetPackageDefinition
 	std::string name;
 	file::Path filepath;
 
-	//! Assets in packages with lower priority order number will override
+	//! Assets in packages with higher layer order will override
 	//! other assets with same asset-package-relative filename.
-	int defaultPriorityOrder = 0;
+	int defaultLayerOrder = 0;
 };
 
 static AssetPackageDefinition readAssetPackageDefinition(const nlohmann::json& j)
 {
 	return AssetPackageDefinition{
-		.defaultPriorityOrder = readOptional<int>(j, "defaultPriorityOrder").value_or(100)
+		.defaultLayerOrder = readOptional<int>(j, "defaultLayerOrder").value_or(0)
 	};
 } 
 
 static void registerAssetPackage(AssetPackageRegistry& registry, const AssetPackageDefinition& definition)
 {
 	registry.push_back(definition.filepath.string() + "/");
-	SKYBOLT_LOG(info) << "Registered asset package: " << definition.name;
+	SKYBOLT_LOG(info) << "Registered asset package: " << definition.name << " (layer " << definition.defaultLayerOrder << ")";
 }
 
 AssetPackageFilepaths loadAssetPackagesInPath(AssetPackageRegistry& registry, const file::Path& assetSearchPath)
@@ -59,9 +59,9 @@ AssetPackageFilepaths loadAssetPackagesInPath(AssetPackageRegistry& registry, co
 		definitions.push_back(definition);
 	}
 
-	// Sort by priority order
+	// Sort by descending layer order so that assets in higher layers are found first
 	std::sort(definitions.begin(), definitions.end(), [](const auto& a, const auto& b) {
-		return a.defaultPriorityOrder < b.defaultPriorityOrder;
+		return a.defaultLayerOrder > b.defaultLayerOrder;
 	});
 
 	// Load packages

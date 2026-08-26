@@ -17,6 +17,9 @@ using AssetPackageRegistry = std::vector<std::filesystem::path>;
 
 using AssetPackageName = std::string;
 using AssetPackageFilepaths = std::map<AssetPackageName, file::Path>;
+
+//! Loads asset packages from assetSearchPaths and adds them to registry.
+//! @returns the file paths to the root directory of all loaded asset packages.
 AssetPackageFilepaths loadAssetPackagesInPath(AssetPackageRegistry& registry, const file::Path& assetSearchPath);
 
 file::Paths getPathsInAssetPackages(const std::vector<std::string>& assetPackagePaths, const std::string& relativePath);
