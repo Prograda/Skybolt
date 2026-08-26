@@ -38,11 +38,19 @@ static void registerAssetPackage(AssetPackageRegistry& registry, const AssetPack
 
 AssetPackageFilepaths loadAssetPackagesInPath(AssetPackageRegistry& registry, const file::Path& assetSearchPath)
 {
+	std::set<std::filesystem::path> foundFolders;
 	// Find packages
 	std::vector<AssetPackageDefinition> definitions;
 	file::Paths folders = file::findFoldersInDirectory(assetSearchPath.string());
 	for (const auto& folder : folders)
 	{
+		if (foundFolders.contains(folder))
+		{
+			// Ignore duplicate asset package folder
+			continue;
+		}
+		foundFolders.insert(folder);
+
 		AssetPackageDefinition definition;
 		const file::Path packageJsonFilename = folder / "package.json";
 		if (!std::filesystem::exists(packageJsonFilename))
@@ -95,14 +103,10 @@ file::Paths getFilesWithExtensionInDirectoryInAssetPackages(const std::vector<st
 	return getFilesWithExtensionInDirectoryInAssetPackagesRecursive(assetPackagePaths, relativeDirectory, extension, levels);
 }
 
-static file::Paths removeDuplicates(const file::Paths& paths)
-{
-	std::set<file::Path> uniquePaths(paths.begin(), paths.end());
-	return {uniquePaths.begin(), uniquePaths.end()};
-}
-
 file::Paths getFilesWithExtensionInDirectoryInAssetPackagesRecursive(const std::vector<std::string>& assetPackagePaths, const std::string& relativeDirectory, const std::string& extension, std::optional<int> depth)
 {
+	std::set<std::filesystem::path> findRelativeAssetPaths;
+
 	file::Paths result;
 	for (const auto& packagePath : assetPackagePaths)
 	{
@@ -110,10 +114,21 @@ file::Paths getFilesWithExtensionInDirectoryInAssetPackagesRecursive(const std::
 		if (std::filesystem::exists(path))
 		{
 			auto paths = file::findFilenamesInDirectoryRecursive(path, extension, depth.value_or(100));
-			result.insert(result.end(), paths.begin(), paths.end());
+
+			for (const auto& p : paths)
+			{
+				std::filesystem::path relativeAssetPath = std::filesystem::relative(p, packagePath);
+				if (findRelativeAssetPaths.contains(relativeAssetPath))
+				{
+					// Ignore duplicate asset.
+					// Assets in packages with higher layer order will override other assets with same asset-package-relative filename.
+					continue;
+				}
+				findRelativeAssetPaths.insert(relativeAssetPath);
+				result.push_back(p);
+			}
 		}
 	}
-	result = removeDuplicates(result);
 	return result;
 }
 
