@@ -15,7 +15,6 @@
 #include <SkyboltCommon/Json/JsonHelpers.h>
 #include <SkyboltCommon/Json/ReadJsonFile.h>
 #include <SkyboltEngine/AssetPackage.h>
-#include <SkyboltSim/Spatial/GeocentricToNedConverter.h>
 #include <SkyboltEngine/EngineRoot.h>
 #include <SkyboltEngine/EngineSettings.h>
 #include <SkyboltEngine/EngineStats.h>
@@ -26,6 +25,7 @@
 #include <SkyboltSim/Components/AtmosphereComponent.h>
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/OceanComponent.h>
+#include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/Node.h>
 #include <SkyboltSim/Components/ParticleSystemComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
@@ -33,6 +33,7 @@
 #include <SkyboltSim/Components/Rotor.h>
 #include <SkyboltSim/Particles/ParticleSystem.h>
 #include <SkyboltSim/Components/SunComponent.h>
+#include <SkyboltSim/Spatial/GeocentricToNedConverter.h>
 #include <SkyboltSim/Spatial/Positionable.h>
 
 #include <SkyboltVis/Renderable/Planet/Features/BuildingTypes.h>
@@ -244,14 +245,21 @@ struct VisObjectFactoryContext
 
 static void loadVisualModel(Entity* entity, const ComponentFactoryContext& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
 {
-	vis::ModelPtr model = createVisualModel(json, *VisObjectFactoryContext.modelFactory);
-	visObjectsComponent->addObject(model);
+	try
+	{
+		vis::ModelPtr model = createVisualModel(json, *VisObjectFactoryContext.modelFactory);
+		visObjectsComponent->addObject(model);
 
-	SimVisBindingPtr simVis(new SimpleSimVisBinding(entity, model,
-		math::toGlmDvec3(readOptionalVec3f(json, "positionRelBody", osg::Vec3f())),
-		math::toGlmDquat(readOptionalQuat(json, "orientationRelBody", osg::Quat()))
-	));
-	simVisBindingComponent->bindings.push_back(simVis);
+		SimVisBindingPtr simVis(new SimpleSimVisBinding(entity, model,
+			math::toGlmDvec3(readOptionalVec3f(json, "positionRelBody", osg::Vec3f())),
+			math::toGlmDquat(readOptionalQuat(json, "orientationRelBody", osg::Quat()))
+		));
+		simVisBindingComponent->bindings.push_back(simVis);
+	}
+	catch (const std::exception& e)
+	{
+		SKYBOLT_LOG(error) << "Error loading visual model for entity '" << getName(*entity) << "': " << e.what();
+	}
 }
 
 static void loadVisualMainRotor(Entity* entity, const ComponentFactoryContext& context, const VisObjectFactoryContext& VisObjectFactoryContext, const VisObjectsComponentPtr& visObjectsComponent, const SimVisBindingsComponentPtr& simVisBindingComponent, const nlohmann::json& json)
