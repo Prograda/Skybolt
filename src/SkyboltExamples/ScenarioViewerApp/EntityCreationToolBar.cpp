@@ -11,6 +11,7 @@
 #include <SkyboltCommon/MapUtility.h>
 #include <SkyboltEngine/EntityFactory.h>
 #include <SkyboltEngine/Scenario/ScenarioMetadataComponent.h>
+#include <SkyboltEngineQt/Util/QMenuUtil.h>
 #include <SkyboltSim/World.h>
 
 #include <QBoxLayout>
@@ -69,7 +70,7 @@ static QMenu* createCreateMenu(const EntityCreationToolBarConfig& config)
 			config.world->addEntity(entity);
 		});
 	}
-
+	sortMenuRecursively(*menu);
 	return menu;
 }
 
