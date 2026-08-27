@@ -3,8 +3,7 @@
 		{"node": {
 		}},
 		{"planet": {
-			"radius": 6371000,
-			"ocean": true
+			"radius": 6371000
 		}},
 		{"atmosphere": {
 			"rayleighScatteringCoeffAt440nm": 3.31e-5,
@@ -16,6 +15,7 @@
 			"miePhaseFunctionG": 0.93,
 			"useEarthOzone": true
 		}},
+		{"ocean": {}},
 		{"clouds": {}},
 		{"planetElevationTileSource": {
 			"tileSource": {

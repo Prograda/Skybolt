@@ -8,7 +8,7 @@ Skybolt 3D object world positions use ECEF coordinates with:
 * +Z axis through the North Pole
 
 ## Latitude and Longitude
-Parts of Skybolt represent positions as either `LatLon` or `LatLonAlt` when more natural than ECEF. 
+Skybolt also represents positions as either `LatLon` or `LatLonAlt` when more natural than ECEF. 
 
 ## North East Down (NED)
 Local Tangent Plane (LTP) coordinates are represented as:

@@ -2,6 +2,7 @@
 
 #include <SkyboltSim/Component.h>
 #include <SkyboltSim/SkyboltSimFwd.h>
+#include <SkyboltSim/Physics/Atmosphere.h>
 
 namespace skybolt::sim {
 
@@ -27,6 +28,8 @@ public:
 	double miePhaseFunctionG = 0.8;
 
 	bool useEarthOzone = true;
+
+	Atmosphere atmosphere = createEarthAtmosphere(); // TODO: use planet specific atmospheric parameters
 };
 
 SKYBOLT_REFLECT(AtmosphereComponent)

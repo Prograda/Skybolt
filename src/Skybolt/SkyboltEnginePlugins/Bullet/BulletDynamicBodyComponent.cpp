@@ -18,6 +18,8 @@ namespace sim {
 
 SKYBOLT_REFLECT(BulletDynamicBodyComponent) {
 	registry.type<BulletDynamicBodyComponent>("BulletDynamicBodyComponent")
+		.property("momentOfInertia", &BulletDynamicBodyComponent::getMomentOfInertia, &BulletDynamicBodyComponent::setMomentOfInertia)
+		.property("centerOfMass", &BulletDynamicBodyComponent::getCenterOfMass, &BulletDynamicBodyComponent::setCenterOfMass)
 		.superType<DynamicBodyComponent>();
 }
 
@@ -121,6 +123,15 @@ void BulletDynamicBodyComponent::updatePostDynamics()
 Vector3 BulletDynamicBodyComponent::getMomentOfInertia() const
 {
 	return toGlmDvec3(mMomentOfInertia);
+}
+
+void BulletDynamicBodyComponent::setMomentOfInertia(const Vector3& momentOfInertia)
+{
+	mMomentOfInertia = toBtVector3(momentOfInertia);
+	if (mDynamicsEnabled)
+	{
+		mBody->setMassProps(mMass, mMomentOfInertia);
+	}
 }
 
 Vector3 BulletDynamicBodyComponent::getCenterOfMass() const

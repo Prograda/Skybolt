@@ -7,6 +7,8 @@ from pathlib import Path
 
 from docs import build_docs
 
+import stubs
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -33,10 +35,17 @@ def package(skybolt_source_dir: Path, skybolt_build_dir: Path, package_dir: Path
     """
     logging.info(f"Packaging build...")
 
+    if os.sys.platform.startswith('linux'):
+        # FIXME: build dir is under config folder on Linux. We should update Windows to do this as well.
+        skybolt_build_dir = skybolt_build_dir / build_config_name
+
     sp.run(f"cmake --install {skybolt_build_dir} --prefix {skybolt_build_dir}/install --config={build_config_name}", shell=True, check=True)
     sp.run(f"cmake --install {skybolt_build_dir} --prefix {skybolt_build_dir}/install --config={build_config_name} --component QtPlugins", shell=True, check=True)
     sp.run(f"cmake --install {skybolt_build_dir} --prefix {skybolt_build_dir}/install --config={build_config_name} --component OsgPlugins", shell=True, check=True)
     sp.run(f"cmake --install {skybolt_build_dir} --prefix {skybolt_build_dir}/install --config={build_config_name} --component SkyboltDependencies", shell=True, check=True)
+
+    skybolt_binary_dir = skybolt_build_dir / "bin" / build_config_name
+    stubs.generate_skybolt_stubs("skybolt", skybolt_binary_dir, skybolt_binary_dir / "skybolt.pyi")
 
     copy_tree(skybolt_build_dir / "install/bin", package_dir / "bin")
 
@@ -52,8 +61,9 @@ def package(skybolt_source_dir: Path, skybolt_build_dir: Path, package_dir: Path
 
 def package_docs(skybolt_source_dir: Path, package_dir: Path):
     logging.info(f"Packaging docs...")
+    skybolt_binary_dir = package_dir / "bin"
     output_dir = package_dir / "Docs"
-    build_docs.build(skybolt_source_dir, output_dir)
+    build_docs.build(skybolt_source_dir, skybolt_binary_dir, output_dir)
 
     # Delete unneeded output files
     (output_dir / "objects.inv").unlink(missing_ok=True)
@@ -89,6 +99,7 @@ if __name__ == "__main__":
             return BUILD_STAGES.index(name) <= BUILD_STAGES.index(args.stage)
 
     conan_build_dir = Path(args.build_dir) / "build"
+    skybolt_binary_dir = conan_build_dir / "bin" / args.build_config_name
 
     # Run build stages
     if should_run_stage("build"):

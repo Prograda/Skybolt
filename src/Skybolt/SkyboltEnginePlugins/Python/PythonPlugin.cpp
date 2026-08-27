@@ -66,6 +66,11 @@ public:
 		}
 
 		loadPythonPluginModules(moduleNames);
+
+		// TODO: move this into Plugin::Plugin()? Presumably other plugins will want to have their types registered too.
+		// FIXME: There's currently an issue where if this plugin is linked statically, calling this addStaticallyRegisteredTypes
+		// will re-register previously registered types, creating duplicate types because there is only one `globalHandlers` list across statically-linked objects.
+		addStaticallyRegisteredTypes(*config.engineRoot->typeRegistry);
 	}
 
 	~PythonComponentPlugin() override = default;

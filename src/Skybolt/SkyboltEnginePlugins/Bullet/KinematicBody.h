@@ -62,5 +62,7 @@ private:
 	RigidBody* mBody;
 };
 
+SKYBOLT_REFLECT_EXTERN(KinematicBody);
+
 } // namespace sim
 } // namespace skybolt

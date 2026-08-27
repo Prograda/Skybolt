@@ -27,7 +27,6 @@ public:
 	const double radius;
 
 	std::shared_ptr<PlanetAltitudeProvider> altitudeProvider; //!< Null if the planet has no terrain
-	std::optional<Atmosphere> atmosphere;
 };
 
 } // namespace sim

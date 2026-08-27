@@ -4,9 +4,8 @@ A C++/Python-based engine for simulating and visualizing dynamic objects such as
 ## Features
 * **Dynamic Simulation:** Real-time 3D object simulation within a geospatial coordinate system.
 * **Modular Architecture**: Model dynamic objects using a composition-based entity-component system (ECS) with a configurable property framework.
-* **Photoreal Rendering**: Visualize photorealistic environments, including terrain, ocean, urban infrastructure, and atmospheric conditions.
+* **Planetary Environment Rendering**: Visualize dynamic objects in environments featuring terrain, ocean, urban infrastructure, and atmospheric conditions.
 * **Extensible Framework**: Add custom functionality through C++ and Python-based plugins. 
-* **Scenario Viewer App**: Interactive 3D application for visualizing scenarios.
 
 ## Getting Started
 Continue to the [Getting Started](getting_started.md) guide.

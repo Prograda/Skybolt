@@ -15,10 +15,15 @@ nav:
   - Asset Packages: asset_packages.md
   - Configuration: configuration.md
   - Architecture: architecture.md
+  - Coordinate Systems: coordinate_systems.md
+  - Entities: entities.md
   - Python API:
     - python_api/index.md
     - skybolt: python_api/skybolt.md
     - skybolt_util: python_api/skybolt_util.md
+
+hooks:
+  - docs./hooks/generate_components_doc.py
 
 plugins:
   - search

@@ -91,7 +91,7 @@ static sim::ComponentPtr loadFuselage(Entity* entity, const ComponentFactoryCont
 
 	params.pitchBaseAccel = readOptionalOrDefault(json, "pitchBaseAccel", 0.0);
 
-	params.aerodynamicDerivativeReferenceSpeed = readOptionalOrDefault(json, "aerodynamicDerivativeReferenceSpeed", 100);
+	params.aerodynamicDerivativeReferenceSpeed = readOptionalOrDefault(json, "aerodynamicDerivativeReferenceSpeed", 100.0);
 
 	FuselageComponentConfig config;
 	config.params = params;
@@ -149,7 +149,7 @@ static sim::ComponentPtr loadMainRotor(Entity* entity, const ComponentFactoryCon
 	return component;
 }
 
-static sim::ComponentPtr loadTailRotor(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+static sim::ComponentPtr loadPropellerWithInput(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json, const std::string& inputName)
 {
 	PropellerParams params;
 	params.minPitch = readOptionalOrDefault(json, "minPitch", -20)  * skybolt::math::degToRadF();
@@ -164,11 +164,21 @@ static sim::ComponentPtr loadTailRotor(Entity* entity, const ComponentFactoryCon
 	.body = entity->getFirstComponent<DynamicBodyComponent>().get(),
 	.positionRelBody = readVector3(json.at("positionRelBody")),
 	.orientationRelBody = readQuaternion(json.at("orientationRelBody")),
-	.input = entity->getFirstComponentRequired<ControlInputsComponent>()->createOrGet("pedal", 0.0f, posNegUnitRange<float>()),
+	.input = entity->getFirstComponentRequired<ControlInputsComponent>()->createOrGet(inputName, 0.0f, posNegUnitRange<float>()),
 	.pitch = 0.0f
 	});
 	component->setDriverRpm(1.0f);
 	return component;
+}
+
+static sim::ComponentPtr loadPropeller(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	return loadPropellerWithInput(entity, context, json, "throttle");
+}
+
+static sim::ComponentPtr loadTailRotor(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	return loadPropellerWithInput(entity, context, json, "pedal");
 }
 
 sim::ComponentPtr loadReactonControlSystem(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
@@ -361,22 +371,14 @@ static sim::ComponentPtr loadScenarioMetadata(Entity* entity, const ComponentFac
 static sim::ComponentPtr loadPlanet(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
 	double planetRadius = json.at("radius").get<double>();
-	bool hasOcean = readOptionalOrDefault(json, "ocean", true);
-	auto planetComponent = std::make_shared<PlanetComponent>(planetRadius);
-
-	if (json.contains("atmosphere"))
-	{
-		planetComponent->atmosphere = createEarthAtmosphere(); // TODO: use planet specific atmospheric parameters
-	}
-
-	// FIXME: This should be split out into a separate component loader, instead of added here as a side effect
-	if (hasOcean)
-	{
-		entity->addComponent(std::make_shared<OceanComponent>());
-	}
-
-	return planetComponent;
+	return std::make_shared<PlanetComponent>(planetRadius);
 }
+
+static sim::ComponentPtr loadOcean(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
+{
+	return std::make_shared<OceanComponent>();
+}
+
 
 static sim::ComponentPtr loadPlanetElevationTileSource(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json)
 {
@@ -419,8 +421,10 @@ void addDefaultFactories(ComponentFactoryRegistry& registry)
 	registry["mainRotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadMainRotor);
 	registry["motion"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadMotion);
 	registry["node"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadNode);
+	registry["ocean"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadOcean);
 	registry["planet"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadPlanet);
 	registry["planetElevationTileSource"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadPlanetElevationTileSource);
+	registry["propeller"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadPropeller);
 	registry["reactionControlSystem"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadReactonControlSystem);
 	registry["rocketMotor"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadRocketMotor);
 	registry["scenarioMetadata"] = std::make_shared<ComponentFactoryFunctionAdapter>(loadScenarioMetadata);

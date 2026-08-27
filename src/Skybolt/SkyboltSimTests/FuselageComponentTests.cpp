@@ -36,6 +36,11 @@ public:
 		return mMomentOfInertia;
 	}
 
+	void setMomentOfInertia(const Vector3& momentOfInertia) override
+	{
+		mMomentOfInertia = momentOfInertia;
+	}
+
 	Vector3 getCenterOfMass() const override
 	{
 		return mCenterOfMass;

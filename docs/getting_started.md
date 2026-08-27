@@ -7,7 +7,14 @@ Skybolt can be obtained by either of these methods:
 * [Download a pre-built version](https://github.com/prograda/skybolt/releases) on supported operating systems
 * [Build from source](building_from_source.md)
 
-## Scenario Viewer App
+## Using Skybolt applications
+### Skybolt App (skybolt.exe)
+The core skybolt application for running scenarios "headless", i.e. without a user-interface, either in real-time or faster-than-real-time modes.
+
+Example usage:
+`skybolt run <my_scenario.scenario.json> [--real-time]
+
+### Scenario Viewer App
 Skybolt comes with a Qt-based 3D scenario viewer application. Example scenarios that demonstrate use cases of the application can be found in `/Scenarios`.
 
 ## Creating Applications with Skybolt

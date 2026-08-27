@@ -1,0 +1,466 @@
+{
+	"module_components": {
+		"_Core": {
+			"FuselageComponent": {
+				"json_parsing_name": "fuselage",
+				"description": "Simplified aircraft fuselage dynamics model.",
+				"construction_parameters": {
+					"liftSlope": {
+						"type": "double",
+						"description": "Lift slope.",
+						"default_value": 5.7
+					},
+					"zeroLiftAlpha": {
+						"type": "double",
+						"description": "Angle of attack at zero lift.",
+						"default_value": 0.0
+					},
+					"stallAlpha": {
+						"type": "double",
+						"description": "Stall angle of attack.",
+						"default_value": 0.3
+					},
+					"stallLift": {
+						"type": "double",
+						"description": "Lift coefficient/value used at stall.",
+						"default_value": 1.0
+					},
+					"liftArea": {
+						"type": "double",
+						"description": "Lift area.",
+						"default_value": 0.0
+					},
+					"dragConstant": {
+						"type": "Vector3",
+						"description": "Drag coefficient represented as a Vector3. No explicit default."
+					},
+					"effectiveWingSpan": {
+						"type": "double",
+						"description": "Effective wing span used for the wing model.",
+						"default_value": 10.0
+					},
+					"wingOswaldEfficiencyFactor": {
+						"type": "double",
+						"description": "Oswald efficiency factor.",
+						"default_value": 0.75
+					},
+					"rollAccelDueToSideSlipAngle": {
+						"type": "double",
+						"description": "Roll acceleration derivative with respect to sideslip angle.",
+						"default_value": 0.0
+					},
+					"rollAccelDueToRollRate": {
+						"type": "double",
+						"description": "Roll acceleration derivative with respect to roll rate.",
+						"default_value": -1.0
+					},
+					"rollAccelDueToYawRate": {
+						"type": "double",
+						"description": "Roll acceleration derivative with respect to yaw rate.",
+						"default_value": 0.0
+					},
+					"rollAccelDueToAileron": {
+						"type": "double",
+						"description": "Roll acceleration derivative with respect to aileron input.",
+						"default_value": 0.0
+					},
+					"pitchAccelDueToAngleOfAttack": {
+						"type": "double",
+						"description": "Pitch acceleration derivative with respect to angle of attack.",
+						"default_value": -0.2
+					},
+					"pitchAccelDueToPitchRate": {
+						"type": "double",
+						"description": "Pitch acceleration derivative with respect to pitch rate.",
+						"default_value": -1.0
+					},
+					"pitchAccelDueToElevator": {
+						"type": "double",
+						"description": "Pitch acceleration derivative with respect to elevator input.",
+						"default_value": 0.0
+					},
+					"yawAccelDueToSideSlipAngle": {
+						"type": "double",
+						"description": "Yaw acceleration derivative with respect to sideslip angle.",
+						"default_value": -2.0
+					},
+					"yawAccelDueToRollRate": {
+						"type": "double",
+						"description": "Yaw acceleration derivative with respect to roll rate.",
+						"default_value": 0.0
+					},
+					"yawAccelDueToYawRate": {
+						"type": "double",
+						"description": "Yaw acceleration derivative with respect to yaw rate.",
+						"default_value": -1.0
+					},
+					"yawAccelDueToRudder": {
+						"type": "double",
+						"description": "Yaw acceleration derivative with respect to rudder input.",
+						"default_value": 0.0
+					},
+					"pitchBaseAccel": {
+						"type": "double",
+						"description": "Base pitch acceleration.",
+						"default_value": 0.0
+					},
+					"aerodynamicDerivativeReferenceSpeed": {
+						"type": "double",
+						"description": "Reference speed for aerodynamic derivatives.",
+						"default_value": 100
+					},
+					"hasControlSurfaces": {
+						"type": "boolean",
+						"description": "Enables creation of stick, stick-trim, and rudder control inputs when a ControlInputsComponent is present.",
+						"default_value": false
+					}
+				}
+			},
+			"MainRotorComponent": {
+				"json_parsing_name": "mainRotor",
+				"description": "Simplified rotor dynamics model.",
+				"construction_parameters": {
+					"maxRpm": {
+						"type": "double",
+						"description": "Maximum rotor RPM. (Required)"
+					},
+					"positionRelBody": {
+						"type": "Vector3",
+						"description": "Rotor position relative to the body. (Required)"
+					},
+					"surfaceAreaPerBlade": {
+						"type": "double",
+						"description": "Surface area of one rotor blade.",
+						"default_value": 4.5
+					},
+					"bladeCount": {
+						"type": "int",
+						"description": "Number of rotor blades.",
+						"default_value": 4
+					},
+					"minCollectivePitch": {
+						"type": "double",
+						"description": "Minimum collective pitch in degrees (converted to radians).",
+						"default_value": 0
+					},
+					"maxCollectivePitch": {
+						"type": "double",
+						"description": "Maximum collective pitch in degrees (converted to radians).",
+						"default_value": 12
+					},
+					"maxTppPitch": {
+						"type": "double",
+						"description": "Maximum tip-path-plane pitch in degrees (converted to radians).",
+						"default_value": 6
+					},
+					"maxTppRoll": {
+						"type": "double",
+						"description": "Maximum tip-path-plane roll in degrees (converted to radians).",
+						"default_value": 4
+					},
+					"diskRadius": {
+						"type": "double",
+						"description": "Rotor disk radius.",
+						"default_value": 7.5
+					},
+					"zeroLiftAngleOfAttack": {
+						"type": "double",
+						"description": "Zero-lift angle of attack.",
+						"default_value": 0.0
+					},
+					"bladeStallAngleOfAttack": {
+						"type": "double",
+						"description": "Blade stall angle of attack in degrees (converted to radians).",
+						"default_value": 15
+					},
+					"bladeLiftSlopePerRadian": {
+						"type": "double",
+						"description": "Blade lift slope per radian.",
+						"default_value": 5.7
+					},
+					"stallLiftCoefficient": {
+						"type": "double",
+						"description": "Lift coefficient at stall.",
+						"default_value": 0.7
+					},
+					"inducedVelocity": {
+						"type": "float_or_curve",
+						"description": "Induced velocity, represented as either a scalar or curve.",
+						"default_value": 10.0
+					},
+					"orientationRelBody": {
+						"type": "quaternion",
+						"description": "Optional rotor orientation relative to the body."
+					}
+				}
+			},
+			"PropellerComponent": {
+				"json_parsing_name": "propeller",
+				"description": "Simplified propeller dynamics model.",
+				"construction_parameters": {
+					"rpmMultiplier": {
+						"type": "double",
+						"description": "Multiplier applied to the driver's RPM. (Required)"
+					},
+					"positionRelBody": {
+						"type": "Vector3",
+						"description": "Tail rotor position relative to the body. (Required)"
+					},
+					"orientationRelBody": {
+						"type": "quaternion",
+						"description": "Tail rotor orientation relative to the body. (Required)"
+					},
+					"minPitch": {
+						"type": "double",
+						"description": "Minimum blade pitch in degrees (converted to radians).",
+						"default_value": -20
+					},
+					"maxPitch": {
+						"type": "double",
+						"description": "Maximum blade pitch in degrees (converted to radians).",
+						"default_value": 20
+					},
+					"pitchResponseRate": {
+						"type": "double",
+						"description": "Rate at which blade pitch responds to input.",
+						"default_value": 10
+					},
+					"thrustPerRpmPerPitch": {
+						"type": "double",
+						"description": "Thrust scaling factor.",
+						"default_value": 10.0
+					}
+				}
+			},
+			"ReactionControlSystemComponent": {
+				"json_parsing_name": "reactionControlSystem",
+				"description": "Reaction control system (RCS) model. Applies torque to a body directly in response to longitudional and laterial stick controlInputs, independently of body aerodynamics.",
+				"construction_parameters": {
+					"torque": {
+						"type": "Vector3",
+						"description": "Maximum reaction-control torque vector. (Required)"
+					}
+				}
+			},
+			"RocketMotorComponent": {
+				"json_parsing_name": "rocketMotor",
+				"description": "Simple motor model that applies thrust proportionally to throttle controlInput.",
+				"construction_parameters": {
+					"maxThrust": {
+						"type": "double",
+						"description": "Maximum rocket motor thrust. (Required)"
+					}
+				}
+			},
+			"ShipWakeComponent": {
+				"json_parsing_name": "shipWake",
+				"description": "Defines geometric parameters for a ship wake.",
+				"construction_parameters": {
+					"type": {
+						"type": "string",
+						"description": "Wake type. Supported values: shipWake, rotorWash. (Required)"
+					},
+					"bowWakeForwardOffset": {
+						"type": "double",
+						"description": "Forward offset of the bow wake.",
+						"default_value": "startAheadDistance"
+					},
+					"sternWakeForwardOffset": {
+						"type": "double",
+						"description": "Forward offset of the stern wake.",
+						"default_value": 0
+					},
+					"startWidth": {
+						"type": "double",
+						"description": "Initial wake width.",
+						"default_value": 16.0
+					},
+					"spreadAngularWidth": {
+						"type": "double",
+						"description": "Angular spread of the wake in degrees (converted to radians).",
+						"default_value": 5
+					},
+					"length": {
+						"type": "double",
+						"description": "Wake length.",
+						"default_value": 700.0
+					}
+				}
+			},
+			"AttachmentPointsComponent": {
+				"json_parsing_name": "attachmentPoint",
+				"description": "Defines a point to which another entity can be attached.",
+				"construction_parameters": {
+					"positionRelBody": {
+						"type": "Vector3",
+						"description": "Attachment-point position relative to the body. (Required)"
+					},
+					"name": {
+						"type": "string",
+						"description": "Name used to register the attachment point. (Required)"
+					},
+					"orientationRelBody": {
+						"type": "quaternion",
+						"description": "Attachment-point orientation relative to the body.",
+						"default_value": "identity"
+					}
+				}
+			},
+			"AssetDescriptionComponent": {
+				"json_parsing_name": "assetDescription",
+				"description": "Stores a human-readable description of an asset.",
+				"construction_parameters": {
+					"description": {
+						"type": "string",
+						"description": "Human-readable asset description. (Required)"
+					},
+					"authors": {
+						"type": "array_of_strings",
+						"description": "JSON array of strings containing author names. (Required)"
+					},
+					"sourceUrl": {
+						"type": "string",
+						"description": "Source URL for the asset."
+					}
+				}
+			},
+			"ScenarioMetadataComponent": {
+				"json_parsing_name": "scenarioMetadata",
+				"description": "Reads metadata for controlling entity behavior in the scenario.",
+				"construction_parameters": {
+					"scenarioObjectDirectory": {
+						"type": "string",
+						"description": "String containing a /-separated directory of the object within the scenario."
+					},
+					"userDeletable": {
+						"type": "boolean",
+						"description": "Whether the scenario object can be deleted by the user.",
+						"default_value": true
+					},
+					"persistAcrossLoad": {
+						"type": "boolean",
+						"description": "Whether the object persists across scenario loads.",
+						"default_value": false
+					},
+					"replicatable": {
+						"type": "boolean",
+						"description": "Whether the object can be replicated over network.",
+						"default_value": true
+					}
+				}
+			},
+			"PlanetComponent": {
+				"json_parsing_name": "planet",
+				"description": "Defines planet configuration.",
+				"construction_parameters": {
+					"radius": {
+						"type": "double",
+						"description": "Planet radius. (Required)"
+					}
+				}
+			},
+			"PlanetElevationComponent": {
+				"json_parsing_name": "planetElevationTileSource",
+				"description": "Terrain/elevation tile-source configuration.",
+				"construction_parameters": {
+					"tileSource": {
+						"type": "object",
+						"description": "JSON object containing tile-source configuration. Must contain 'format' and 'maxLevel'. Can optionally contain 'heightMapTexelsOnTileEdge' (Default: false)."
+					}
+				}
+			},
+			"AtmosphereComponent": {
+				"json_parsing_name": "atmosphere",
+				"description": "Defines planet atmosphere.",
+				"construction_parameters": {}
+			},
+			"Node": {
+				"json_parsing_name": "node",
+				"description": "Spatial transform",
+				"construction_parameters": {}
+			},
+			"Motion": {
+				"json_parsing_name": "motion",
+				"description": "Motion state",
+				"construction_parameters": {}
+			},
+			"AttacherComponent": {
+				"json_parsing_name": "attacher",
+				"description": "Attaches the entity to another entity.",
+				"construction_parameters": {}
+			},
+			"CameraComponent": {
+				"json_parsing_name": "camera",
+				"description": "Camera state.",
+				"construction_parameters": {}
+			},
+			"CameraControllerComponent": {
+				"json_parsing_name": "cameraController",
+				"description": "Defines controllers for controlling the current camera state.",
+				"construction_parameters": {}
+			},
+			"ControlInputsComponent": {
+				"json_parsing_name": "controlInputs",
+				"description": "Stores current control input values.",
+				"construction_parameters": {}
+			},
+			"CloudComponent": {
+				"json_parsing_name": "clouds",
+				"description": "Defines clouds in the atmosphere.",
+				"construction_parameters": {}
+			},
+			"DynamicBodyComponent": {
+				"json_parsing_name": "dynamicBody",
+				"description": "Base class for dynamic bodies. See `SimpleDynamicBodyComponent` and `BulletDynamicBodyComponent` derived classes.",
+				"construction_parameters": {}
+			},
+			"SimpleDynamicBodyComponent": {
+				"json_parsing_name": "dynamicBody",
+				"construction_parameters": {}
+			},
+			"SunComponent": {
+				"json_parsing_name": "sun",
+				"description": "Defines the sun.",
+				"construction_parameters": {}
+			}
+		},
+		"SkyboltBullet": {
+			"BulletDynamicBodyComponent": {
+				"json_parsing_name": "dynamicBody",
+				"description": "Six degree-of-freedom dynamic rigid body. Used instead of `SimpleDynamicBodyComponent` when `SkyboltBullet` plugin is available.",
+				"construction_parameters": {
+					"size": {
+						"type": "Vector3",
+						"description": "Vector3 defining dimensions of body in body axes. Only used by Bullet physics plugin. (Required)"
+					}
+				}
+			},
+			"KinematicBody": {
+				"json_parsing_name": "kinematicBody",
+				"description": "Kinematic body that can be externally moved and collide with other bodies, but does not simulate dynamics.",
+				"construction_parameters": {
+					"size": {
+						"type": "Vector3",
+						"description": "Vector3 defining dimensions of body in body axes. (Required)"
+					}
+				}
+			}
+		},
+		"SkyboltJsbSim": {
+			"BulletDynamicBodyComponent": {
+				"json_parsing_name": "jsbSimAircraft",
+				"description": "Simulates aircraft dynamics using JSBSim.",
+				"construction_parameters": {
+					"jsbSimRootDir": {
+						"type": "string",
+						"description": "Optional directory in which to search for JSBSim aircraft folders. If not set, JSBSim directory specified in Skybolt settings file will be used."
+					},
+					"model": {
+						"type": "string",
+						"description": "Aircraft model name in JSBSim."
+					}
+				}
+			}
+		}
+	}
+}

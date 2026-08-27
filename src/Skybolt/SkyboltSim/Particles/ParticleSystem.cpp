@@ -6,6 +6,7 @@
 
 #include "ParticleSystem.h"
 #include <SkyboltSim/Entity.h>
+#include <SkyboltSim/Components/AtmosphereComponent.h>
 #include <SkyboltSim/Components/PlanetComponent.h>
 #include <SkyboltSim/Physics/Atmosphere.h>
 #include "SkyboltSim/Spatial/GreatCircle.h"
@@ -102,7 +103,7 @@ static double getAltitude(const sim::Entity& planet, const sim::Vector3& positio
 static double getAtmosphericDensity(const sim::Entity& planet, const sim::Vector3& position)
 {
 	auto altitude = getAltitude(planet, position);
-	const std::optional<Atmosphere>& atmosphere = planet.getFirstComponent<sim::PlanetComponent>()->atmosphere;
+	const std::optional<Atmosphere>& atmosphere = planet.getFirstComponent<sim::AtmosphereComponent>()->atmosphere;
 	if (atmosphere)
 	{
 		return float(atmosphere->getDensity(altitude));

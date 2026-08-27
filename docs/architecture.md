@@ -13,8 +13,8 @@ The main aspects of the simulation architecture are:
 * **Entities**: Objects in the simulation. Each entity can represent a physical object (e.g. aircraft, ship) or an non-physical object that performs a function.
 * **Components**: Modular building blocks giving functionality to entities. Components may define an entity's position, behavior, appearance, or other characteristics.
 
-### SkyboltVis
-The `SkyboltVis` library renders visual represenations of entities. The renderer is built to provide physically plausible imagery from ground level to space. The renderer uses **tile-based streaming** from geospatial sources, allowing efficient real-time loading of terrain and features such as buildings, roads, rivers and lakes.
+### SkyboltVisOsg
+The `SkyboltVisOsg` library renders visual represenations of entities. The renderer is built to provide physically plausible imagery from ground level to space. The renderer uses **tile-based streaming** from geospatial sources, allowing efficient real-time loading of terrain and features such as buildings, roads, rivers and lakes.
 
 Environments are rendered use multiple **physically-based lighting** techniques:
 
@@ -22,10 +22,10 @@ Environments are rendered use multiple **physically-based lighting** techniques:
 * Planetary atmospheric scattering model
 * Volumetric cloud ray-marcher
 
-Under the hood, `SkyboltVis` uses [OpenSceneGraph](https://github.com/openscenegraph/OpenSceneGraph) to manage scene graph state, issue draw calls, and handle 2D/3D asset file I/O.
+Under the hood, `SkyboltVisOsg` uses [OpenSceneGraph](https://github.com/openscenegraph/OpenSceneGraph) to manage scene graph state, issue draw calls, and handle 2D/3D asset file I/O.
 
 ### SkyboltEngine
-The `SkyboltEngine` library ties together `SkyboltSim` and `SkyboltVis`, and provides engine-level functionality like user input, scenario management, and plugin support.
+The `SkyboltEngine` library ties together `SkyboltSim` and `SkyboltVisOsg`, and provides engine-level functionality like user input, scenario management, and plugin support.
 
 ## Plugins
 To support a wide variety of use cases, the simulation engine is extensible through **C++** and **Python** plugins.

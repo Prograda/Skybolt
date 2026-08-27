@@ -13,7 +13,12 @@
 #include <SkyboltSim/CollisionGroupMasks.h>
 #include <SkyboltSim/Components/Node.h>
 
-using namespace skybolt::sim;
+namespace skybolt::sim {
+
+SKYBOLT_REFLECT(KinematicBody) {
+	registry.type<KinematicBody>("KinematicBody")
+		.superType<Component>();
+}
 
 KinematicBody::KinematicBody(BulletWorld* world, EntityId ownerEntityId, Node* node, const btCollisionShapePtr& shape, int collisionGroupMask,
 					   const Vector3 &localPosition, const Quaternion &localOrientation) :
@@ -70,3 +75,5 @@ const btCollisionObject* KinematicBody::getBtCollisionObject() const
 {
 	return mBody;
 }
+
+} // namespace skybolt::sim

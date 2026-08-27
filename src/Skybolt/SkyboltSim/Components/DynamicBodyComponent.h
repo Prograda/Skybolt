@@ -35,6 +35,7 @@ public:
 	virtual double getMass() const = 0;
 
 	virtual Vector3 getMomentOfInertia() const = 0;
+	virtual void setMomentOfInertia(const Vector3& momentOfInertia) = 0;
 	
 	//! Gets the center of mass relative to the body position in body axes
 	virtual Vector3 getCenterOfMass() const = 0;

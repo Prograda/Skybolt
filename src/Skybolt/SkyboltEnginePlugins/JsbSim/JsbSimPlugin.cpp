@@ -213,6 +213,11 @@ private:
 	std::shared_ptr<ControlInputT<float>> mRudderInput;
 };
 
+SKYBOLT_REFLECT(JsbSimAircraftComponent) {
+	registry.type<JsbSimAircraftComponent>("JsbSimAircraftComponent")
+		.superType<Component>();
+}
+
 static sim::ComponentPtr loadJsbSimAircraftComponent(Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json, const std::string& defaultJsbSimRootDir)
 {
 	std::string jsbSimRoot = readOptionalOrDefault(json, "jsbSimRootDir", defaultJsbSimRootDir);
@@ -259,6 +264,11 @@ public:
 		(*mComponentFactoryRegistry)[JsbSimComponentName] = std::make_shared<ComponentFactoryFunctionAdapter>([defaultJsbSimRootDir] (Entity* entity, const ComponentFactoryContext& context, const nlohmann::json& json) {
 			return loadJsbSimAircraftComponent(entity, context, json, defaultJsbSimRootDir);
 			});
+
+		// TODO: move this into Plugin::Plugin()? Presumably other plugins will want to have their types registered too.
+		// FIXME: There's currently an issue where if this plugin is linked statically, calling this addStaticallyRegisteredTypes
+		// will re-register previously registered types, creating duplicate types because there is only one `globalHandlers` list across statically-linked objects.
+		addStaticallyRegisteredTypes(*config.engineRoot->typeRegistry);
 	}
 
 	~JsbSimPlugin()

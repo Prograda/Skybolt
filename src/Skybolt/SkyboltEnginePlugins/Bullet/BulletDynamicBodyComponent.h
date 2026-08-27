@@ -48,6 +48,7 @@ public: // DynamicBodyComponent interface
 	double getMass() const override { return mMass; }
 
 	Vector3 getMomentOfInertia() const override;
+	void setMomentOfInertia(const Vector3& momentOfInertia) override;
 
 	Vector3 getCenterOfMass() const override;
 

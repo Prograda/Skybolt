@@ -3,26 +3,31 @@ import os
 import subprocess as sp
 from pathlib import Path
 
-def build(source_dir: Path, output_dir: Path, deploy_to_github=False):
+
+def add_to_path(env, directory: str, prepend: bool = True):
+  """Adds a directory to os.environ['PATH'] safely without duplicates."""
+  target = os.path.normcase(os.path.abspath(directory))
+  paths = [os.path.abspath(p) for p in env.get("PATH", "").split(os.pathsep) if p]
+  
+  # Filter out the target if it already exists, then insert/append
+  filtered = [p for p in paths if os.path.normcase(p) != target]
+  updated = [directory] + filtered if prepend else filtered + [directory]
+  
+  env["PATH"] = os.pathsep.join(updated)
+
+def build(source_dir: Path, skybolt_binary_dir: Path, output_dir: Path, deploy_to_github=False):
     python_source_dir = source_dir / "Assets/Core/Scripts"
 
     env = os.environ.copy()
-    env["PYTHONPATH"] = os.pathsep.join([str(python_source_dir)])
-
-    # Create dummy skybolt python module so that mkdocs collects the skybolt.pyi file to generate interface documentation.
-    # This is not required if the compile python .pyd file is on the PYTHONPATH, but we don't assume this is the case as
-    # skybolt might not have been compiled.
-    skybolt_module_filename = (python_source_dir / "skybolt.py")
-    skybolt_module_filename.touch()
-    skybolt_module_filename.write_text("#This is a temporary file used as a stub for generating documentation. It should not exist except for when building docs.")
+    env["PYTHONPATH"] = os.pathsep.join([str(python_source_dir.resolve()), str(skybolt_binary_dir.resolve())])
+    add_to_path(env, str(skybolt_binary_dir.resolve()))
 
     try:
         command = "gh-deploy" if deploy_to_github else "build"
-        sp.run(f"mkdocs {command} --site-dir {output_dir} --dirty", cwd=str(source_dir), env=env, shell=True, check=True)
+        commandline = f"mkdocs {command} --site-dir {output_dir} --clean"
+        sp.run(commandline, cwd=str(source_dir), env=env, shell=True, check=True)
     except RuntimeError as e:
-        raise e
-    finally:
-        skybolt_module_filename.unlink()
+        raise RuntimeError(f"Command '{commandline}' failed", e)
 
 
 if __name__ == "__main__":

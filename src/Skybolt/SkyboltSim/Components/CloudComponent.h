@@ -39,7 +39,7 @@ public:
 
 SKYBOLT_REFLECT(CloudComponent)
 {
-	registry.type<CloudComponent>("CloudsComponent")
+	registry.type<CloudComponent>("CloudComponent")
 		.superType<Component>()
 		.property("layers", &CloudComponent::layers);
 };

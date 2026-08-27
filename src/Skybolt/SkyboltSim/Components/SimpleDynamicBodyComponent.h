@@ -22,6 +22,7 @@ public: // DynamicBodyComponent interface
 	void setMass(double mass) override { mMass = mass; }
 
 	virtual Vector3 getMomentOfInertia() const { return mMomentOfInertia; }
+	virtual void setMomentOfInertia(const Vector3& momentOfInertia) { mMomentOfInertia = momentOfInertia; }
 
 	virtual Vector3 getCenterOfMass() const { return mCenterOfMass; }
 
