@@ -11,6 +11,8 @@ namespace skybolt::vis {
 class ImageFactory
 {
 public:
+	virtual ~ImageFactory() = default;
+
 	//! @returns non-null ImagePtr on success, or error message
 	virtual Expected<ImagePtr> createImage(int width, int height, Image::Format format, Image::ColorSpace colorSpace) const = 0;
 
