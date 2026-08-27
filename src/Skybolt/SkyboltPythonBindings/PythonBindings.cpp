@@ -30,6 +30,7 @@
 #include <SkyboltSim/Components/MainRotorComponent.h>
 #include <SkyboltSim/Components/NameComponent.h>
 #include <SkyboltSim/Components/SunComponent.h>
+#include <SkyboltSim/Spatial/AzimuthElevation.h>
 #include <SkyboltSim/Spatial/Frustum.h>
 #include <SkyboltSim/Spatial/Geocentric.h>
 #include <SkyboltSim/Spatial/GreatCircle.h>
@@ -53,6 +54,7 @@
 #include <SkyboltVisOsg/Window/WindowUtil.h>
 
 #include <osg/Image>
+#include <pybind11/eval.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
@@ -414,6 +416,28 @@ PYBIND11_MODULE(skybolt, m) {
 		.def_readwrite("ownEntityAttachmentPoint", &AttacherComponent::ownEntityAttachmentPoint)
 		.def_readwrite("positionOffset", &AttacherComponent::positionOffset)
 		.def_readwrite("orientationOffset", &AttacherComponent::orientationOffset);
+
+	py::class_<AzimuthElevation>(m, "AzimuthElevation")
+		.def(py::init())
+		.def(py::init<double, double>())
+		.def_readwrite("x", &AzimuthElevation::x)
+		.def_readwrite("y", &AzimuthElevation::y)
+		.def_readwrite("azimuth", &AzimuthElevation::x)
+		.def_readwrite("elevation", &AzimuthElevation::y)
+		.def(py::self + py::self)
+		.def(py::self - py::self)
+		.def(py::self * py::self)
+		.def(py::self / py::self)
+		.def(py::self += py::self)
+		.def(py::self -= py::self)
+		.def(py::self *= double())
+		.def(py::self /= double())
+		.def(double() * py::self)
+		.def(py::self * double())
+		.def(py::self / double());
+
+	m.def("directionToAzimuthElevation", &directionToAzimuthElevation);
+	m.def("azimuthAndElevationToDirection", &azimuthAndElevationToDirection);
 
 	py::class_<AzimuthElevationLatLon>(m, "AzimuthElevationLatLon")
 		.def(py::init<>())
