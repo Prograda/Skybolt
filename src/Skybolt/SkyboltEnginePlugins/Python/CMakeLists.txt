@@ -23,5 +23,6 @@ add_library(${TARGET_NAME} ${SKYBOLT_PLUGINS_LIBRARY_TYPE} ${SrcFiles})
 target_include_directories(${TARGET_NAME} PUBLIC ${Skybolt_INCLUDE_DIR}/Skybolt)
 target_link_libraries (${TARGET_NAME} ${LIBS})
 
+set_target_properties(${TARGET_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE) #Export symbols for tests
 set_engine_plugin_target_properties(${TARGET_NAME})
 skybolt_plugin_install(${TARGET_NAME})

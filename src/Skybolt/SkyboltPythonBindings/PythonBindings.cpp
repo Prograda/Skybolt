@@ -77,17 +77,15 @@ static void setGlobalEngineRoot(EngineRoot* root) { gEngineRoot = root;
 	addStaticallyRegisteredTypes(*root->typeRegistry);
 }
 
-static std::unique_ptr<EngineRoot> createEngineRootWithDefaults() {
-	return EngineRootFactory::create({});
-}
-
 static std::unique_ptr<EngineRoot> createEngineRoot(bool loadPlugins = true)
 {
 	nlohmann::json settings = readEngineSettings({});
-
-	std::vector<PluginFactory> pluginFactories;
 	
-	if (loadPlugins)
+	// FIXME: This is a hack to avoid unloading/reloading plugins.
+	// Unloading a plugin before the python interpreter is destroyed can cause a crash because the plugin may have registered python types that are still in use.
+	static std::vector<PluginFactory> pluginFactories;
+	
+	if (loadPlugins && pluginFactories.empty())
 	{
 		pluginFactories = loadPluginFactories<Plugin, PluginConfig>(getAllPluginFilepathsInDirectories(EngineRootFactory::getDefaultPluginDirs()));
 	}
@@ -97,7 +95,11 @@ static std::unique_ptr<EngineRoot> createEngineRoot(bool loadPlugins = true)
 	config.assetSearchPaths = getDefaultAssetSearchPaths();
 	config.imageFactory = std::make_shared<vis::OsgImageFactory>();
 	auto engineRoot = std::make_unique<EngineRoot>(config);
-	engineRoot->loadPlugins(pluginFactories);
+
+	if (loadPlugins)
+	{
+		engineRoot->loadPlugins(pluginFactories);
+	}
 	return engineRoot;
 }
 
@@ -524,8 +526,11 @@ PYBIND11_MODULE(skybolt, m) {
 		.def("findEntityByName", &World::findObjectByName);
 
 	py::class_<EntityFactory>(m, "EntityFactory", "Class responsible for creating `Entity` instances based on a template name")
-		.def("createEntity", &EntityFactory::createEntity, py::return_value_policy::reference,
-			py::arg("templateName"), py::arg("name") = "", py::arg("position") = math::dvec3Zero(), py::arg("orientation") = math::dquatIdentity(), py::arg("id") = sim::nullEntityId());
+		.def("createEntity", &EntityFactory::createEntity,
+			py::arg("templateName"), py::arg("name") = "", py::arg("position") = math::dvec3Zero(), py::arg("orientation") = math::dquatIdentity(), py::arg("id") = sim::nullEntityId(),
+			// keep_alive ensure the returned EntityFactory is kept alive as long as the returned Entity exists.
+			// This ensures the entity does not outlive the EngineRoot as the EntityFactory keeps the EngineRoot alive.
+			py::keep_alive<0, 1>());
 
 	py::class_<Scenario>(m, "Scenario")
 		.def_readwrite("startJulianDate", &Scenario::startJulianDate)
@@ -565,7 +570,6 @@ PYBIND11_MODULE(skybolt, m) {
 
 	m.def("getGlobalEngineRoot", &getGlobalEngineRoot, "Get global EngineRoot", py::return_value_policy::reference);
 	m.def("setGlobalEngineRoot", &setGlobalEngineRoot, "Set global EngineRoot");
-	m.def("createEngineRootWithDefaults", &createEngineRootWithDefaults, "Create an EngineRoot with default values"); //@deprecated
 	m.def("createEngineRoot", &createEngineRoot, py::arg("loadPlugins"), "Create an EngineRoot");
 	m.def("createVisRoot", &createVisRoot, "Create a VisRoot");
 	m.def("attachCameraToWindowWithEngine", &attachCameraToWindowWithEngine);

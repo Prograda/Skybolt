@@ -1,3 +1,4 @@
+
 OPTION(BUILD_BULLET_PLUGIN "Build Bullet Plugin")
 if (BUILD_BULLET_PLUGIN)
 	add_subdirectory(Bullet)
@@ -19,4 +20,7 @@ endif()
 OPTION(BUILD_PYTHON_PLUGIN "Build Python Plugin")
 if (BUILD_PYTHON_PLUGIN)
 	add_subdirectory(Python)
+	if (BUILD_TESTING)
+		add_subdirectory(PythonTests)
+	endif()
 endif()

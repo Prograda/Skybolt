@@ -21,7 +21,7 @@ Skybolt comes with a Qt-based 3D scenario viewer application. Example scenarios 
 The `src/SkyboltExamples` directory contains example applications demonstrating how to build your own projects using Skybolt libraries.
 
 ## Using Python API
-Refer to `src/SkyboltExamples/MinimalPython/MinimalPython.py` for example usage of the python API.
+Refer to `src/Skybolt/SkyboltEnginePlugins/PythonTests/Scripts` for example usage of the python API.
 Refer to [Python API documentation](python_api/index.md) for complete reference.
 
 ## Writing Plugins

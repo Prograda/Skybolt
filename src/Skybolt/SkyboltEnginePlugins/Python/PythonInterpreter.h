@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <SkyboltCommon/NonNullPtr.h>
 #include <SkyboltEngine/SkyboltEngineFwd.h>
 
 #include <memory>
@@ -19,8 +20,11 @@ namespace skybolt {
 class PythonInterpreter
 {
 public:
-	PythonInterpreter(EngineRoot* engineRoot);
+	PythonInterpreter();
 	~PythonInterpreter();
+
+	//! Allows Python code to use an existing engine provided by C++, as opposed to creating a new engine in Python.
+	void useExternalEngine(const NonNullPtr<EngineRoot> engineRoot);
 
 private:
 	std::unique_ptr<pybind11::scoped_interpreter> mPyInterpreter; //!< Will be null if interpreter is managed externally

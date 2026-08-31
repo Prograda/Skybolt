@@ -52,9 +52,10 @@ static bool isPythonPluginModule(const file::Path& filename)
 class PythonComponentPlugin : public Plugin
 {
 public:
-	PythonComponentPlugin(const PluginConfig& config) :
-		mPythonInterpreter(config.engineRoot)
+	PythonComponentPlugin(const PluginConfig& config)
 	{
+		mPythonInterpreter.useExternalEngine(config.engineRoot);
+
 		file::Paths moduleFilenames = getFilesWithExtensionInDirectoryInAssetPackages(config.engineRoot->getAssetPackagePaths(), "Scripts", ".py");
 		std::vector<std::string> moduleNames;
 		for (const file::Path& moduleFilename : moduleFilenames)

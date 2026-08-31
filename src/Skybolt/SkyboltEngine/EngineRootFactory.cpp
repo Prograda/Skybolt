@@ -39,7 +39,7 @@ std::unique_ptr<EngineRoot> EngineRootFactory::create(const boost::program_optio
 	}
 	catch (const std::exception& e)
 	{
-		// Catch and re-throw a copy of the exception to avoid issues with exceptions crossing shared library boundaries
+		// Catch and re-throw a copy of the exception to avoid issues with the original exception memory becoming invalid after DLL unload.
 		// FIXME: This loses exception type information, but at least the message makes it through.
 		throw std::runtime_error(e.what());
 	}
