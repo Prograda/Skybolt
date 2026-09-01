@@ -14,7 +14,7 @@ on:
       build_docs:
         description: Build the documentation?
         type: boolean
-        default: true
+        default: false
       upload:
         description: Upload resulting artifact?
         type: boolean
@@ -30,7 +30,10 @@ jobs:
     runs-on: ${{ inputs.os }}
     env:
       packageDir: ${{github.workspace}}/package
+      CONAN_HOME: ${{ github.workspace}}/.conan2
     steps:
+    - name: Free Disk Space
+      uses: jlumbroso/free-disk-space@main
     - uses: actions/checkout@v2.4.0
       with:
         lfs: true
@@ -39,57 +42,42 @@ jobs:
       with:
         python-version: ${{ inputs.python-version }}
         architecture: ${{ inputs.python-arch }}
-    - name: Install C and C++ header files
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib
-    - name: Install conan and uv
+    - name: Install uv
       run: |
         python3 -m pip install --upgrade pip
-        pip3 install conan uv
-    - name: Configure conan (Linux)
-      if: runner.os == 'Linux'
-      run: |
-        conan profile detect
-        echo "compiler.cppstd=17" >> ~/.conan2/profiles/default  # Set cppstd to 17
-        echo "qt/*:compiler.cppstd=gnu20" >> ~/.conan2/profiles/default # Work around issue https://github.com/conan-io/conan-center-index/issues/27912
-        # Options to resolve qt compilation issues
-        echo [options] >> ~/.conan2/profiles/default
-        echo "qt/*:openssl=False" >> ~/.conan2/profiles/default
-        echo "qt/*:with_pq=False" >> ~/.conan2/profiles/default
-
-        export CONAN_SYSREQUIRES_MODE=enabled
-    - name: Configure conan (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        conan profile detect
-        echo "compiler.cppstd=17" >> ~/.conan2/profiles/default  # Set cppstd to 17
-        # Options to resolve qt compilation issues
-        echo [options] >> ~/.conan2/profiles/default
-        echo "qt/*:openssl=False" >> ~/.conan2/profiles/default
-        echo "qt/*:with_pq=False" >> ~/.conan2/profiles/default
-    - name: Cache Conan Packages
-      if: always() # Save cache even if the build fails
-      uses: actions/cache@v4
+        pip3 install uv
+    - name: Set up Conan
+      uses: conan-io/setup-conan@v1
       with:
-        path: ~/.conan2
-        key: conan-${{ runner.os }}-${{ hashFiles('conanfile.py') }}
-        restore-keys: |
-          conan-${{ runner.os }}-
+        version: "2.32.0"
+        cache_packages: true # Enables automatic caching of ~/.conan2
+
+    - name: Configure Conan profiles
+      run: |
+        # conan-io/setup-conan puts the default profile in the standard location
+        conan profile detect --force
+        echo "compiler.cppstd=20" >> ${{ env.CONAN_HOME }}/profiles/default
+        if [ "${{ runner.os }}" == "Linux" ]; then
+          echo "qt/*:compiler.cppstd=gnu20" >> ${{ env.CONAN_HOME }}/profiles/default
+        fi
+        echo "[options]" >> ${{ env.CONAN_HOME }}/profiles/default
+        echo "qt/*:openssl=False" >> ${{ env.CONAN_HOME }}/profiles/default
+        echo "qt/*:with_pq=False" >> ${{ env.CONAN_HOME }}/profiles/default
+      shell: bash
     - name: Build
       run: |
-        uv run python3 ${{github.workspace}}/Tools/BuildScripts/build.py --source-dir=${{github.workspace}} --build-dir=${{github.workspace}} --output-dir=${{env.packageDir}} --stage package
+        uv --project ${{github.workspace}}/Tools/BuildScripts run python3 ${{github.workspace}}/Tools/BuildScripts/build.py --source-dir=${{github.workspace}} --build-dir=${{github.workspace}} --package-dir=${{env.packageDir}} --stage package
     - name: Build docs
       if: inputs.build_docs
       run: |
-        uv run python3 ${{github.workspace}}/Tools/BuildScripts/build.py --source-dir=${{github.workspace}} --build-dir=${{github.workspace}} --output-dir=${{env.packageDir}} --stage package_docs --only
+        uv --project ${{github.workspace}}/Tools/BuildScripts run python3 ${{github.workspace}}/Tools/BuildScripts/build.py --source-dir=${{github.workspace}} --build-dir=${{github.workspace}} --package-dir=${{env.packageDir}} --stage package_docs --only
     - name: Cmake test
       run: |
-        cd ${{env.packageDir}}/Build
+        cd ${{github.workspace}}/build/Release
         ctest
     - name: Zip Build Artifact
       if: inputs.upload
-      working-directory: ${{env.packageDir}}/Package
+      working-directory: ${{env.packageDir}}
       run: |
         7z a "${{ github.workspace }}/out/Skybolt.zip" .
     - name: Upload Build Artifact

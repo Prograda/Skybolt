@@ -58,9 +58,9 @@ std::vector<std::function<std::shared_ptr<PluginT>(const PluginConfigT&)>> loadP
 				SKYBOLT_LOG(info) << "Loaded plugin: " << pluginName << " (" << path << ")";
 
 				result.push_back([=](const PluginConfigT& config) { 
-					SKYBOLT_LOG(info) << "Initializing plugin: " << pluginName;
+					SKYBOLT_LOG(debug) << "Initializing plugin: " << pluginName;
 					auto result = creator(config); 
-					SKYBOLT_LOG(info) << "Plugin initialised: " << pluginName;
+					SKYBOLT_LOG(debug) << "Plugin initialised: " << pluginName;
 					return result;
 				});
 			}

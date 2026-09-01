@@ -185,7 +185,7 @@ void PagedForest::asyncCreatePage(const osg::Vec2i& pageId)
 	page->pageId = pageId;
 	mLoadingPageQueue.push_back(page);
 
-	mScheduler.run([=]() {
+	mScheduler.run([=, this]() {
 		if (!page->cancel)
 		{
 			page->group = mPageGeneratorTask->run(page->pageId);

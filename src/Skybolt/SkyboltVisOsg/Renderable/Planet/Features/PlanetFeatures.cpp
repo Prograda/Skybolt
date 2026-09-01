@@ -35,6 +35,12 @@ struct LoadedVisObjects
 	sim::LatLon latLonOrigin;
 };
 
+static bool isConcreteRunway(const std::string& str)
+{
+	const std::string invalidChars = "GWU"; // W is for water, G is for grass, U is for unpaved.
+    return str.find_first_of(invalidChars) == std::string::npos;
+}
+
 class VisObjectsLoadTask
 {
 public:
@@ -121,20 +127,23 @@ public:
 				const mapfeatures::Airport& srcAirport = static_cast<const mapfeatures::Airport&>(*feature);
 				for (const mapfeatures::Airport::Runway& srcRunway : srcAirport.runways)
 				{
-					Runway runway;
-					runway.startPoint = math::toOsgVec3f(converter.latLonAltToCartesianNed(toLatLonAlt(srcRunway.start, srcAirport.altitude)));
-					runway.endPoint = math::toOsgVec3f(converter.latLonAltToCartesianNed(toLatLonAlt(srcRunway.end, srcAirport.altitude)));
-
-					std::vector<std::string> strs;
-					boost::split(strs, srcRunway.name, boost::is_any_of("\\/"));
-					if (strs.size() == 2)
+					if (isConcreteRunway(srcRunway.name))
 					{
-						runway.startMarking = strs.front();
-						runway.endMarking = strs.back();
-					}
+						Runway runway;
+						runway.startPoint = math::toOsgVec3f(converter.latLonAltToCartesianNed(toLatLonAlt(srcRunway.start, srcAirport.altitude)));
+						runway.endPoint = math::toOsgVec3f(converter.latLonAltToCartesianNed(toLatLonAlt(srcRunway.end, srcAirport.altitude)));
 
-					runway.width = srcRunway.width;
-					runways.push_back(runway);
+						std::vector<std::string> strs;
+						boost::split(strs, srcRunway.name, boost::is_any_of("\\/"));
+						if (strs.size() == 2)
+						{
+							runway.startMarking = strs.front();
+							runway.endMarking = strs.back();
+						}
+
+						runway.width = srcRunway.width;
+						runways.push_back(runway);
+					}
 				}
 				if (0)
 				{

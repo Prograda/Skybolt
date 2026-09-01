@@ -38,7 +38,7 @@ void ConcurrentAsyncTileLoader::load(const QuadTreeTileKey& key, const TileImage
 
 	mRequests.push_back(request);
 
-	mScheduler->run([=]() {
+	mScheduler->run([=, this]() {
 		*request.result = mTileImageLoader->load(key, [=] {return progress->isCancelRequested(); });
 		request.progressCallback->state = *request.result ? TileProgressCallback::State::Loaded : TileProgressCallback::State::FailedOrCanceled;
 	}, &mLoadingTaskSync);

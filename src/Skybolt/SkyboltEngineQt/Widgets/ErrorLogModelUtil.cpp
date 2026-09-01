@@ -15,6 +15,7 @@
 #include <boost/log/expressions.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/log/support/date_time.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace bl = boost::log;
@@ -57,6 +58,8 @@ void connectToBoostLogger(QPointer<ErrorLogModel> model)
 	// Remove existing sinks to avoid duplicate logging sinks with whatever default sinks boost has set up
 	bl::core::get()->remove_all_sinks();
 
+	bl::add_common_attributes();
+
 	// Output to the error log model
 	auto sink = boost::make_shared<LabelLogSink>([model = std::move(model)] (bl::trivial::severity_level level, const QString& message) {
 		if (model)
@@ -79,6 +82,15 @@ void connectToBoostLogger(QPointer<ErrorLogModel> model)
     auto consoleSink = boost::make_shared<console_sink_t>();
     consoleSink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
     
+	namespace expr = boost::log::expressions;
+
+	consoleSink->set_formatter(
+		expr::stream
+			<< "[" << expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S.%f") << "] "
+			<< "[" << bl::trivial::severity << "] "
+			<< expr::smessage
+	);
+
     bl::core::get()->add_sink(consoleSink);
 }
 

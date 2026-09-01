@@ -23,7 +23,7 @@ nav:
     - skybolt_util: python_api/skybolt_util.md
 
 hooks:
-  - docs./hooks/generate_components_doc.py
+  - docs/hooks/generate_components_doc.py
 
 plugins:
   - search

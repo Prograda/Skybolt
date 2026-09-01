@@ -1,21 +1,30 @@
+import importlib
 import os
 import sys
 from pathlib import Path
+from typing import Sequence
 from mypy.stubgen import generate_stub_for_c_module
 
-def generate_skybolt_stubs(module_name: str, build_dir: Path, output_file: Path):
-    sys.path.append(str(build_dir.resolve()))
+def generate_skybolt_stubs(module_name: str, module_search_dirs: Sequence[Path], output_file: Path):
+    for dir in module_search_dirs:
+        sys.path.append(str(dir.resolve()))
     import setup_environment
     setup_environment.setup_skybolt_environment() # Setup environment so that skybolt can find DLLs
-    
+    print(f"module_search_dirs {module_search_dirs}")
     try:
-        import skybolt
+        importlib.import_module(module_name)
     except Exception as e:
-        pattern = str(build_dir / (module_name + "*.pyd"))
-        if glob.glob(pattern):
+        found = False
+        for dir in module_search_dirs:
+            pattern = module_name + "*.{pyd,so}"
+            if dir.glob(pattern):
+                found = True
+                break
+
+        if found:
             raise RuntimeError(f"The module binary exists at '{pattern}' but python failed to import it. Is there a Python version mismatch?")
         else:
-            raise RuntimeError(f"Module import failed because no module found at '{pattern}'.")
+            raise RuntimeError(f"Module import failed because no module found with '{pattern}'.")
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
     

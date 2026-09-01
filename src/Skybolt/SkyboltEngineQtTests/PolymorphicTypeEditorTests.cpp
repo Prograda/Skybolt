@@ -83,7 +83,7 @@ TEST_CASE_METHOD(QAppFixture, "PolymorphicTypeEditor populates combo box with fa
 
 	auto comboBox = editor->findChild<QComboBox*>();
 	REQUIRE(comboBox != nullptr);
-	CHECK(comboBox->count() == 2);
+	REQUIRE(comboBox->count() == 2);
 	CHECK(comboBox->itemText(0).toStdString() == "DerivedA");
 	CHECK(comboBox->itemText(1).toStdString() == "DerivedB");
 }

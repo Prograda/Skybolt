@@ -9,7 +9,7 @@ Entity template definitions are stored in `.entity.json` files and are located u
 
 Entities are defined by a list of components. Each component can have zero or more properties that can be configured in the `.entity.json` file.
 
-{% for module_name, components in module_components.items() -%}
+{% for module_name, components in module_components.items() if module_name in ["_Core", "SkyboltBullet", "SkyboltJsbSim", "SkyboltPython"] -%}
 {% if module_name.startswith("_") -%}
 ## {{ module_name[1:] }} Components
 {% else -%}

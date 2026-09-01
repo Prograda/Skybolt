@@ -1,5 +1,3 @@
-#pragma once
-
 #include "ElevationImageMetadata.h"
 #include <SkyboltCommon/Exception.h>
 

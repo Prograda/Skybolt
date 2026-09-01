@@ -134,7 +134,7 @@ void NonBlockingTilePlanetAltitudeProvider::requestLoadTileAndAddToCache(const Q
 {
 	if (mScheduler->hasFinished(mLoadingTaskSync))
 	{
-		mScheduler->run([=]() {
+		mScheduler->run([key, this]() {
 			if (std::optional<TileImage> image = loadTile(key); image)
 			{
 				addTileToCache(*image, key);

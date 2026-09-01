@@ -12,12 +12,17 @@ import stubs
 logging.basicConfig(level=logging.INFO)
 
 
-def build(skybolt_source_dir: Path, skybolt_build_dir: Path, profile_filepath: Path):
+def build(skybolt_source_dir: Path, skybolt_build_dir: Path, profile_filepath: Path, build_config_name: str):
     """
     Build Skybolt using conan. This will also build dependencies if required.
     """
     logging.info(f"Building...")
-    sp.run(f"conan build {skybolt_source_dir} --output-folder={skybolt_build_dir}  -pr:a=default -pr:a={profile_filepath} --build=missing --lockfile-partial", shell=True, check=True)
+    
+    sp.run(f"conan remote add skybolt-deps {skybolt_source_dir / 'Conan'} --force", shell=True, check=True)
+    
+    build_config_args = "-c skybolt/*:build_type=RelWithDebInfo -c skybolt-widgets/*:build_type=RelWithDebInfo" if build_config_name == "RelWithDebInfo" else ""
+    
+    sp.run(f"conan build {skybolt_source_dir} --output-folder={skybolt_build_dir} -pr:a=default -pr:a={profile_filepath} --build=missing", shell=True, check=True)
 
 
 def copy_tree(source_dir: Path, destination_dir: Path):
@@ -44,8 +49,14 @@ def package(skybolt_source_dir: Path, skybolt_build_dir: Path, package_dir: Path
     sp.run(f"cmake --install {skybolt_build_dir} --prefix {skybolt_build_dir}/install --config={build_config_name} --component OsgPlugins", shell=True, check=True)
     sp.run(f"cmake --install {skybolt_build_dir} --prefix {skybolt_build_dir}/install --config={build_config_name} --component SkyboltDependencies", shell=True, check=True)
 
-    skybolt_binary_dir = skybolt_build_dir / "bin" / build_config_name
-    stubs.generate_skybolt_stubs("skybolt", skybolt_binary_dir, skybolt_binary_dir / "skybolt.pyi")
+    if os.sys.platform.startswith('linux'):
+        skybolt_runtime_library_dir = skybolt_build_dir / "install/lib"
+    else:
+        skybolt_runtime_library_dir = skybolt_build_dir / "install/bin"
+        
+    if not os.sys.platform.startswith('linux'):
+        # TODO: get this working on linux. It currently fails because Linux can't find the dependency .so files. Maybe we should set the rpaths at compile time.
+        stubs.generate_skybolt_stubs("skybolt", [skybolt_runtime_library_dir], skybolt_runtime_library_dir / "skybolt.pyi")
 
     copy_tree(skybolt_build_dir / "install/bin", package_dir / "bin")
 
@@ -62,7 +73,7 @@ def package(skybolt_source_dir: Path, skybolt_build_dir: Path, package_dir: Path
 def package_docs(skybolt_source_dir: Path, package_dir: Path):
     logging.info(f"Packaging docs...")
     skybolt_binary_dir = package_dir / "bin"
-    output_dir = package_dir / "Docs"
+    output_dir = package_dir / "Docs" / "Skybolt"
     build_docs.build(skybolt_source_dir, skybolt_binary_dir, output_dir)
 
     # Delete unneeded output files
@@ -98,13 +109,16 @@ if __name__ == "__main__":
         else:
             return BUILD_STAGES.index(name) <= BUILD_STAGES.index(args.stage)
 
-    conan_build_dir = Path(args.build_dir) / "build"
+    source_dir = Path(args.source_dir).resolve()
+    build_dir = Path(args.build_dir).resolve()
+    package_dir = Path(args.package_dir).resolve()
+    conan_build_dir = build_dir / "build"
     skybolt_binary_dir = conan_build_dir / "bin" / args.build_config_name
 
     # Run build stages
     if should_run_stage("build"):
-        build(Path(args.source_dir), Path(args.build_dir), profile_filepath)
+        build(source_dir, build_dir, profile_filepath, args.build_config_name)
     if should_run_stage("package"):
-        package(Path(args.source_dir), conan_build_dir, Path(args.package_dir), args.build_config_name)
+        package(source_dir, conan_build_dir, package_dir, args.build_config_name)
     if should_run_stage("package_docs"):
-        package_docs(Path(args.source_dir), Path(args.package_dir))
+        package_docs(source_dir, package_dir)

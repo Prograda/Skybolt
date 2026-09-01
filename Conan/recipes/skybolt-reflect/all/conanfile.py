@@ -26,7 +26,7 @@ class SkybolyReflectConan(ConanFile):
     def source(self):
         git = Git(self, folder=self.name)
         git.clone('https://github.com/prograda/skybolt-reflect', target=".")
-        git.checkout("ab8644dbd00e28efab139874cd7486751451a01d")
+        git.checkout("04abec17ecef4504687ccd4b32188e0f9455a162")
 
     def generate(self):
         tc = CMakeToolchain(self)

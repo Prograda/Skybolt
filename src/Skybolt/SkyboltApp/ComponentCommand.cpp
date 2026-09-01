@@ -113,11 +113,11 @@ int dumpComponents(const po::variables_map& vm)
 	const auto pluginFilepaths = loadDefaultPluginFilepaths();
 
 	auto baseEngineRoot = createEngineRootWithoutPlugins(vm);
-	std::set<std::string> baseComponentNames;
+	std::set<std::string> foundComponentNames;
 	nlohmann::json coreComponents = nlohmann::json::object();
 	for (const auto& [typeName, type] : getComponentTypesByName(*baseEngineRoot->typeRegistry))
 	{
-		baseComponentNames.insert(typeName);
+		foundComponentNames.insert(typeName);
 		coreComponents[typeName] = createComponentJson(type);
 	}
 
@@ -126,21 +126,32 @@ int dumpComponents(const po::variables_map& vm)
 
 	for (size_t i = 0; i < pluginFilepaths.size(); ++i)
 	{
-		const std::filesystem::path& pluginFilepath = pluginFilepaths[i];
-		const auto pluginFactories = loadPluginFactories<Plugin, PluginConfig>({ pluginFilepath });
+		std::string pluginName = pluginFilepaths[i].stem().string();
+		if (pluginsJson.contains(pluginName))
+		{
+			SKYBOLT_LOG(warning) << "Duplicate plugin '" << pluginName << "' found. Skipping duplicates.";
+			continue;
+		}
+
+		// Load all plugins up to the current index to ensure that dependencies are loaded in the correct order.
+		std::vector<std::filesystem::path> pluginFilepathSubset(pluginFilepaths.begin(), pluginFilepaths.begin() + i + 1);
+
 		auto engineRoot = createEngineRootWithoutPlugins(vm);
+
+		const auto pluginFactories = loadPluginFactories<Plugin, PluginConfig>(pluginFilepathSubset);
 		engineRoot->loadPlugins(pluginFactories);
 
 		nlohmann::json pluginComponents = nlohmann::json::object();
 		for (const auto& [typeName, type] : getComponentTypesByName(*engineRoot->typeRegistry))
 		{
-			if (!baseComponentNames.contains(typeName))
+			if (!foundComponentNames.contains(typeName))
 			{
+				foundComponentNames.insert(typeName);
 				pluginComponents[typeName] = createComponentJson(type);
 			}
 		}
 
-		pluginsJson[pluginFilepath.stem().string()] = std::move(pluginComponents);
+		pluginsJson[pluginName] = std::move(pluginComponents);
 	}
 
 	nlohmann::json output;
