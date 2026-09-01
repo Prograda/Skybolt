@@ -1,5 +1,0 @@
-# Required to build executables
-conan>=2,<3
-
-# Required to build documentation
--r ./docs/requirements.txt

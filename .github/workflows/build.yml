@@ -43,10 +43,10 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib
-    - name: Install required python packages
+    - name: Install conan and uv
       run: |
         python3 -m pip install --upgrade pip
-        pip3 install -r ${{github.workspace}}/Tools/BuildScripts/requirements.txt
+        pip3 install conan uv
     - name: Configure conan (Linux)
       if: runner.os == 'Linux'
       run: |
@@ -78,11 +78,11 @@ jobs:
           conan-${{ runner.os }}-
     - name: Build
       run: |
-        python3 ${{github.workspace}}/Tools/BuildScripts/build.py --skybolt-source-dir=${{github.workspace}} --output-dir=${{env.packageDir}} --stage package
+        uv run python3 ${{github.workspace}}/Tools/BuildScripts/build.py --source-dir=${{github.workspace}} --build-dir=${{github.workspace}} --output-dir=${{env.packageDir}} --stage package
     - name: Build docs
       if: inputs.build_docs
       run: |
-        python3 ${{github.workspace}}/Tools/BuildScripts/build.py --skybolt-source-dir=${{github.workspace}} --output-dir=${{env.packageDir}} --stage package_docs --only
+        uv run python3 ${{github.workspace}}/Tools/BuildScripts/build.py --source-dir=${{github.workspace}} --build-dir=${{github.workspace}} --output-dir=${{env.packageDir}} --stage package_docs --only
     - name: Cmake test
       run: |
         cd ${{env.packageDir}}/Build
